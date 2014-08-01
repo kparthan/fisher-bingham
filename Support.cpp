@@ -8,7 +8,7 @@ int CONSTRAIN_KAPPA;
  *  \brief This function checks to see if valid arguments are given to the 
  *  command line output.
  *  \param argc an integer
- *  \param argv an vector of strings
+ *  \param argv an std::vector of strings
  *  \return the parameters of the model
  */
 struct Parameters parseCommandLineInput(int argc, char **argv)
@@ -65,11 +65,11 @@ bool checkFile(string &file_name)
 }
 
 /*!
- *  \brief This module prints the elements of a vector<vector<> > to a file
- *  \param v a reference to vector<vector<long double> >
+ *  \brief This module prints the elements of a std::vector<std::vector<> > to a file
+ *  \param v a reference to std::vector<std::vector<long double> >
  *  \param file_name a pointer to a const char
  */
-void writeToFile(vector<vector<long double> > &v, const char *file_name)
+void writeToFile(std::vector<std::vector<long double> > &v, const char *file_name)
 {
   ofstream file(file_name);
   for (int i=0; i<v.size(); i++) {
@@ -97,11 +97,11 @@ string extractName(string &file)
 }
 
 /*!
- *  \brief This function prints the elements of an vector.
+ *  \brief This function prints the elements of an std::vector.
  *  \param os a reference to a ostream
- *  \param v a reference to a vector<long double>
+ *  \param v a reference to a std::vector<long double>
  */
-void print(ostream &os, vector<long double> &v, int precision)
+void print(ostream &os, std::vector<long double> &v, int precision)
 {
   if (precision == 0) {
     if (v.size() == 1) {
@@ -160,12 +160,12 @@ long double exponent(long double a, long double x)
 }
 
 /*!
- *  \brief Normalizes a vector
- *  \param x a reference to a vector<long double>
- *  \param unit a reference to a vector<long double>
- *  \return the norm of the vector
+ *  \brief Normalizes a std::vector
+ *  \param x a reference to a std::vector<long double>
+ *  \param unit a reference to a std::vector<long double>
+ *  \return the norm of the std::vector
  */
-long double normalize(vector<long double> &x, vector<long double> &unit)
+long double normalize(std::vector<long double> &x, std::vector<long double> &unit)
 {
   long double normsq = 0;
   for (int i=0; i<x.size(); i++) {
@@ -180,12 +180,12 @@ long double normalize(vector<long double> &x, vector<long double> &unit)
 
 /*!
  *  \brief This function converts the cartesian coordinates into spherical.
- *  \param cartesian a reference to a vector<long double> 
- *  \param spherical a reference to a vector<long double> 
+ *  \param cartesian a reference to a std::vector<long double> 
+ *  \param spherical a reference to a std::vector<long double> 
  */
-void cartesian2spherical(vector<long double> &cartesian, vector<long double> &spherical)
+void cartesian2spherical(std::vector<long double> &cartesian, std::vector<long double> &spherical)
 {
-  vector<long double> unit(3,0);
+  std::vector<long double> unit(3,0);
   long double r = normalize(cartesian,unit);
 
   long double x = unit[0];
@@ -225,10 +225,10 @@ void cartesian2spherical(vector<long double> &cartesian, vector<long double> &sp
 
 /*!
  *  \brief This function converts the spherical coordinates into cartesian.
- *  \param spherical a reference to a vector<long double> 
- *  \param cartesian a reference to a vector<long double> 
+ *  \param spherical a reference to a std::vector<long double> 
+ *  \param cartesian a reference to a std::vector<long double> 
  */
-void spherical2cartesian(vector<long double> &spherical, vector<long double> &cartesian)
+void spherical2cartesian(std::vector<long double> &spherical, std::vector<long double> &cartesian)
 {
   cartesian[0] = spherical[0] * sin(spherical[1]) * cos(spherical[2]);
   cartesian[1] = spherical[0] * sin(spherical[1]) * sin(spherical[2]);
@@ -236,12 +236,12 @@ void spherical2cartesian(vector<long double> &spherical, vector<long double> &ca
 }
 
 /*!
- *  \brief This funciton computes the dot product between two vectors.
- *  \param v1 a reference to a vector<long double>
- *  \param v2 a reference to a vector<long double>
+ *  \brief This funciton computes the dot product between two std::vectors.
+ *  \param v1 a reference to a std::vector<long double>
+ *  \param v2 a reference to a std::vector<long double>
  *  \return the dot product
  */
-long double computeDotProduct(vector<long double> &v1, vector<long double> &v2) 
+long double computeDotProduct(std::vector<long double> &v1, std::vector<long double> &v2) 
 {
   assert(v1.size() == v2.size());
   long double dot_product = 0;
@@ -251,7 +251,99 @@ long double computeDotProduct(vector<long double> &v1, vector<long double> &v2)
   return dot_product;
 }
 
+/*!
+ *  Matrix inverse C++ Boost::ublas
+ */
+bool invertMatrix(const matrix<long double>& input, matrix<long double>& inverse)
+{
+  typedef permutation_matrix<std::size_t> pmatrix;
+
+  // create a working copy of the input
+  matrix<long double> A(input);
+
+  // create a permutation matrix for the LU-factorization
+  pmatrix pm(A.size1());
+
+  // perform LU-factorization
+  int res = lu_factorize(A, pm);
+  if (res != 0)
+    return false;
+
+  // create identity matrix of "inverse"
+  inverse.assign(identity_matrix<long double> (A.size1()));
+
+  // backsubstitute to get the inverse
+  lu_substitute(A, pm, inverse);
+
+  return true;
+}
+
 void Test(void)
 {
+  cout << "Testing matrices ...\n";
+
+  //cout << "Matrix declaration ...\n";
+  matrix<long double> m1 (3, 3);
+  for (int i = 0; i < m1.size1(); ++ i) {
+    for (int j = 0; j < m1.size2(); ++ j) {
+      m1 (i, j) = 3 * i + j;
+    }
+  }
+  cout << "m1: " << m1 << endl;
+  cout << "2 * m1: " << 2*m1 << endl;
+  cout << "m1/2: " << m1/2 << endl;
+
+  //cout << "Matrix transpose ...\n";
+  matrix<long double> m2;
+  m2 = trans(m1);
+  cout << "m1' = m2: " << m2 << endl;
+
+  //cout << "Matrix inverse ...\n";
+  matrix<long double> inverse(3,3);
+  m1(0,0) = 1;
+  invertMatrix(m1,inverse);
+  cout << "m1: " << m1 << endl;
+  cout << "inv(m1): " << inverse << endl;
+
+  //cout << "Identity matrix ...\n";
+  identity_matrix<long double> id(3,3);
+  cout << "id: " << id << endl;
+  matrix<long double> add = id + m1;
+  cout << "id + m1: " << add << endl;
+
+  // matrix row
+  matrix_row<matrix<long double> > mr(m1,0);
+  cout << "mr: " << mr << endl;
+
+  // boost vector
+  boost::numeric::ublas::vector<long double> v(3);
+  for (int i=0; i<3; i++) {
+    v[i] = i + 3;
+  }
+  cout << "v: " << v << endl;
+  cout << "2 * v: " << 2 * v << endl;
+  cout << "v/2: " << v/2 << endl;
+
+  // adding matrix row and vector
+  boost::numeric::ublas::vector<long double> v1 = mr + v;
+  cout << "v1: " << v1 << endl;
+
+  // multiplication
+  matrix<long double> m3 = prod(m1,m2);
+  cout << "m1 * m2 = m3: " << m3 << endl;
+
+  // multiplying matrices and vectors
+  boost::numeric::ublas::vector<long double> mv = prod(v1,m1);
+  cout << "v1 * m1 = mv: " << mv << endl;
+  mv = prod(m1,v1);
+  cout << "m1 * v1 = mv: " << mv << endl;
+
+  long double v1_T_v1 = inner_prod(v1,v1);
+  cout << "v1' * v1 = : " << v1_T_v1 << endl;
+
+  matrix<long double> m4 = outer_prod(v1,v1);
+  cout << "v1 * v1' = m4: " << m4 << endl;
+
+  // eigen values & vectors
 }
 

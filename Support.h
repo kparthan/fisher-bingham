@@ -12,15 +12,17 @@ struct Parameters
 struct Parameters parseCommandLineInput (int, char **); 
 void Usage (const char *, options_description &);
 bool checkFile(string &);
-void writeToFile(vector<vector<long double> > &, const char *);
+void writeToFile(std::vector<std::vector<long double> > &, const char *);
 string extractName(string &);
-void print(ostream &, vector<long double> &, int);
+void print(ostream &, std::vector<long double> &, int);
+
 int sign(long double);
 long double exponent(long double, long double);
-long double normalize(vector<long double> &, vector<long double> &);
-void cartesian2spherical(vector<long double> &, vector<long double> &);
-void spherical2cartesian(vector<long double> &, vector<long double> &);
-long double computeDotProduct(vector<long double> &, vector<long double> &);
+long double normalize(std::vector<long double> &, std::vector<long double> &);
+void cartesian2spherical(std::vector<long double> &, std::vector<long double> &);
+void spherical2cartesian(std::vector<long double> &, std::vector<long double> &);
+long double computeDotProduct(std::vector<long double> &, std::vector<long double> &);
+bool invertMatrix(const matrix<long double> &, matrix<long double> &);
 
 void Test(void);
 

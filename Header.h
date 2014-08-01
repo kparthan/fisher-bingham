@@ -30,10 +30,16 @@
 #include <boost/math/special_functions/gamma.hpp>
 #include <boost/math/distributions.hpp>
 
+#include <boost/numeric/ublas/matrix.hpp>
+#include <boost/numeric/ublas/matrix_proxy.hpp>
+#include <boost/numeric/ublas/lu.hpp>
+#include <boost/numeric/ublas/io.hpp>
+
 using namespace std;
 using namespace boost::program_options;
 using namespace boost::filesystem;
 using namespace boost::math;
+using namespace boost::numeric::ublas;
 
 // numeric constants
 #define AOM 0.001
