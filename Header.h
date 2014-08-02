@@ -20,6 +20,7 @@
 #include <boost/foreach.hpp>
 #include <boost/tokenizer.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/multiprecision/mpfr.hpp>
 
 #include <boost/math/constants/constants.hpp>
 #include <boost/math/special_functions.hpp>
@@ -34,12 +35,19 @@
 #include <boost/numeric/ublas/matrix_proxy.hpp>
 #include <boost/numeric/ublas/lu.hpp>
 #include <boost/numeric/ublas/io.hpp>
+#include <boost/numeric/odeint.hpp>
 
 using namespace std;
 using namespace boost::program_options;
 using namespace boost::filesystem;
 using namespace boost::math;
+using namespace boost::multiprecision;
 using namespace boost::numeric::ublas;
+using namespace boost::numeric::odeint;
+
+typedef number<mpfr_float_backend<1000> >  my_float; 
+typedef boost::numeric::ublas::vector<long double> boost_vector;
+typedef std::vector<double> state_type;
 
 // numeric constants
 #define AOM 0.001
@@ -47,7 +55,7 @@ using namespace boost::numeric::ublas;
 #define PI boost::math::constants::pi<double>()
 #define LOG_PI log(PI)
 #define ZERO std::numeric_limits<long double>::epsilon()
-#define TOLERANCE 1e-6
+#define TOLERANCE 1e-8
 
 #define SET 1 
 #define UNSET 0

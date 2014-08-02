@@ -22,7 +22,17 @@ long double normalize(std::vector<long double> &, std::vector<long double> &);
 void cartesian2spherical(std::vector<long double> &, std::vector<long double> &);
 void spherical2cartesian(std::vector<long double> &, std::vector<long double> &);
 long double computeDotProduct(std::vector<long double> &, std::vector<long double> &);
+long double computeLogSurfaceAreaSphere(int);
+long double logModifiedBesselFirstKind(long double, long double);
+
+matrix<long double> computeOrthogonalTransformation(std::vector<long double> &);
+std::vector<std::vector<long double> > transform(std::vector<std::vector<long double> > &, matrix<long double> &);
 bool invertMatrix(const matrix<long double> &, matrix<long double> &);
+void eigenDecomposition(matrix<long double>, boost::numeric::ublas::vector<long double> &, matrix<long double> &);
+void jacobiRotateMatrix(matrix<long double> &, matrix<long double> &, int, int);
+void integrate_function(double);
+void track(const state_type &, const double);
+void rhs(const state_type &, state_type &, const double);
 
 void Test(void);
 
