@@ -262,7 +262,7 @@ void vMF::generateCanonical(std::vector<std::vector<long double> > &canonical_sa
  */
 std::vector<std::vector<long double> > vMF::generate(int sample_size)
 {
-  cout << "Generating from ";
+  cout << "\nGenerating from ";
   if (D == 3) {
     std::vector<long double> spherical(3,0);
     cartesian2spherical(mu,spherical);
@@ -272,7 +272,7 @@ std::vector<std::vector<long double> > vMF::generate(int sample_size)
     cout << " Kappa: " << kappa << " and sample size = " << sample_size << endl;
   } else {
     cout << "[D,K] = [" << D << "," << kappa 
-         << "] and sample size = " << sample_size << endl;
+         << "] and sample size = " << sample_size;
   }
   if (sample_size != 0) {
     std::vector<std::vector<long double> > canonical_sample;
@@ -280,7 +280,7 @@ std::vector<std::vector<long double> > vMF::generate(int sample_size)
     if (fabs(mu[D-1] - 1) <= TOLERANCE) {  // check if mu is Z-axis
       return canonical_sample;
     } else {
-      matrix<long double> transformation = computeOrthogonalTransformation(mu);
+      matrix<long double> transformation = align_zaxis_with_vector(mu);
       return transform(canonical_sample,transformation);
     }
   } else if (sample_size == 0) {

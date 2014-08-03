@@ -1,7 +1,7 @@
 #include "Support.h"
-#include "Normal.h"
+#include "Test.h"
 
-int CONSTRAIN_KAPPA;
+std::vector<long double> XAXIS,YAXIS,ZAXIS;
 
 ////////////////////// GENERAL PURPOSE FUNCTIONS \\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
@@ -70,15 +70,14 @@ bool checkFile(string &file_name)
  *  \param v a reference to std::vector<std::vector<long double> >
  *  \param file_name a pointer to a const char
  */
-void writeToFile(std::vector<std::vector<long double> > &v, const char *file_name)
+void writeToFile(const char *file_name, std::vector<std::vector<long double> > &v, int precision)
 {
   ofstream file(file_name);
   for (int i=0; i<v.size(); i++) {
-    file << "(";
-    for (int j=0; j<v[i].size()-1; j++) {
-      file << v[i][j] << ", ";
+    for (int j=0; j<v[i].size(); j++) {
+      file << fixed << setw(10) << setprecision(precision) << v[i][j];
     }
-    file << v[i][v[i].size()-1] << ")" << endl;
+    file << endl;
   }
   file.close(); 
 }
@@ -128,6 +127,16 @@ void print(ostream &os, std::vector<long double> &v, int precision)
     } else {
       os << "No elements in v ...";
     }
+  }
+}
+
+/*!
+ *
+ */
+void convert2boostvector(std::vector<long double> &stlvec, boost_vector &vec)
+{
+  for (int i=0; i<stlvec.size(); i++) {
+    vec[i] = stlvec[i];
   }
 }
 
@@ -309,6 +318,8 @@ long double logModifiedBesselFirstKind(long double alpha, long double x)
   return log_mod_bessel;
 }
 
+////////////////////// GEOMETRY FUNCTIONS \\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
 /*!
  *  \brief This function computes the orthogonal transformation matrix
  *  to align a vector x = (0,...,0,1)^T with another vector y
@@ -316,7 +327,7 @@ long double logModifiedBesselFirstKind(long double alpha, long double x)
  *  \param y a reference to a vector<long double>
  *  \return the transformation matrix
  */
-matrix<long double> computeOrthogonalTransformation(std::vector<long double> &y)
+matrix<long double> align_zaxis_with_vector2(std::vector<long double> &y)
 {
   int D = y.size();
 
@@ -360,6 +371,83 @@ matrix<long double> computeOrthogonalTransformation(std::vector<long double> &y)
   matrix<long double> tmp4 = prod(tmp3,UVt);
   matrix<long double> Q = tmp2 + tmp4;
   return Q;
+}
+
+matrix<long double> move_axes(std::vector<long double> &y)
+{
+  boost_vector vec(3); convert2boostvector(y,vec);
+  boost_vector zaxis(3); convert2boostvector(ZAXIS,zaxis);
+  boost_vector sum = vec + zaxis;
+  matrix<long double> tmp1 = outer_prod(sum,sum);
+  long double dp = inner_prod(sum,sum);
+  matrix<long double> tmp2 = tmp1 / (1+dp);
+  matrix<long double> I = identity_matrix<long double>(3,3);
+  matrix<long double> H = tmp2 - I;
+  return H;
+}
+
+matrix<long double> 
+computeOrthogonalTransformation(
+  std::vector<long double> &major_axis,
+  std::vector<long double> &mean
+) {
+  matrix<long double> r1 = align_xaxis_with_major_axis(major_axis);
+  matrix<long double> r2 = align_zaxis_with_vector(mean);
+  matrix<long double> r = prod(r2,r1);  // r = r2 * r1
+  return r;
+}
+
+matrix<long double> align_xaxis_with_major_axis(std::vector<long double> &major_axis)
+{
+  long double dp = computeDotProduct(major_axis,XAXIS);
+  long double theta;
+  if (dp > 1) {
+    theta = 0;
+  } else if (dp < -1) {
+    theta = PI;
+  } else {
+    theta = acos(dp);
+  }
+  matrix<long double> r = identity_matrix<long double>(3,3);
+  r(0,0) = dp; r(1,1) = dp;
+  if (theta < PI/2) {
+    r(0,1) = sin(theta);
+  } else {
+    r(0,1) = -sin(theta);
+  }
+  r(1,0) = -r(0,1);
+  return r;
+}
+
+matrix<long double> align_zaxis_with_vector(std::vector<long double> &y)
+{
+  std::vector<long double> spherical(3,0);
+  cartesian2spherical(y,spherical);
+  long double theta = spherical[1];
+  long double phi = spherical[2];
+
+  matrix<long double> r1 = identity_matrix<long double>(3,3);
+  r1(0,0) = cos(theta);
+  r1(0,2) = sin(theta);
+  r1(2,0) = -r1(0,2); //-sin(theta)
+  r1(2,2) = r1(0,0); //cos(theta)
+  matrix<long double> r2 = identity_matrix<long double>(3,3);
+  r2(0,0) = cos(phi);
+  r2(0,1) = -sin(phi);
+  r2(1,0) = -r2(0,1); //sin(phi)
+  r2(1,1) = r2(0,0);  // cos(phi)
+  matrix<long double> r = prod(r2,r1);
+  return r;
+}
+
+void 
+generateRandomOrthogonalVectors(
+  std::vector<long double> &mean,
+  std::vector<long double> &major_axis,
+  std::vector<long double> &minor_axis
+) {
+  long double theta = rand()*PI/(long double)RAND_MAX;
+  
 }
 
 /*
@@ -544,95 +632,18 @@ void integrate_function(double limit)
 
 ////////////////////// TESTING FUNCTIONS \\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
-void Test(void)
+void TestFunctions(void)
 {
-  cout << "Testing matrices ...\n";
+  Test test;
 
-  //cout << "Matrix declaration ...\n";
-  matrix<long double> m1 (3, 3);
-  for (int i = 0; i < m1.size1(); ++ i) {
-    for (int j = 0; j < m1.size2(); ++ j) {
-      m1 (i, j) = 3 * i + j;
-    }
-  }
-  cout << "m1: " << m1 << endl;
-  cout << "2 * m1: " << 2*m1 << endl;
-  cout << "m1/2: " << m1/2 << endl;
+  //test.matrixFunctions();
 
-  //cout << "Matrix transpose ...\n";
-  matrix<long double> m2;
-  m2 = trans(m1);
-  cout << "m1' = m2: " << m2 << endl;
+  //test.numericalIntegration();
 
-  //cout << "Matrix inverse ...\n";
-  matrix<long double> inverse(3,3);
-  m1(0,0) = 1;
-  invertMatrix(m1,inverse);
-  cout << "m1: " << m1 << endl;
-  cout << "inv(m1): " << inverse << endl;
+  //test.normalDistributionFunctions();
 
-  //cout << "Identity matrix ...\n";
-  identity_matrix<long double> id(3,3);
-  cout << "id: " << id << endl;
-  matrix<long double> add = id + m1;
-  cout << "id + m1: " << add << endl;
+  test.orthogonalTransformations();
 
-  // matrix row
-  matrix_row<matrix<long double> > mr(m1,0);
-  cout << "mr: " << mr << endl;
-
-  // boost vector
-  boost_vector v(3);
-  for (int i=0; i<3; i++) {
-    v[i] = i + 3;
-  }
-  cout << "v: " << v << endl;
-  cout << "2 * v: " << 2 * v << endl;
-  cout << "v/2: " << v/2 << endl;
-
-  // adding matrix row and vector
-  boost_vector v1 = mr + v;
-  cout << "v1: " << v1 << endl;
-
-  // multiplication
-  matrix<long double> m3 = prod(m1,m2);
-  cout << "m1 * m2 = m3: " << m3 << endl;
-
-  // multiplying matrices and vectors
-  boost_vector mv = prod(v1,m1);
-  cout << "v1 * m1 = mv: " << mv << endl;
-  mv = prod(m1,v1);
-  cout << "m1 * v1 = mv: " << mv << endl;
-
-  long double v1_T_v1 = inner_prod(v1,v1);
-  cout << "v1' * v1 = : " << v1_T_v1 << endl;
-
-  matrix<long double> m4 = outer_prod(v1,v1);
-  cout << "v1 * v1' = m4: " << m4 << endl;
-
-  // eigen values & vectors
-  matrix<long double> symm = (m1 + trans(m1))/2;
-  cout << "symmetric matrix: " << symm << endl;
-  boost_vector eigen_values(3,0);
-  matrix<long double> eigen_vectors = identity_matrix<long double>(3,3);
-  eigenDecomposition(symm,eigen_values,eigen_vectors);
-
-  symm = identity_matrix<long double>(3,3);
-  cout << "symmetric matrix: " << symm << endl;
-  eigen_vectors = identity_matrix<long double>(3,3);
-  eigenDecomposition(symm,eigen_values,eigen_vectors);
-
-  // integration
-  integrate_function(10);
-
-  // Normal cdf
-  Normal normal(0,1);
-  long double cdf = normal.cumulativeDensity(2);
-  cout << "cdf: " << cdf << endl;
-
-  long double x = sqrt(PI/2);
-  cdf = normal.cumulativeDensity(x);
-  cout << "cdf: " << cdf << endl;
-  cout << "2*cdf-1: " << 2*cdf-1 << endl;
+  //test.randomSampleGeneration();
 }
 

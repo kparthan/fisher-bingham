@@ -6,7 +6,8 @@ OBJECTS = main.o \
   Normal.o  \
   vMF.o \
   FB4.o \
-  FB6.o
+  FB6.o \
+  Test.o
 
 all: main 
 
@@ -29,6 +30,9 @@ FB4.o: FB4.cpp FB4.h Header.h
 	g++ -c $(CFLAGS) $< -o $@
 
 FB6.o: FB6.cpp FB6.h Header.h
+	g++ -c $(CFLAGS) $< -o $@
+
+Test.o: Test.cpp Test.h Header.h
 	g++ -c $(CFLAGS) $< -o $@
 
 clean:
