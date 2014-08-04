@@ -212,6 +212,7 @@ void vMF::printParameters(ostream &os)
  */
 void vMF::generateCanonical(std::vector<std::vector<long double> > &canonical_sample, int sample_size)
 {
+  canonical_sample.clear();
   int count = 0;
   beta_distribution<> beta((D-1)/2.0,(D-1)/2.0);
   Normal normal(0,1);
@@ -262,14 +263,14 @@ void vMF::generateCanonical(std::vector<std::vector<long double> > &canonical_sa
  */
 std::vector<std::vector<long double> > vMF::generate(int sample_size)
 {
-  cout << "\nGenerating from ";
+  cout << "\nGenerating from vMF with mean: ";
   if (D == 3) {
     std::vector<long double> spherical(3,0);
     cartesian2spherical(mu,spherical);
     spherical[1] *= 180 / PI;
     spherical[2] *= 180 / PI;
     print(cout,spherical,3);
-    cout << " Kappa: " << kappa << " and sample size = " << sample_size << endl;
+    cout << "; Kappa: " << kappa << "; sample size = " << sample_size << endl;
   } else {
     cout << "[D,K] = [" << D << "," << kappa 
          << "] and sample size = " << sample_size;

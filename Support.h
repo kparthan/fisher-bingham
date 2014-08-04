@@ -23,11 +23,15 @@ long double normalize(std::vector<long double> &, std::vector<long double> &);
 void cartesian2spherical(std::vector<long double> &, std::vector<long double> &);
 void spherical2cartesian(std::vector<long double> &, std::vector<long double> &);
 long double computeDotProduct(std::vector<long double> &, std::vector<long double> &);
+std::vector<long double> crossProduct(std::vector<long double> &, std::vector<long double> &); 
 long double computeLogSurfaceAreaSphere(int);
 long double logModifiedBesselFirstKind(long double, long double);
 
-matrix<long double> align_zaxis_with_vector2(std::vector<long double> &);
-matrix<long double> move_axes(std::vector<long double> &);
+std::vector<std::vector<long double> > load_matrix(string &);
+std::vector<long double> prod(matrix<long double> &, std::vector<long double> &);
+std::vector<long double> prod(std::vector<long double> &, matrix<long double> &);
+std::vector<long double> computeVectorSum(std::vector<std::vector<long double> > &);
+matrix<long double> computeDispersionMatrix(std::vector<std::vector<long double> > &);
 matrix<long double> computeOrthogonalTransformation(std::vector<long double> &, std::vector<long double> &);
 matrix<long double> align_xaxis_with_major_axis(std::vector<long double> &);
 matrix<long double> align_zaxis_with_vector(std::vector<long double> &);
@@ -36,7 +40,7 @@ std::vector<std::vector<long double> > transform(std::vector<std::vector<long do
 bool invertMatrix(const matrix<long double> &, matrix<long double> &);
 void eigenDecomposition(matrix<long double>, boost::numeric::ublas::vector<long double> &, matrix<long double> &);
 void jacobiRotateMatrix(matrix<long double> &, matrix<long double> &, int, int);
-void integrate_function(double);
+long double computeIntegral(double);
 void track(const state_type &, const double);
 void rhs(const state_type &, state_type &, const double);
 

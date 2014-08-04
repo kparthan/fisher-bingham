@@ -21,6 +21,12 @@ class FB6
     FB6 operator=(const FB6 &);
 
     std::vector<std::vector<long double> > generate(int);
+
+    std::vector<std::vector<long double> > generateCanonical(int);
+
+    std::vector<std::vector<long double> > generate_cartesian_coordinates(
+      std::vector<long double> &, std::vector<long double> &
+    );
 };
 
 #endif

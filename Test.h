@@ -10,11 +10,17 @@ class Test
   public:
     void matrixFunctions(void);
 
+    void productMatrixVector(void);
+
+    void dispersionMatrix(void);
+
     void numericalIntegration(void);
 
     void normalDistributionFunctions(void);
 
     void orthogonalTransformations(void);
+
+    void orthogonalTransformations2(void);
 
     void randomSampleGeneration(void);
 };

@@ -263,6 +263,15 @@ long double computeDotProduct(std::vector<long double> &v1, std::vector<long dou
   return dot_product;
 }
 
+std::vector<long double> crossProduct(std::vector<long double> &v1, std::vector<long double> &v2) 
+{
+  std::vector<long double> ans(3,0);
+  ans[0] = v1[1] * v2[2] - v1[2] * v2[1];
+  ans[1] = v1[2] * v2[0] - v1[0] * v2[2];
+  ans[2] = v1[0] * v2[1] - v1[1] * v2[0];
+  return ans;
+}
+
 /*!
  *  \brief This function computes the surface area of nd-sphere
  *  Surface area = Gamma(d/2+1)/d \pi^(d/2)
@@ -320,102 +329,110 @@ long double logModifiedBesselFirstKind(long double alpha, long double x)
 
 ////////////////////// GEOMETRY FUNCTIONS \\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
+std::vector<std::vector<long double> > load_matrix(string &file_name)
+{
+  std::vector<std::vector<long double> > sample;
+  ifstream file(file_name.c_str());
+  string line;
+  std::vector<long double> numbers(3,0),unit_vector(3,0);
+  int i;
+  while (getline(file,line)) {
+    boost::char_separator<char> sep(" \t");
+    boost::tokenizer<boost::char_separator<char> > tokens(line,sep);
+    i = 0;
+    BOOST_FOREACH(const string &t, tokens) {
+      istringstream iss(t);
+      long double x;
+      iss >> x;
+      numbers[i++] = x;
+    }
+    normalize(numbers,unit_vector);
+    sample.push_back(unit_vector);
+  }
+  file.close();
+  return sample;
+}
+
+std::vector<long double> prod(matrix<long double> &m, std::vector<long double> &v)
+{
+  assert(m.size2() == v.size());
+  std::vector<long double> ans(m.size1(),0);
+  for (int i=0; i<m.size1(); i++) {
+    for (int j=0; j<m.size2(); j++) {
+      ans[i] += m(i,j) * v[j];
+    }
+  }
+  return ans;
+}
+
+std::vector<long double> prod(std::vector<long double> &v, matrix<long double> &m)
+{
+  assert(m.size1() == v.size());
+  std::vector<long double> ans(m.size2(),0);
+  for (int i=0; i<m.size2(); i++) {
+    for (int j=0; j<m.size1(); j++) {
+      ans[i] += v[j] * m(j,i);
+    }
+  }
+  return ans;
+}
+
+std::vector<long double> computeVectorSum(std::vector<std::vector<long double> > &sample) 
+{
+  int d = sample[0].size();
+  std::vector<long double> sum(d,0);
+  for (int i=0; i<sample.size(); i++) {
+    for (int j=0; j<d; j++) {
+      sum[j] += sample[i][j];
+    }
+  }
+  for (int j=0; j<d; j++) {
+    sum[j] /= sample.size();
+  }
+  return sum;
+}
+
+matrix<long double> computeDispersionMatrix(std::vector<std::vector<long double> > &sample)
+{
+  int d = sample[0].size();
+  matrix<long double> dispersion = zero_matrix<long double>(d,d);
+  boost_vector vec(3);
+  for (int i=0; i<sample.size(); i++) {
+    convert2boostvector(sample[i],vec);
+    dispersion += outer_prod(vec,vec);
+  }
+  return dispersion/sample.size();
+}
+
 /*!
- *  \brief This function computes the orthogonal transformation matrix
- *  to align a vector x = (0,...,0,1)^T with another vector y
- *  Source: http://math.stackexchange.com/questions/598750/finding-the-rotation-matrix-in-n-dimensions
- *  \param y a reference to a vector<long double>
- *  \return the transformation matrix
+ *  Matrix to rotate FROM the standard frame of reference.
  */
-matrix<long double> align_zaxis_with_vector2(std::vector<long double> &y)
-{
-  int D = y.size();
-
-  std::vector<long double> x(D,0);
-  x[D-1] = 1;
-  std::vector<long double> u = x;
-  long double uy = y[D-1];
-  std::vector<long double> vn(D,0),v(D,0);
-  for (int i=0; i<D; i++) {
-    vn[i] = y[i] - uy * x[i];
-  }
-  normalize(vn,v);
-  matrix<long double> I = identity_matrix<long double>(D,D);
-  boost_vector U(D),V(D);
-  for (int i=0; i<D; i++) {
-    U[i] = u[i];
-    V[i] = v[i];
-  }
-
-  matrix<long double> UUt = outer_prod(U,U);
-  matrix<long double> VVt = outer_prod(V,V);
-  matrix<long double> tmp1 = UUt + VVt;
-  matrix<long double> tmp2 = I - tmp1;
-  matrix<long double> UV(D,2);
-  for (int i=0; i<D; i++) {
-    UV(i,0) = U(i);
-    UV(i,1) = V(i);
-  }
-  matrix<long double> UVt = trans(UV);
-  long double cost = 0;
-  for (int i=0; i<D; i++) {
-    cost += x[i] * y[i];
-  }
-  long double sint = sqrt(1-cost*cost);
-  matrix<long double> R(2,2);
-  R(0,0) = cost;
-  R(0,1) = -sint;
-  R(1,0) = sint;
-  R(1,1) = cost;
-  matrix<long double> tmp3 = prod(UV,R);
-  matrix<long double> tmp4 = prod(tmp3,UVt);
-  matrix<long double> Q = tmp2 + tmp4;
-  return Q;
-}
-
-matrix<long double> move_axes(std::vector<long double> &y)
-{
-  boost_vector vec(3); convert2boostvector(y,vec);
-  boost_vector zaxis(3); convert2boostvector(ZAXIS,zaxis);
-  boost_vector sum = vec + zaxis;
-  matrix<long double> tmp1 = outer_prod(sum,sum);
-  long double dp = inner_prod(sum,sum);
-  matrix<long double> tmp2 = tmp1 / (1+dp);
-  matrix<long double> I = identity_matrix<long double>(3,3);
-  matrix<long double> H = tmp2 - I;
-  return H;
-}
-
-matrix<long double> 
-computeOrthogonalTransformation(
-  std::vector<long double> &major_axis,
-  std::vector<long double> &mean
+matrix<long double> computeOrthogonalTransformation(
+  std::vector<long double> &mean,
+  std::vector<long double> &major_axis
 ) {
-  matrix<long double> r1 = align_xaxis_with_major_axis(major_axis);
-  matrix<long double> r2 = align_zaxis_with_vector(mean);
-  matrix<long double> r = prod(r2,r1);  // r = r2 * r1
+  matrix<long double> r1 = align_zaxis_with_vector(mean);
+  matrix<long double> inverse(3,3);
+  invertMatrix(r1,inverse);
+  // rotate major axis onto XY-plane
+  std::vector<long double> major1 = prod(inverse,major_axis);
+  matrix<long double> r2 = align_xaxis_with_major_axis(major1);
+  matrix<long double> r = prod(r1,r2);
   return r;
 }
 
 matrix<long double> align_xaxis_with_major_axis(std::vector<long double> &major_axis)
 {
-  long double dp = computeDotProduct(major_axis,XAXIS);
-  long double theta;
-  if (dp > 1) {
-    theta = 0;
-  } else if (dp < -1) {
-    theta = PI;
-  } else {
-    theta = acos(dp);
-  }
+  std::vector<long double> spherical(3,0);
+  cartesian2spherical(major_axis,spherical);
+  long double theta = spherical[1]; // theta = PI/2
+  long double phi = spherical[2];
+
   matrix<long double> r = identity_matrix<long double>(3,3);
-  r(0,0) = dp; r(1,1) = dp;
-  if (theta < PI/2) {
-    r(0,1) = sin(theta);
-  } else {
-    r(0,1) = -sin(theta);
-  }
-  r(1,0) = -r(0,1);
+  r(0,0) = cos(phi);
+  r(0,1) = -sin(phi);
+  r(1,0) = -r(0,1); // sin(phi)
+  r(1,1) = r(0,0); // cos(phi)
   return r;
 }
 
@@ -431,23 +448,40 @@ matrix<long double> align_zaxis_with_vector(std::vector<long double> &y)
   r1(0,2) = sin(theta);
   r1(2,0) = -r1(0,2); //-sin(theta)
   r1(2,2) = r1(0,0); //cos(theta)
+
   matrix<long double> r2 = identity_matrix<long double>(3,3);
   r2(0,0) = cos(phi);
   r2(0,1) = -sin(phi);
   r2(1,0) = -r2(0,1); //sin(phi)
   r2(1,1) = r2(0,0);  // cos(phi)
+
   matrix<long double> r = prod(r2,r1);
   return r;
 }
 
-void 
-generateRandomOrthogonalVectors(
+void generateRandomOrthogonalVectors(
   std::vector<long double> &mean,
   std::vector<long double> &major_axis,
   std::vector<long double> &minor_axis
 ) {
+  long double phi = rand()*2*PI/(long double)RAND_MAX;
+  std::vector<long double> spherical(3,1),major1(3,0);
+  spherical[1] = PI/2;
+  spherical[2] = phi;
+  spherical2cartesian(spherical,major1); // major axis
+  std::vector<long double> mu1 = ZAXIS;
+  std::vector<long double> minor1 = crossProduct(mu1,major1);
+
   long double theta = rand()*PI/(long double)RAND_MAX;
-  
+  phi = rand()*2*PI/(long double)RAND_MAX;
+  spherical[1] = theta;
+  spherical[2] = phi;
+  mean = std::vector<long double>(3,0);
+  spherical2cartesian(spherical,mean); 
+
+  matrix<long double> r = align_zaxis_with_vector(mean);
+  major_axis = prod(r,major1);
+  minor_axis = prod(r,minor1);
 }
 
 /*
@@ -456,24 +490,13 @@ generateRandomOrthogonalVectors(
  *  \param T a reference to a Matrix<long double>
  *  \return the transformed vector list
  */
-std::vector<std::vector<long double> > transform(std::vector<std::vector<long double> > &x, matrix<long double> &T)
-{
-  int N = x.size();
-  int D = x[0].size();
-  matrix<long double> X(D,N);
-  for (int i=0; i<N; i++) {
-    for (int j=0; j<D; j++) {
-      X(j,i) = x[i][j];
-    }
-  }
-  matrix<long double> Y = prod(T,X);
-  std::vector<std::vector<long double> > y;
-  std::vector<long double> tmp(D,0);
-  for (int i=0; i<N; i++) {
-    for (int j=0; j<D; j++) {
-      tmp[j] = Y(j,i);
-    }
-    y.push_back(tmp);
+std::vector<std::vector<long double> > transform(
+  std::vector<std::vector<long double> > &x, 
+  matrix<long double> &T
+) {
+  std::vector<std::vector<long double> > y(x.size());
+  for (int i=0; i<x.size(); i++) {
+    y[i] = prod(T,x[i]);
   }
   return y;
 }
@@ -552,7 +575,7 @@ void eigenDecomposition(
       break; //finished
     }
 
-    jacobiRotateMatrix(m,eigen_vectors, max_row, max_col);
+    jacobiRotateMatrix(m,eigen_vectors,max_row,max_col);
   }
 
   for (int i = 0; i < num_cols; i++) {
@@ -595,13 +618,13 @@ void jacobiRotateMatrix(
     m(max_row,i) = temp - (s*(m(i,max_col) + (tau*m(max_row,i))));
     m(i,max_col) = m(i,max_col) + (s*(temp - (tau*m(i,max_col))));
   }
-  for(i = max_col + 1; i < 3; i++){ // Case i > max_col
+  for(i = max_col + 1; i < m.size2(); i++){ // Case i > max_col
     temp = m(max_row,i);
     m(max_row,i) = temp - (s*(m(max_col,i) + (tau*temp)));
     m(max_col,i) = m(max_col,i) + (s*(temp - (tau*m(max_col,i))));
   }
 
-  for (i = 0; i < 3; i++) { // update the transformation matrix
+  for (i = 0; i < eigen_vectors.size1(); i++) { // update the transformation matrix
     temp = eigen_vectors(i,max_row);
     eigen_vectors(i,max_row) = temp
       - (s*(eigen_vectors(i,max_col) + (tau*temp)));
@@ -622,12 +645,16 @@ void track(const state_type &x, const double t)
     cout << t << "\t" << x[0] << endl;
 }
 
-void integrate_function(double limit)
+/*
+ *  Dawson's integral required to compute FB4 normalization constant
+ */
+long double computeIntegral(double limit)
 {
   state_type x (1,0.0);
   //integrate(rhs,x,0.0,limit,0.1,track);
   integrate(rhs,x,0.0,limit,0.1);
-  cout << "ans: " << x[0] << endl;
+  //cout << "ans: " << x[0] << endl;
+  return x[0];
 }
 
 ////////////////////// TESTING FUNCTIONS \\\\\\\\\\\\\\\\\\\\\\\\\\\\
@@ -638,11 +665,17 @@ void TestFunctions(void)
 
   //test.matrixFunctions();
 
+  //test.productMatrixVector();
+
+  test.dispersionMatrix();
+
   //test.numericalIntegration();
 
   //test.normalDistributionFunctions();
 
-  test.orthogonalTransformations();
+  //test.orthogonalTransformations();
+
+  //test.orthogonalTransformations2();
 
   //test.randomSampleGeneration();
 }

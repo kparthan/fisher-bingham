@@ -3,6 +3,7 @@
 #include "Normal.h"
 #include "vMF.h"
 #include "FB4.h"
+#include "FB6.h"
 
 extern std::vector<long double> XAXIS,YAXIS,ZAXIS;
 
@@ -85,10 +86,57 @@ void Test::matrixFunctions()
   eigenDecomposition(symm,eigen_values,eigen_vectors);
 }
 
+void Test::productMatrixVector(void)
+{
+  matrix<long double> m1(4,3);
+  for (int i=0; i<4; i++) {
+    for (int j=0; j<3; j++) {
+      m1(i,j) = i + 1 + j/2.0;
+    }
+  }
+  std::vector<long double> v(3,0);
+  v[0] = 1; v[1] = -2; v[2] = 3;
+  cout << "m1: " << m1 << endl;
+  cout << "v: "; print(cout,v,3); cout << endl;
+  std::vector<long double> ans = prod(m1,v);
+  cout << "m1*v: "; print(cout,ans,3); cout << endl;
+
+  matrix<long double> m2(3,4);
+  for (int i=0; i<3; i++) {
+    for (int j=0; j<4; j++) {
+      m2(i,j) = i + 1 + j/2.0;
+    }
+  }
+  cout << "m2: " << m2 << endl;
+  cout << "v: "; print(cout,v,3); cout << endl;
+  ans = prod(v,m2);
+  cout << "m2*v: "; print(cout,ans,3); cout << endl;
+}
+
+void Test::dispersionMatrix(void)
+{
+  string file_name = "./visualize/kent.dat";
+  std::vector<std::vector<long double> > sample = load_matrix(file_name);
+  std::vector<long double> unit_mean = computeVectorSum(sample);
+  cout << "unit_mean: "; print(cout,unit_mean,3); cout << endl;
+  matrix<long double> m = computeDispersionMatrix(sample);
+  cout << "dispersion: " << m << endl;
+
+  matrix<long double> eigen_vectors = identity_matrix<long double>(3,3);
+  boost_vector eigen_values(3);
+  eigenDecomposition(m,eigen_values,eigen_vectors);
+
+  m(0,0) = 0.341; m(0,1) = -0.221; m(0,2) = 0.408;
+  m(1,0) = -0.221; m(1,1) = 0.153; m(1,2) = -0.272;
+  m(2,0) = 0.408; m(2,1) = -0.272; m(2,2) = 0.506;
+  eigen_vectors = identity_matrix<long double>(3,3);
+  eigenDecomposition(m,eigen_values,eigen_vectors);
+}
+
 void Test::numericalIntegration(void)
 {
   // integration
-  integrate_function(10);
+  long double val = computeIntegral(10);
 }
 
 void Test::normalDistributionFunctions(void)
@@ -129,17 +177,59 @@ void Test::orthogonalTransformations(void)
   cout << "ans2: " << ans2 << endl;
 }
 
+void Test::orthogonalTransformations2(void)
+{
+  std::vector<long double> m0,m1,m2;
+  generateRandomOrthogonalVectors(m0,m1,m2);
+  cout << "mean: "; print(cout,m0,3); cout << endl;
+  cout << "major: "; print(cout,m1,3); cout << endl;
+  cout << "minor: "; print(cout,m2,3); cout << endl;
+
+  matrix<long double> r = computeOrthogonalTransformation(m0,m1);
+  cout << "r: " << r << endl;
+  std::vector<long double> ztransform = prod(r,ZAXIS);
+  cout << "ztransform: "; print(cout,ztransform,3); cout << endl; // = mu0
+  std::vector<long double> xtransform = prod(r,XAXIS);
+  cout << "xtransform: "; print(cout,xtransform,3); cout << endl; // = mu1
+  std::vector<long double> ytransform = prod(r,YAXIS);
+  cout << "ytransform: "; print(cout,ytransform,3); cout << endl; // = mu2
+}
+
 void Test::randomSampleGeneration(void)
 {
+  std::vector<std::vector<long double> > random_sample;
+  std::vector<long double> m0,m1,m2;
+  generateRandomOrthogonalVectors(m0,m1,m2);
+
+  // FB4 generation (gamma < 0)
+  FB4 fb4_1(m0,m1,m2,100,-10);
+  random_sample = fb4_1.generate(1000);
+  writeToFile("./visualize/fb4_1.dat",random_sample,3);
+
+  // FB4 generation (gamma < 0)
+  FB4 fb4_2(m0,m1,m2,100,10);
+  random_sample = fb4_2.generate(1000);
+  writeToFile("./visualize/fb4_2.dat",random_sample,3);
+
   // vMF generation
-  std::vector<long double> mu = ZAXIS;
-  vMF vmf(ZAXIS,100);
-  std::vector<std::vector<long double> > random_sample = vmf.generate(1000);
+  vMF vmf(m0,100);
+  random_sample = vmf.generate(1000);
   writeToFile("./visualize/vmf.dat",random_sample,3);
 
-  // FB4 generation
-  FB4 fb4(100,-10);
-  random_sample = fb4.generate(1000);
-  writeToFile("./visualize/fb4.dat",random_sample,3);
+  // vMF (2D)
+  std::vector<long double> mean(2,0); mean[0] = 1;
+  vMF vmf2(mean,10);
+  vmf2.generateCanonical(random_sample,100);
+  writeToFile("./visualize/vmf2.dat",random_sample,3);
+
+  // FB6 generation 
+  FB6 fb6(m0,m1,m2,100,15,10);
+  random_sample = fb6.generate(1000);
+  writeToFile("./visualize/fb6.dat",random_sample,3);
+
+  // FB6 generation 
+  FB6 kent(m0,m1,m2,100,20,0);
+  random_sample = kent.generate(1000);
+  writeToFile("./visualize/kent.dat",random_sample,3);
 }
 

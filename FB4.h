@@ -10,16 +10,6 @@ class FB4
 
     long double kappa,gamma;
 
-  protected:
-    int determine_best_case();
-
-    std::vector<long double> generate_FB4_minus(int, int);
-
-    std::vector<long double> generate_spherical_coordinates(std::vector<long double> &);
-
-    std::vector<std::vector<long double> > 
-    generate_cartesian_coordinates(std::vector<long double> &, std::vector<long double> &);
-
   public:
     FB4();
 
@@ -30,7 +20,26 @@ class FB4
  
     FB4 operator=(const FB4 &);
 
+    long double computeNormalizationConstant(void);
+
     std::vector<std::vector<long double> > generate(int);
+
+    std::vector<std::vector<long double> > generateCanonical(int);
+
+    std::vector<long double> generate_u(int);
+
+    int determine_best_case();
+
+    std::vector<long double> generate_FB4_minus(int, int);
+
+    std::vector<long double> generate_FB4_plus(int);
+
+    std::vector<long double> generate_spherical_coordinates(std::vector<long double> &);
+
+    std::vector<std::vector<long double> > generate_cartesian_coordinates(
+      std::vector<long double> &, std::vector<long double> &
+    );
+
 };
 
 #endif
