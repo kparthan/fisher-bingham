@@ -146,9 +146,9 @@ int FB4::determine_best_case()
   ratio = exp(log_tmp);
   a2 = ratio * a0;
 
-  if (a0 > a1 && a0 > a2) {
+  if (a0 >= a1 && a0 >= a2) {
     return 1;
-  } else if (a1 > a0 && a1 > a2) {
+  } else if (a1 >= a0 && a1 >= a2) {
     return 2;
   } else {
     return 3;
@@ -202,7 +202,7 @@ std::vector<long double> FB4::generate_FB4_minus(int best, int sample_size)
       s2 = rand() / (long double)RAND_MAX;
       tmp1 = exp(gamma*u1*u1);
       tmp2 = exp(gamma*(1-u1)*(1-u1));
-      if (s2 <= tmp1 && s2 <= tmp2) {
+      if (s2 <= tmp1 || s2 <= tmp2) {
         u[i] = u1;
       } else {
         i--;

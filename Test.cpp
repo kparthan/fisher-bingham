@@ -223,13 +223,18 @@ void Test::randomSampleGeneration(void)
   writeToFile("./visualize/vmf2.dat",random_sample,3);
 
   // FB6 generation 
-  FB6 fb6(m0,m1,m2,100,15,10);
+  FB6 fb6(m0,m1,m2,100,15,-10);
   random_sample = fb6.generate(1000);
   writeToFile("./visualize/fb6.dat",random_sample,3);
 
   // FB6 generation 
-  FB6 kent(m0,m1,m2,100,20,0);
+  FB6 kent(m0,m1,m2,1000,475,0);
   random_sample = kent.generate(1000);
   writeToFile("./visualize/kent.dat",random_sample,3);
+
+  // FB6 generation 
+  /*FB6 kent1(m0,m1,m2,1,60,-10);
+  random_sample = kent1.generate(1000);
+  writeToFile("./visualize/kent1.dat",random_sample,3);*/
 }
 

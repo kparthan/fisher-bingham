@@ -667,7 +667,7 @@ void TestFunctions(void)
 
   //test.productMatrixVector();
 
-  test.dispersionMatrix();
+  //test.dispersionMatrix();
 
   //test.numericalIntegration();
 
@@ -677,6 +677,6 @@ void TestFunctions(void)
 
   //test.orthogonalTransformations2();
 
-  //test.randomSampleGeneration();
+  test.randomSampleGeneration();
 }
 
