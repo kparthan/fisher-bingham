@@ -310,7 +310,6 @@ long double logModifiedBesselFirstKind(long double alpha, long double x)
   // Gamma(m+alpha+1) = (m+alpha)*Gamma(m+alpha), 
   // because Gamma(x+1) = x*Gamma(x), for all x > 0.
   do { 
-    //long double tmp = log(x2_4) - log(m) - log(alpha+m);
     long double tmp = x2_4 / (m*(alpha+m));  // the m-th term
     R *= tmp;  // the m-th term
     I += R;                     // total
@@ -321,9 +320,6 @@ long double logModifiedBesselFirstKind(long double alpha, long double x)
     //cout << "m: " << m << "; tmp: " << tmp << "; R: " << R << "; I: " << I << endl;
   } while( R >= I * TOLERANCE);
   long double log_mod_bessel = log(I) + (alpha * log(x/2.0)) - boost::math::lgamma<long double>(alpha+1);
-  /*if (log_mod_bessel >= INFINITY) {
-    log_mod_bessel = approximate_bessel(alpha,x);
-  }*/
   return log_mod_bessel;
 }
 
@@ -353,6 +349,27 @@ std::vector<std::vector<long double> > load_matrix(string &file_name)
   return sample;
 }
 
+/*!
+ *  v1 and v2 are considered to be a column std::vectors
+ *  output: v1 * v2' (the outer product matrix)
+ */
+matrix<long double> outer_prod(std::vector<long double> &v1, std::vector<long double> &v2)
+{
+  assert(v1.size() == v2.size());
+  int m = v1.size();
+  matrix<long double> ans(m,m);
+  for (int i=0; i<m; i++) {
+    for (int j=0; j<m; j++) {
+      ans(i,j) = v1[i] * v2[j];
+    }
+  }
+  return ans;
+}
+
+/*!
+ *  v is considered to be a column std::vector
+ *  output: m * v (a row std::vector)
+ */
 std::vector<long double> prod(matrix<long double> &m, std::vector<long double> &v)
 {
   assert(m.size2() == v.size());
@@ -365,6 +382,10 @@ std::vector<long double> prod(matrix<long double> &m, std::vector<long double> &
   return ans;
 }
 
+/*!
+ *  v is considered to be a column std::vector
+ *  output: v' * m (a row std::vector)
+ */
 std::vector<long double> prod(std::vector<long double> &v, matrix<long double> &m)
 {
   assert(m.size1() == v.size());
@@ -396,10 +417,8 @@ matrix<long double> computeDispersionMatrix(std::vector<std::vector<long double>
 {
   int d = sample[0].size();
   matrix<long double> dispersion = zero_matrix<long double>(d,d);
-  boost_vector vec(3);
   for (int i=0; i<sample.size(); i++) {
-    convert2boostvector(sample[i],vec);
-    dispersion += outer_prod(vec,vec);
+    dispersion += outer_prod(sample[i],sample[i]);
   }
   return dispersion/sample.size();
 }
@@ -677,6 +696,8 @@ void TestFunctions(void)
 
   //test.orthogonalTransformations2();
 
-  test.randomSampleGeneration();
+  //test.randomSampleGeneration();
+
+  test.normalization_constant();
 }
 

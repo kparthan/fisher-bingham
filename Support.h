@@ -28,6 +28,7 @@ long double computeLogSurfaceAreaSphere(int);
 long double logModifiedBesselFirstKind(long double, long double);
 
 std::vector<std::vector<long double> > load_matrix(string &);
+matrix<long double> outer_prod(std::vector<long double> &, std::vector<long double> &);
 std::vector<long double> prod(matrix<long double> &, std::vector<long double> &);
 std::vector<long double> prod(std::vector<long double> &, matrix<long double> &);
 std::vector<long double> computeVectorSum(std::vector<std::vector<long double> > &);

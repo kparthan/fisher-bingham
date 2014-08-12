@@ -238,3 +238,8 @@ void Test::randomSampleGeneration(void)
   writeToFile("./visualize/kent1.dat",random_sample,3);*/
 }
 
+void Test::normalization_constant(void)
+{
+  cout << "ZERO: " << ZERO << endl;
+}
+

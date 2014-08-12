@@ -66,7 +66,7 @@ std::vector<std::vector<long double> > FB6::generate(int sample_size)
 
 std::vector<std::vector<long double> > FB6::generateCanonical(int sample_size)
 {
-  if (beta != 0) {
+  if (beta != 0) {  // general case
     long double psi1 = gamma - beta;
     long double psi2 = gamma + beta;
     FB4 g1(kappa,psi1);
@@ -136,7 +136,7 @@ std::vector<std::vector<long double> > FB6::generateCanonical(int sample_size)
     } // for loop ends ...
     // step 3: FB6_0
     return generate_cartesian_coordinates(u,phi);
-  } else if (beta == 0) {
+  } else if (beta == 0) { // FB6 becomes FB4
     FB4 fb4(kappa,gamma);
     return fb4.generateCanonical(sample_size);
   }

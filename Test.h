@@ -23,6 +23,8 @@ class Test
     void orthogonalTransformations2(void);
 
     void randomSampleGeneration(void);
+
+    void normalization_constant(void);
 };
 
 #endif
