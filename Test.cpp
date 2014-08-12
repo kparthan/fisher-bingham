@@ -4,6 +4,7 @@
 #include "vMF.h"
 #include "FB4.h"
 #include "FB6.h"
+#include "Kent.h"
 
 extern std::vector<long double> XAXIS,YAXIS,ZAXIS;
 
@@ -241,5 +242,17 @@ void Test::randomSampleGeneration(void)
 void Test::normalization_constant(void)
 {
   cout << "ZERO: " << ZERO << endl;
+  std::vector<long double> m0 = ZAXIS;
+  std::vector<long double> m1 = XAXIS;
+  std::vector<long double> m2 = YAXIS;
+  matrix<long double> a1 = outer_prod(m1,m1);
+  cout << "a1: " << a1 << endl;
+  matrix<long double> a2 = outer_prod(m2,m2);
+  cout << "a2: " << a2 << endl;
+  matrix<long double> A = a1 - a2;
+  cout << "A: " << A << endl;
+  //Kent kent(100,30);
+  Kent kent(100,47.5);
+  kent.computeLogNormalizationConstant();
 }
 

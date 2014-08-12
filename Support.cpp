@@ -318,7 +318,7 @@ long double logModifiedBesselFirstKind(long double alpha, long double x)
     }
     m += 1.0;
     //cout << "m: " << m << "; tmp: " << tmp << "; R: " << R << "; I: " << I << endl;
-  } while( R >= I * TOLERANCE);
+  } while( R >= I * ZERO);
   long double log_mod_bessel = log(I) + (alpha * log(x/2.0)) - boost::math::lgamma<long double>(alpha+1);
   return log_mod_bessel;
 }

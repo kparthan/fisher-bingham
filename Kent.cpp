@@ -101,10 +101,11 @@ long double Kent::computeLogNormalizationConstant(long double k, long double b)
     diff = log_fj - log_f0; 
     current = exp(diff); // < 1
     delta = (prev-current)/prev;
-    if (delta < TOLERANCE) {
+    cout << "j: " << j << "; delta: " << delta << endl;
+    series_sum += current;
+    if (current/series_sum <= ZERO) {
       break;
     }
-    series_sum += current;
     prev = current;
     j++;
   }

@@ -1,8 +1,12 @@
 clc;
 
-d = [2 2]';
-a = [10 0 5 0]';
-B = zeros(4); B(2,4) = 30;
+%d = [2 2]';
+%a = [10 0 5 0]';
+%B = zeros(4); B(2,4) = 30;
+
+d = [3]';
+a = [0 0 100]';
+B = zeros(3); B(1,1) = 47.5; B(2,2) = -47.5;
 
 display(' ');
 display('Calculating SP approx');
