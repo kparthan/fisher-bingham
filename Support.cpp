@@ -159,19 +159,6 @@ int sign(long double number)
 }
 
 /*!
- *  \brief This function computes the exponent a^x
- *  \param a a long double
- *  \param x a long double
- *  \return the exponent value
- */
-long double exponent(long double a, long double x)
-{
-  assert(a > 0);
-  long double tmp = x * log(a);
-  return exp(tmp);
-}
-
-/*!
  *  \brief Normalizes a std::vector<long double>
  *  \param x a reference to a std::vector<long double>
  *  \param unit a reference to a std::vector<long double>
@@ -179,15 +166,20 @@ long double exponent(long double a, long double x)
  */
 long double normalize(std::vector<long double> &x, std::vector<long double> &unit)
 {
+  long double l2norm = norm(x);
+  for (int i=0; i<x.size(); i++) {
+    unit[i] = x[i] / l2norm;
+  }
+  return l2norm;
+}
+
+long double norm(std::vector<long double> &v)
+{
   long double normsq = 0;
-  for (int i=0; i<x.size(); i++) {
-    normsq += x[i] * x[i];
+  for (int i=0; i<v.size(); i++) {
+    normsq += v[i] * v[i];
   }
-  long double norm = sqrt(normsq);
-  for (int i=0; i<x.size(); i++) {
-    unit[i] = x[i] / norm;
-  }
-  return norm;
+  return sqrt(normsq);
 }
 
 /*!
@@ -319,7 +311,7 @@ long double logModifiedBesselFirstKind(long double alpha, long double x)
     m += 1.0;
     //cout << "m: " << m << "; tmp: " << tmp << "; R: " << R << "; I: " << I << endl;
   } while( R >= I * ZERO);
-  long double log_mod_bessel = log(I) + (alpha * log(x/2.0)) - boost::math::lgamma<long double>(alpha+1);
+  long double log_mod_bessel = log(I) + (alpha * log(x/2.0)) - lgamma<long double>(alpha+1);
   return log_mod_bessel;
 }
 
@@ -398,6 +390,9 @@ std::vector<long double> prod(std::vector<long double> &v, matrix<long double> &
   return ans;
 }
 
+/*!
+ *  Computes \sum x / N (x is a vector)
+ */
 std::vector<long double> computeVectorSum(std::vector<std::vector<long double> > &sample) 
 {
   int d = sample[0].size();
@@ -413,6 +408,9 @@ std::vector<long double> computeVectorSum(std::vector<std::vector<long double> >
   return sum;
 }
 
+/*!
+ *  Computes \sum x * x' / N (x is a vector)
+ */
 matrix<long double> computeDispersionMatrix(std::vector<std::vector<long double> > &sample)
 {
   int d = sample[0].size();
@@ -549,10 +547,15 @@ bool invertMatrix(const matrix<long double> &input, matrix<long double> &inverse
 
 /*!
  *  Eigen decomposition
+ *  Inputs:
+ *                m -- a symmetric matrix
+ *    eigen_vectors -- an identity matrix
+ *  Outputs:
+ *    eigen_vectors -- each column is a unit eigen vector
  */
 void eigenDecomposition(
   matrix<long double> m, 
-  boost_vector &eigen_values,
+  std::vector<long double> &eigen_values,
   matrix<long double> &eigen_vectors
 ) {
   // check if m is symmetric
@@ -598,10 +601,10 @@ void eigenDecomposition(
   }
 
   for (int i = 0; i < num_cols; i++) {
-    eigen_values(i) = m(i,i);
+    eigen_values[i] = m(i,i);
   }
 
-  cout << "eigen_values: " << eigen_values << endl;
+  cout << "eigen_values: "; print(cout,eigen_values,0); cout << endl;
   cout << "eigen_vectors: " << eigen_vectors << endl;
 }
 
@@ -698,6 +701,8 @@ void TestFunctions(void)
 
   //test.randomSampleGeneration();
 
-  test.normalization_constant();
+  //test.normalization_constant();
+
+  test.moment_estimation();
 }
 

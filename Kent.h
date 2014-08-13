@@ -2,6 +2,7 @@
 #define KENT_H
 
 #include "Header.h"
+#include "Support.h"
 
 class Kent  // FB5
 {
@@ -29,6 +30,12 @@ class Kent  // FB5
     long double computeLogNormalizationConstant();
 
     long double computeLogNormalizationConstant(long double, long double);
+
+    struct Estimates computeMomentEstimates(std::vector<std::vector<long double> > &);
+
+    struct Estimates computeMomentEstimates(
+      int, std::vector<long double> &, matrix<long double> &
+    );
 };
 
 #endif

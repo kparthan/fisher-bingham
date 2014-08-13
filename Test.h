@@ -25,6 +25,8 @@ class Test
     void randomSampleGeneration(void);
 
     void normalization_constant(void);
+
+    void moment_estimation(void);
 };
 
 #endif

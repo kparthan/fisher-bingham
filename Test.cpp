@@ -77,11 +77,25 @@ void Test::matrixFunctions()
   // eigen values & vectors
   matrix<long double> symm = (m1 + trans(m1))/2;
   cout << "symmetric matrix: " << symm << endl;
-  boost_vector eigen_values(3,0);
+  std::vector<long double> eigen_values(3,0);
   matrix<long double> eigen_vectors = identity_matrix<long double>(3,3);
   eigenDecomposition(symm,eigen_values,eigen_vectors);
 
   symm = identity_matrix<long double>(3,3);
+  cout << "symmetric matrix: " << symm << endl;
+  eigen_vectors = identity_matrix<long double>(3,3);
+  eigenDecomposition(symm,eigen_values,eigen_vectors);
+
+  symm(0,0) = 2.294628e+01; symm(0,1) = -2.162988e+01; symm(0,2) = -1.516247e+01;
+  symm(1,0) = -2.162988e+01; symm(1,1) = -2.794379e+01; symm(1,2) = 2.987167e+01;
+  symm(2,0) = -1.516247e+01; symm(2,1) = 2.987167e+01; symm(2,2) = 4.997508e+00;
+  cout << "symmetric matrix: " << symm << endl;
+  eigen_vectors = identity_matrix<long double>(3,3);
+  eigenDecomposition(symm,eigen_values,eigen_vectors);
+
+  symm(0,0) = 16.8974; symm(0,1) = -20.5575; symm(0,2) = 11.4795;
+  symm(1,0) = -20.5575; symm(1,1) = -4.5362; symm(1,2) = -38.3720;
+  symm(2,0) = 11.4795; symm(2,1) = -38.3720; symm(2,2) = -12.3612;
   cout << "symmetric matrix: " << symm << endl;
   eigen_vectors = identity_matrix<long double>(3,3);
   eigenDecomposition(symm,eigen_values,eigen_vectors);
@@ -124,7 +138,7 @@ void Test::dispersionMatrix(void)
   cout << "dispersion: " << m << endl;
 
   matrix<long double> eigen_vectors = identity_matrix<long double>(3,3);
-  boost_vector eigen_values(3);
+  std::vector<long double> eigen_values(3);
   eigenDecomposition(m,eigen_values,eigen_vectors);
 
   m(0,0) = 0.341; m(0,1) = -0.221; m(0,2) = 0.408;
@@ -242,17 +256,97 @@ void Test::randomSampleGeneration(void)
 void Test::normalization_constant(void)
 {
   cout << "ZERO: " << ZERO << endl;
+  long double kappa = 100;
+  long double beta = 47.5;
   std::vector<long double> m0 = ZAXIS;
   std::vector<long double> m1 = XAXIS;
   std::vector<long double> m2 = YAXIS;
+  std::vector<long double> kmu(3,0);
+  for (int i=0; i<3; i++) kmu[i] = kappa * m0[i];
+  cout << "kmu: "; print(cout,kmu,0); cout << endl;
   matrix<long double> a1 = outer_prod(m1,m1);
   cout << "a1: " << a1 << endl;
   matrix<long double> a2 = outer_prod(m2,m2);
   cout << "a2: " << a2 << endl;
-  matrix<long double> A = a1 - a2;
+  matrix<long double> A = beta * (a1 - a2);
   cout << "A: " << A << endl;
   //Kent kent(100,30);
-  Kent kent(100,47.5);
+  Kent kent(kappa,beta);
   kent.computeLogNormalizationConstant();
+
+  std::vector<std::vector<long double> > random_sample;
+  generateRandomOrthogonalVectors(m0,m1,m2);
+  cout << "m0: "; print(cout,m0,0); cout << endl;
+  cout << "m1: "; print(cout,m1,0); cout << endl;
+  cout << "m2: "; print(cout,m2,0); cout << endl;
+  for (int i=0; i<3; i++) kmu[i] = kappa * m0[i];
+  cout << "kmu: "; print(cout,kmu,0); cout << endl;
+  a1 = outer_prod(m1,m1);
+  cout << "a1: " << a1 << endl;
+  a2 = outer_prod(m2,m2);
+  cout << "a2: " << a2 << endl;
+  A = beta * (a1 - a2);
+  cout << "A: " << A << endl;
+  Kent kent1(m0,m1,m2,kappa,beta);
+  kent1.computeLogNormalizationConstant();
+}
+
+void Test::moment_estimation(void)
+{
+  std::vector<long double> spherical(3,0);
+  struct Estimates estimates;
+  /*std::vector<std::vector<long double> > random_sample;
+  std::vector<long double> m0,m1,m2;
+  long double kappa = 100;
+  long double beta = 20;
+
+  generateRandomOrthogonalVectors(m0,m1,m2);
+  cartesian2spherical(m0,spherical);
+  cout << "m0: "; print(cout,m0,3);
+  cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
+  cartesian2spherical(m1,spherical);
+  cout << "m1: "; print(cout,m1,3);
+  cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
+  cartesian2spherical(m2,spherical);
+  cout << "m2: "; print(cout,m2,3);
+  cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
+
+  Kent kent(m0,m1,m2,kappa,beta);
+  random_sample = kent.generate(1000);
+  estimates = kent.computeMomentEstimates(random_sample);
+
+  cartesian2spherical(estimates.mean,spherical);
+  cout << "m0_est: "; print(cout,estimates.mean,3);
+  cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
+  cartesian2spherical(estimates.major_axis,spherical);
+  cout << "m1_est: "; print(cout,estimates.major_axis,3);
+  cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
+  cartesian2spherical(estimates.minor_axis,spherical);
+  cout << "m2_est: "; print(cout,estimates.minor_axis,3);
+  cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";*/
+
+  // Kent example from paper
+  cout << "Example from paper:\n";
+  Kent kent(100,20);
+  std::vector<long double> sample_mean(3,0);
+  //sample_mean[0] = 0.083; sample_mean[1] = -0.959; sample_mean[2] = 0.131;
+  sample_mean[0] = -0.959; sample_mean[1] = 0.131; sample_mean[2] = 0.083;
+  matrix<long double> S(3,3);
+  /*S(0,0) = 0.045; S(0,1) = -0.075; S(0,2) = 0.014;
+  S(1,0) = -0.075; S(1,1) = 0.921; S(1,2) = -0.122;
+  S(2,0) = 0.014; S(2,1) = -0.122; S(2,2) = 0.034;*/
+  S(0,0) = 0.921; S(0,1) = -0.122; S(0,2) = -0.075;
+  S(1,0) = -0.122; S(1,1) = 0.034; S(1,2) = 0.014;
+  S(2,0) = -0.075; S(2,1) = 0.014; S(2,2) = 0.045;
+  estimates = kent.computeMomentEstimates(34,sample_mean,S);
+  cartesian2spherical(estimates.mean,spherical);
+  cout << "m0_est: "; print(cout,estimates.mean,3);
+  cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
+  cartesian2spherical(estimates.major_axis,spherical);
+  cout << "m1_est: "; print(cout,estimates.major_axis,3);
+  cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
+  cartesian2spherical(estimates.minor_axis,spherical);
+  cout << "m2_est: "; print(cout,estimates.minor_axis,3);
+  cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
 }
 
