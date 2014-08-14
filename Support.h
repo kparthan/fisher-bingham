@@ -27,11 +27,13 @@ int sign(long double);
 long double normalize(std::vector<long double> &, std::vector<long double> &);
 long double norm(std::vector<long double> &);
 void cartesian2spherical(std::vector<long double> &, std::vector<long double> &);
+void cartesian2sphericalPoleXAxis(std::vector<long double> &, std::vector<long double> &);
 void spherical2cartesian(std::vector<long double> &, std::vector<long double> &);
 long double computeDotProduct(std::vector<long double> &, std::vector<long double> &);
 std::vector<long double> crossProduct(std::vector<long double> &, std::vector<long double> &); 
 long double computeLogSurfaceAreaSphere(int);
 long double logModifiedBesselFirstKind(long double, long double);
+void solveQuadratic(std::vector<long double> &, long double, long double, long double);
 
 std::vector<std::vector<long double> > load_matrix(string &);
 matrix<long double> outer_prod(std::vector<long double> &, std::vector<long double> &);

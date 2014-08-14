@@ -184,6 +184,7 @@ long double norm(std::vector<long double> &v)
 
 /*!
  *  \brief This function converts the cartesian coordinates into spherical.
+ *  (theta with +Z and phi with +X)
  *  \param cartesian a reference to a std::vector<long double> 
  *  \param spherical a reference to a std::vector<long double> 
  */
@@ -219,6 +220,52 @@ void cartesian2spherical(std::vector<long double> &cartesian, std::vector<long d
   } else if (y >= 0) {
     phi = angle;
   } else if (y < 0) {
+    phi = 2 * PI - angle;
+  }
+
+  spherical[0] = r;
+  spherical[1] = theta;
+  spherical[2] = phi;
+}
+
+/*!
+ *  \brief This function converts the cartesian coordinates into spherical.
+ *  (theta with +X and phi with +Y)
+ *  \param cartesian a reference to a std::vector<long double> 
+ *  \param spherical a reference to a std::vector<long double> 
+ */
+void cartesian2sphericalPoleXAxis(std::vector<long double> &cartesian, std::vector<long double> &spherical)
+{
+  std::vector<long double> unit(3,0);
+  long double r = normalize(cartesian,unit);
+
+  long double x = unit[0];
+  long double y = unit[1];
+  long double z = unit[2];
+
+  // theta \in [0,PI]: angle with X-axis
+  long double theta = acos(x);
+
+  // phi \in[0,2 PI]: angle with positive Y-axis
+  long double ratio = y/sin(theta);
+  if (ratio > 1) {
+    ratio = 1;
+  } else if (ratio < -1) {
+    ratio = -1;
+  }
+  long double angle = acos(ratio);
+  long double phi = 0;
+  if (y == 0 && z == 0) {
+    phi = 0;
+  } else if (y == 0) {
+    if (z > 0) {
+      phi = angle;
+    } else {
+      phi = 2 * PI - angle;
+    }
+  } else if (z >= 0) {
+    phi = angle;
+  } else if (z < 0) {
     phi = 2 * PI - angle;
   }
 
@@ -313,6 +360,20 @@ long double logModifiedBesselFirstKind(long double alpha, long double x)
   } while( R >= I * ZERO);
   long double log_mod_bessel = log(I) + (alpha * log(x/2.0)) - lgamma<long double>(alpha+1);
   return log_mod_bessel;
+}
+
+/*!
+ *  Find the roots of a quadratic: ax^2 + bx + c = 0
+ */
+void solveQuadratic(
+  std::vector<long double> &roots, 
+  long double a,
+  long double b, 
+  long double c
+) {
+  long double D = sqrt(b*b-4*a*c);
+  roots[0] = (-b + D) / (2*a);
+  roots[1] = (-b - D) / (2*a);
 }
 
 ////////////////////// GEOMETRY FUNCTIONS \\\\\\\\\\\\\\\\\\\\\\\\\\\\
