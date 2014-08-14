@@ -146,6 +146,7 @@ struct Estimates Kent::computeMomentEstimates(
   matrix<long double> K = identity_matrix<long double>(3,3);
   K(0,0) = cos(psi); K(0,1) = -sin(psi);
   K(1,0) = -K(0,1); K(1,1) = K(0,0);
+  cout << "Ht: " << Ht << endl;
   cout << "H: " << H << endl;
   cout << "K: " << K << endl;
   matrix<long double> est = prod(H,K);
@@ -164,7 +165,7 @@ struct Estimates Kent::computeMomentEstimates(
 
   // compute r2:
   long double t1 = (B(0,0)-B(1,1)) * (B(0,0)-B(1,1));
-  long double t2 = 4 * B(0,1) * B(1,0);
+  long double t2 = 4 * B(0,1) * B(0,1);
   long double r2 = sqrt(t1+t2);
   cout << "r2: " << r2 << endl;
 
@@ -181,8 +182,8 @@ struct Estimates Kent::computeMomentEstimates(
   cartesian2spherical(sample_mean,spherical);
   //long double theta = spherical[1];
   //long double phi = spherical[2];
-  long double theta = 1.485;
-  long double phi = 3;
+  long double theta = 2.98123;
+  long double phi = 0.5647;
   matrix<long double> H(3,3);
   H(0,0) = cos(theta); H(0,1) = -sin(theta); H(0,2) = 0;
   H(1,0) = sin(theta)*cos(phi); H(1,1) = cos(theta)*cos(phi); H(1,2) = -sin(phi);

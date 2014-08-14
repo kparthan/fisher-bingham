@@ -329,12 +329,11 @@ void Test::moment_estimation(void)
   cout << "Example from paper:\n";
   Kent kent(100,20);
   std::vector<long double> sample_mean(3,0);
-  //sample_mean[0] = 0.083; sample_mean[1] = -0.959; sample_mean[2] = 0.131;
   sample_mean[0] = -0.959; sample_mean[1] = 0.131; sample_mean[2] = 0.083;
+  cartesian2spherical(sample_mean,spherical);
+  cout << "m0: "; print(cout,sample_mean,3);
+  cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
   matrix<long double> S(3,3);
-  /*S(0,0) = 0.045; S(0,1) = -0.075; S(0,2) = 0.014;
-  S(1,0) = -0.075; S(1,1) = 0.921; S(1,2) = -0.122;
-  S(2,0) = 0.014; S(2,1) = -0.122; S(2,2) = 0.034;*/
   S(0,0) = 0.921; S(0,1) = -0.122; S(0,2) = -0.075;
   S(1,0) = -0.122; S(1,1) = 0.034; S(1,2) = 0.014;
   S(2,0) = -0.075; S(2,1) = 0.014; S(2,2) = 0.045;
