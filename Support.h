@@ -49,7 +49,7 @@ std::vector<std::vector<long double> > transform(std::vector<std::vector<long do
 bool invertMatrix(const matrix<long double> &, matrix<long double> &);
 void eigenDecomposition(matrix<long double>, std::vector<long double> &, matrix<long double> &);
 void jacobiRotateMatrix(matrix<long double> &, matrix<long double> &, int, int);
-long double computeIntegral(double);
+long double computeDawsonsIntegral(double);
 void track(const state_type &, const double);
 void rhs(const state_type &, state_type &, const double);
 

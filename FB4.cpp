@@ -68,8 +68,8 @@ long double FB4::computeNormalizationConstant(void)
     long double tmp = 2*sqrt(gamma);
     long double tau1 = (kappa+2*gamma)/tmp;
     long double tau2 = (kappa-2*gamma)/tmp;
-    long double int1 = computeIntegral(tau1);
-    long double int2 = computeIntegral(fabs(tau2));
+    long double int1 = computeDawsonsIntegral(tau1);
+    long double int2 = computeDawsonsIntegral(fabs(tau2));
     tmp = exp(kappa);
     long double c1 = tmp * int1 - (sign(tau2) * int2 / tmp);
     c = c1 * exp(gamma) / sqrt(gamma);

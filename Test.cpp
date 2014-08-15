@@ -151,7 +151,7 @@ void Test::dispersionMatrix(void)
 void Test::numericalIntegration(void)
 {
   // integration
-  long double val = computeIntegral(10);
+  long double val = computeDawsonsIntegral(10);
 }
 
 void Test::normalDistributionFunctions(void)
@@ -357,5 +357,10 @@ void Test::moment_estimation(void)
   cout << "m2_est: "; print(cout,estimates.minor_axis,3);
   cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
   cout << "kappa_est: " << estimates.kappa << "; beta_est: " << estimates.beta << endl;
+}
+
+void Test::optimization(void)
+{
+  std::vector<double> v;
 }
 

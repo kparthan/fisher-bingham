@@ -718,12 +718,12 @@ void jacobiRotateMatrix(
 }
 
 
-void rhs(const state_type &x, state_type &dxdt, const double t)
+void rhs(const std::vector<double> &x, std::vector<double> &dxdt, const double t)
 {
     dxdt[0] = 1 - (2 * t * x[0]); 
 }
 
-void track(const state_type &x, const double t)
+void track(const std::vector<double> &x, const double t)
 {
     cout << t << "\t" << x[0] << endl;
 }
@@ -731,12 +731,13 @@ void track(const state_type &x, const double t)
 /*
  *  Dawson's integral required to compute FB4 normalization constant
  */
-long double computeIntegral(double limit)
+long double computeDawsonsIntegral(double limit)
 {
-  state_type x (1,0.0);
+  //state_type x (1,0.0);
+  std::vector<double> x (1,0.0);
   //integrate(rhs,x,0.0,limit,0.1,track);
   integrate(rhs,x,0.0,limit,0.1);
-  //cout << "ans: " << x[0] << endl;
+  cout << "ans: " << x[0] << endl;
   return x[0];
 }
 
@@ -752,7 +753,7 @@ void TestFunctions(void)
 
   //test.dispersionMatrix();
 
-  //test.numericalIntegration();
+  test.numericalIntegration();
 
   //test.normalDistributionFunctions();
 
@@ -764,6 +765,8 @@ void TestFunctions(void)
 
   //test.normalization_constant();
 
-  test.moment_estimation();
+  //test.moment_estimation();
+
+  test.optimization();
 }
 

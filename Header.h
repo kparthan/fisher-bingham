@@ -47,7 +47,8 @@ using namespace boost::numeric::odeint;
 
 typedef number<mpfr_float_backend<1000> >  my_float; 
 typedef boost::numeric::ublas::vector<long double> boost_vector;
-typedef std::vector<double> state_type;
+typedef boost::numeric::ublas::matrix<long double> boost_matrix;
+//typedef std::vector<double> state_type;
 
 // numeric constants
 #define AOM 0.001
