@@ -10,7 +10,7 @@ class vMF
     int D;
 
     //! (unit) mean of the distribution
-		std::vector<long double> mu;
+		Vector mu;
 
     //! Concentration parameter 
 		long double kappa;
@@ -19,7 +19,7 @@ class vMF
     long double cd,log_cd;
 
     //! kappa * mu
-    std::vector<long double> kmu;
+    Vector kmu;
 
   protected:
     //! Computes the vMF constants
@@ -33,7 +33,7 @@ class vMF
 		vMF();
 
 		//! Constructor that sets value of parameters
-		vMF(std::vector<long double> &, long double);
+		vMF(Vector &, long double);
 
     //! Updates the model parameters
     void updateParameters();
@@ -42,7 +42,7 @@ class vMF
     vMF operator=(const vMF &);
 
 		//! Gets the mean 
-		std::vector<long double> mean();
+		Vector mean();
 
     //! Gets the Kappa 
     long double Kappa(); 
@@ -55,25 +55,25 @@ class vMF
     int getDimensionality();
 
 		//! Function value
-		long double density(std::vector<long double> &);
+		long double density(Vector &);
 
     //! Computes the log of probability density
-		long double log_density(std::vector<long double> &);
+		long double log_density(Vector &);
 
     //! Computes the negative log likelihood of a sample
-    long double negativeLogLikelihood(std::vector<long double> &);
+    long double negativeLogLikelihood(Vector &);
 
     //! Computes the negative log likelihood of a sample
-    long double negativeLogLikelihood(std::vector<std::vector<long double> > &);
+    long double negativeLogLikelihood(std::vector<Vector > &);
 
     //! Prints the model parameters
     void printParameters(ostream &);
 
     //! Generate random sample
-    std::vector<std::vector<long double> > generate(int);
+    std::vector<Vector > generate(int);
 
     //! Generate a random canonical sample
-    void generateCanonical(std::vector<std::vector<long double> > &, int);
+    void generateCanonical(std::vector<Vector> &, int);
 
 };
 

@@ -1,7 +1,8 @@
 #include "Kent.h"
 #include "FB6.h"
+#include "Optimize.h"
 
-extern std::vector<long double> XAXIS,YAXIS,ZAXIS;
+extern Vector XAXIS,YAXIS,ZAXIS;
 
 /*!
  *  Null constructor
@@ -21,15 +22,15 @@ Kent::Kent(long double kappa, long double beta) : kappa(kappa), beta(beta)
   mu = ZAXIS;
   major_axis = XAXIS;
   minor_axis = YAXIS;
-  assert(eccentricity() < 1);
+  //assert(eccentricity() < 1);
 }
 
 /*!
  *  Constructor
  */
-Kent::Kent(std::vector<long double> &mu, std::vector<long double> &major_axis, 
-         std::vector<long double> &minor_axis, long double kappa, long double beta)
-         : mu(mu), major_axis(major_axis), minor_axis(minor_axis), kappa(kappa), beta(beta)
+Kent::Kent(Vector &mu, Vector &major_axis, Vector &minor_axis,
+          long double kappa, long double beta): mu(mu), 
+          major_axis(major_axis), minor_axis(minor_axis), kappa(kappa), beta(beta)
 {
   assert(eccentricity() < 1);
 }
@@ -49,7 +50,7 @@ Kent Kent::operator=(const Kent &source)
   return *this;
 }
 
-std::vector<std::vector<long double> > Kent::generate(int sample_size)
+std::vector<Vector> Kent::generate(int sample_size)
 {
   cout << "\nGenerating from Kent:\n";
   cout << "mean: "; print(cout,mu,3); cout << endl;
@@ -57,12 +58,12 @@ std::vector<std::vector<long double> > Kent::generate(int sample_size)
   cout << "minor: "; print(cout,minor_axis,3); cout << endl;
   cout << "Kappa: " << kappa << "; Beta: " << beta 
        << "; sample size: " << sample_size << endl;
-  std::vector<std::vector<long double> > canonical_sample = generateCanonical(sample_size);
-  matrix<long double> transformation = computeOrthogonalTransformation(mu,major_axis);
+  std::vector<Vector> canonical_sample = generateCanonical(sample_size);
+  Matrix transformation = computeOrthogonalTransformation(mu,major_axis);
   return transform(canonical_sample,transformation);
 }
 
-std::vector<std::vector<long double> > Kent::generateCanonical(int sample_size)
+std::vector<Vector> Kent::generateCanonical(int sample_size)
 {
   FB6 fb6(kappa,beta,0);
   return fb6.generateCanonical(sample_size);
@@ -121,82 +122,79 @@ long double Kent::computeLogNormalizationConstant(long double k, long double b)
 /*!
  *  Moment estimation (with +Z as the north pole)
  */
-struct Estimates Kent::computeMomentEstimates(std::vector<std::vector<long double> > &data)
+struct Estimates Kent::computeMomentEstimates(std::vector<Vector> &data)
 {
   int N = data.size();
-  std::vector<long double> sample_mean = computeVectorSum(data);
-  matrix<long double> S = computeDispersionMatrix(data);
-  return computeMomentEstimates(N,sample_mean,S);
+  Vector sample_mean = computeVectorSum(data);
+  Matrix S = computeDispersionMatrix(data);
+  return computeMomentEstimates(sample_mean,S);
 }
 
 /*!
  *  Moment estimation (with +X as the north pole) 
  *  (similar to used in Kent (1982) paper)
  */
-struct Estimates Kent::computeMomentEstimates(
-  int sample_size, 
-  std::vector<long double> &sample_mean,
-  matrix<long double> &T
-) { 
+struct Estimates Kent::computeMomentEstimates(Vector &sample_mean, Matrix &S)
+{ 
   // compute r1:
   long double r1 = norm(sample_mean);
 
-  struct Estimates moment_estimates;
-  std::vector<long double> spherical(3,0);
+  struct Estimates estimates;
+  Vector spherical(3,0);
   cartesian2sphericalPoleXAxis(sample_mean,spherical);
   long double theta = spherical[1];
   long double phi = spherical[2];
 
   // rotation matrix to align north pole
-  matrix<long double> H(3,3);
+  Matrix H(3,3);
   H(0,0) = cos(theta); H(0,1) = -sin(theta); H(0,2) = 0;
   H(1,0) = sin(theta)*cos(phi); H(1,1) = cos(theta)*cos(phi); H(1,2) = -sin(phi);
   H(2,0) = sin(theta)*sin(phi); H(2,1) = cos(theta)*sin(phi); H(2,2) = cos(phi);
-  matrix<long double> Ht = trans(H);
-  matrix<long double> tmp = prod(Ht,T);
-  matrix<long double> B = prod(tmp,H);
+  Matrix Ht = trans(H);
+  Matrix tmp = prod(Ht,S);
+  Matrix B = prod(tmp,H);
   long double ratio = 2 * B(1,2) / (B(1,1) - B(2,2));
   long double psi = 0.5 * atan(ratio);
-  matrix<long double> K = identity_matrix<long double>(3,3);
+  Matrix K = IdentityMatrix(3,3);
   K(1,1) = cos(psi); K(1,2) = -sin(psi);
   K(2,1) = -K(1,2); K(2,2) = K(1,1);
-  matrix<long double> HK = prod(H,K);
+  Matrix HK = prod(H,K);
 
   // compute r2:
   long double t1 = (B(1,1)-B(2,2)) * (B(1,1)-B(2,2));
   long double t2 = 4 * B(1,2) * B(1,2);
   long double r2 = sqrt(t1+t2);
 
-  moment_estimates.mean = std::vector<long double>(3,0);
-  std::vector<long double> axis1(3,0),axis2(3,0);
+  estimates.mean = Vector(3,0);
+  Vector axis1(3,0),axis2(3,0);
   for (int i=0; i<3; i++) {
-    moment_estimates.mean[i] = HK(i,0);
+    estimates.mean[i] = HK(i,0);
     axis1[i] = HK(i,1);
     axis2[i] = HK(i,2);
   }
   if (B(1,1) >= B(2,2)) {
-    moment_estimates.major_axis = axis1;
-    moment_estimates.minor_axis = axis2;
+    estimates.major_axis = axis1;
+    estimates.minor_axis = axis2;
   } else {
     for (int j=0; j<3; j++) axis2[j] *= -1;
-    moment_estimates.major_axis = axis2;
-    moment_estimates.minor_axis = axis1;
+    estimates.major_axis = axis2;
+    estimates.minor_axis = axis1;
   }
 
   // estimate kappa, beta
   long double f1 = 1/(2 - 2*r1 - r2);
   long double f2 = 1/(2 - 2*r1 + r2);
-  moment_estimates.kappa = f1 + f2;
-  moment_estimates.beta = 0.5 * (f1-f2);
+  estimates.kappa = f1 + f2;
+  estimates.beta = 0.5 * (f1-f2);
 
-  //std::vector<long double> cross = crossProduct(moment_estimates.major_axis,moment_estimates.minor_axis);
+  //Vector cross = crossProduct(estimates.major_axis,estimates.minor_axis);
   // submatrix 2 X 2
-  /*matrix<long double> B_sub(2,2);
+  /*Matrix B_sub(2,2);
   B_sub(0,0) = B(1,1); B_sub(0,1) = B(1,2);
   B_sub(1,0) = B(2,1); B_sub(1,1) = B(2,2);
   // ... find eigen values of submatrix by solving a simple quadratic equation
-  std::vector<long double> eigen_vals(2,0);
-  matrix<long double> eigen_vecs = identity_matrix<long double>(2,2);
+  Vector eigen_vals(2,0);
+  Matrix eigen_vecs = IdentityMatrix(2,2);
   eigenDecomposition(B_sub,eigen_vals,eigen_vecs);*/
   //cout << "theta: " << theta*180/PI << "; phi: " << phi*180/PI << endl;
   //cout << "B: " << B << endl;
@@ -207,34 +205,38 @@ struct Estimates Kent::computeMomentEstimates(
   //cout << "cross: "; print(cout,cross,0); cout << endl;
   //cout << "r1: " << r1 << endl;
   //cout << "r2: " << r2 << endl;
-  return moment_estimates;
+
+  Optimize opt(estimates.mean,estimates.major_axis,estimates.minor_axis);
+  opt.computeMomentEstimates(sample_mean,S);
+  
+  return estimates;
 }
 
 /*struct Estimates Kent::computeMomentEstimates(
   int sample_size, 
-  std::vector<long double> &sample_mean,
-  matrix<long double> &T
+  Vector &sample_mean,
+  Matrix &T
 ) { 
   struct Estimates moment_estimates;
-  matrix<long double> Ht = align_zaxis_with_vector(sample_mean);
-  matrix<long double> H = trans(Ht);
-  matrix<long double> tmp = prod(Ht,T);
-  matrix<long double> B = prod(tmp,H);
+  Matrix Ht = align_zaxis_with_vector(sample_mean);
+  Matrix H = trans(Ht);
+  Matrix tmp = prod(Ht,T);
+  Matrix B = prod(tmp,H);
   cout << "B: " << B << endl;
   long double ratio = 2 * B(0,1) / (B(0,0) - B(1,1));
   long double psi = 0.5 * atan(ratio);
   cout << "psi (degrees): " << psi * 180/PI << endl;
-  matrix<long double> K = identity_matrix<long double>(3,3);
+  Matrix K = IdentityMatrix(3,3);
   K(0,0) = cos(psi); K(0,1) = -sin(psi);
   K(1,0) = -K(0,1); K(1,1) = K(0,0);
   cout << "Ht: " << Ht << endl;
   cout << "H: " << H << endl;
   cout << "K: " << K << endl;
-  matrix<long double> est = prod(H,K);
+  Matrix est = prod(H,K);
   cout << "HK: " << est << endl;
-  moment_estimates.mean = std::vector<long double>(3,0);
-  moment_estimates.major_axis = std::vector<long double>(3,0);
-  moment_estimates.minor_axis = std::vector<long double>(3,0);
+  moment_estimates.mean = Vector(3,0);
+  moment_estimates.major_axis = Vector(3,0);
+  moment_estimates.minor_axis = Vector(3,0);
   for (int i=0; i<3; i++) {
     moment_estimates.mean[i] = est(i,0);
     moment_estimates.major_axis[i] = est(i,1);

@@ -3,7 +3,7 @@
 #include "Normal.h"
 #include "Support.h"
 
-extern std::vector<long double> XAXIS,YAXIS,ZAXIS;
+extern Vector XAXIS,YAXIS,ZAXIS;
 
 /*!
  *  Null constructor
@@ -28,9 +28,9 @@ FB4::FB4(long double kappa, long double gamma) : kappa(kappa), gamma(gamma)
 /*!
  *  Constructor
  */
-FB4::FB4(std::vector<long double> &mu, std::vector<long double> &major_axis, 
-         std::vector<long double> &minor_axis, long double kappa, long double gamma) : 
-         mu(mu), major_axis(major_axis), minor_axis(minor_axis), kappa(kappa), gamma(gamma)
+FB4::FB4(Vector &mu, Vector &major_axis, Vector &minor_axis,
+         long double kappa, long double gamma) : mu(mu), 
+         major_axis(major_axis), minor_axis(minor_axis), kappa(kappa), gamma(gamma)
 {}
 
 /*!
@@ -80,7 +80,7 @@ long double FB4::computeNormalizationConstant(void)
   return c;
 }
 
-std::vector<std::vector<long double> > FB4::generate(int sample_size)
+std::vector<Vector> FB4::generate(int sample_size)
 {
   cout << "\nGenerating from FB4:\n";
   cout << "mean: "; print(cout,mu,3); cout << endl;
@@ -88,29 +88,29 @@ std::vector<std::vector<long double> > FB4::generate(int sample_size)
   cout << "minor: "; print(cout,minor_axis,3); cout << endl;
   cout << "Kappa: " << kappa << "; Gamma: " << gamma 
        << "; sample size: " << sample_size << endl;
-  std::vector<std::vector<long double> > canonical_sample = generateCanonical(sample_size);
-  matrix<long double> transformation = computeOrthogonalTransformation(mu,major_axis);
+  std::vector<Vector > canonical_sample = generateCanonical(sample_size);
+  Matrix transformation = computeOrthogonalTransformation(mu,major_axis);
   return transform(canonical_sample,transformation);
 }
 
-std::vector<std::vector<long double> > FB4::generateCanonical(int sample_size)
+std::vector<Vector> FB4::generateCanonical(int sample_size)
 {
   if (gamma != 0) {
-    std::vector<long double> u = generate_u(sample_size);
+    Vector u = generate_u(sample_size);
     // step 2 (of FB6_0)
-    std::vector<long double> phi = generate_spherical_coordinates(u);
+    Vector phi = generate_spherical_coordinates(u);
     // step 3 (of FB6_0)
     return generate_cartesian_coordinates(u,phi);
   } else if (gamma == 0) { // vMF
-    std::vector<long double> mu(3,0); mu[2] = 1;
+    Vector mu(3,0); mu[2] = 1;
     vMF vmf(mu,kappa);
     return vmf.generate(sample_size);
   }
 }
 
-std::vector<long double> FB4::generate_u(int sample_size)
+Vector FB4::generate_u(int sample_size)
 {
-  std::vector<long double> u;
+  Vector u;
   if (gamma < 0) {  // FB4-
     int best = determine_best_case();
     u = generate_FB4_minus(best,sample_size);
@@ -158,9 +158,9 @@ int FB4::determine_best_case()
 /*!
  *  FB4- algorithm
  */
-std::vector<long double> FB4::generate_FB4_minus(int best, int sample_size)
+Vector FB4::generate_FB4_minus(int best, int sample_size)
 {
-  std::vector<long double> u(sample_size,0);
+  Vector u(sample_size,0);
   if (best == 1) {
     // step 0
     long double sigma_inv = sqrt(-2*gamma);
@@ -170,7 +170,7 @@ std::vector<long double> FB4::generate_FB4_minus(int best, int sample_size)
     long double q2 = -kappa/(2*gamma);
     Normal normal(0,1);
     long double t,u_accept;
-    std::vector<long double> tmp;
+    Vector tmp;
     for (int i=0; i<sample_size; i++) {
       // step 1
       tmp = normal.generate(1);
@@ -218,9 +218,9 @@ std::vector<long double> FB4::generate_FB4_minus(int best, int sample_size)
 /*!
  *  FB4+ algorithm
  */
-std::vector<long double> FB4::generate_FB4_plus(int sample_size)
+Vector FB4::generate_FB4_plus(int sample_size)
 {
-  std::vector<long double> u(sample_size,0);
+  Vector u(sample_size,0);
 
   long double r1,r2,m1,m2,n1,n2,lambda,num,denom,p1,s1,s2,s3,r,u1,q1,q2,tmp;
   // step 0
@@ -260,9 +260,9 @@ std::vector<long double> FB4::generate_FB4_plus(int sample_size)
 /*!
  *  step 2 (of FB6_0) (actually 2* for FB4)
  */
-std::vector<long double> FB4::generate_spherical_coordinates(std::vector<long double> &u)
+Vector FB4::generate_spherical_coordinates(Vector &u)
 {
-  std::vector<long double> phi(u.size(),0);
+  Vector phi(u.size(),0);
   long double s;
   for (int i=0; i<u.size(); i++) {
     s = rand()/(long double)RAND_MAX;
@@ -274,12 +274,12 @@ std::vector<long double> FB4::generate_spherical_coordinates(std::vector<long do
 /*!
  *  step 3 (of FB6_0) : transformation to (unit) Cartesian coordinates
  */
-std::vector<std::vector<long double> > FB4::generate_cartesian_coordinates(
-  std::vector<long double> &u, 
-  std::vector<long double> &phi
+std::vector<Vector > FB4::generate_cartesian_coordinates(
+  Vector &u, 
+  Vector &phi
 ) {
-  std::vector<std::vector<long double> > coordinates(u.size());
-  std::vector<long double> x(3,0);
+  std::vector<Vector > coordinates(u.size());
+  Vector x(3,0);
   long double tmp;
   for (int i=0; i<u.size(); i++) {
     tmp = sqrt(1-u[i]*u[i]);

@@ -6,7 +6,7 @@
 class FB6
 {
   private:
-    std::vector<long double> mu,major_axis,minor_axis;
+    Vector mu,major_axis,minor_axis;
 
     long double kappa,beta,gamma;
 
@@ -15,18 +15,15 @@ class FB6
 
     FB6(long double, long double, long double);
 
-    FB6(std::vector<long double> &, std::vector<long double> &, std::vector<long double> &, 
-        long double, long double, long double);
+    FB6(Vector &, Vector &, Vector &, long double, long double, long double);
  
     FB6 operator=(const FB6 &);
 
-    std::vector<std::vector<long double> > generate(int);
+    std::vector<Vector> generate(int);
 
-    std::vector<std::vector<long double> > generateCanonical(int);
+    std::vector<Vector> generateCanonical(int);
 
-    std::vector<std::vector<long double> > generate_cartesian_coordinates(
-      std::vector<long double> &, std::vector<long double> &
-    );
+    std::vector<Vector> generate_cartesian_coordinates(Vector &, Vector &);
 };
 
 #endif

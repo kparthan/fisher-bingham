@@ -1,7 +1,7 @@
 #include "Support.h"
 #include "Test.h"
 
-std::vector<long double> XAXIS,YAXIS,ZAXIS;
+Vector XAXIS,YAXIS,ZAXIS;
 
 ////////////////////// GENERAL PURPOSE FUNCTIONS \\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
@@ -66,11 +66,11 @@ bool checkFile(string &file_name)
 }
 
 /*!
- *  \brief This module prints the elements of a std::vector<std::vector<long double><> > to a file
- *  \param v a reference to std::vector<std::vector<long double> >
+ *  \brief This module prints the elements of a std::vector<Vector<> > to a file
+ *  \param v a reference to std::vector<Vector >
  *  \param file_name a pointer to a const char
  */
-void writeToFile(const char *file_name, std::vector<std::vector<long double> > &v, int precision)
+void writeToFile(const char *file_name, std::vector<Vector > &v, int precision)
 {
   ofstream file(file_name);
   for (int i=0; i<v.size(); i++) {
@@ -97,11 +97,11 @@ string extractName(string &file)
 }
 
 /*!
- *  \brief This function prints the elements of an std::vector<long double>.
+ *  \brief This function prints the elements of an Vector.
  *  \param os a reference to a ostream
- *  \param v a reference to a std::vector<long double>
+ *  \param v a reference to a Vector
  */
-void print(ostream &os, std::vector<long double> &v, int precision)
+void print(ostream &os, Vector &v, int precision)
 {
   if (precision == 0) {
     if (v.size() == 1) {
@@ -130,16 +130,6 @@ void print(ostream &os, std::vector<long double> &v, int precision)
   }
 }
 
-/*!
- *
- */
-void convert2boostvector(std::vector<long double> &stlvec, boost_vector &vec)
-{
-  for (int i=0; i<stlvec.size(); i++) {
-    vec[i] = stlvec[i];
-  }
-}
-
 ////////////////////// MATH FUNCTIONS \\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
 /*!
@@ -159,12 +149,12 @@ int sign(long double number)
 }
 
 /*!
- *  \brief Normalizes a std::vector<long double>
- *  \param x a reference to a std::vector<long double>
- *  \param unit a reference to a std::vector<long double>
- *  \return the norm of the std::vector<long double>
+ *  \brief Normalizes a Vector
+ *  \param x a reference to a Vector
+ *  \param unit a reference to a Vector
+ *  \return the norm of the Vector
  */
-long double normalize(std::vector<long double> &x, std::vector<long double> &unit)
+long double normalize(Vector &x, Vector &unit)
 {
   long double l2norm = norm(x);
   for (int i=0; i<x.size(); i++) {
@@ -173,7 +163,7 @@ long double normalize(std::vector<long double> &x, std::vector<long double> &uni
   return l2norm;
 }
 
-long double norm(std::vector<long double> &v)
+long double norm(Vector &v)
 {
   long double normsq = 0;
   for (int i=0; i<v.size(); i++) {
@@ -185,12 +175,12 @@ long double norm(std::vector<long double> &v)
 /*!
  *  \brief This function converts the cartesian coordinates into spherical.
  *  (theta with +Z and phi with +X)
- *  \param cartesian a reference to a std::vector<long double> 
- *  \param spherical a reference to a std::vector<long double> 
+ *  \param cartesian a reference to a Vector 
+ *  \param spherical a reference to a Vector 
  */
-void cartesian2spherical(std::vector<long double> &cartesian, std::vector<long double> &spherical)
+void cartesian2spherical(Vector &cartesian, Vector &spherical)
 {
-  std::vector<long double> unit(3,0);
+  Vector unit(3,0);
   long double r = normalize(cartesian,unit);
 
   long double x = unit[0];
@@ -231,12 +221,12 @@ void cartesian2spherical(std::vector<long double> &cartesian, std::vector<long d
 /*!
  *  \brief This function converts the cartesian coordinates into spherical.
  *  (theta with +X and phi with +Y)
- *  \param cartesian a reference to a std::vector<long double> 
- *  \param spherical a reference to a std::vector<long double> 
+ *  \param cartesian a reference to a Vector 
+ *  \param spherical a reference to a Vector 
  */
-void cartesian2sphericalPoleXAxis(std::vector<long double> &cartesian, std::vector<long double> &spherical)
+void cartesian2sphericalPoleXAxis(Vector &cartesian, Vector &spherical)
 {
-  std::vector<long double> unit(3,0);
+  Vector unit(3,0);
   long double r = normalize(cartesian,unit);
 
   long double x = unit[0];
@@ -276,10 +266,10 @@ void cartesian2sphericalPoleXAxis(std::vector<long double> &cartesian, std::vect
 
 /*!
  *  \brief This function converts the spherical coordinates into cartesian.
- *  \param spherical a reference to a std::vector<long double> 
- *  \param cartesian a reference to a std::vector<long double> 
+ *  \param spherical a reference to a Vector 
+ *  \param cartesian a reference to a Vector 
  */
-void spherical2cartesian(std::vector<long double> &spherical, std::vector<long double> &cartesian)
+void spherical2cartesian(Vector &spherical, Vector &cartesian)
 {
   cartesian[0] = spherical[0] * sin(spherical[1]) * cos(spherical[2]);
   cartesian[1] = spherical[0] * sin(spherical[1]) * sin(spherical[2]);
@@ -287,12 +277,12 @@ void spherical2cartesian(std::vector<long double> &spherical, std::vector<long d
 }
 
 /*!
- *  \brief This funciton computes the dot product between two std::vector<long double>s.
- *  \param v1 a reference to a std::vector<long double>
- *  \param v2 a reference to a std::vector<long double>
+ *  \brief This funciton computes the dot product between two Vectors.
+ *  \param v1 a reference to a Vector
+ *  \param v2 a reference to a Vector
  *  \return the dot product
  */
-long double computeDotProduct(std::vector<long double> &v1, std::vector<long double> &v2) 
+long double computeDotProduct(Vector &v1, Vector &v2) 
 {
   assert(v1.size() == v2.size());
   long double dot_product = 0;
@@ -302,9 +292,9 @@ long double computeDotProduct(std::vector<long double> &v1, std::vector<long dou
   return dot_product;
 }
 
-std::vector<long double> crossProduct(std::vector<long double> &v1, std::vector<long double> &v2) 
+Vector crossProduct(Vector &v1, Vector &v2) 
 {
-  std::vector<long double> ans(3,0);
+  Vector ans(3,0);
   ans[0] = v1[1] * v2[2] - v1[2] * v2[1];
   ans[1] = v1[2] * v2[0] - v1[0] * v2[2];
   ans[2] = v1[0] * v2[1] - v1[1] * v2[0];
@@ -366,7 +356,7 @@ long double logModifiedBesselFirstKind(long double alpha, long double x)
  *  Find the roots of a quadratic: ax^2 + bx + c = 0
  */
 void solveQuadratic(
-  std::vector<long double> &roots, 
+  Vector &roots, 
   long double a,
   long double b, 
   long double c
@@ -378,12 +368,12 @@ void solveQuadratic(
 
 ////////////////////// GEOMETRY FUNCTIONS \\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
-std::vector<std::vector<long double> > load_matrix(string &file_name)
+std::vector<Vector > load_matrix(string &file_name)
 {
-  std::vector<std::vector<long double> > sample;
+  std::vector<Vector > sample;
   ifstream file(file_name.c_str());
   string line;
-  std::vector<long double> numbers(3,0),unit_vector(3,0);
+  Vector numbers(3,0),unit_vector(3,0);
   int i;
   while (getline(file,line)) {
     boost::char_separator<char> sep(" \t");
@@ -406,11 +396,11 @@ std::vector<std::vector<long double> > load_matrix(string &file_name)
  *  v1 and v2 are considered to be a column std::vectors
  *  output: v1 * v2' (the outer product matrix)
  */
-matrix<long double> outer_prod(std::vector<long double> &v1, std::vector<long double> &v2)
+Matrix outer_prod(Vector &v1, Vector &v2)
 {
   assert(v1.size() == v2.size());
   int m = v1.size();
-  matrix<long double> ans(m,m);
+  Matrix ans(m,m);
   for (int i=0; i<m; i++) {
     for (int j=0; j<m; j++) {
       ans(i,j) = v1[i] * v2[j];
@@ -423,10 +413,10 @@ matrix<long double> outer_prod(std::vector<long double> &v1, std::vector<long do
  *  v is considered to be a column std::vector
  *  output: m * v (a row std::vector)
  */
-std::vector<long double> prod(matrix<long double> &m, std::vector<long double> &v)
+Vector prod(Matrix &m, Vector &v)
 {
   assert(m.size2() == v.size());
-  std::vector<long double> ans(m.size1(),0);
+  Vector ans(m.size1(),0);
   for (int i=0; i<m.size1(); i++) {
     for (int j=0; j<m.size2(); j++) {
       ans[i] += m(i,j) * v[j];
@@ -439,10 +429,10 @@ std::vector<long double> prod(matrix<long double> &m, std::vector<long double> &
  *  v is considered to be a column std::vector
  *  output: v' * m (a row std::vector)
  */
-std::vector<long double> prod(std::vector<long double> &v, matrix<long double> &m)
+Vector prod(Vector &v, Matrix &m)
 {
   assert(m.size1() == v.size());
-  std::vector<long double> ans(m.size2(),0);
+  Vector ans(m.size2(),0);
   for (int i=0; i<m.size2(); i++) {
     for (int j=0; j<m.size1(); j++) {
       ans[i] += v[j] * m(j,i);
@@ -454,10 +444,10 @@ std::vector<long double> prod(std::vector<long double> &v, matrix<long double> &
 /*!
  *  Computes \sum x / N (x is a vector)
  */
-std::vector<long double> computeVectorSum(std::vector<std::vector<long double> > &sample) 
+Vector computeVectorSum(std::vector<Vector > &sample) 
 {
   int d = sample[0].size();
-  std::vector<long double> sum(d,0);
+  Vector sum(d,0);
   for (int i=0; i<sample.size(); i++) {
     for (int j=0; j<d; j++) {
       sum[j] += sample[i][j];
@@ -472,10 +462,10 @@ std::vector<long double> computeVectorSum(std::vector<std::vector<long double> >
 /*!
  *  Computes \sum x * x' / N (x is a vector)
  */
-matrix<long double> computeDispersionMatrix(std::vector<std::vector<long double> > &sample)
+Matrix computeDispersionMatrix(std::vector<Vector > &sample)
 {
   int d = sample[0].size();
-  matrix<long double> dispersion = zero_matrix<long double>(d,d);
+  Matrix dispersion = ZeroMatrix(d,d);
   for (int i=0; i<sample.size(); i++) {
     dispersion += outer_prod(sample[i],sample[i]);
   }
@@ -485,28 +475,28 @@ matrix<long double> computeDispersionMatrix(std::vector<std::vector<long double>
 /*!
  *  Matrix to rotate FROM the standard frame of reference.
  */
-matrix<long double> computeOrthogonalTransformation(
-  std::vector<long double> &mean,
-  std::vector<long double> &major_axis
+Matrix computeOrthogonalTransformation(
+  Vector &mean,
+  Vector &major_axis
 ) {
-  matrix<long double> r1 = align_zaxis_with_vector(mean);
-  matrix<long double> inverse(3,3);
+  Matrix r1 = align_zaxis_with_vector(mean);
+  Matrix inverse(3,3);
   invertMatrix(r1,inverse);
   // rotate major axis onto XY-plane
-  std::vector<long double> major1 = prod(inverse,major_axis);
-  matrix<long double> r2 = align_xaxis_with_major_axis(major1);
-  matrix<long double> r = prod(r1,r2);
+  Vector major1 = prod(inverse,major_axis);
+  Matrix r2 = align_xaxis_with_major_axis(major1);
+  Matrix r = prod(r1,r2);
   return r;
 }
 
-matrix<long double> align_xaxis_with_major_axis(std::vector<long double> &major_axis)
+Matrix align_xaxis_with_major_axis(Vector &major_axis)
 {
-  std::vector<long double> spherical(3,0);
+  Vector spherical(3,0);
   cartesian2spherical(major_axis,spherical);
   long double theta = spherical[1]; // theta = PI/2
   long double phi = spherical[2];
 
-  matrix<long double> r = identity_matrix<long double>(3,3);
+  Matrix r = IdentityMatrix(3,3);
   r(0,0) = cos(phi);
   r(0,1) = -sin(phi);
   r(1,0) = -r(0,1); // sin(phi)
@@ -514,50 +504,50 @@ matrix<long double> align_xaxis_with_major_axis(std::vector<long double> &major_
   return r;
 }
 
-matrix<long double> align_zaxis_with_vector(std::vector<long double> &y)
+Matrix align_zaxis_with_vector(Vector &y)
 {
-  std::vector<long double> spherical(3,0);
+  Vector spherical(3,0);
   cartesian2spherical(y,spherical);
   long double theta = spherical[1];
   long double phi = spherical[2];
 
-  matrix<long double> r1 = identity_matrix<long double>(3,3);
+  Matrix r1 = IdentityMatrix(3,3);
   r1(0,0) = cos(theta);
   r1(0,2) = sin(theta);
   r1(2,0) = -r1(0,2); //-sin(theta)
   r1(2,2) = r1(0,0); //cos(theta)
 
-  matrix<long double> r2 = identity_matrix<long double>(3,3);
+  Matrix r2 = IdentityMatrix(3,3);
   r2(0,0) = cos(phi);
   r2(0,1) = -sin(phi);
   r2(1,0) = -r2(0,1); //sin(phi)
   r2(1,1) = r2(0,0);  // cos(phi)
 
-  matrix<long double> r = prod(r2,r1);
+  Matrix r = prod(r2,r1);
   return r;
 }
 
 void generateRandomOrthogonalVectors(
-  std::vector<long double> &mean,
-  std::vector<long double> &major_axis,
-  std::vector<long double> &minor_axis
+  Vector &mean,
+  Vector &major_axis,
+  Vector &minor_axis
 ) {
   long double phi = rand()*2*PI/(long double)RAND_MAX;
-  std::vector<long double> spherical(3,1),major1(3,0);
+  Vector spherical(3,1),major1(3,0);
   spherical[1] = PI/2;
   spherical[2] = phi;
   spherical2cartesian(spherical,major1); // major axis
-  std::vector<long double> mu1 = ZAXIS;
-  std::vector<long double> minor1 = crossProduct(mu1,major1);
+  Vector mu1 = ZAXIS;
+  Vector minor1 = crossProduct(mu1,major1);
 
   long double theta = rand()*PI/(long double)RAND_MAX;
   phi = rand()*2*PI/(long double)RAND_MAX;
   spherical[1] = theta;
   spherical[2] = phi;
-  mean = std::vector<long double>(3,0);
+  mean = Vector(3,0);
   spherical2cartesian(spherical,mean); 
 
-  matrix<long double> r = align_zaxis_with_vector(mean);
+  Matrix r = align_zaxis_with_vector(mean);
   major_axis = prod(r,major1);
   minor_axis = prod(r,minor1);
 }
@@ -568,11 +558,11 @@ void generateRandomOrthogonalVectors(
  *  \param T a reference to a Matrix<long double>
  *  \return the transformed vector list
  */
-std::vector<std::vector<long double> > transform(
-  std::vector<std::vector<long double> > &x, 
-  matrix<long double> &T
+std::vector<Vector > transform(
+  std::vector<Vector > &x, 
+  Matrix &T
 ) {
-  std::vector<std::vector<long double> > y(x.size());
+  std::vector<Vector > y(x.size());
   for (int i=0; i<x.size(); i++) {
     y[i] = prod(T,x[i]);
   }
@@ -582,12 +572,12 @@ std::vector<std::vector<long double> > transform(
 /*!
  *  Matrix inverse C++ Boost::ublas
  */
-bool invertMatrix(const matrix<long double> &input, matrix<long double> &inverse)
+bool invertMatrix(const Matrix &input, Matrix &inverse)
 {
   typedef permutation_matrix<std::size_t> pmatrix;
 
   // create a working copy of the input
-  matrix<long double> A(input);
+  Matrix A(input);
 
   // create a permutation matrix for the LU-factorization
   pmatrix pm(A.size1());
@@ -598,7 +588,7 @@ bool invertMatrix(const matrix<long double> &input, matrix<long double> &inverse
     return false;
 
   // create identity matrix of "inverse"
-  inverse.assign(identity_matrix<long double> (A.size1()));
+  inverse.assign(IdentityMatrix (A.size1()));
 
   // backsubstitute to get the inverse
   lu_substitute(A, pm, inverse);
@@ -615,9 +605,9 @@ bool invertMatrix(const matrix<long double> &input, matrix<long double> &inverse
  *    eigen_vectors -- each column is a unit eigen vector
  */
 void eigenDecomposition(
-  matrix<long double> m, 
-  std::vector<long double> &eigen_values,
-  matrix<long double> &eigen_vectors
+  Matrix m, 
+  Vector &eigen_values,
+  Matrix &eigen_vectors
 ) {
   // check if m is symmetric
   int num_rows = m.size1();
@@ -670,8 +660,8 @@ void eigenDecomposition(
 }
 
 void jacobiRotateMatrix(
-  matrix<long double> &m,
-  matrix<long double> &eigen_vectors, 
+  Matrix &m,
+  Matrix &eigen_vectors, 
   int max_row, 
   int max_col
 ) {
@@ -717,17 +707,6 @@ void jacobiRotateMatrix(
   return;
 }
 
-
-void rhs(const std::vector<double> &x, std::vector<double> &dxdt, const double t)
-{
-    dxdt[0] = 1 - (2 * t * x[0]); 
-}
-
-void track(const std::vector<double> &x, const double t)
-{
-    cout << t << "\t" << x[0] << endl;
-}
-
 /*
  *  Dawson's integral required to compute FB4 normalization constant
  */
@@ -739,6 +718,16 @@ long double computeDawsonsIntegral(double limit)
   integrate(rhs,x,0.0,limit,0.1);
   cout << "ans: " << x[0] << endl;
   return x[0];
+}
+
+void rhs(const std::vector<double> &x, std::vector<double> &dxdt, const double t)
+{
+    dxdt[0] = 1 - (2 * t * x[0]); 
+}
+
+void track(const std::vector<double> &x, const double t)
+{
+    cout << t << "\t" << x[0] << endl;
 }
 
 ////////////////////// TESTING FUNCTIONS \\\\\\\\\\\\\\\\\\\\\\\\\\\\
@@ -753,7 +742,7 @@ void TestFunctions(void)
 
   //test.dispersionMatrix();
 
-  test.numericalIntegration();
+  //test.numericalIntegration();
 
   //test.normalDistributionFunctions();
 

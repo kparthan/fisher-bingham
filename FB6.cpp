@@ -3,7 +3,7 @@
 #include "vMF.h"
 #include "Support.h"
 
-extern std::vector<long double> XAXIS,YAXIS,ZAXIS;
+extern Vector XAXIS,YAXIS,ZAXIS;
 
 /*!
  *  Null constructor
@@ -29,9 +29,9 @@ FB6::FB6(long double kappa, long double beta, long double gamma) :
 /*!
  *  Constructor
  */
-FB6::FB6(std::vector<long double> &mu, std::vector<long double> &major_axis, 
-         std::vector<long double> &minor_axis, long double kappa, long double beta,
-         long double gamma) : mu(mu), major_axis(major_axis), minor_axis(minor_axis), 
+FB6::FB6(Vector &mu, Vector &major_axis, Vector &minor_axis,
+         long double kappa, long double beta, long double gamma) :
+         mu(mu), major_axis(major_axis), minor_axis(minor_axis), 
          kappa(kappa), beta(beta), gamma(gamma)
 {}
 
@@ -51,7 +51,7 @@ FB6 FB6::operator=(const FB6 &source)
   return *this;
 }
 
-std::vector<std::vector<long double> > FB6::generate(int sample_size)
+std::vector<Vector> FB6::generate(int sample_size)
 {
   cout << "\nGenerating from FB6:\n";
   cout << "mean: "; print(cout,mu,3); cout << endl;
@@ -59,12 +59,12 @@ std::vector<std::vector<long double> > FB6::generate(int sample_size)
   cout << "minor: "; print(cout,minor_axis,3); cout << endl;
   cout << "Kappa: " << kappa << "; Beta: " << beta << "; Gamma: " << gamma 
        << "; sample size: " << sample_size << endl;
-  std::vector<std::vector<long double> > canonical_sample = generateCanonical(sample_size);
-  matrix<long double> transformation = computeOrthogonalTransformation(mu,major_axis);
+  std::vector<Vector > canonical_sample = generateCanonical(sample_size);
+  Matrix transformation = computeOrthogonalTransformation(mu,major_axis);
   return transform(canonical_sample,transformation);
 }
 
-std::vector<std::vector<long double> > FB6::generateCanonical(int sample_size)
+std::vector<Vector> FB6::generateCanonical(int sample_size)
 {
   if (beta != 0) {  // general case
     long double psi1 = gamma - beta;
@@ -74,13 +74,13 @@ std::vector<std::vector<long double> > FB6::generateCanonical(int sample_size)
     long double c1 = g1.computeNormalizationConstant();
     long double c2 = g2.computeNormalizationConstant();
     long double num,denom;
-    std::vector<long double> u(sample_size,0);
+    Vector u(sample_size,0);
     // step 1: FB6_0
     // step 0
     denom = c1 + exp(-2*beta) * c2;
     long double p2 = c1 / denom;
     long double s1,s2,eta,tmp;
-    std::vector<long double> u1;
+    Vector u1;
     for (int i=0; i<sample_size; i++) {
       // step 1
       s1 = rand()/(long double)RAND_MAX;
@@ -104,11 +104,11 @@ std::vector<std::vector<long double> > FB6::generateCanonical(int sample_size)
       }
     } // for loop ends ...
     // step 2: FB6_0
-    std::vector<long double> phi(sample_size,0);
+    Vector phi(sample_size,0);
     long double p,delta,psi,angle;
-    std::vector<long double> vmf2dmean(2,0); vmf2dmean[0] = 1; 
-    std::vector<std::vector<long double> > random_sample;
-    std::vector<long double> x;
+    Vector vmf2dmean(2,0); vmf2dmean[0] = 1; 
+    std::vector<Vector > random_sample;
+    Vector x;
     for (int i=0; i<sample_size; i++) {
       // generate delta from Bernoulli distribution
       p = rand()/(long double)RAND_MAX;
@@ -145,12 +145,10 @@ std::vector<std::vector<long double> > FB6::generateCanonical(int sample_size)
 /*!
  *  step 3 (of FB6_0) : transformation to (unit) Cartesian coordinates
  */
-std::vector<std::vector<long double> > FB6::generate_cartesian_coordinates(
-  std::vector<long double> &u, 
-  std::vector<long double> &phi
-) {
-  std::vector<std::vector<long double> > coordinates(u.size());
-  std::vector<long double> x(3,0);
+std::vector<Vector> FB6::generate_cartesian_coordinates(Vector &u, Vector &phi)
+{
+  std::vector<Vector> coordinates(u.size());
+  Vector x(3,0);
   long double tmp;
   for (int i=0; i<u.size(); i++) {
     tmp = sqrt(1-u[i]*u[i]);

@@ -72,7 +72,7 @@ long double Normal::cumulativeDensity(long double x)
 
 /*!
  *  \brief This function computes the negative log likelihood of given data.
- *  \param sample a reference to a std::vector<long double>
+ *  \param sample a reference to a Vector
  *  \return the negative log likelihood (base e)
  */
 long double Normal::negativeLogLikelihood(long double x)
@@ -83,10 +83,10 @@ long double Normal::negativeLogLikelihood(long double x)
 
 /*!
  *  \brief This function computes the negative log likelihood of given data.
- *  \param sample a reference to a std::vector<long double>
+ *  \param sample a reference to a Vector
  *  \return the negative log likelihood (base e)
  */
-long double Normal::negativeLogLikelihood(std::vector<long double> &sample)
+long double Normal::negativeLogLikelihood(Vector &sample)
 {
   long double value = 0;
   long double tmp = 0.5 * log(2*PI) + log(sigma);
@@ -115,9 +115,9 @@ void Normal::printParameters(ostream &os)
  *  \param sample_size an integer
  *  \return the random sample
  */
-std::vector<long double> Normal::generate(int sample_size)
+Vector Normal::generate(int sample_size)
 {
-  std::vector<long double> sample(sample_size,0);
+  Vector sample(sample_size,0);
   long double u,v,r1,r2,sqroot,arg;
 
   for (int i=0; i<sample_size; i+=2) {

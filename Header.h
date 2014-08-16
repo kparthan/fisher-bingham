@@ -45,9 +45,11 @@ using namespace boost::multiprecision;
 using namespace boost::numeric::ublas;
 using namespace boost::numeric::odeint;
 
-typedef number<mpfr_float_backend<1000> >  my_float; 
-typedef boost::numeric::ublas::vector<long double> boost_vector;
-typedef boost::numeric::ublas::matrix<long double> boost_matrix;
+typedef std::vector<long double> Vector;
+typedef boost::numeric::ublas::matrix<long double> Matrix;
+typedef boost::numeric::ublas::identity_matrix<long double> IdentityMatrix;
+typedef boost::numeric::ublas::zero_matrix<long double> ZeroMatrix;
+typedef number<mpfr_float_backend<1000> > my_float; 
 //typedef std::vector<double> state_type;
 
 // numeric constants

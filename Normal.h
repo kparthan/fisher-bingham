@@ -37,13 +37,13 @@ class Normal
     long double negativeLogLikelihood(long double);
 
     //! Computes the negative log likelihood of a sample
-    long double negativeLogLikelihood(std::vector<long double> &);
+    long double negativeLogLikelihood(Vector &);
 
     //! Prints the model parameters
     void printParameters(ostream &);
 
     //! Generate random sample
-    std::vector<long double> generate(int);
+    Vector generate(int);
 
 };
 

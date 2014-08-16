@@ -10,7 +10,7 @@ struct Parameters
 
 struct Estimates
 {
-  std::vector<long double> mean,major_axis,minor_axis;
+  Vector mean,major_axis,minor_axis;
   long double kappa,beta;
 };
 
@@ -18,40 +18,39 @@ struct Estimates
 struct Parameters parseCommandLineInput (int, char **); 
 void Usage (const char *, options_description &);
 bool checkFile(string &);
-void writeToFile(const char *, std::vector<std::vector<long double> > &, int);
+void writeToFile(const char *, std::vector<Vector > &, int);
 string extractName(string &);
-void print(ostream &, std::vector<long double> &, int);
-void convert2boostvector(std::vector<long double> &stlvec, boost_vector &vec);
+void print(ostream &, Vector &, int);
 
 int sign(long double);
-long double normalize(std::vector<long double> &, std::vector<long double> &);
-long double norm(std::vector<long double> &);
-void cartesian2spherical(std::vector<long double> &, std::vector<long double> &);
-void cartesian2sphericalPoleXAxis(std::vector<long double> &, std::vector<long double> &);
-void spherical2cartesian(std::vector<long double> &, std::vector<long double> &);
-long double computeDotProduct(std::vector<long double> &, std::vector<long double> &);
-std::vector<long double> crossProduct(std::vector<long double> &, std::vector<long double> &); 
+long double normalize(Vector &, Vector &);
+long double norm(Vector &);
+void cartesian2spherical(Vector &, Vector &);
+void cartesian2sphericalPoleXAxis(Vector &, Vector &);
+void spherical2cartesian(Vector &, Vector &);
+long double computeDotProduct(Vector &, Vector &);
+Vector crossProduct(Vector &, Vector &); 
 long double computeLogSurfaceAreaSphere(int);
 long double logModifiedBesselFirstKind(long double, long double);
-void solveQuadratic(std::vector<long double> &, long double, long double, long double);
+void solveQuadratic(Vector &, long double, long double, long double);
 
-std::vector<std::vector<long double> > load_matrix(string &);
-matrix<long double> outer_prod(std::vector<long double> &, std::vector<long double> &);
-std::vector<long double> prod(matrix<long double> &, std::vector<long double> &);
-std::vector<long double> prod(std::vector<long double> &, matrix<long double> &);
-std::vector<long double> computeVectorSum(std::vector<std::vector<long double> > &);
-matrix<long double> computeDispersionMatrix(std::vector<std::vector<long double> > &);
-matrix<long double> computeOrthogonalTransformation(std::vector<long double> &, std::vector<long double> &);
-matrix<long double> align_xaxis_with_major_axis(std::vector<long double> &);
-matrix<long double> align_zaxis_with_vector(std::vector<long double> &);
-void generateRandomOrthogonalVectors(std::vector<long double> &, std::vector<long double> &, std::vector<long double> &);
-std::vector<std::vector<long double> > transform(std::vector<std::vector<long double> > &, matrix<long double> &);
-bool invertMatrix(const matrix<long double> &, matrix<long double> &);
-void eigenDecomposition(matrix<long double>, std::vector<long double> &, matrix<long double> &);
-void jacobiRotateMatrix(matrix<long double> &, matrix<long double> &, int, int);
+std::vector<Vector> load_matrix(string &);
+Matrix outer_prod(Vector &, Vector &);
+Vector prod(Matrix &, Vector &);
+Vector prod(Vector &, Matrix &);
+Vector computeVectorSum(std::vector<Vector > &);
+Matrix computeDispersionMatrix(std::vector<Vector > &);
+Matrix computeOrthogonalTransformation(Vector &, Vector &);
+Matrix align_xaxis_with_major_axis(Vector &);
+Matrix align_zaxis_with_vector(Vector &);
+void generateRandomOrthogonalVectors(Vector &, Vector &, Vector &);
+std::vector<Vector> transform(std::vector<Vector > &, Matrix &);
+bool invertMatrix(const Matrix &, Matrix &);
+void eigenDecomposition(Matrix, Vector &, Matrix &);
+void jacobiRotateMatrix(Matrix &, Matrix &, int, int);
 long double computeDawsonsIntegral(double);
-void track(const state_type &, const double);
-void rhs(const state_type &, state_type &, const double);
+void track(const std::vector<double> &, const double);
+void rhs(const std::vector<double> &, std::vector<double> &, const double);
 
 void TestFunctions(void);
 

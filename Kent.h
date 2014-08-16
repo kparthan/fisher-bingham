@@ -6,8 +6,11 @@
 
 class Kent  // FB5
 {
+  friend class Optimize;
+
   private:
-    std::vector<long double> mu,major_axis,minor_axis;
+
+    Vector mu,major_axis,minor_axis;
 
     long double kappa,beta; // gamma = 0
 
@@ -16,14 +19,13 @@ class Kent  // FB5
 
     Kent(long double, long double);
 
-    Kent(std::vector<long double> &, std::vector<long double> &, std::vector<long double> &, 
-        long double, long double);
+    Kent(Vector &, Vector &, Vector &, long double, long double);
  
     Kent operator=(const Kent &);
 
-    std::vector<std::vector<long double> > generate(int);
+    std::vector<Vector> generate(int);
 
-    std::vector<std::vector<long double> > generateCanonical(int);
+    std::vector<Vector> generateCanonical(int);
 
     long double eccentricity();
 
@@ -31,11 +33,9 @@ class Kent  // FB5
 
     long double computeLogNormalizationConstant(long double, long double);
 
-    struct Estimates computeMomentEstimates(std::vector<std::vector<long double> > &);
+    struct Estimates computeMomentEstimates(std::vector<Vector> &);
 
-    struct Estimates computeMomentEstimates(
-      int, std::vector<long double> &, matrix<long double> &
-    );
+    struct Estimates computeMomentEstimates(Vector &, Matrix &);
 };
 
 #endif

@@ -8,7 +8,7 @@
 vMF::vMF()
 {
   D = 3;
-  mu = std::vector<long double>(3,0); mu[2] = 1;
+  mu = Vector(3,0); mu[2] = 1;
   kappa = 1;
   updateConstants();
 }
@@ -19,7 +19,7 @@ vMF::vMF()
  *  \param mu a reference to a vector<long double>
  *  \param kappa a long double
  */
-vMF::vMF(std::vector<long double> &mu, long double kappa) : mu(mu), kappa(kappa)
+vMF::vMF(Vector &mu, long double kappa) : mu(mu), kappa(kappa)
 {
   D = mu.size();
   updateConstants();
@@ -30,7 +30,7 @@ vMF::vMF(std::vector<long double> &mu, long double kappa) : mu(mu), kappa(kappa)
  */
 void vMF::updateConstants()
 {
-  kmu = std::vector<long double>(D,0);
+  kmu = Vector(D,0);
   for (int i=0; i<D; i++) {
     kmu[i] = kappa * mu[i];
   }
@@ -90,7 +90,7 @@ vMF vMF::operator=(const vMF &source)
  *  \brief This function returns the mean of the distribution
  *  \return the mean of the distribution
  */
-std::vector<long double> vMF::mean(void)
+Vector vMF::mean(void)
 {
 	return mu;
 }
@@ -131,7 +131,7 @@ int vMF::getDimensionality()
  *  \param x a reference to a vector<long double>
  *  \return density of the function given x
  */
-long double vMF::density(std::vector<long double> &x)
+long double vMF::density(Vector &x)
 {
   long double value = log_density(x);
   return exp(value);
@@ -142,7 +142,7 @@ long double vMF::density(std::vector<long double> &x)
  *  \param x a reference to a vector<long double>
  *  \return density of the function given x
  */
-long double vMF::log_density(std::vector<long double> &x)
+long double vMF::log_density(Vector &x)
 {
   long double expnt = computeDotProduct(kmu,x);
   long double log_density = log_cd + expnt;// + (D-1) * log(AOM);
@@ -154,7 +154,7 @@ long double vMF::log_density(std::vector<long double> &x)
  *  \param x a reference to a vector<long double>
  *  \return the negative log likelihood (base e)
  */
-long double vMF::negativeLogLikelihood(std::vector<long double> &x)
+long double vMF::negativeLogLikelihood(Vector &x)
 {
   return -log_density(x);
 }
@@ -164,12 +164,12 @@ long double vMF::negativeLogLikelihood(std::vector<long double> &x)
  *  \param sample a reference to a vector<vector<long double> >
  *  \return the negative log likelihood (base e)
  */
-long double vMF::negativeLogLikelihood(std::vector<std::vector<long double> > &sample)
+long double vMF::negativeLogLikelihood(std::vector<Vector > &sample)
 {
   long double value = 0;
   int N = sample.size();
   value -= N * log_cd;
-  std::vector<long double> sum(D,0);
+  Vector sum(D,0);
   for (int i=0; i<N; i++) {
     for (int j=0; j<D; j++) {
       sum[j] += sample[i][j];
@@ -210,14 +210,14 @@ void vMF::printParameters(ostream &os)
  *  \param sample_size an integer
  *  \return the random list of points
  */
-void vMF::generateCanonical(std::vector<std::vector<long double> > &canonical_sample, int sample_size)
+void vMF::generateCanonical(std::vector<Vector > &canonical_sample, int sample_size)
 {
   canonical_sample.clear();
   int count = 0;
   beta_distribution<> beta((D-1)/2.0,(D-1)/2.0);
   Normal normal(0,1);
-  std::vector<long double> V(D-1,0);  // (D-1)-unit vector
-  std::vector<long double> random_vmf(D,0);
+  Vector V(D-1,0);  // (D-1)-unit vector
+  Vector random_vmf(D,0);
 
   // step 0
   long double tmp1,tmp2,p,Z,U,W,check;
@@ -242,7 +242,7 @@ void vMF::generateCanonical(std::vector<std::vector<long double> > &canonical_sa
     check = kappa * W + ((D-1) * log(1 - x0*W)) - c;
     if (check >= log(U)) {
       // step 3
-      std::vector<long double> random_normal = normal.generate(D-1);
+      Vector random_normal = normal.generate(D-1);
       normalize(random_normal,V);
       //print(cout,V);
       tmp1 = sqrt(1-W*W);
@@ -261,11 +261,11 @@ void vMF::generateCanonical(std::vector<std::vector<long double> > &canonical_sa
  *  \param sample_size an integer
  *  \return the random list of points
  */
-std::vector<std::vector<long double> > vMF::generate(int sample_size)
+std::vector<Vector > vMF::generate(int sample_size)
 {
   cout << "\nGenerating from vMF with mean: ";
   if (D == 3) {
-    std::vector<long double> spherical(3,0);
+    Vector spherical(3,0);
     cartesian2spherical(mu,spherical);
     spherical[1] *= 180 / PI;
     spherical[2] *= 180 / PI;
@@ -276,16 +276,16 @@ std::vector<std::vector<long double> > vMF::generate(int sample_size)
          << "] and sample size = " << sample_size;
   }
   if (sample_size != 0) {
-    std::vector<std::vector<long double> > canonical_sample;
+    std::vector<Vector > canonical_sample;
     generateCanonical(canonical_sample,sample_size);
     if (fabs(mu[D-1] - 1) <= TOLERANCE) {  // check if mu is Z-axis
       return canonical_sample;
     } else {
-      matrix<long double> transformation = align_zaxis_with_vector(mu);
+      Matrix transformation = align_zaxis_with_vector(mu);
       return transform(canonical_sample,transformation);
     }
   } else if (sample_size == 0) {
-    return std::vector<std::vector<long double> >(); 
+    return std::vector<Vector>(); 
   }
 }
 
