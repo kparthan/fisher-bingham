@@ -6,8 +6,6 @@
 
 class Kent  // FB5
 {
-  friend class Optimize;
-
   private:
 
     Vector mu,major_axis,minor_axis;
@@ -32,6 +30,10 @@ class Kent  // FB5
     long double computeLogNormalizationConstant();
 
     long double computeLogNormalizationConstant(long double, long double);
+
+    long double computeNegativeLogLikelihood(std::vector<Vector> &);
+
+    long double computeNegativeLogLikelihood(Vector &, Matrix &);
 
     struct Estimates computeMomentEstimates(std::vector<Vector> &);
 

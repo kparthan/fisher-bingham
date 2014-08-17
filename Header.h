@@ -50,7 +50,6 @@ typedef boost::numeric::ublas::matrix<long double> Matrix;
 typedef boost::numeric::ublas::identity_matrix<long double> IdentityMatrix;
 typedef boost::numeric::ublas::zero_matrix<long double> ZeroMatrix;
 typedef number<mpfr_float_backend<1000> > my_float; 
-//typedef std::vector<double> state_type;
 
 // numeric constants
 #define AOM 0.001
@@ -62,6 +61,9 @@ typedef number<mpfr_float_backend<1000> > my_float;
 
 #define SET 1 
 #define UNSET 0
+
+#define MOMENT 1
+#define MLE 2
 
 #define PRINT_NON_DETAIL 0
 #define PRINT_DETAIL 1

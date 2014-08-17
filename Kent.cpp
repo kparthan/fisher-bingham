@@ -32,7 +32,7 @@ Kent::Kent(Vector &mu, Vector &major_axis, Vector &minor_axis,
           long double kappa, long double beta): mu(mu), 
           major_axis(major_axis), minor_axis(minor_axis), kappa(kappa), beta(beta)
 {
-  assert(eccentricity() < 1);
+  //assert(eccentricity() < 1);
 }
 
 /*!
@@ -90,6 +90,7 @@ long double Kent::computeLogNormalizationConstant(void)
  */
 long double Kent::computeLogNormalizationConstant(long double k, long double b)
 {
+  assert(b > 0);
   long double ex = 2 * b/k; 
   long double log_ex = 2 * log(ex);
   //long double log_bessel = logModifiedBesselFirstKind(0,k);
@@ -106,7 +107,7 @@ long double Kent::computeLogNormalizationConstant(long double k, long double b)
     diff = log_fj - log_f0; 
     current = exp(diff); // < 1
     series_sum += current;
-    if (current/series_sum <= ZERO) {
+    if (current/series_sum <= TOLERANCE) {
       break;
     }
     prev = current;
@@ -119,12 +120,31 @@ long double Kent::computeLogNormalizationConstant(long double k, long double b)
   return log_norm;
 }
 
+long double Kent::computeNegativeLogLikelihood(std::vector<Vector> &data)
+{
+  Vector sample_mean = computeVectorSum(data);
+  Matrix S = computeDispersionMatrix(data);
+  return computeNegativeLogLikelihood(sample_mean,S);
+}
+
+long double Kent::computeNegativeLogLikelihood(Vector &sample_mean, Matrix &S)
+{
+  long double c1 = computeDotProduct(sample_mean,mu);
+  Vector x = prod(S,major_axis);
+  long double mj = computeDotProduct(major_axis,x);
+  x = prod(S,minor_axis);
+  long double mi = computeDotProduct(minor_axis,x);
+  long double c2 = mj - mi;
+  long double log_norm = computeLogNormalizationConstant(kappa,beta);
+  long double ans = log_norm - kappa * c1 - beta * c2;
+  return ans;
+}
+
 /*!
  *  Moment estimation (with +Z as the north pole)
  */
 struct Estimates Kent::computeMomentEstimates(std::vector<Vector> &data)
 {
-  int N = data.size();
   Vector sample_mean = computeVectorSum(data);
   Matrix S = computeDispersionMatrix(data);
   return computeMomentEstimates(sample_mean,S);
@@ -206,52 +226,12 @@ struct Estimates Kent::computeMomentEstimates(Vector &sample_mean, Matrix &S)
   //cout << "r1: " << r1 << endl;
   //cout << "r2: " << r2 << endl;
 
-  Optimize opt(estimates.mean,estimates.major_axis,estimates.minor_axis);
-  opt.computeMomentEstimates(sample_mean,S);
+  Optimize opt;
+  opt.initialize(estimates.mean,estimates.major_axis,estimates.minor_axis,
+                 estimates.kappa,estimates.beta);
+  //opt.computeMomentEstimates(sample_mean,S,estimates);
+  opt.computeMLEstimates(sample_mean,S,estimates);
   
   return estimates;
 }
-
-/*struct Estimates Kent::computeMomentEstimates(
-  int sample_size, 
-  Vector &sample_mean,
-  Matrix &T
-) { 
-  struct Estimates moment_estimates;
-  Matrix Ht = align_zaxis_with_vector(sample_mean);
-  Matrix H = trans(Ht);
-  Matrix tmp = prod(Ht,T);
-  Matrix B = prod(tmp,H);
-  cout << "B: " << B << endl;
-  long double ratio = 2 * B(0,1) / (B(0,0) - B(1,1));
-  long double psi = 0.5 * atan(ratio);
-  cout << "psi (degrees): " << psi * 180/PI << endl;
-  Matrix K = IdentityMatrix(3,3);
-  K(0,0) = cos(psi); K(0,1) = -sin(psi);
-  K(1,0) = -K(0,1); K(1,1) = K(0,0);
-  cout << "Ht: " << Ht << endl;
-  cout << "H: " << H << endl;
-  cout << "K: " << K << endl;
-  Matrix est = prod(H,K);
-  cout << "HK: " << est << endl;
-  moment_estimates.mean = Vector(3,0);
-  moment_estimates.major_axis = Vector(3,0);
-  moment_estimates.minor_axis = Vector(3,0);
-  for (int i=0; i<3; i++) {
-    moment_estimates.mean[i] = est(i,0);
-    moment_estimates.major_axis[i] = est(i,1);
-    moment_estimates.minor_axis[i] = est(i,2);
-  }
-  // compute r1:
-  long double r1 = norm(sample_mean);
-  cout << "r1: " << r1 << endl;
-
-  // compute r2:
-  long double t1 = (B(0,0)-B(1,1)) * (B(0,0)-B(1,1));
-  long double t2 = 4 * B(0,1) * B(0,1);
-  long double r2 = sqrt(t1+t2);
-  cout << "r2: " << r2 << endl;
-
-  return moment_estimates;
-}*/
 

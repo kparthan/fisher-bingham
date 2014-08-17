@@ -716,7 +716,7 @@ long double computeDawsonsIntegral(double limit)
   std::vector<double> x (1,0.0);
   //integrate(rhs,x,0.0,limit,0.1,track);
   integrate(rhs,x,0.0,limit,0.1);
-  cout << "ans: " << x[0] << endl;
+  //cout << "ans: " << x[0] << endl;
   return x[0];
 }
 
@@ -754,8 +754,8 @@ void TestFunctions(void)
 
   //test.normalization_constant();
 
-  //test.moment_estimation();
+  test.moment_estimation();
 
-  test.optimization();
+  //test.optimization();
 }
 
