@@ -229,9 +229,27 @@ struct Estimates Kent::computeMomentEstimates(Vector &sample_mean, Matrix &S)
   Optimize opt;
   opt.initialize(estimates.mean,estimates.major_axis,estimates.minor_axis,
                  estimates.kappa,estimates.beta);
-  //opt.computeMomentEstimates(sample_mean,S,estimates);
+  opt.computeMomentEstimates(sample_mean,S,estimates);
+  return estimates;
+}
+
+/*!
+ *  Max LH estimation
+ */
+struct Estimates Kent::computeMLEstimates(std::vector<Vector> &data)
+{
+  Vector sample_mean = computeVectorSum(data);
+  Matrix S = computeDispersionMatrix(data);
+  return computeMLEstimates(sample_mean,S);
+}
+
+struct Estimates Kent::computeMLEstimates(Vector &sample_mean, Matrix &S)
+{
+  struct Estimates estimates = computeMomentEstimates(sample_mean,S);
+  Optimize opt;
+  opt.initialize(estimates.mean,estimates.major_axis,estimates.minor_axis,
+                 estimates.kappa,estimates.beta);
   opt.computeMLEstimates(sample_mean,S,estimates);
-  
   return estimates;
 }
 

@@ -45,9 +45,12 @@ class MaximumLikelihoodObjectiveFunction
 
     Matrix S;
 
+    double psi_init,delta_init;
+
   public:
-    MaximumLikelihoodObjectiveFunction(Vector &sample_mean, Matrix &S) :
-                                       sample_mean(sample_mean), S(S)
+    MaximumLikelihoodObjectiveFunction(Vector &sample_mean, Matrix &S, double psi_init, 
+                                       double delta_init) : sample_mean(sample_mean), 
+                                       S(S), psi_init(psi_init), delta_init(delta_init)
     {}
 
     /*!
@@ -57,11 +60,11 @@ class MaximumLikelihoodObjectiveFunction
      *  k,b,m0,mj,mi are parameters
      */
     double operator() (const column_vector& x) const {
-      const double alpha = x(0);
-      const double eta = x(1);
-      const double psi = x(2);
-      const double k = x(3);
-      const double b = x(4);
+      double alpha = x(0);
+      double eta = x(1);
+      double psi = x(2);
+      double k = x(3);
+      double b = x(4);
 
       Vector m0(3,0),m1(3,0),m2,spherical(3,0);
       spherical[0] = 1;
@@ -69,10 +72,16 @@ class MaximumLikelihoodObjectiveFunction
       spherical[1] = alpha; spherical[2] = eta;
       spherical2cartesian(spherical,m0);
       // compute m1
-      spherical[1] = psi;
       // cos(delta-eta) = -cot(alpha) cot(psi)
       double tmp = -1/(tan(alpha) * tan(psi));
-      const double delta = eta + acos(tmp);
+      double delta;
+      if (fabs(tmp) > 1) {
+        psi = psi_init;
+        delta = delta_init;
+      } else {
+        delta = eta + acos(tmp);
+      }
+      spherical[1] = psi;
       spherical[2] = delta;
       spherical2cartesian(spherical,m1);
       // compute m2: m0 X m1
@@ -81,6 +90,7 @@ class MaximumLikelihoodObjectiveFunction
       Kent kent(m0,m1,m2,k,b);
       Vector sample_mean1 = sample_mean; Matrix S1 = S;
       double fval = kent.computeNegativeLogLikelihood(sample_mean1,S1);
+      assert(!boost::math::isnan(fval));
       return fval;
     }
 };

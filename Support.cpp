@@ -538,7 +538,7 @@ void generateRandomOrthogonalVectors(
   spherical[2] = phi;
   spherical2cartesian(spherical,major1); // major axis
   Vector mu1 = ZAXIS;
-  Vector minor1 = crossProduct(mu1,major1);
+  //Vector minor1 = crossProduct(mu1,major1);
 
   long double theta = rand()*PI/(long double)RAND_MAX;
   phi = rand()*2*PI/(long double)RAND_MAX;
@@ -549,7 +549,8 @@ void generateRandomOrthogonalVectors(
 
   Matrix r = align_zaxis_with_vector(mean);
   major_axis = prod(r,major1);
-  minor_axis = prod(r,minor1);
+  //minor_axis = prod(r,minor1);
+  minor_axis = crossProduct(mean,major_axis);
 }
 
 /*
@@ -754,8 +755,10 @@ void TestFunctions(void)
 
   //test.normalization_constant();
 
-  test.moment_estimation();
-
   //test.optimization();
+
+  //test.moment_estimation();
+
+  test.ml_estimation();
 }
 

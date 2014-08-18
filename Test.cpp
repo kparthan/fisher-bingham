@@ -293,6 +293,26 @@ void Test::normalization_constant(void)
   kent1.computeLogNormalizationConstant();
 }
 
+void Test::optimization(void)
+{
+  Kent kent;
+  struct Estimates estimates;
+  Vector spherical(3,0),sample_mean(3,0);
+
+  // Kent example from paper
+  cout << "\nExample from paper:\n";
+  kent= Kent(100,20);
+  sample_mean[0] = 0.083; sample_mean[1] = -0.959; sample_mean[2] = 0.131;
+  cartesian2spherical(sample_mean,spherical);
+  cout << "m0: "; print(cout,sample_mean,3);
+  cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
+  Matrix S(3,3);
+  S(0,0) = 0.045; S(0,1) = -0.075; S(0,2) = 0.014;
+  S(1,0) = -0.075; S(1,1) = 0.921; S(1,2) = -0.122;
+  S(2,0) = 0.014; S(2,1) = -0.122; S(2,2) = 0.034;
+  estimates = kent.computeMomentEstimates(sample_mean,S);
+}
+
 void Test::moment_estimation(void)
 {
   Vector spherical(3,0);
@@ -357,15 +377,45 @@ void Test::moment_estimation(void)
   cout << "kappa_est: " << estimates.kappa << "; beta_est: " << estimates.beta << endl;
 }
 
-void Test::optimization(void)
+void Test::ml_estimation(void)
 {
-  Kent kent;
+  Vector spherical(3,0);
   struct Estimates estimates;
-  Vector spherical(3,0),sample_mean(3,0);
+  std::vector<Vector> random_sample;
+  Vector m0,m1,m2;
+  long double kappa = 100;
+  long double beta = 47.5;
+
+  generateRandomOrthogonalVectors(m0,m1,m2);
+  cartesian2spherical(m0,spherical);
+  cout << "m0: "; print(cout,m0,3);
+  cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
+  cartesian2spherical(m1,spherical);
+  cout << "m1: "; print(cout,m1,3);
+  cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
+  cartesian2spherical(m2,spherical);
+  cout << "m2: "; print(cout,m2,3);
+  cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
+
+  Kent kent(m0,m1,m2,kappa,beta);
+  random_sample = kent.generate(1000);
+  estimates = kent.computeMLEstimates(random_sample);
+
+  cartesian2spherical(estimates.mean,spherical);
+  cout << "m0_est: "; print(cout,estimates.mean,3);
+  cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
+  cartesian2spherical(estimates.major_axis,spherical);
+  cout << "m1_est: "; print(cout,estimates.major_axis,3);
+  cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
+  cartesian2spherical(estimates.minor_axis,spherical);
+  cout << "m2_est: "; print(cout,estimates.minor_axis,3);
+  cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
+  cout << "kappa_est: " << estimates.kappa << "; beta_est: " << estimates.beta << endl;
 
   // Kent example from paper
   cout << "\nExample from paper:\n";
-  kent= Kent(100,20);
+  kent = Kent(100,20);
+  Vector sample_mean(3,0);
   sample_mean[0] = 0.083; sample_mean[1] = -0.959; sample_mean[2] = 0.131;
   cartesian2spherical(sample_mean,spherical);
   cout << "m0: "; print(cout,sample_mean,3);
@@ -374,6 +424,16 @@ void Test::optimization(void)
   S(0,0) = 0.045; S(0,1) = -0.075; S(0,2) = 0.014;
   S(1,0) = -0.075; S(1,1) = 0.921; S(1,2) = -0.122;
   S(2,0) = 0.014; S(2,1) = -0.122; S(2,2) = 0.034;
-  estimates = kent.computeMomentEstimates(sample_mean,S);
+  estimates = kent.computeMLEstimates(sample_mean,S);
+  cartesian2spherical(estimates.mean,spherical);
+  cout << "m0_est: "; print(cout,estimates.mean,3);
+  cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
+  cartesian2spherical(estimates.major_axis,spherical);
+  cout << "m1_est: "; print(cout,estimates.major_axis,3);
+  cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
+  cartesian2spherical(estimates.minor_axis,spherical);
+  cout << "m2_est: "; print(cout,estimates.minor_axis,3);
+  cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
+  cout << "kappa_est: " << estimates.kappa << "; beta_est: " << estimates.beta << endl;
 }
 

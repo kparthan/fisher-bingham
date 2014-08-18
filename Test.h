@@ -26,9 +26,11 @@ class Test
 
     void normalization_constant(void);
 
+    void optimization(void);
+
     void moment_estimation(void);
 
-    void optimization(void);
+    void ml_estimation(void);
 };
 
 #endif

@@ -10,6 +10,11 @@ void Optimize::initialize(Vector &m0, Vector &m1, Vector &m2, long double k, lon
   minor = m2;
   kappa = k;
   beta = b;
+  Vector spherical(3,0);
+  cartesian2spherical(m0,spherical);
+  alpha = spherical[1]; eta = spherical[2];
+  cartesian2spherical(m1,spherical);
+  psi = spherical[1]; delta = spherical[2];
 }
 
 void Optimize::computeMomentEstimates(Vector &sample_mean, Matrix &S, struct Estimates &estimates)
@@ -21,33 +26,28 @@ void Optimize::computeMomentEstimates(Vector &sample_mean, Matrix &S, struct Est
 
 void Optimize::computeMLEstimates(Vector &sample_mean, Matrix &S, struct Estimates &estimates)
 {
-  // initialize
-  computeMomentEstimates(sample_mean,S,estimates);
-  Vector spherical(3,0); 
-  cartesian2spherical(estimates.mean,spherical);
-  alpha = spherical[1];
-  eta = spherical[2];
-  cartesian2spherical(estimates.major_axis,spherical);
-  psi = spherical[1];
-  delta = spherical[2];
-  kappa = estimates.kappa;
-  beta = estimates.beta;
-
-  // minimize
   column_vector theta = minimize(sample_mean,S,MLE,5);
-  alpha = theta(0);
-  eta = theta(1);
-  spherical[1] = alpha; spherical[2] = eta;
+  double alpha_f = theta(0);
+  double eta_f = theta(1);
+  Vector spherical(3,0); spherical[0] = 1;
+  spherical[1] = alpha_f; spherical[2] = eta_f;
   spherical2cartesian(spherical,estimates.mean);
-  psi = theta(2);
-  double tmp = -1/(tan(alpha) * tan(psi));
-  double delta = eta + acos(tmp);
-  spherical[1] = psi; spherical[2] = delta;
+  double psi_f = theta(2);
+  double tmp = -1/(tan(alpha_f) * tan(psi_f));
+  double delta_f;
+  if (fabs(tmp) > 1) { 
+    cout << "yes\n";
+    psi_f = psi;
+    delta_f = delta;
+  } else {
+    delta_f = eta_f + acos(tmp);
+  }
+  assert(!boost::math::isnan(delta_f));
+  spherical[1] = psi_f; spherical[2] = delta_f;
   spherical2cartesian(spherical,estimates.major_axis);
-  estimates.minor_axis = crossProduct(estimates.major_axis,estimates.minor_axis);
+  estimates.minor_axis = crossProduct(estimates.mean,estimates.major_axis);
   estimates.kappa = theta(3);
   estimates.beta = theta(4);
-
 }
 
 column_vector Optimize::minimize(Vector &sample_mean, Matrix &S, int estimation, int num_params)
@@ -73,7 +73,7 @@ column_vector Optimize::minimize(Vector &sample_mean, Matrix &S, int estimation,
       find_min_using_approximate_derivatives(
         bfgs_search_strategy(),
         objective_delta_stop_strategy(1e-10),
-        MaximumLikelihoodObjectiveFunction(sample_mean,S),
+        MaximumLikelihoodObjectiveFunction(sample_mean,S,psi,delta),
         starting_point,
         -100
       );

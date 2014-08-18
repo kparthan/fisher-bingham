@@ -38,6 +38,10 @@ class Kent  // FB5
     struct Estimates computeMomentEstimates(std::vector<Vector> &);
 
     struct Estimates computeMomentEstimates(Vector &, Matrix &);
+
+    struct Estimates computeMLEstimates(std::vector<Vector> &);
+
+    struct Estimates computeMLEstimates(Vector &, Matrix &);
 };
 
 #endif
