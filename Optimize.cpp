@@ -27,9 +27,20 @@ void Optimize::computeMomentEstimates(Vector &sample_mean, Matrix &S, struct Est
 void Optimize::computeMLEstimates(Vector &sample_mean, Matrix &S, struct Estimates &estimates)
 {
   column_vector theta = minimize(sample_mean,S,MLE,5);
+  finalize(theta,estimates);
+}
+
+void Optimize::computeMMLEstimates(Vector &sample_mean, Matrix &S, struct Estimates &estimates)
+{
+  column_vector theta = minimize(sample_mean,S,MML,5);
+  finalize(theta,estimates);
+}
+
+void Optimize::finalize(column_vector &theta, struct Estimates &estimates)
+{
   double alpha_f = theta(0);
   double eta_f = theta(1);
-  Vector spherical(3,0); spherical[0] = 1;
+  Vector spherical(3,1);
   spherical[1] = alpha_f; spherical[2] = eta_f;
   spherical2cartesian(spherical,estimates.mean);
   double psi_f = theta(2);
@@ -74,6 +85,19 @@ column_vector Optimize::minimize(Vector &sample_mean, Matrix &S, int estimation,
         bfgs_search_strategy(),
         objective_delta_stop_strategy(1e-10),
         MaximumLikelihoodObjectiveFunction(sample_mean,S,psi,delta),
+        starting_point,
+        -100
+      );
+      break;
+    }
+
+    case MML:
+    {
+      starting_point = alpha,eta,psi,kappa,beta; 
+      find_min_using_approximate_derivatives(
+        bfgs_search_strategy(),
+        objective_delta_stop_strategy(1e-10),
+        MMLObjectiveFunction(sample_mean,S,psi,delta),
         starting_point,
         -100
       );

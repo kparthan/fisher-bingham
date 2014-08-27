@@ -64,6 +64,7 @@ typedef number<mpfr_float_backend<1000> > my_float;
 
 #define MOMENT 1
 #define MLE 2
+#define MML 3
 
 #define PRINT_NON_DETAIL 0
 #define PRINT_DETAIL 1

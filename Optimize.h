@@ -32,7 +32,7 @@ class MomentObjectiveFunction
       const double b = x(1);
 
       Kent kent(k,b);
-      long double log_norm = kent.computeLogNormalizationConstant(k,b);
+      long double log_norm = kent.computeLogNormalizationConstant();
       double fval = log_norm - k * C1 - b * C2;
       return fval;
     }
@@ -95,6 +95,49 @@ class MaximumLikelihoodObjectiveFunction
     }
 };
 
+class MMLObjectiveFunction
+{
+  private:
+    Vector sample_mean;
+
+    Matrix S;
+
+    double psi_init,delta_init;
+
+  public:
+    MMLObjectiveFunction(Vector &sample_mean, Matrix &S, double psi_init, 
+                         double delta_init) : sample_mean(sample_mean), S(S),
+                         psi_init(psi_init), delta_init(delta_init)
+    {}
+
+    /*!
+     *  minimize function: log c(k,b) - k  (m0' x) - b (mj' xx' mj -  mi xx' mi)
+     *  x: sample mean
+     *  xx' : dispersion matrix (S)
+     *  k,b,m0,mj,mi are parameters
+     */
+    double operator() (const column_vector& x) const {
+      double alpha = x(0);
+      double eta = x(1);
+      double psi = x(2);
+      double k = x(3);
+      double b = x(4);
+
+      double tmp = -1/(tan(alpha) * tan(psi));
+      double delta;
+      if (fabs(tmp) > 1) {
+        psi = psi_init;
+        delta = delta_init;
+      } else {
+        delta = eta + acos(tmp);
+      }
+      Kent kent(alpha,eta,psi,delta,k,b);
+      long double log_prior = kent.computeLogPriorProbability();
+      long double log_fisher = kent.computeLogFisherInformation();
+
+    }
+};
+
 class Optimize
 {
   private:
@@ -109,9 +152,13 @@ class Optimize
 
     void initialize(Vector &, Vector &, Vector &, long double, long double);
 
+    void finalize(column_vector &, struct Estimates &);
+
     void computeMomentEstimates(Vector &, Matrix &, struct Estimates &);
 
     void computeMLEstimates(Vector &, Matrix &, struct Estimates &);
+
+    void computeMMLEstimates(Vector &, Matrix &, struct Estimates &);
 
     column_vector minimize(Vector &, Matrix &, int, int);
 };

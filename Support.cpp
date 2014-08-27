@@ -759,6 +759,10 @@ void TestFunctions(void)
 
   //test.moment_estimation();
 
-  test.ml_estimation();
+  //test.ml_estimation();
+
+  //test.expectation();
+
+    test.fisher();
 }
 

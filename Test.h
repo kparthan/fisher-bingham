@@ -31,6 +31,10 @@ class Test
     void moment_estimation(void);
 
     void ml_estimation(void);
+
+    void expectation();
+
+    void fisher();
 };
 
 #endif

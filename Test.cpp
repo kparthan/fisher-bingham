@@ -258,7 +258,7 @@ void Test::randomSampleGeneration(void)
 void Test::normalization_constant(void)
 {
   cout << "ZERO: " << ZERO << endl;
-  long double kappa = 100;
+  long double kappa = 1000;
   long double beta = 47.5;
   Vector m0 = ZAXIS;
   Vector m1 = XAXIS;
@@ -274,7 +274,11 @@ void Test::normalization_constant(void)
   cout << "A: " << A << endl;
   //Kent kent(100,30);
   Kent kent(kappa,beta);
-  kent.computeLogNormalizationConstant();
+  long double log_norm = kent.computeLogNormalizationConstant();
+  cout << "log_norm: " << log_norm << endl;
+  cout << "dc_db: " << kent.log_dc_db() << endl;
+  cout << "dc_dk: " << kent.log_dc_dk() << endl;
+  cout << "d2c_dk2: " << kent.log_d2c_dk2() << endl;
 
   std::vector<Vector > random_sample;
   generateRandomOrthogonalVectors(m0,m1,m2);
@@ -290,7 +294,11 @@ void Test::normalization_constant(void)
   A = beta * (a1 - a2);
   cout << "A: " << A << endl;
   Kent kent1(m0,m1,m2,kappa,beta);
-  kent1.computeLogNormalizationConstant();
+  log_norm = kent1.computeLogNormalizationConstant();
+  cout << "log_norm: " << log_norm << endl;
+  cout << "dc_db: " << kent1.log_dc_db() << endl;
+  cout << "dc_dk: " << kent1.log_dc_dk() << endl;
+  cout << "d2c_dk2: " << kent1.log_d2c_dk2() << endl;
 }
 
 void Test::optimization(void)
@@ -435,5 +443,34 @@ void Test::ml_estimation(void)
   cout << "m2_est: "; print(cout,estimates.minor_axis,3);
   cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
   cout << "kappa_est: " << estimates.kappa << "; beta_est: " << estimates.beta << endl;
+}
+
+void Test::expectation()
+{
+  Vector m0,m1,m2;
+  long double kappa = 100;
+  long double beta = 47.5;
+
+  generateRandomOrthogonalVectors(m0,m1,m2);
+  Kent kent(m0,m1,m2,kappa,beta);
+  kent.computeConstants();
+  kent.computeExpectation();
+  Kent::Constants constants = kent.getConstants();
+  cout << "E_x: "; print(cout,constants.E_x,0); cout << endl;
+  cout << "E_xx: " << constants.E_xx << endl;
+}
+
+void Test::fisher()
+{
+  Vector m0,m1,m2;
+  long double kappa = 100;
+  long double beta = 14.5;
+
+  generateRandomOrthogonalVectors(m0,m1,m2);
+  Kent kent(m0,m1,m2,kappa,beta);
+  kent.computeConstants();
+  long double log_det_fkb = kent.computeLogFisherScale();
+  cout << "log(det(f_kb)): " << log_det_fkb << endl;
+  cout << "det(f_kb): " << exp(log_det_fkb) << endl;
 }
 

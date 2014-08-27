@@ -35,6 +35,25 @@ Kent::Kent(Vector &mu, Vector &major_axis, Vector &minor_axis,
   //assert(eccentricity() < 1);
 }
 
+Kent::Kent(long double alpha, long double eta, long double psi, long double delta, 
+           long double kappa, long double beta) : alpha(alpha), eta(eta), psi(psi), 
+           delta(delta), kappa(kappa), beta(beta)
+{
+  //assert(eccentricity() < 1);
+  Vector spherical(3,1);
+  mu = Vector(3,0);
+  // compute mu
+  spherical[1] = alpha; spherical[2] = eta;
+  spherical2cartesian(spherical,mu);
+  // compute major_axis
+  spherical[1] = psi;
+  spherical[2] = delta;
+  major_axis = Vector(3,0);
+  spherical2cartesian(spherical,major_axis);
+  // compute minor_axis
+  minor_axis = crossProduct(mu,major_axis);
+}
+
 /*!
  *  Copy the elements
  */
@@ -44,8 +63,13 @@ Kent Kent::operator=(const Kent &source)
     mu = source.mu;
     major_axis = source.major_axis;
     minor_axis = source.minor_axis;
+    alpha = source.alpha;
+    eta = source.eta;
+    psi = source.psi;
+    delta = source.delta;
     kappa = source.kappa;
     beta = source.beta;
+    constants = source.constants;
   }
   return *this;
 }
@@ -77,47 +101,211 @@ long double Kent::eccentricity()
   return 2 * beta / kappa;
 }
 
-/*!
- *  Normalization constant
- */
-long double Kent::computeLogNormalizationConstant(void)
+Kent::Constants Kent::getConstants()
 {
-  return computeLogNormalizationConstant(kappa,beta);
+  return constants;
 }
 
 /*!
  *  Normalization constant
  */
-long double Kent::computeLogNormalizationConstant(long double k, long double b)
+long double Kent::computeLogNormalizationConstant(void)
 {
-  assert(b > 0);
+  return computeSeriesSum(kappa,beta,0.5);
+}
+
+long double Kent::log_dc_dk(void)
+{
+  return computeSeriesSum(kappa,beta,1.5);
+}
+
+long double Kent::log_d2c_dk2(void)
+{
+  return computeSeriesSum(kappa,beta,2.5);
+}
+
+long double Kent::computeSeriesSum(long double k, long double b, long double d)
+{
   long double ex = 2 * b/k; 
   long double log_ex = 2 * log(ex);
   //long double log_bessel = logModifiedBesselFirstKind(0,k);
-  long double log_bessel = log(cyl_bessel_i(0,k));
-  long double log_f0 = lgamma<long double>(0.5) + log_bessel;
-  long double log_fj,prev=1,current,diff,delta,series_sum=1;
-  int j = 1;
+  long double log_bessel_prev,log_bessel_current;
+  long double log_f0,log_fj_current,log_fj_prev;
+  long double current,log_diff,series_sum=1;
+  int j = 0;
+  long double gj;
+
+  log_bessel_prev = log(cyl_bessel_i(d,k));
+  log_f0 = lgamma<long double>(0.5) + log_bessel_prev;
+  log_fj_prev = log_f0;
   while (1) {
-    log_fj = lgamma<long double>(j+0.5) - lgamma<long double>(j+1);
-    log_fj += j * log_ex;
-    //log_bessel = logModifiedBesselFirstKind(2*j+0.5,k);
-    log_bessel = log(cyl_bessel_i(2*j+0.5,k));
-    log_fj += log_bessel;
-    diff = log_fj - log_f0; 
-    current = exp(diff); // < 1
+    d += 2;
+    log_bessel_current = log(cyl_bessel_i(d,k));
+    gj = log_bessel_current - log_bessel_prev;
+    gj += log_ex;
+    gj += (log(j+0.5) - log(j+1));
+
+    log_fj_current = log_fj_prev + gj;
+    log_diff = log_fj_current - log_f0; 
+    current = exp(log_diff); // < 1
     series_sum += current;
     if (current/series_sum <= TOLERANCE) {
       break;
     }
-    prev = current;
     j++;
+    log_bessel_prev = log_bessel_current;
+    log_fj_prev = log_fj_current;
   }
-  long double log_norm = log(2*PI) + 0.5 * log(2.0/k);
-  log_norm += log_f0;
-  log_norm += log(series_sum);
-  //cout << "log_norm: " << log_norm << endl;
-  return log_norm;
+  long double ans = log(2*PI) + 0.5 * log(2.0/k);
+  ans += log_f0;
+  ans += log(series_sum);
+  cout << "j: " << j << endl;
+  //cout << "ans: " << ans << endl;
+  return ans;
+}
+
+long double Kent::log_dc_db()
+{
+  return computeSeriesSum2(kappa,beta,2.5);
+}
+
+long double Kent::log_d2c_dkdb()
+{
+  return computeSeriesSum2(kappa,beta,3.5);
+}
+
+long double Kent::computeSeriesSum2(long double k, long double b, long double d)
+{
+  long double ex = 2 * b/k; 
+  long double log_ex = 2 * log(ex);
+  long double log_bessel_prev,log_bessel_current;
+  long double log_f1,log_fj_current,log_fj_prev;
+  long double current,log_diff,series_sum=1;
+  int j = 1;
+  long double gj;
+
+  log_bessel_prev = log(cyl_bessel_i(d,k));
+  log_f1 = lgamma<long double>(1.5) + log_ex + log_bessel_prev;
+  log_fj_prev = log_f1;
+  while (1) {
+    d += 2;
+    log_bessel_current = log(cyl_bessel_i(d,k));
+    gj = log_bessel_current - log_bessel_prev;
+    gj += log_ex;
+    gj += (log(j+0.5) - log(j));
+
+    log_fj_current = log_fj_prev + gj;
+    log_diff = log_fj_current - log_f1; 
+    current = exp(log_diff); // < 1
+    series_sum += current;
+    if (current/series_sum <= TOLERANCE) {
+      break;
+    }
+    j++;
+    log_bessel_prev = log_bessel_current;
+    log_fj_prev = log_fj_current;
+  }
+  long double ans = log(2*PI) + 0.5 * log(2.0/k) + log(2/b);
+  ans += log_f1;
+  ans += log(series_sum);
+  cout << "j: " << j << endl;
+  return ans;
+}
+
+long double Kent::log_d2c_db2()
+{
+  long double b = beta;
+  long double k = kappa;
+  long double ex = 2 * b/k; 
+  long double log_ex = 2 * log(ex);
+  long double log_bessel_prev,log_bessel_current;
+  long double log_f1,log_fj_current,log_fj_prev;
+  long double current,log_diff,series_sum=1;
+  long double d = 2.5;
+  int j = 1;
+  long double gj;
+
+  log_bessel_prev = log(cyl_bessel_i(d,k));
+  log_f1 = lgamma<long double>(1.5) + log_ex + log_bessel_prev;
+  log_fj_prev = log_f1;
+  while (1) {
+    d += 2;
+    log_bessel_current = log(cyl_bessel_i(d,k));
+    gj = log_bessel_current - log_bessel_prev;
+    gj += log_ex;
+    gj += (2*log(2*j+1) - log(2*j) - log(2*j-1));
+
+    log_fj_current = log_fj_prev + gj;
+    log_diff = log_fj_current - log_f1; 
+    current = exp(log_diff); // < 1
+    series_sum += current;
+    if (current/series_sum <= TOLERANCE) {
+      break;
+    }
+    j++;
+    log_bessel_prev = log_bessel_current;
+    log_fj_prev = log_fj_current;
+  }
+  long double ans = log(2*PI) + 0.5 * log(2.0/k) + log(2) - 2*log(b);
+  ans += log_f1;
+  ans += log(series_sum);
+  cout << "j: " << j << endl;
+  return ans;
+}
+
+void Kent::computeConstants()
+{
+  constants.log_c = computeLogNormalizationConstant();
+  constants.log_cb = log_dc_db();
+  constants.log_cbb = log_d2c_db2();
+  constants.log_ck = log_dc_dk();
+  constants.log_ckk = log_d2c_dk2();
+  constants.log_ckb = log_d2c_dkdb();
+
+  long double tmp;
+  tmp = constants.log_ck - constants.log_c;
+  constants.ck_c = exp(tmp);
+
+  tmp = constants.log_ckk - constants.log_c;
+  constants.ckk_c = exp(tmp);
+
+  tmp = constants.log_cb - constants.log_c;
+  constants.cb_c = exp(tmp);
+
+  tmp = constants.log_cbb - constants.log_c;
+  constants.cbb_c = exp(tmp);
+
+  tmp = constants.log_ckb - constants.log_c;
+  constants.ckb_c = exp(tmp);
+
+  constants.R = computeOrthogonalTransformation(mu,major_axis);
+  constants.Rt = trans(constants.R);
+}
+
+/*!
+ *  E[x x'] = R E[y y'] R'  where
+ *  R is the rotation matrix from standard frame of reference 
+ *  to the current orientation of axes
+ */
+void Kent::computeExpectation()
+{
+  constants.E_x = Vector(3,0);
+  for (int i=0; i<3; i++) {
+    constants.E_x[i] = mu[i] * constants.ck_c;
+  }
+
+  Matrix expectation_std = ZeroMatrix(3,3);
+  expectation_std(0,0) = 0.5 * (1 - constants.ckk_c + constants.cb_c);  // lambda_1
+  expectation_std(1,1) = 0.5 * (1 - constants.ckk_c - constants.cb_c);  // lambda_2
+  expectation_std(2,2) = constants.ckk_c;  // lambda_3
+
+  assert(expectation_std(0,0) > 0);
+  assert(expectation_std(1,1) > 0);
+  assert(expectation_std(2,2) > 0);
+  cout << "E_std: " << expectation_std << endl;
+
+  Matrix tmp1 = prod(constants.R,expectation_std);
+  constants.E_xx = prod(tmp1,constants.Rt);
 }
 
 long double Kent::computeNegativeLogLikelihood(std::vector<Vector> &data)
@@ -135,9 +323,41 @@ long double Kent::computeNegativeLogLikelihood(Vector &sample_mean, Matrix &S)
   x = prod(S,minor_axis);
   long double mi = computeDotProduct(minor_axis,x);
   long double c2 = mj - mi;
-  long double log_norm = computeLogNormalizationConstant(kappa,beta);
+  long double log_norm = computeLogNormalizationConstant();
   long double ans = log_norm - kappa * c1 - beta * c2;
   return ans;
+}
+
+long double Kent::computeLogPriorProbability()
+{
+}
+
+long double Kent::computeLogFisherInformation()
+{
+  computeConstants();
+  computeExpectation();
+  long double log_det_axes = computeLogFisherAxes();
+  long double log_det_kb = computeLogFisherScale();
+  return log_det_axes + log_det_kb;
+}
+
+long double Kent::computeLogFisherAxes()
+{
+}
+
+long double Kent::computeLogFisherScale()
+{
+  // E [d^2 L / d k^2]
+  long double t1 = constants.ckk_c - (constants.ck_c * constants.ck_c);
+
+  // E [d^2 L / d b^2]
+  long double t2 = constants.cbb_c - (constants.cb_c * constants.cb_c);
+
+  // E [d^2 L / dk db]
+  long double t3 = constants.ckb_c - (constants.ck_c * constants.cb_c);
+
+  long double det = t1 * t2 - t3;
+  return log(det);
 }
 
 /*!
@@ -250,6 +470,16 @@ struct Estimates Kent::computeMLEstimates(Vector &sample_mean, Matrix &S)
   opt.initialize(estimates.mean,estimates.major_axis,estimates.minor_axis,
                  estimates.kappa,estimates.beta);
   opt.computeMLEstimates(sample_mean,S,estimates);
+  return estimates;
+}
+
+struct Estimates Kent::computeMMLEstimates(Vector &sample_mean, Matrix &S)
+{
+  struct Estimates estimates = computeMomentEstimates(sample_mean,S);
+  Optimize opt;
+  opt.initialize(estimates.mean,estimates.major_axis,estimates.minor_axis,
+                 estimates.kappa,estimates.beta);
+  opt.computeMMLEstimates(sample_mean,S,estimates);
   return estimates;
 }
 
