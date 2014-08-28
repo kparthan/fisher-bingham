@@ -34,6 +34,8 @@ class Test
 
     void expectation();
 
+    void kl_divergence();
+
     void fisher();
 };
 

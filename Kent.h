@@ -23,6 +23,8 @@ class Kent  // FB5
       Matrix R,Rt;  // R: standard -> current orientation
     } constants;
 
+    int computed;
+
   public:
     Kent();
 
@@ -83,6 +85,18 @@ class Kent  // FB5
     struct Estimates computeMLEstimates(Vector &, Matrix &);
 
     struct Estimates computeMMLEstimates(Vector &, Matrix &);
+
+    Vector Mean();
+
+    Vector MajorAxis();
+
+    Vector MinorAxis();
+
+    long double Kappa();
+
+    long double Beta();
+
+    long double computeKLDivergence(Kent &);
 };
 
 #endif

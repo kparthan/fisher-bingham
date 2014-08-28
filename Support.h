@@ -38,6 +38,7 @@ std::vector<Vector> load_matrix(string &);
 Matrix outer_prod(Vector &, Vector &);
 Vector prod(Matrix &, Vector &);
 Vector prod(Vector &, Matrix &);
+long double prod_vMv(Vector &, Matrix &);
 Vector computeVectorSum(std::vector<Vector > &);
 Matrix computeDispersionMatrix(std::vector<Vector > &);
 Matrix computeOrthogonalTransformation(Vector &, Vector &);

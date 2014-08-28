@@ -70,6 +70,7 @@ Kent Kent::operator=(const Kent &source)
     kappa = source.kappa;
     beta = source.beta;
     constants = source.constants;
+    computed = source.computed;
   }
   return *this;
 }
@@ -103,6 +104,9 @@ long double Kent::eccentricity()
 
 Kent::Constants Kent::getConstants()
 {
+  if (computed != SET) {
+    computeExpectation();
+  }
   return constants;
 }
 
@@ -289,6 +293,8 @@ void Kent::computeConstants()
  */
 void Kent::computeExpectation()
 {
+  computeConstants();
+
   constants.E_x = Vector(3,0);
   for (int i=0; i<3; i++) {
     constants.E_x[i] = mu[i] * constants.ck_c;
@@ -306,6 +312,8 @@ void Kent::computeExpectation()
 
   Matrix tmp1 = prod(constants.R,expectation_std);
   constants.E_xx = prod(tmp1,constants.Rt);
+
+  computed = SET;
 }
 
 long double Kent::computeNegativeLogLikelihood(std::vector<Vector> &data)
@@ -481,5 +489,60 @@ struct Estimates Kent::computeMMLEstimates(Vector &sample_mean, Matrix &S)
                  estimates.kappa,estimates.beta);
   opt.computeMMLEstimates(sample_mean,S,estimates);
   return estimates;
+}
+
+Vector Kent::Mean()
+{
+  return mu;
+}
+
+Vector Kent::MajorAxis()
+{
+  return major_axis;
+}
+
+Vector Kent::MinorAxis()
+{
+  return minor_axis;
+}
+
+long double Kent::Kappa()
+{
+  return kappa;
+}
+
+long double Kent::Beta()
+{
+  return beta;
+}
+
+long double Kent::computeKLDivergence(Kent &other)
+{
+  struct Constants constants1 = getConstants();
+  struct Constants constants2 = other.getConstants();
+
+  long double ans = constants2.log_c - constants1.log_c;
+  
+  long double kappa2 = other.Kappa();
+  Vector mu2 = other.Mean();
+  Vector kmu(3,0);
+  for (int i=0; i<3; i++) {
+    kmu[i] = kappa * mu[i] - kappa2 * mu2[i];
+  }
+  ans += computeDotProduct(kmu,constants1.E_x);
+
+  long double tmp1,tmp2;
+  tmp1 = prod_vMv(major_axis,constants1.E_xx);
+  tmp2 = prod_vMv(minor_axis,constants1.E_xx);
+  ans += beta * (tmp1 - tmp2);
+
+  long double beta2 = other.Beta();
+  Vector mj2 = other.MajorAxis();
+  Vector mi2 = other.MinorAxis();
+  tmp1 = prod_vMv(mj2,constants1.E_xx);
+  tmp2 = prod_vMv(mi2,constants1.E_xx);
+  ans -= beta2 * (tmp1 - tmp2);
+
+  return ans;
 }
 

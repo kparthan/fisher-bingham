@@ -442,6 +442,16 @@ Vector prod(Vector &v, Matrix &m)
 }
 
 /*!
+ *  v is considered to be a column std::vector
+ *  output: v' M v
+ */
+long double prod_vMv(Vector &v, Matrix &M)
+{
+  Vector vM = prod(v,M);
+  return computeDotProduct(vM,v);
+}
+
+/*!
  *  Computes \sum x / N (x is a vector)
  */
 Vector computeVectorSum(std::vector<Vector > &sample) 
@@ -763,6 +773,8 @@ void TestFunctions(void)
 
   //test.expectation();
 
-    test.fisher();
+  test.kl_divergence();
+
+  //test.fisher();
 }
 

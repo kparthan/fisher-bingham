@@ -453,11 +453,28 @@ void Test::expectation()
 
   generateRandomOrthogonalVectors(m0,m1,m2);
   Kent kent(m0,m1,m2,kappa,beta);
-  kent.computeConstants();
   kent.computeExpectation();
   Kent::Constants constants = kent.getConstants();
   cout << "E_x: "; print(cout,constants.E_x,0); cout << endl;
   cout << "E_xx: " << constants.E_xx << endl;
+}
+
+void Test::kl_divergence()
+{
+  Vector m0,m1,m2;
+  long double kappa = 100;
+  long double beta = 47.5;
+  generateRandomOrthogonalVectors(m0,m1,m2);
+  Kent kent1(m0,m1,m2,kappa,beta);
+
+  kappa = 200; beta = 60;
+  Kent kent2(m0,m1,m2,kappa,beta);
+  cout << "KL-Div: " << kent1.computeKLDivergence(kent2) << endl;
+
+  generateRandomOrthogonalVectors(m0,m1,m2);
+  kappa = 100; beta = 47.5;
+  Kent kent3(m0,m1,m2,kappa,beta);
+  cout << "KL-Div: " << kent1.computeKLDivergence(kent3) << endl;
 }
 
 void Test::fisher()
