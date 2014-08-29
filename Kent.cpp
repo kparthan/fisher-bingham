@@ -52,6 +52,25 @@ Kent::Kent(long double alpha, long double eta, long double psi, long double delt
   spherical2cartesian(spherical,major_axis);
   // compute minor_axis
   minor_axis = crossProduct(mu,major_axis);
+
+  // pre-compute trignometry constants
+  tc.cos_alpha = cos(alpha);
+  tc.sin_alpha = sin(alpha);
+  tc.tan_alpha = tan(alpha);
+
+  tc.cos_eta = cos(eta);
+  tc.sin_eta = sin(eta);
+
+  tc.cos_delta = cos(delta);
+  tc.sin_delta = sin(delta);
+
+  tc.d_n = delta - eta;
+  tc.cos_d_n = cos(tc.d_n);
+  tc.sin_d_n = sin(tc.d_n);
+
+  tc.cos_psi = cos(psi);
+  tc.sin_psi = sin(psi);
+  tc.tan_psi = tan(psi);
 }
 
 /*!
@@ -71,6 +90,8 @@ Kent Kent::operator=(const Kent &source)
     beta = source.beta;
     constants = source.constants;
     computed = source.computed;
+    df = source.df;
+    tc = source.tc;
   }
   return *this;
 }
@@ -342,7 +363,6 @@ long double Kent::computeLogPriorProbability()
 
 long double Kent::computeLogFisherInformation()
 {
-  computeConstants();
   computeExpectation();
   long double log_det_axes = computeLogFisherAxes();
   long double log_det_kb = computeLogFisherScale();
@@ -351,6 +371,217 @@ long double Kent::computeLogFisherInformation()
 
 long double Kent::computeLogFisherAxes()
 {
+  computeDifferentials();
+}
+
+void Kent::computeDifferentials()
+{
+  computeFirstOrderDifferentials();
+  computeSecondOrderDifferentials();
+}
+
+void Kent::computeFirstOrderDifferentials()
+{
+  std::vector<Vector > first_order(3);
+  Vector d1(3,0);
+
+  // d1_mu[0]: dmu_da
+  d1[0] = tc.cos_alpha * tc.cos_eta;  // d1 y11_da
+  d1[1] = tc.cos_alpha * tc.sin_eta;  // d1 y12_da
+  d1[2] = -tc.sin_alpha;              // d1 y13_da
+  first_order[0] = d1;
+
+  // d1_mu[1]: dmu_dn
+  d1[0] = -tc.sin_alpha * tc.sin_eta;  // d1 y11_dn
+  d1[1] = tc.sin_alpha * tc.cos_eta;   // d1 y12_dn
+  d1[2] = 0;                           // d1 y13_dn
+  first_order[1] = d1;
+
+  // d1_mu[2]: dmu_ds = 0
+  d1[0] = 0;
+  d1[1] = 0;
+  d1[2] = 0;
+  first_order[2] = d1;
+
+  df.d1_mu = first_order;
+
+  computeDeltaDifferentials();
+  // d1_mj[0]: dmj_da
+  d1[0] = -tc.sin_psi * tc.sin_delta * df.ddel_da;
+  d1[1] = tc.sin_psi * tc.cos_delta * df.ddel_da;
+  d1[2] = -tc.sin_delta * df.ddel_da;
+  first_order[0] = d1;
+
+  // d1_mj[1]: dmj_dn
+  d1[0] = -tc.sin_psi * tc.sin_delta;
+  d1[1] = tc.sin_psi * tc.cos_delta;
+  d1[2] = -tc.sin_delta;
+  first_order[1] = d1;
+
+  // d1_mj[2]: dmj_ds
+  d1[0] = tc.cos_psi * tc.cos_delta - tc.sin_psi * tc.sin_delta * df.ddel_ds;
+  d1[1] = tc.cos_psi * tc.sin_delta + tc.sin_psi * tc.cos_delta * df.ddel_ds;
+  d1[2] = -tc.sin_delta * df.ddel_ds;
+  first_order[2] = d1;
+
+  df.d1_mj = first_order;
+
+  // d1_mi[0]: dmi_da
+  // d1_mi[1]: dmi_dn
+  // d1_mi[2]: dmi_ds
+  for (int i=0; i<3; i++) {
+    first_order[i] = computeFirstOrderDifferentialsMinorAxis(i);
+  }
+  df.d1_mi = first_order;
+}
+
+Vector Kent::computeFirstOrderDifferentialsMinorAxis(int i)
+{
+  Vector cross1 = crossProduct(df.d1_mu[i],major_axis);
+  Vector cross2 = crossProduct(mu,df.d1_mj[i]);
+  Vector ans(3,0);
+  for (int i=0; i<3; i++) {
+    ans[i] = cross1[i] + cross2[i];
+  }
+  return ans;
+}
+
+void Kent::computeDeltaDifferentials()
+{
+  long double tmp1,tmp2;
+
+  // d(delta)_d(alpha)
+  tmp1 = tc.sin_d_n * tc.tan_psi * tc.sin_alpha * tc.sin_alpha;
+  df.ddel_da = -1/tmp1;
+
+  // d(delta)_d(psi)
+  tmp1 = tc.sin_d_n * tc.tan_alpha * tc.sin_psi * tc.sin_psi;
+  df.ddel_ds = -1/tmp1;
+
+  // d2(delta)_d(alpha)2
+  tmp1 = tc.tan_psi * tc.sin_alpha * tc.sin_alpha * tc.tan_alpha;
+  tmp2 = 2/tmp1;
+  tmp1 = df.ddel_da * df.ddel_da * tc.cos_d_n;
+  df.d2del_da2 = (tmp2 - tmp1) / tc.sin_d_n;
+
+  // d2(delta)_d(psi)2
+  tmp1 = tc.tan_alpha * tc.sin_psi * tc.sin_psi * tc.tan_psi;
+  tmp2 = 2/tmp1;
+  tmp1 = df.ddel_ds * df.ddel_ds * tc.cos_d_n;
+  df.d2del_ds2 = (tmp2 - tmp1) / tc.sin_d_n;
+
+  // d2(delta)_d(alpha)d(psi)
+  tmp1 = tc.sin_alpha * tc.sin_alpha * tc.sin_psi * tc.sin_psi;
+  tmp2 = 1/tmp1;
+  tmp1 = df.ddel_da * df.ddel_ds * tc.cos_d_n;
+  df.d2del_dads = (tmp2 - tmp1) / tc.sin_d_n;
+}
+
+void Kent::computeSecondOrderDifferentials()
+{
+  std::vector<Vector > second_order(6);
+  Vector d2(3,0);
+
+  // d2_mu[0]: d2mu_da2
+  d2[0] = -tc.sin_alpha * tc.cos_eta;
+  d2[1] = -tc.sin_alpha * tc.sin_eta;
+  d2[2] = -tc.cos_alpha;
+  second_order[0] = d2;
+
+  // d2_mu[1]: d2mu_dn2
+  d2[2] = 0;
+  second_order[1] = d2;
+
+  // d2_mu[2]: d2mu_ds2
+  d2[0] = 0;
+  d2[1] = 0;
+  second_order[2] = d2;
+
+  // d2_mu[3]: d2mu_dadn
+  d2[0] = -tc.cos_alpha * tc.sin_eta;
+  d2[1] = tc.cos_alpha * tc.cos_eta;
+  second_order[3] = d2;
+
+  // d2_mu[4]: d2mu_dads
+  d2[0] = 0;
+  d2[1] = 0;
+  second_order[4] = d2;
+
+  // d2_mu[5]: d2mu_dnds
+  second_order[5] = d2;
+
+  df.d2_mu = second_order;
+
+  // d2_mj[0]: d2mj_da2
+  d2[2] = -tc.sin_delta * df.d2del_da2 - tc.cos_delta * df.ddel_da * df.ddel_da;
+  d2[0] = tc.sin_psi * d2[2];
+  d2[1] = tc.sin_psi * (tc.cos_delta * df.d2del_da2 - tc.sin_delta * df.ddel_da * df.ddel_da);
+  second_order[0] = d2;
+
+  // d2_mj[1]: d2mj_dn2
+  d2[0] = -tc.sin_psi * tc.cos_delta;
+  d2[1] = -tc.sin_psi * tc.sin_delta;
+  d2[2] = -tc.cos_delta;
+  second_order[1] = d2;
+
+  // d2_mj[2]: d2mj_ds2
+  d2[2] = -tc.sin_delta * df.d2del_ds2 - tc.cos_delta * df.ddel_ds * df.ddel_ds;
+  d2[0] = tc.sin_psi * d2[2] - tc.cos_delta * tc.sin_psi 
+          - 2 * tc.cos_psi * tc.sin_delta * df.ddel_ds;
+  d2[1] = -tc.sin_delta * tc.sin_psi + 2 * tc.cos_delta * tc.cos_psi * df.ddel_ds
+          + tc.sin_psi * (tc.cos_delta * df.d2del_ds2 - tc.sin_delta * df.ddel_ds * df.ddel_ds);
+  second_order[2] = d2;
+
+  // d2_mj[3]: d2mj_dadn
+  for (int i=0; i<3; i++) {
+    d2[i] = -df.ddel_da * major_axis[i];
+  }
+  second_order[3] = d2;
+
+  // d2_mj[4]: d2mj_dads
+  d2[2] = -tc.sin_delta * df.d2del_dads - tc.cos_delta * df.ddel_da * df.ddel_ds;
+  d2[0] = tc.sin_psi * d2[2] - tc.cos_psi * tc.sin_delta * df.ddel_da;
+  d2[1] = tc.sin_psi * (tc.cos_delta * df.d2del_dads - tc.sin_delta * df.ddel_da * df.ddel_ds)
+          + tc.cos_psi * tc.cos_delta * df.ddel_da;
+  second_order[4] = d2;
+
+  // d2_mj[5]: d2mj_dnds
+  d2[0] = -tc.cos_psi * tc.sin_delta - tc.sin_psi * tc.cos_delta * df.ddel_ds;
+  d2[1] = tc.cos_psi * tc.cos_delta - tc.sin_psi * tc.sin_delta * df.ddel_ds;
+  d2[2] = -tc.cos_delta * df.ddel_ds;
+  second_order[5] = d2;
+
+  df.d2_mj = second_order;
+
+  // d2_mi[0]: d2mi_da2
+  second_order[0] = computeSecondOrderDifferentialsMinorAxis(0,0,0,0,0,0);
+  // d2_mi[1]: d2mi_dn2
+  second_order[1] = computeSecondOrderDifferentialsMinorAxis(1,1,1,1,1,1);
+  // d2_mi[2]: d2mi_ds2
+  second_order[2] = computeSecondOrderDifferentialsMinorAxis(2,2,2,2,2,2);
+  // d2_mi[3]: d2mi_dadn
+  second_order[3] = computeSecondOrderDifferentialsMinorAxis(3,1,0,3,0,1);
+  // d2_mi[4]: d2mi_dads
+  second_order[4] = computeSecondOrderDifferentialsMinorAxis(4,2,0,4,0,2);
+  // d2_mi[5]: d2mi_dnds
+  second_order[5] = computeSecondOrderDifferentialsMinorAxis(5,2,1,5,1,2);
+
+  df.d2_mi = second_order;
+}
+
+Vector Kent::computeSecondOrderDifferentialsMinorAxis(
+  int i0, int i1, int i2, int i3, int i4, int i5
+) {
+  Vector c1 = crossProduct(df.d2_mu[i0],major_axis);
+  Vector c2 = crossProduct(df.d1_mu[i1],df.d1_mj[i2]);
+  Vector c3 = crossProduct(mu,df.d2_mj[i3]);
+  Vector c4 = crossProduct(df.d1_mu[i4],df.d1_mj[i5]);
+
+  Vector ans(3,0);
+  for (int i=0; i<3; i++) {
+    ans[i] = c1[i] + c2[i] + c3[i] + c4[i];
+  }
+  return ans;
 }
 
 long double Kent::computeLogFisherScale()

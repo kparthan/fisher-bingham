@@ -23,6 +23,27 @@ class Kent  // FB5
       Matrix R,Rt;  // R: standard -> current orientation
     } constants;
 
+    struct TrignometryConstants {
+      long double cos_alpha,sin_alpha,tan_alpha;
+      long double cos_eta,sin_eta;
+      long double cos_psi,sin_psi,tan_psi;
+      long double cos_delta,sin_delta;
+      long double d_n,cos_d_n,sin_d_n;
+    } tc;
+
+    //  d1_mu (3 X 3): <dmu_da> <dmu_dn> <dmu_ds>
+    //  d2_mu (6 X 3): [0] <d2mu_da2> 
+    //                 [1] <d2mu_dn2> 
+    //                 [2] <d2mu_ds2> 
+    //                 [3] <d2mu_dadn> 
+    //                 [4] <d2mu_dads> 
+    //                 [5] <d2mu_dnds>
+    struct Differentials {
+      std::vector<Vector > d1_mu,d1_mj,d1_mi;
+      std::vector<Vector > d2_mu,d2_mj,d2_mi;
+      long double ddel_da,ddel_ds,d2del_da2,d2del_ds2,d2del_dads;
+    } df;
+
     int computed;
 
   public:
@@ -65,6 +86,18 @@ class Kent  // FB5
     void computeExpectation();
 
     long double computeLogFisherAxes();
+
+    void computeDifferentials();
+
+    void computeFirstOrderDifferentials();
+
+    Vector computeFirstOrderDifferentialsMinorAxis(int);
+
+    void computeDeltaDifferentials();
+
+    void computeSecondOrderDifferentials();
+
+    Vector computeSecondOrderDifferentialsMinorAxis(int, int, int, int, int, int);
 
     long double computeLogFisherScale();
 
