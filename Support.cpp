@@ -130,6 +130,22 @@ void print(ostream &os, Vector &v, int precision)
   }
 }
 
+void print(string &type, struct Estimates &estimates)
+{
+  cout << "TYPE: " << type << endl;
+  Vector spherical(3,0);
+  cartesian2spherical(estimates.mean,spherical);
+  cout << "m0_est: "; print(cout,estimates.mean,3);
+  cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
+  cartesian2spherical(estimates.major_axis,spherical);
+  cout << "m1_est: "; print(cout,estimates.major_axis,3);
+  cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
+  cartesian2spherical(estimates.minor_axis,spherical);
+  cout << "m2_est: "; print(cout,estimates.minor_axis,3);
+  cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
+  cout << "kappa_est: " << estimates.kappa << "; beta_est: " << estimates.beta << endl;
+}
+
 ////////////////////// MATH FUNCTIONS \\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
 /*!

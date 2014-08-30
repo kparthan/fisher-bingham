@@ -112,6 +112,10 @@ class Kent  // FB5
 
     long double computeLogFisherInformation();
 
+    void computeAllEstimators(std::vector<Vector> &);
+
+    void computeAllEstimators(Vector &, Matrix &, int);
+
     struct Estimates computeMomentEstimates(std::vector<Vector> &);
 
     struct Estimates computeMomentEstimates(Vector &, Matrix &, int);

@@ -21,6 +21,7 @@ bool checkFile(string &);
 void writeToFile(const char *, std::vector<Vector > &, int);
 string extractName(string &);
 void print(ostream &, Vector &, int);
+void print(string &, struct Estimates &);
 
 int sign(long double);
 long double normalize(Vector &, Vector &);

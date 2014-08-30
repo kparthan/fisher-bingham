@@ -650,6 +650,28 @@ long double Kent::computeLogFisherScale()
   return log(det);
 }
 
+void Kent::computeAllEstimators(std::vector<Vector> &data)
+{
+  Vector sample_mean = computeVectorSum(data);
+  Matrix S = computeDispersionMatrix(data);
+  computeAllEstimators(sample_mean,S,data.size());
+}
+
+void Kent::computeAllEstimators(Vector &sample_mean, Matrix &S, int N)
+{
+  string type = "MOMENT";
+  struct Estimates moment_est = computeMomentEstimates(sample_mean,S,N);
+  print(type,moment_est);
+
+  type = "MLE";
+  struct Estimates ml_est = moment_est;
+  Optimize opt;
+  opt.initialize(N,ml_est.mean,ml_est.major_axis,ml_est.minor_axis,
+                 ml_est.kappa,ml_est.beta);
+  opt.computeMLEstimates(sample_mean,S,ml_est);
+  print(type,ml_est);
+}
+
 /*!
  *  Moment estimation (with +Z as the north pole)
  */

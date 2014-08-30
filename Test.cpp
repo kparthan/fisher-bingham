@@ -408,7 +408,7 @@ void Test::ml_estimation(void)
   std::vector<Vector> random_sample;
   Vector m0,m1,m2;
   long double kappa = 100;
-  long double beta = 30;
+  long double beta = 47.5;
 
   generateRandomOrthogonalVectors(m0,m1,m2);
   cartesian2spherical(m0,spherical);
@@ -423,18 +423,7 @@ void Test::ml_estimation(void)
 
   Kent kent(m0,m1,m2,kappa,beta);
   random_sample = kent.generate(1000);
-  estimates = kent.computeMLEstimates(random_sample);
-
-  cartesian2spherical(estimates.mean,spherical);
-  cout << "m0_est: "; print(cout,estimates.mean,3);
-  cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
-  cartesian2spherical(estimates.major_axis,spherical);
-  cout << "m1_est: "; print(cout,estimates.major_axis,3);
-  cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
-  cartesian2spherical(estimates.minor_axis,spherical);
-  cout << "m2_est: "; print(cout,estimates.minor_axis,3);
-  cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
-  cout << "kappa_est: " << estimates.kappa << "; beta_est: " << estimates.beta << endl;
+  kent.computeAllEstimators(random_sample);
 
   // Kent example from paper
   cout << "\nExample from paper:\n";
@@ -455,17 +444,7 @@ void Test::ml_estimation(void)
       S(i,j) *= N;
     }
   }
-  estimates = kent.computeMLEstimates(sample_mean,S,N);
-  cartesian2spherical(estimates.mean,spherical);
-  cout << "m0_est: "; print(cout,estimates.mean,3);
-  cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
-  cartesian2spherical(estimates.major_axis,spherical);
-  cout << "m1_est: "; print(cout,estimates.major_axis,3);
-  cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
-  cartesian2spherical(estimates.minor_axis,spherical);
-  cout << "m2_est: "; print(cout,estimates.minor_axis,3);
-  cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
-  cout << "kappa_est: " << estimates.kappa << "; beta_est: " << estimates.beta << endl;
+  kent.computeAllEstimators(sample_mean,S,N);
 }
 
 void Test::expectation()

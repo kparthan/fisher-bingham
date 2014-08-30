@@ -120,7 +120,7 @@ column_vector Optimize::minimize(Vector &sample_mean, Matrix &S, int estimation,
                   1e-6,  // stopping trust region radius
                   100    // max number of objective function evaluations
   );*/
-  cout << "solution:\n" << starting_point << endl;
+  //cout << "solution:\n" << starting_point << endl;
   return starting_point;
 }
 
