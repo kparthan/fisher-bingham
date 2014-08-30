@@ -452,7 +452,35 @@ long double prod_vMv(Vector &v, Matrix &M)
 }
 
 /*!
- *  Computes \sum x / N (x is a vector)
+ *  x,y are considered to be a column std::vectors
+ *  output: x' M y
+ */
+long double prod_xMy(Vector &x, Matrix &M, Vector &y)
+{
+  Vector xM = prod(x,M);
+  return computeDotProduct(xM,y);
+}
+
+/*!
+ *  determinant of 3 X 3 matrix
+ */
+long double determinant(Matrix &m)
+{
+  long double det = 0,subdet;
+  subdet = m(1,1) * m(2,2) - m(1,2) * m(2,1);
+  det += m(0,0) * subdet;
+
+  subdet = m(1,0) * m(2,2) - m(1,2) * m(2,0);
+  det -= m(0,1) * subdet;
+
+  subdet = m(1,0) * m(2,1) - m(1,1) * m(2,0);
+  det += m(0,2) * subdet;
+
+  return det;
+}
+
+/*!
+ *  Computes \sum x (x is a vector)
  */
 Vector computeVectorSum(std::vector<Vector > &sample) 
 {
@@ -463,14 +491,23 @@ Vector computeVectorSum(std::vector<Vector > &sample)
       sum[j] += sample[i][j];
     }
   }
-  for (int j=0; j<d; j++) {
+  return sum;
+}
+
+/*!
+ *  Computes \sum x / N (x is a vector)
+ */
+Vector computeNormalizedVectorSum(std::vector<Vector > &sample) 
+{
+  Vector sum = computeVectorSum(sample);
+  for (int j=0; j<sum.size(); j++) {
     sum[j] /= sample.size();
   }
   return sum;
 }
 
 /*!
- *  Computes \sum x * x' / N (x is a vector)
+ *  Computes \sum x * x' (x is a vector)
  */
 Matrix computeDispersionMatrix(std::vector<Vector > &sample)
 {
@@ -479,6 +516,15 @@ Matrix computeDispersionMatrix(std::vector<Vector > &sample)
   for (int i=0; i<sample.size(); i++) {
     dispersion += outer_prod(sample[i],sample[i]);
   }
+  return dispersion;
+}
+
+/*!
+ *  Computes \sum x * x' / N (x is a vector)
+ */
+Matrix computeNormalizedDispersionMatrix(std::vector<Vector > &sample)
+{
+  Matrix dispersion = computeDispersionMatrix(sample);
   return dispersion/sample.size();
 }
 
@@ -769,11 +815,11 @@ void TestFunctions(void)
 
   //test.moment_estimation();
 
-  //test.ml_estimation();
+  test.ml_estimation();
 
   //test.expectation();
 
-  test.kl_divergence();
+  //test.kl_divergence();
 
   //test.fisher();
 }

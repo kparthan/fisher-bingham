@@ -3,8 +3,9 @@
 Optimize::Optimize()
 {}
 
-void Optimize::initialize(Vector &m0, Vector &m1, Vector &m2, long double k, long double b)
+void Optimize::initialize(int sample_size, Vector &m0, Vector &m1, Vector &m2, long double k, long double b)
 {
+  N = sample_size;
   mean = m0;
   major = m1;
   minor = m2;
@@ -71,7 +72,7 @@ column_vector Optimize::minimize(Vector &sample_mean, Matrix &S, int estimation,
       find_min_using_approximate_derivatives(
         bfgs_search_strategy(),
         objective_delta_stop_strategy(1e-10),
-        MomentObjectiveFunction(mean,major,minor,sample_mean,S),
+        MomentObjectiveFunction(mean,major,minor,sample_mean,S,N),
         starting_point,
         -100
       );
@@ -84,7 +85,7 @@ column_vector Optimize::minimize(Vector &sample_mean, Matrix &S, int estimation,
       find_min_using_approximate_derivatives(
         bfgs_search_strategy(),
         objective_delta_stop_strategy(1e-10),
-        MaximumLikelihoodObjectiveFunction(sample_mean,S,psi,delta),
+        MaximumLikelihoodObjectiveFunction(sample_mean,S,N,psi,delta),
         starting_point,
         -100
       );
@@ -97,7 +98,7 @@ column_vector Optimize::minimize(Vector &sample_mean, Matrix &S, int estimation,
       find_min_using_approximate_derivatives(
         bfgs_search_strategy(),
         objective_delta_stop_strategy(1e-10),
-        MMLObjectiveFunction(sample_mean,S,psi,delta),
+        MMLObjectiveFunction(sample_mean,S,N,psi,delta),
         starting_point,
         -100
       );

@@ -184,7 +184,7 @@ long double Kent::computeSeriesSum(long double k, long double b, long double d)
   long double ans = log(2*PI) + 0.5 * log(2.0/k);
   ans += log_f0;
   ans += log(series_sum);
-  cout << "j: " << j << endl;
+  //cout << "j: " << j << endl;
   //cout << "ans: " << ans << endl;
   return ans;
 }
@@ -317,8 +317,10 @@ void Kent::computeExpectation()
   computeConstants();
 
   constants.E_x = Vector(3,0);
+  constants.kappa_E_x = Vector(3,0);
   for (int i=0; i<3; i++) {
     constants.E_x[i] = mu[i] * constants.ck_c;
+    constants.kappa_E_x[i] = kappa * constants.E_x[i];
   }
 
   Matrix expectation_std = ZeroMatrix(3,3);
@@ -333,6 +335,12 @@ void Kent::computeExpectation()
 
   Matrix tmp1 = prod(constants.R,expectation_std);
   constants.E_xx = prod(tmp1,constants.Rt);
+  constants.beta_E_xx = ZeroMatrix(3,3);
+  for (int i=0; i<3; i++) {
+    for (int j=0; j<3; j++) {
+      constants.beta_E_xx(i,j) = constants.E_xx(i,j) * beta;
+    }
+  }
 
   computed = SET;
 }
@@ -341,24 +349,31 @@ long double Kent::computeNegativeLogLikelihood(std::vector<Vector> &data)
 {
   Vector sample_mean = computeVectorSum(data);
   Matrix S = computeDispersionMatrix(data);
-  return computeNegativeLogLikelihood(sample_mean,S);
+  return computeNegativeLogLikelihood(sample_mean,S,data.size());
 }
 
-long double Kent::computeNegativeLogLikelihood(Vector &sample_mean, Matrix &S)
+long double Kent::computeNegativeLogLikelihood(Vector &sample_mean, Matrix &S, int N)
 {
   long double c1 = computeDotProduct(sample_mean,mu);
-  Vector x = prod(S,major_axis);
-  long double mj = computeDotProduct(major_axis,x);
-  x = prod(S,minor_axis);
-  long double mi = computeDotProduct(minor_axis,x);
+
+  long double mj = prod_xMy(major_axis,S,major_axis);
+  long double mi = prod_xMy(minor_axis,S,minor_axis);
   long double c2 = mj - mi;
+
   long double log_norm = computeLogNormalizationConstant();
-  long double ans = log_norm - kappa * c1 - beta * c2;
+
+  long double ans = N * log_norm - kappa * c1 - beta * c2;
   return ans;
 }
 
 long double Kent::computeLogPriorProbability()
 {
+  long double log_joint_prior=0;
+  log_joint_prior += log(4) - 4*log(PI);
+  log_joint_prior += log(sin(alpha));
+  log_joint_prior += 2 * log(kappa);
+  log_joint_prior -= 2 * log(1+kappa*kappa);
+  return log_joint_prior;
 }
 
 long double Kent::computeLogFisherInformation()
@@ -366,18 +381,17 @@ long double Kent::computeLogFisherInformation()
   computeExpectation();
   long double log_det_axes = computeLogFisherAxes();
   long double log_det_kb = computeLogFisherScale();
-  return log_det_axes + log_det_kb;
+  return log_det_axes + log_det_kb; //+ 5 * log(N);
 }
 
 long double Kent::computeLogFisherAxes()
 {
-  computeDifferentials();
-}
-
-void Kent::computeDifferentials()
-{
   computeFirstOrderDifferentials();
   computeSecondOrderDifferentials();
+  computeFisherMatrixAxes();
+  //long double det = determinant(df.fisher_axes);
+  //cout << "det: " << det << endl; exit(1);
+  return log(determinant(df.fisher_axes));
 }
 
 void Kent::computeFirstOrderDifferentials()
@@ -409,19 +423,19 @@ void Kent::computeFirstOrderDifferentials()
   // d1_mj[0]: dmj_da
   d1[0] = -tc.sin_psi * tc.sin_delta * df.ddel_da;
   d1[1] = tc.sin_psi * tc.cos_delta * df.ddel_da;
-  d1[2] = -tc.sin_delta * df.ddel_da;
+  d1[2] = 0; 
   first_order[0] = d1;
 
   // d1_mj[1]: dmj_dn
   d1[0] = -tc.sin_psi * tc.sin_delta;
   d1[1] = tc.sin_psi * tc.cos_delta;
-  d1[2] = -tc.sin_delta;
+  d1[2] = 0; 
   first_order[1] = d1;
 
   // d1_mj[2]: dmj_ds
   d1[0] = tc.cos_psi * tc.cos_delta - tc.sin_psi * tc.sin_delta * df.ddel_ds;
   d1[1] = tc.cos_psi * tc.sin_delta + tc.sin_psi * tc.cos_delta * df.ddel_ds;
-  d1[2] = -tc.sin_delta * df.ddel_ds;
+  d1[2] = -tc.sin_psi;
   first_order[2] = d1;
 
   df.d1_mj = first_order;
@@ -513,42 +527,43 @@ void Kent::computeSecondOrderDifferentials()
   df.d2_mu = second_order;
 
   // d2_mj[0]: d2mj_da2
-  d2[2] = -tc.sin_delta * df.d2del_da2 - tc.cos_delta * df.ddel_da * df.ddel_da;
-  d2[0] = tc.sin_psi * d2[2];
+  d2[0] = -tc.sin_psi * (tc.sin_delta * df.d2del_da2 + tc.cos_delta * df.ddel_da * df.ddel_da);
   d2[1] = tc.sin_psi * (tc.cos_delta * df.d2del_da2 - tc.sin_delta * df.ddel_da * df.ddel_da);
+  d2[2] = 0;
   second_order[0] = d2;
 
   // d2_mj[1]: d2mj_dn2
   d2[0] = -tc.sin_psi * tc.cos_delta;
   d2[1] = -tc.sin_psi * tc.sin_delta;
-  d2[2] = -tc.cos_delta;
+  d2[2] = 0; 
   second_order[1] = d2;
 
   // d2_mj[2]: d2mj_ds2
-  d2[2] = -tc.sin_delta * df.d2del_ds2 - tc.cos_delta * df.ddel_ds * df.ddel_ds;
-  d2[0] = tc.sin_psi * d2[2] - tc.cos_delta * tc.sin_psi 
-          - 2 * tc.cos_psi * tc.sin_delta * df.ddel_ds;
+  d2[0] = -tc.cos_delta * tc.sin_psi - 2 * tc.cos_psi * tc.sin_delta * df.ddel_ds
+          - tc.sin_psi * (tc.sin_delta * df.d2del_ds2 + tc.cos_delta * df.ddel_ds * df.ddel_ds);
   d2[1] = -tc.sin_delta * tc.sin_psi + 2 * tc.cos_delta * tc.cos_psi * df.ddel_ds
           + tc.sin_psi * (tc.cos_delta * df.d2del_ds2 - tc.sin_delta * df.ddel_ds * df.ddel_ds);
+  d2[2] = -tc.cos_psi;
   second_order[2] = d2;
 
   // d2_mj[3]: d2mj_dadn
-  for (int i=0; i<3; i++) {
-    d2[i] = -df.ddel_da * major_axis[i];
-  }
+  d2[0] = -df.ddel_da * major_axis[0];
+  d2[1] = -df.ddel_da * major_axis[1];
+  d2[2] = 0;
   second_order[3] = d2;
 
   // d2_mj[4]: d2mj_dads
-  d2[2] = -tc.sin_delta * df.d2del_dads - tc.cos_delta * df.ddel_da * df.ddel_ds;
-  d2[0] = tc.sin_psi * d2[2] - tc.cos_psi * tc.sin_delta * df.ddel_da;
+  d2[0] = -tc.sin_psi * (tc.sin_delta * df.d2del_dads + tc.cos_delta * df.ddel_da * df.ddel_ds)
+          - tc.cos_psi * tc.sin_delta * df.ddel_da;
   d2[1] = tc.sin_psi * (tc.cos_delta * df.d2del_dads - tc.sin_delta * df.ddel_da * df.ddel_ds)
           + tc.cos_psi * tc.cos_delta * df.ddel_da;
+  d2[2] = 0; 
   second_order[4] = d2;
 
   // d2_mj[5]: d2mj_dnds
   d2[0] = -tc.cos_psi * tc.sin_delta - tc.sin_psi * tc.cos_delta * df.ddel_ds;
   d2[1] = tc.cos_psi * tc.cos_delta - tc.sin_psi * tc.sin_delta * df.ddel_ds;
-  d2[2] = -tc.cos_delta * df.ddel_ds;
+  d2[2] = 0; 
   second_order[5] = d2;
 
   df.d2_mj = second_order;
@@ -584,6 +599,42 @@ Vector Kent::computeSecondOrderDifferentialsMinorAxis(
   return ans;
 }
 
+void Kent::computeFisherMatrixAxes()
+{
+  df.fisher_axes = ZeroMatrix(3,3);
+  // E[d^2 L / da^2]
+  df.fisher_axes(0,0) = computeExpectationLikelihood(0,0,0);
+  // E[d^2 L / dadn]
+  df.fisher_axes(0,1) = computeExpectationLikelihood(3,0,1);
+  // E[d^2 L / dads]
+  df.fisher_axes(0,2) = computeExpectationLikelihood(4,0,2);
+  // E[d^2 L / dn^2]
+  df.fisher_axes(1,1) = computeExpectationLikelihood(1,1,1);
+  // E[d^2 L / dnds]
+  df.fisher_axes(1,2) = computeExpectationLikelihood(5,1,2);
+  // E[d^2 L / ds^2]
+  df.fisher_axes(2,2) = computeExpectationLikelihood(2,2,2);
+  df.fisher_axes(1,0) = df.fisher_axes(0,1);
+  df.fisher_axes(2,0) = df.fisher_axes(0,2);
+  df.fisher_axes(2,1) = df.fisher_axes(1,2);
+  //cout << "FisherAxes: " << df.fisher_axes << endl;
+}
+
+long double Kent::computeExpectationLikelihood(int i1, int i2, int i3)
+{
+  long double t1 = computeDotProduct(constants.kappa_E_x,df.d2_mu[i1]);
+
+  long double t2 = prod_xMy(major_axis,constants.beta_E_xx,df.d2_mj[i1]);
+  t2 += prod_xMy(df.d1_mj[i2],constants.beta_E_xx,df.d1_mj[i3]);
+  t2 *= 2;
+
+  long double t3 = prod_xMy(minor_axis,constants.beta_E_xx,df.d2_mi[i1]);
+  t3 += prod_xMy(df.d1_mi[i2],constants.beta_E_xx,df.d1_mi[i3]);
+  t3 *= 2;
+
+  return -t1-t2+t3;
+}
+
 long double Kent::computeLogFisherScale()
 {
   // E [d^2 L / d k^2]
@@ -606,15 +657,24 @@ struct Estimates Kent::computeMomentEstimates(std::vector<Vector> &data)
 {
   Vector sample_mean = computeVectorSum(data);
   Matrix S = computeDispersionMatrix(data);
-  return computeMomentEstimates(sample_mean,S);
+  return computeMomentEstimates(sample_mean,S,data.size());
 }
 
 /*!
  *  Moment estimation (with +X as the north pole) 
  *  (similar to used in Kent (1982) paper)
+ *  (sample_mean1 and S1 are \sum_x and \sum_ x x')
  */
-struct Estimates Kent::computeMomentEstimates(Vector &sample_mean, Matrix &S)
-{ 
+struct Estimates Kent::computeMomentEstimates(Vector &sample_mean1, Matrix &S1, int N)
+{
+  Vector sample_mean = sample_mean1;
+  Matrix S = S1; 
+  for (int i=0; i<3; i++) {
+    sample_mean[i] /= N;
+    for (int j=0; j<3; j++) {
+      S(i,j) /= N;
+    }
+  }
   // compute r1:
   long double r1 = norm(sample_mean);
 
@@ -686,9 +746,9 @@ struct Estimates Kent::computeMomentEstimates(Vector &sample_mean, Matrix &S)
   //cout << "r2: " << r2 << endl;
 
   Optimize opt;
-  opt.initialize(estimates.mean,estimates.major_axis,estimates.minor_axis,
+  opt.initialize(N,estimates.mean,estimates.major_axis,estimates.minor_axis,
                  estimates.kappa,estimates.beta);
-  opt.computeMomentEstimates(sample_mean,S,estimates);
+  opt.computeMomentEstimates(sample_mean1,S1,estimates);
   return estimates;
 }
 
@@ -699,24 +759,34 @@ struct Estimates Kent::computeMLEstimates(std::vector<Vector> &data)
 {
   Vector sample_mean = computeVectorSum(data);
   Matrix S = computeDispersionMatrix(data);
-  return computeMLEstimates(sample_mean,S);
+  return computeMLEstimates(sample_mean,S,data.size());
 }
 
-struct Estimates Kent::computeMLEstimates(Vector &sample_mean, Matrix &S)
+struct Estimates Kent::computeMLEstimates(Vector &sample_mean, Matrix &S, int N)
 {
-  struct Estimates estimates = computeMomentEstimates(sample_mean,S);
+  struct Estimates estimates = computeMomentEstimates(sample_mean,S,N);
   Optimize opt;
-  opt.initialize(estimates.mean,estimates.major_axis,estimates.minor_axis,
+  opt.initialize(N,estimates.mean,estimates.major_axis,estimates.minor_axis,
                  estimates.kappa,estimates.beta);
   opt.computeMLEstimates(sample_mean,S,estimates);
   return estimates;
 }
 
-struct Estimates Kent::computeMMLEstimates(Vector &sample_mean, Matrix &S)
+/*!
+ *  MML estimation
+ */
+struct Estimates Kent::computeMMLEstimates(std::vector<Vector> &data)
 {
-  struct Estimates estimates = computeMomentEstimates(sample_mean,S);
+  Vector sample_mean = computeVectorSum(data);
+  Matrix S = computeDispersionMatrix(data);
+  return computeMMLEstimates(sample_mean,S,data.size());
+}
+
+struct Estimates Kent::computeMMLEstimates(Vector &sample_mean, Matrix &S, int N)
+{
+  struct Estimates estimates = computeMomentEstimates(sample_mean,S,N);
   Optimize opt;
-  opt.initialize(estimates.mean,estimates.major_axis,estimates.minor_axis,
+  opt.initialize(N,estimates.mean,estimates.major_axis,estimates.minor_axis,
                  estimates.kappa,estimates.beta);
   opt.computeMMLEstimates(sample_mean,S,estimates);
   return estimates;

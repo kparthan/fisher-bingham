@@ -15,13 +15,12 @@ class MomentObjectiveFunction
 
   public:
     MomentObjectiveFunction(Vector &m0, Vector &m1, Vector &m2,
-                            Vector &sample_mean, Matrix &S) {
-      C1 = computeDotProduct(sample_mean,m0);
-      Vector x = prod(S,m1);
-      long double mj = computeDotProduct(m1,x);
-      x = prod(S,m2);
-      long double mi = computeDotProduct(m2,x);
-      C2 = mj - mi;
+                            Vector &sample_mean, Matrix &S, int sample_size) {
+      C1 = computeDotProduct(sample_mean,m0) / sample_size;
+
+      long double mj = prod_xMy(m1,S,m1);
+      long double mi = prod_xMy(m2,S,m2);
+      C2 = (mj - mi) / sample_size;
     }
 
     /*!
@@ -45,18 +44,21 @@ class MaximumLikelihoodObjectiveFunction
 
     Matrix S;
 
+    int N;
+
     double psi_init,delta_init;
 
   public:
-    MaximumLikelihoodObjectiveFunction(Vector &sample_mean, Matrix &S, double psi_init, 
-                                       double delta_init) : sample_mean(sample_mean), 
-                                       S(S), psi_init(psi_init), delta_init(delta_init)
+    MaximumLikelihoodObjectiveFunction(Vector &sample_mean, Matrix &S, int sample_size,
+                                       double psi_init, double delta_init) : 
+                                       sample_mean(sample_mean), S(S), N(sample_size), 
+                                       psi_init(psi_init), delta_init(delta_init)
     {}
 
     /*!
-     *  minimize function: log c(k,b) - k  (m0' x) - b (mj' xx' mj -  mi xx' mi)
-     *  x: sample mean
-     *  xx' : dispersion matrix (S)
+     *  minimize function: N * log c(k,b) - k  (m0' x) - b (mj' xx' mj -  mi xx' mi)
+     *  \sum_x: sample mean
+     *  \sum_xx' : dispersion matrix (S)
      *  k,b,m0,mj,mi are parameters
      */
     double operator() (const column_vector& x) const {
@@ -76,6 +78,7 @@ class MaximumLikelihoodObjectiveFunction
       double tmp = -1/(tan(alpha) * tan(psi));
       double delta;
       if (fabs(tmp) > 1) {
+        cout << "yes\n";
         psi = psi_init;
         delta = delta_init;
       } else {
@@ -89,7 +92,7 @@ class MaximumLikelihoodObjectiveFunction
 
       Kent kent(m0,m1,m2,k,b);
       Vector sample_mean1 = sample_mean; Matrix S1 = S;
-      double fval = kent.computeNegativeLogLikelihood(sample_mean1,S1);
+      double fval = kent.computeNegativeLogLikelihood(sample_mean1,S1,N);
       assert(!boost::math::isnan(fval));
       return fval;
     }
@@ -102,11 +105,14 @@ class MMLObjectiveFunction
 
     Matrix S;
 
+    int N;
+
     double psi_init,delta_init;
 
   public:
-    MMLObjectiveFunction(Vector &sample_mean, Matrix &S, double psi_init, 
-                         double delta_init) : sample_mean(sample_mean), S(S),
+    MMLObjectiveFunction(Vector &sample_mean, Matrix &S, int sample_size, 
+                         double psi_init, double delta_init) :
+                         sample_mean(sample_mean), S(S), N(sample_size),
                          psi_init(psi_init), delta_init(delta_init)
     {}
 
@@ -141,6 +147,8 @@ class MMLObjectiveFunction
 class Optimize
 {
   private:
+    int N;
+
     Vector mean,major,minor; 
 
     double alpha,eta,psi,delta;
@@ -150,7 +158,7 @@ class Optimize
   public:
     Optimize();
 
-    void initialize(Vector &, Vector &, Vector &, long double, long double);
+    void initialize(int, Vector &, Vector &, Vector &, long double, long double);
 
     void finalize(column_vector &, struct Estimates &);
 

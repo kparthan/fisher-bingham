@@ -310,7 +310,10 @@ void Test::optimization(void)
   // Kent example from paper
   cout << "\nExample from paper:\n";
   kent= Kent(100,20);
-  sample_mean[0] = 0.083; sample_mean[1] = -0.959; sample_mean[2] = 0.131;
+  int N = 34;
+  sample_mean[0] = 0.083; 
+  sample_mean[1] = -0.959; 
+  sample_mean[2] = 0.131;
   cartesian2spherical(sample_mean,spherical);
   cout << "m0: "; print(cout,sample_mean,3);
   cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
@@ -318,7 +321,13 @@ void Test::optimization(void)
   S(0,0) = 0.045; S(0,1) = -0.075; S(0,2) = 0.014;
   S(1,0) = -0.075; S(1,1) = 0.921; S(1,2) = -0.122;
   S(2,0) = 0.014; S(2,1) = -0.122; S(2,2) = 0.034;
-  estimates = kent.computeMomentEstimates(sample_mean,S);
+  for (int i=0; i<3; i++) {
+    sample_mean[i] *= N;
+    for (int j=0; j<3; j++) {
+      S(i,j) *= N;
+    }
+  }
+  estimates = kent.computeMomentEstimates(sample_mean,S,N);
 }
 
 void Test::moment_estimation(void)
@@ -372,7 +381,14 @@ void Test::moment_estimation(void)
   /*S(0,0) = 0.921; S(0,1) = -0.122; S(0,2) = -0.075;
   S(1,0) = -0.122; S(1,1) = 0.034; S(1,2) = 0.014;
   S(2,0) = -0.075; S(2,1) = 0.014; S(2,2) = 0.045;*/
-  estimates = kent.computeMomentEstimates(sample_mean,S);
+  int N = 34;
+  for (int i=0; i<3; i++) {
+    sample_mean[i] *= N;
+    for (int j=0; j<3; j++) {
+      S(i,j) *= N;
+    }
+  }
+  estimates = kent.computeMomentEstimates(sample_mean,S,N);
   cartesian2spherical(estimates.mean,spherical);
   cout << "m0_est: "; print(cout,estimates.mean,3);
   cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
@@ -392,7 +408,7 @@ void Test::ml_estimation(void)
   std::vector<Vector> random_sample;
   Vector m0,m1,m2;
   long double kappa = 100;
-  long double beta = 47.5;
+  long double beta = 30;
 
   generateRandomOrthogonalVectors(m0,m1,m2);
   cartesian2spherical(m0,spherical);
@@ -432,7 +448,14 @@ void Test::ml_estimation(void)
   S(0,0) = 0.045; S(0,1) = -0.075; S(0,2) = 0.014;
   S(1,0) = -0.075; S(1,1) = 0.921; S(1,2) = -0.122;
   S(2,0) = 0.014; S(2,1) = -0.122; S(2,2) = 0.034;
-  estimates = kent.computeMLEstimates(sample_mean,S);
+  int N = 34;
+  for (int i=0; i<3; i++) {
+    sample_mean[i] *= N;
+    for (int j=0; j<3; j++) {
+      S(i,j) *= N;
+    }
+  }
+  estimates = kent.computeMLEstimates(sample_mean,S,N);
   cartesian2spherical(estimates.mean,spherical);
   cout << "m0_est: "; print(cout,estimates.mean,3);
   cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
@@ -484,10 +507,30 @@ void Test::fisher()
   long double beta = 14.5;
 
   generateRandomOrthogonalVectors(m0,m1,m2);
-  Kent kent(m0,m1,m2,kappa,beta);
-  kent.computeConstants();
+  Vector spherical(3,0);
+
+  cartesian2spherical(m0,spherical);
+  //cout << "m0: "; print(cout,spherical,0); cout << endl;
+  long double alpha = spherical[1];
+  long double eta = spherical[2];
+  cout << "alpha: " << alpha << "; eta: " << eta << endl;
+
+  cartesian2spherical(m1,spherical);
+  long double psi = spherical[1];
+  long double delta = spherical[2];
+  //cout << "m1: "; print(cout,spherical,0); cout << endl;
+  cout << "psi: " << psi << "; delta: " << delta << endl;
+
+  cout << "cos(delta-eta): " << cos(delta-eta) << endl;
+  cout << "cot(alpha)*cot(psi): " << 1 / (tan(alpha)*tan(psi)) << endl;
+
+  Kent kent(alpha,eta,psi,delta,kappa,beta);
+  kent.computeExpectation();
   long double log_det_fkb = kent.computeLogFisherScale();
   cout << "log(det(f_kb)): " << log_det_fkb << endl;
   cout << "det(f_kb): " << exp(log_det_fkb) << endl;
+  long double log_det_faxes = kent.computeLogFisherAxes();
+  cout << "log(det(f_axes)): " << log_det_faxes << endl;
+  cout << "det(f_axes): " << exp(log_det_faxes) << endl;
 }
 

@@ -18,8 +18,8 @@ class Kent  // FB5
     struct Constants {
       long double log_c,log_cb,log_ck,log_ckk,log_ckb,log_cbb;
       long double ck_c,ckk_c,cb_c,cbb_c,ckb_c;
-      Vector E_x;
-      Matrix E_xx;
+      Vector E_x,kappa_E_x;
+      Matrix E_xx,beta_E_xx;
       Matrix R,Rt;  // R: standard -> current orientation
     } constants;
 
@@ -42,6 +42,7 @@ class Kent  // FB5
       std::vector<Vector > d1_mu,d1_mj,d1_mi;
       std::vector<Vector > d2_mu,d2_mj,d2_mi;
       long double ddel_da,ddel_ds,d2del_da2,d2del_ds2,d2del_dads;
+      Matrix fisher_axes;
     } df;
 
     int computed;
@@ -87,7 +88,7 @@ class Kent  // FB5
 
     long double computeLogFisherAxes();
 
-    void computeDifferentials();
+    long double computeExpectationLikelihood(int, int, int);
 
     void computeFirstOrderDifferentials();
 
@@ -99,11 +100,13 @@ class Kent  // FB5
 
     Vector computeSecondOrderDifferentialsMinorAxis(int, int, int, int, int, int);
 
+    void computeFisherMatrixAxes();
+
     long double computeLogFisherScale();
 
     long double computeNegativeLogLikelihood(std::vector<Vector> &);
 
-    long double computeNegativeLogLikelihood(Vector &, Matrix &);
+    long double computeNegativeLogLikelihood(Vector &, Matrix &, int);
 
     long double computeLogPriorProbability();
 
@@ -111,13 +114,15 @@ class Kent  // FB5
 
     struct Estimates computeMomentEstimates(std::vector<Vector> &);
 
-    struct Estimates computeMomentEstimates(Vector &, Matrix &);
+    struct Estimates computeMomentEstimates(Vector &, Matrix &, int);
 
     struct Estimates computeMLEstimates(std::vector<Vector> &);
 
-    struct Estimates computeMLEstimates(Vector &, Matrix &);
+    struct Estimates computeMLEstimates(Vector &, Matrix &, int);
 
-    struct Estimates computeMMLEstimates(Vector &, Matrix &);
+    struct Estimates computeMMLEstimates(std::vector<Vector> &);
+
+    struct Estimates computeMMLEstimates(Vector &, Matrix &, int);
 
     Vector Mean();
 
