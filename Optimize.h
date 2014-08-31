@@ -82,7 +82,13 @@ class MaximumLikelihoodObjectiveFunction
         psi = psi_init;
         delta = delta_init;
       } else {
-        delta = eta + acos(tmp);
+        double acos_tmp = acos(tmp);
+        delta = eta + acos_tmp;
+        if (!(delta >= eta && delta <= PI+eta)) {
+          cout << "yes2\n";
+          delta = eta - acos_tmp;
+          assert(delta >= eta && delta <= PI+eta);
+        }
       }
       spherical[1] = psi;
       spherical[2] = delta;

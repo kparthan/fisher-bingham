@@ -144,6 +144,12 @@ void print(string &type, struct Estimates &estimates)
   cout << "m2_est: "; print(cout,estimates.minor_axis,3);
   cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
   cout << "kappa_est: " << estimates.kappa << "; beta_est: " << estimates.beta << endl;
+  // check:
+  cout << fixed << scientific
+       << "m0_est . m1_est = " << computeDotProduct(estimates.mean,estimates.major_axis)
+       << "; m0_est . m2_est = " << computeDotProduct(estimates.mean,estimates.minor_axis)
+       << "; m1_est . m2_est = " << computeDotProduct(estimates.major_axis,estimates.minor_axis)
+       << endl;
 }
 
 ////////////////////// MATH FUNCTIONS \\\\\\\\\\\\\\\\\\\\\\\\\\\\

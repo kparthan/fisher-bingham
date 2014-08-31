@@ -422,11 +422,11 @@ void Test::ml_estimation(void)
   cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
 
   Kent kent(m0,m1,m2,kappa,beta);
-  random_sample = kent.generate(1000);
+  random_sample = kent.generate(100);
   kent.computeAllEstimators(random_sample);
 
   // Kent example from paper
-  cout << "\nExample from paper:\n";
+  /*cout << "\nExample from paper:\n";
   kent = Kent(100,20);
   Vector sample_mean(3,0);
   sample_mean[0] = 0.083; sample_mean[1] = -0.959; sample_mean[2] = 0.131;
@@ -444,7 +444,7 @@ void Test::ml_estimation(void)
       S(i,j) *= N;
     }
   }
-  kent.computeAllEstimators(sample_mean,S,N);
+  kent.computeAllEstimators(sample_mean,S,N);*/
 }
 
 void Test::expectation()
