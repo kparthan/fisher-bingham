@@ -52,7 +52,13 @@ void Optimize::finalize(column_vector &theta, struct Estimates &estimates)
     psi_f = psi;
     delta_f = delta;
   } else {
-    delta_f = eta_f + acos(tmp);
+    double acos_tmp = acos(tmp);
+    delta_f = eta_f + acos_tmp;
+    if (!(delta_f >= eta_f && delta_f <= PI+eta_f)) {
+      cout << "yes2\n";
+      delta_f = eta_f - acos_tmp;
+      assert(delta_f >= eta_f && delta_f <= PI+eta_f);
+    }
   }
   assert(!boost::math::isnan(delta_f));
   spherical[1] = psi_f; spherical[2] = delta_f;
