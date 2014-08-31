@@ -422,7 +422,7 @@ void Test::ml_estimation(void)
   cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
 
   Kent kent(m0,m1,m2,kappa,beta);
-  random_sample = kent.generate(100);
+  random_sample = kent.generate(1000);
   kent.computeAllEstimators(random_sample);
 
   // Kent example from paper

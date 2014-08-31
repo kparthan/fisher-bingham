@@ -46,14 +46,19 @@ class MaximumLikelihoodObjectiveFunction
 
     int N;
 
-    double psi_init,delta_init;
+    double alpha_init,eta_init,psi_init,delta_init;
 
   public:
-    MaximumLikelihoodObjectiveFunction(Vector &sample_mean, Matrix &S, int sample_size,
-                                       double psi_init, double delta_init) : 
-                                       sample_mean(sample_mean), S(S), N(sample_size), 
-                                       psi_init(psi_init), delta_init(delta_init)
-    {}
+    MaximumLikelihoodObjectiveFunction(Vector &sample_mean, Matrix &S, 
+                                       int sample_size, column_vector &sp): 
+                                       sample_mean(sample_mean), S(S), N(sample_size)
+    {
+      alpha_init = sp(0);
+      eta_init = sp(1);
+      psi_init = sp(2);
+      double tmp = -1/(tan(alpha_init) * tan(psi_init));
+      delta_init = eta_init + acos(tmp);
+    }
 
     /*!
      *  minimize function: N * log c(k,b) - k  (m0' x) - b (mj' xx' mj -  mi xx' mi)
@@ -77,8 +82,14 @@ class MaximumLikelihoodObjectiveFunction
       // cos(delta-eta) = -cot(alpha) cot(psi)
       double tmp = -1/(tan(alpha) * tan(psi));
       double delta;
+      if (fabs(tmp)-1 < TOLERANCE) {
+        if (tmp < 0) tmp = -1;
+        else if (tmp > 0) tmp = 1;
+      }
       if (fabs(tmp) > 1) {
-        cout << "yes\n";
+        cout << "yes, tmp: " << tmp << endl;;
+        alpha = alpha_init;
+        eta = eta_init;
         psi = psi_init;
         delta = delta_init;
       } else {
@@ -98,7 +109,8 @@ class MaximumLikelihoodObjectiveFunction
 
       Kent kent(m0,m1,m2,k,b);
       Vector sample_mean1 = sample_mean; Matrix S1 = S;
-      double fval = kent.computeNegativeLogLikelihood(sample_mean1,S1,N);
+      double fval = kent.computeNegativeLogLikelihood(sample_mean1,S1,N)
+                    + C * (fabs(tmp)-1);
       assert(!boost::math::isnan(fval));
       return fval;
     }

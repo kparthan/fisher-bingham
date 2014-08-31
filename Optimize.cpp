@@ -48,7 +48,7 @@ void Optimize::finalize(column_vector &theta, struct Estimates &estimates)
   double tmp = -1/(tan(alpha_f) * tan(psi_f));
   double delta_f;
   if (fabs(tmp) > 1) { 
-    cout << "yes\n";
+    cout << "yesf, tmp: " << tmp << endl;;
     psi_f = psi;
     delta_f = delta;
   } else {
@@ -91,7 +91,7 @@ column_vector Optimize::minimize(Vector &sample_mean, Matrix &S, int estimation,
       find_min_using_approximate_derivatives(
         bfgs_search_strategy(),
         objective_delta_stop_strategy(1e-10),
-        MaximumLikelihoodObjectiveFunction(sample_mean,S,N,psi,delta),
+        MaximumLikelihoodObjectiveFunction(sample_mean,S,N,starting_point),
         starting_point,
         -100
       );
