@@ -422,7 +422,7 @@ void Test::ml_estimation(void)
   cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
 
   Kent kent(m0,m1,m2,kappa,beta);
-  random_sample = kent.generate(1000);
+  random_sample = kent.generate(100);
   kent.computeAllEstimators(random_sample);
 
   // Kent example from paper
@@ -511,5 +511,32 @@ void Test::fisher()
   long double log_det_faxes = kent.computeLogFisherAxes();
   cout << "log(det(f_axes)): " << log_det_faxes << endl;
   cout << "det(f_axes): " << exp(log_det_faxes) << endl;
+  cout << "log(det(fisher)): " << log_det_fkb+log_det_faxes << endl;
+  cout << "log(fisher): " << kent.computeLogFisherInformation() << endl;
+}
+
+void Test::mml_estimation(void)
+{
+  Vector spherical(3,0);
+  struct Estimates estimates;
+  std::vector<Vector> random_sample;
+  Vector m0,m1,m2;
+  long double kappa = 100;
+  long double beta = 30;
+
+  generateRandomOrthogonalVectors(m0,m1,m2);
+  cartesian2spherical(m0,spherical);
+  cout << "m0: "; print(cout,m0,3);
+  cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
+  cartesian2spherical(m1,spherical);
+  cout << "m1: "; print(cout,m1,3);
+  cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
+  cartesian2spherical(m2,spherical);
+  cout << "m2: "; print(cout,m2,3);
+  cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
+
+  Kent kent(m0,m1,m2,kappa,beta);
+  random_sample = kent.generate(1000);
+  kent.computeAllEstimators(random_sample);
 }
 

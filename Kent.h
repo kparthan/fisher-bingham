@@ -110,7 +110,13 @@ class Kent  // FB5
 
     long double computeLogPriorProbability();
 
+    long double computeLogPriorAxes();
+
+    long double computeLogPriorScale();
+
     long double computeLogFisherInformation();
+
+    long double computeLogFisherInformation(int);
 
     void computeAllEstimators(std::vector<Vector> &);
 
@@ -120,9 +126,9 @@ class Kent  // FB5
 
     struct Estimates computeMomentEstimates(Vector &, Matrix &, int);
 
-    struct Estimates computeMLEstimates(std::vector<Vector> &);
+    struct Estimates computeMLEstimates(std::vector<Vector> &, string);
 
-    struct Estimates computeMLEstimates(Vector &, Matrix &, int);
+    struct Estimates computeMLEstimates(Vector &, Matrix &, int, string);
 
     struct Estimates computeMMLEstimates(std::vector<Vector> &);
 

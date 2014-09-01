@@ -37,6 +37,8 @@ class Test
     void kl_divergence();
 
     void fisher();
+
+    void mml_estimation(void);
 };
 
 #endif

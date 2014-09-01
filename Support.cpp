@@ -837,12 +837,14 @@ void TestFunctions(void)
 
   //test.moment_estimation();
 
-  test.ml_estimation();
+  //test.ml_estimation();
 
   //test.expectation();
 
   //test.kl_divergence();
 
   //test.fisher();
+
+  test.mml_estimation();
 }
 

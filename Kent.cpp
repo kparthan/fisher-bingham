@@ -33,6 +33,7 @@ Kent::Kent(Vector &mu, Vector &major_axis, Vector &minor_axis,
           major_axis(major_axis), minor_axis(minor_axis), kappa(kappa), beta(beta)
 {
   //assert(eccentricity() < 1);
+  computed = UNSET;
 }
 
 Kent::Kent(long double alpha, long double eta, long double psi, long double delta, 
@@ -71,6 +72,7 @@ Kent::Kent(long double alpha, long double eta, long double psi, long double delt
   tc.cos_psi = cos(psi);
   tc.sin_psi = sin(psi);
   tc.tan_psi = tan(psi);
+  computed = UNSET;
 }
 
 /*!
@@ -233,7 +235,7 @@ long double Kent::computeSeriesSum2(long double k, long double b, long double d)
   long double ans = log(2*PI) + 0.5 * log(2.0/k) + log(2/b);
   ans += log_f1;
   ans += log(series_sum);
-  cout << "j: " << j << endl;
+  //cout << "j: " << j << endl;
   return ans;
 }
 
@@ -274,7 +276,7 @@ long double Kent::log_d2c_db2()
   long double ans = log(2*PI) + 0.5 * log(2.0/k) + log(2) - 2*log(b);
   ans += log_f1;
   ans += log(series_sum);
-  cout << "j: " << j << endl;
+  //cout << "j: " << j << endl;
   return ans;
 }
 
@@ -331,7 +333,7 @@ void Kent::computeExpectation()
   assert(expectation_std(0,0) > 0);
   assert(expectation_std(1,1) > 0);
   assert(expectation_std(2,2) > 0);
-  cout << "E_std: " << expectation_std << endl;
+  //cout << "E_std: " << expectation_std << endl;
 
   Matrix tmp1 = prod(constants.R,expectation_std);
   constants.E_xx = prod(tmp1,constants.Rt);
@@ -368,12 +370,26 @@ long double Kent::computeNegativeLogLikelihood(Vector &sample_mean, Matrix &S, i
 
 long double Kent::computeLogPriorProbability()
 {
-  long double log_joint_prior=0;
-  log_joint_prior += log(4) - 4*log(PI);
-  log_joint_prior += log(sin(alpha));
-  log_joint_prior += 2 * log(kappa);
-  log_joint_prior -= 2 * log(1+kappa*kappa);
+  long double log_prior_axes = computeLogPriorAxes();
+  long double log_prior_scale = computeLogPriorScale();
+  long double log_joint_prior = log_prior_axes + log_prior_scale;
   return log_joint_prior;
+}
+
+long double Kent::computeLogPriorAxes()
+{
+  long double log_prior = 0;
+  log_prior += log(4) - 4*log(PI);
+  log_prior += log(sin(alpha));
+  return log_prior;
+}
+
+long double Kent::computeLogPriorScale()
+{
+  long double log_prior = 0;
+  log_prior += 2 * log(kappa);
+  log_prior -= 2 * log(1+kappa*kappa);
+  return log_prior;
 }
 
 long double Kent::computeLogFisherInformation()
@@ -381,7 +397,13 @@ long double Kent::computeLogFisherInformation()
   computeExpectation();
   long double log_det_axes = computeLogFisherAxes();
   long double log_det_kb = computeLogFisherScale();
-  return log_det_axes + log_det_kb; //+ 5 * log(N);
+  return log_det_axes + log_det_kb; 
+}
+
+long double Kent::computeLogFisherInformation(int N)
+{
+  long double log_fisher = computeLogFisherInformation(); 
+  return log_fisher + 5 * log(N);
 }
 
 long double Kent::computeLogFisherAxes()
@@ -389,9 +411,9 @@ long double Kent::computeLogFisherAxes()
   computeFirstOrderDifferentials();
   computeSecondOrderDifferentials();
   computeFisherMatrixAxes();
-  //long double det = determinant(df.fisher_axes);
-  //cout << "det: " << det << endl; exit(1);
-  return log(determinant(df.fisher_axes));
+  long double det = determinant(df.fisher_axes);
+  //cout << "det: " << det << endl; //exit(1);
+  return log(det);
 }
 
 void Kent::computeFirstOrderDifferentials()
@@ -663,13 +685,29 @@ void Kent::computeAllEstimators(Vector &sample_mean, Matrix &S, int N)
   struct Estimates moment_est = computeMomentEstimates(sample_mean,S,N);
   print(type,moment_est);
 
-  type = "MLE";
-  struct Estimates ml_est = moment_est;
-  Optimize opt;
-  opt.initialize(N,ml_est.mean,ml_est.major_axis,ml_est.minor_axis,
-                 ml_est.kappa,ml_est.beta);
-  opt.computeMLEstimates(sample_mean,S,ml_est);
-  print(type,ml_est);
+  type = "MLE_UNCONSTRAINED";
+  struct Estimates ml_est1 = moment_est;
+  Optimize opt1(type);
+  opt1.initialize(N,ml_est1.mean,ml_est1.major_axis,ml_est1.minor_axis,
+                 ml_est1.kappa,ml_est1.beta);
+  opt1.computeEstimates(sample_mean,S,ml_est1);
+  print(type,ml_est1);
+
+  type = "MML_SCALE";
+  struct Estimates mml_est1 = moment_est;
+  Optimize opt2(type);
+  opt2.initialize(N,mml_est1.mean,mml_est1.major_axis,mml_est1.minor_axis,
+                 mml_est1.kappa,mml_est1.beta);
+  opt2.computeEstimates(sample_mean,S,mml_est1);
+  print(type,mml_est1);
+
+  /*type = "MML";
+  struct Estimates mml_est2 = moment_est;
+  Optimize opt3(type);
+  opt3.initialize(N,mml_est2.mean,mml_est2.major_axis,mml_est2.minor_axis,
+                 mml_est2.kappa,mml_est2.beta);
+  opt3.computeEstimates(sample_mean,S,mml_est2);
+  print(type,mml_est2);*/
 }
 
 /*!
@@ -767,30 +805,30 @@ struct Estimates Kent::computeMomentEstimates(Vector &sample_mean1, Matrix &S1, 
   //cout << "r1: " << r1 << endl;
   //cout << "r2: " << r2 << endl;
 
-  Optimize opt;
+  Optimize opt("MOMENT");
   opt.initialize(N,estimates.mean,estimates.major_axis,estimates.minor_axis,
                  estimates.kappa,estimates.beta);
-  opt.computeMomentEstimates(sample_mean1,S1,estimates);
+  opt.computeEstimates(sample_mean1,S1,estimates);
   return estimates;
 }
 
 /*!
  *  Max LH estimation
  */
-struct Estimates Kent::computeMLEstimates(std::vector<Vector> &data)
+struct Estimates Kent::computeMLEstimates(std::vector<Vector> &data, string type)
 {
   Vector sample_mean = computeVectorSum(data);
   Matrix S = computeDispersionMatrix(data);
-  return computeMLEstimates(sample_mean,S,data.size());
+  return computeMLEstimates(sample_mean,S,data.size(),type);
 }
 
-struct Estimates Kent::computeMLEstimates(Vector &sample_mean, Matrix &S, int N)
+struct Estimates Kent::computeMLEstimates(Vector &sample_mean, Matrix &S, int N, string type)
 {
   struct Estimates estimates = computeMomentEstimates(sample_mean,S,N);
-  Optimize opt;
+  Optimize opt(type);
   opt.initialize(N,estimates.mean,estimates.major_axis,estimates.minor_axis,
                  estimates.kappa,estimates.beta);
-  opt.computeMLEstimates(sample_mean,S,estimates);
+  opt.computeEstimates(sample_mean,S,estimates);
   return estimates;
 }
 
@@ -807,10 +845,10 @@ struct Estimates Kent::computeMMLEstimates(std::vector<Vector> &data)
 struct Estimates Kent::computeMMLEstimates(Vector &sample_mean, Matrix &S, int N)
 {
   struct Estimates estimates = computeMomentEstimates(sample_mean,S,N);
-  Optimize opt;
+  Optimize opt("MML");
   opt.initialize(N,estimates.mean,estimates.major_axis,estimates.minor_axis,
                  estimates.kappa,estimates.beta);
-  opt.computeMMLEstimates(sample_mean,S,estimates);
+  opt.computeEstimates(sample_mean,S,estimates);
   return estimates;
 }
 

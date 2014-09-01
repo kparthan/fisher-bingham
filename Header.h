@@ -63,8 +63,10 @@ typedef number<mpfr_float_backend<1000> > my_float;
 #define UNSET 0
 
 #define MOMENT 1
-#define MLE 2
-#define MML 3
+#define MLE_UNCONSTRAINED 2
+#define MLE_CONSTRAINED 3 
+#define MML_SCALE 4
+#define MML 5
 
 #define PRINT_NON_DETAIL 0
 #define PRINT_DETAIL 1
