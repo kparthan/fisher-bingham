@@ -11,7 +11,7 @@ class Kent  // FB5
   private:
     Vector mu,major_axis,minor_axis;
 
-    long double alpha,eta,psi,delta;
+    long double psi,alpha,eta;
     
     long double kappa,beta; // gamma = 0
 

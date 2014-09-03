@@ -33,46 +33,27 @@ Kent::Kent(Vector &mu, Vector &major_axis, Vector &minor_axis,
           major_axis(major_axis), minor_axis(minor_axis), kappa(kappa), beta(beta)
 {
   //assert(eccentricity() < 1);
-  computed = UNSET;
+  Vector spherical(3,0);
+  cartesian2spherical(mu,spherical);
+  alpha = spherical[1];
+  eta = spherical[2];
+  Matrix r = align_vector_with_zaxis(mu);
+  Vector mj = prod(r,major_axis);
+  cartesian2spherical(mj,spherical);
+  psi = spherical[2];
 }
 
-Kent::Kent(long double alpha, long double eta, long double psi, long double delta, 
-           long double kappa, long double beta) : alpha(alpha), eta(eta), psi(psi), 
-           delta(delta), kappa(kappa), beta(beta)
+Kent::Kent(long double psi, long double alpha, long double eta, 
+           long double kappa, long double beta) : psi(psi), alpha(alpha), eta(eta), 
+           kappa(kappa), beta(beta)
 {
-  //assert(eccentricity() < 1);
-  Vector spherical(3,1);
-  mu = Vector(3,0);
-  // compute mu
-  spherical[1] = alpha; spherical[2] = eta;
-  spherical2cartesian(spherical,mu);
-  // compute major_axis
-  spherical[1] = psi;
-  spherical[2] = delta;
-  major_axis = Vector(3,0);
-  spherical2cartesian(spherical,major_axis);
-  // compute minor_axis
-  minor_axis = crossProduct(mu,major_axis);
-
-  // pre-compute trignometry constants
-  tc.cos_alpha = cos(alpha);
-  tc.sin_alpha = sin(alpha);
-  tc.tan_alpha = tan(alpha);
-
-  tc.cos_eta = cos(eta);
-  tc.sin_eta = sin(eta);
-
-  tc.cos_delta = cos(delta);
-  tc.sin_delta = sin(delta);
-
-  tc.d_n = delta - eta;
-  tc.cos_d_n = cos(tc.d_n);
-  tc.sin_d_n = sin(tc.d_n);
-
-  tc.cos_psi = cos(psi);
-  tc.sin_psi = sin(psi);
-  tc.tan_psi = tan(psi);
-  computed = UNSET;
+  Matrix r = computeOrthogonalTransformation(psi,alpha,eta);
+  mu = Vector(3,0); major_axis = mu; minor_axis = mu;
+  for (int i=0; i<3; i++) {
+    major_axis[i] = r(i,0);
+    minor_axis[i] = r(i,1);
+    mu[i] = r(i,2);
+  }
 }
 
 /*!
@@ -84,16 +65,9 @@ Kent Kent::operator=(const Kent &source)
     mu = source.mu;
     major_axis = source.major_axis;
     minor_axis = source.minor_axis;
+    psi = source.psi;
     alpha = source.alpha;
     eta = source.eta;
-    psi = source.psi;
-    delta = source.delta;
-    kappa = source.kappa;
-    beta = source.beta;
-    constants = source.constants;
-    computed = source.computed;
-    df = source.df;
-    tc = source.tc;
   }
   return *this;
 }

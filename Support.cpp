@@ -550,6 +550,28 @@ Matrix computeNormalizedDispersionMatrix(std::vector<Vector > &sample)
   return dispersion/sample.size();
 }
 
+// anti-clockwise rotation about +Y
+Matrix rotate_about_yaxis(long double theta)
+{
+  Matrix r = IdentityMatrix(3,3);
+  r(0,0) = cos(theta);
+  r(0,2) = sin(theta);
+  r(2,0) = -r(0,2); // -sin(theta)
+  r(2,2) = r(0,0);  // cos(theta)
+  return r;
+}
+
+// anti-clockwise rotation about +Z
+Matrix rotate_about_zaxis(long double theta)
+{
+  Matrix r = IdentityMatrix(3,3);
+  r(0,0) = cos(theta);
+  r(0,1) = -sin(theta);
+  r(1,0) = -r(0,2); // sin(theta)
+  r(1,1) = r(0,0);  // cos(theta)
+  return r;
+}
+
 /*!
  *  Matrix to rotate FROM the standard frame of reference.
  */
@@ -558,27 +580,26 @@ Matrix computeOrthogonalTransformation(
   Vector &major_axis
 ) {
   Matrix r1 = align_zaxis_with_vector(mean);
-  Matrix inverse(3,3);
-  invertMatrix(r1,inverse);
-  // rotate major axis onto XY-plane
-  Vector major1 = prod(inverse,major_axis);
-  Matrix r2 = align_xaxis_with_major_axis(major1);
+  Matrix r_inv = trans(r1);
+  Vector mj_xy = prod(r_inv,major_axis);
+  Vector spherical(3,0);
+  cartesian2spherical(mj_xy,spherical);
+  long double psi = spherical[2];
+  Matrix r2 = rotate_about_zaxis(psi);
   Matrix r = prod(r1,r2);
   return r;
 }
 
-Matrix align_xaxis_with_major_axis(Vector &major_axis)
+/*!
+ *  Matrix to rotate FROM the standard frame of reference.
+ */
+Matrix computeOrthogonalTransformation(long double psi, long double alpha, long double eta)
 {
-  Vector spherical(3,0);
-  cartesian2spherical(major_axis,spherical);
-  long double theta = spherical[1]; // theta = PI/2
-  long double phi = spherical[2];
-
-  Matrix r = IdentityMatrix(3,3);
-  r(0,0) = cos(phi);
-  r(0,1) = -sin(phi);
-  r(1,0) = -r(0,1); // sin(phi)
-  r(1,1) = r(0,0); // cos(phi)
+  Matrix r1 = rotate_about_zaxis(psi);
+  Matrix r2 = rotate_about_yaxis(alpha);
+  Matrix r3 = rotate_about_zaxis(eta);
+  Matrix tmp = prod(r3,r2);
+  Matrix r = prod(r,r1);
   return r;
 }
 
@@ -603,6 +624,12 @@ Matrix align_zaxis_with_vector(Vector &y)
 
   Matrix r = prod(r2,r1);
   return r;
+}
+
+Matrix align_vector_with_zaxis(Vector &y)
+{
+  Matrix r = align_zaxis_with_vector(y);
+  return trans(r);
 }
 
 void generateRandomOrthogonalVectors(
