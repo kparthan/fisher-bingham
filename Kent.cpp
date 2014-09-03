@@ -685,13 +685,13 @@ void Kent::computeAllEstimators(Vector &sample_mean, Matrix &S, int N)
   struct Estimates moment_est = computeMomentEstimates(sample_mean,S,N);
   print(type,moment_est);
 
-  type = "MLE_UNCONSTRAINED";
+  /*type = "MLE_UNCONSTRAINED";
   struct Estimates ml_est1 = moment_est;
   Optimize opt1(type);
   opt1.initialize(N,ml_est1.mean,ml_est1.major_axis,ml_est1.minor_axis,
                  ml_est1.kappa,ml_est1.beta);
   opt1.computeEstimates(sample_mean,S,ml_est1);
-  print(type,ml_est1);
+  print(type,ml_est1);*/
 
   type = "MML_SCALE";
   struct Estimates mml_est1 = moment_est;
