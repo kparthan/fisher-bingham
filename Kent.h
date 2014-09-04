@@ -54,7 +54,7 @@ class Kent  // FB5
 
     Kent(Vector &, Vector &, Vector &, long double, long double);
 
-    Kent(long double, long double, long double, long double, long double, long double);
+    Kent(long double, long double, long double, long double, long double);
  
     Kent operator=(const Kent &);
 

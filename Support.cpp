@@ -567,7 +567,7 @@ Matrix rotate_about_zaxis(long double theta)
   Matrix r = IdentityMatrix(3,3);
   r(0,0) = cos(theta);
   r(0,1) = -sin(theta);
-  r(1,0) = -r(0,2); // sin(theta)
+  r(1,0) = -r(0,1); // sin(theta)
   r(1,1) = r(0,0);  // cos(theta)
   return r;
 }
@@ -599,8 +599,27 @@ Matrix computeOrthogonalTransformation(long double psi, long double alpha, long 
   Matrix r2 = rotate_about_yaxis(alpha);
   Matrix r3 = rotate_about_zaxis(eta);
   Matrix tmp = prod(r3,r2);
-  Matrix r = prod(r,r1);
+  Matrix r = prod(tmp,r1);
   return r;
+}
+
+void computeOrthogonalTransformation(
+  Vector &mean, 
+  Vector &major_axis,
+  long double &psi,
+  long double &alpha,
+  long double &eta
+) {
+  Vector spherical(3,0);
+  cartesian2spherical(mean,spherical);
+  alpha = spherical[1];
+  eta = spherical[2];
+
+  Matrix r1 = align_zaxis_with_vector(mean);
+  Matrix r_inv = trans(r1);
+  Vector mj_xy = prod(r_inv,major_axis);
+  cartesian2spherical(mj_xy,spherical);
+  psi = spherical[2];
 }
 
 Matrix align_zaxis_with_vector(Vector &y)
@@ -864,7 +883,7 @@ void TestFunctions(void)
 
   //test.moment_estimation();
 
-  //test.ml_estimation();
+  test.ml_estimation();
 
   //test.expectation();
 
@@ -872,6 +891,6 @@ void TestFunctions(void)
 
   //test.fisher();
 
-  test.mml_estimation();
+  //test.mml_estimation();
 }
 

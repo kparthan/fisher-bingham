@@ -23,13 +23,6 @@ void Optimize::initialize(int sample_size, Vector &m0, Vector &m1, Vector &m2, l
   minor = m2;
   kappa = k;
   beta = b;
-  Vector spherical(3,0);
-  cartesian2spherical(m0,spherical);
-  alpha = spherical[1]; eta = spherical[2];
-  cartesian2spherical(m1,spherical);
-  psi = spherical[1]; delta = spherical[2];
-  c1 = 1000;  
-  c2 = c1;
 }
 
 void Optimize::computeEstimates(Vector &sample_mean, Matrix &S, struct Estimates &estimates)
@@ -45,12 +38,13 @@ void Optimize::computeEstimates(Vector &sample_mean, Matrix &S, struct Estimates
 
     case MLE_UNCONSTRAINED:
     {
+      computeOrthogonalTransformation(mean,major,psi,alpha,eta);
       column_vector theta = minimize(sample_mean,S,5);
       finalize(theta,estimates);
       break;
     }
 
-    case MLE_CONSTRAINED:
+    /*case MLE_CONSTRAINED:
     {
       column_vector theta = minimize(sample_mean,S,7);
       finalize(theta,estimates);
@@ -70,7 +64,7 @@ void Optimize::computeEstimates(Vector &sample_mean, Matrix &S, struct Estimates
       column_vector theta = minimize(sample_mean,S,5);
       finalize(theta,estimates);
       break;
-    }
+    }*/
   }
 }
 
@@ -78,31 +72,13 @@ void Optimize::finalize(column_vector &theta, struct Estimates &estimates)
 {
   double alpha_f = theta(0);
   double eta_f = theta(1);
-  Vector spherical(3,1);
-  spherical[1] = alpha_f; spherical[2] = eta_f;
-  spherical2cartesian(spherical,estimates.mean);
   double psi_f = theta(2);
-  double tmp = -1/(tan(alpha_f) * tan(psi_f));
-  double delta_f;
-  if (fabs(tmp) > 1) { 
-    cout << "yesf, tmp: " << tmp << endl;;
-    psi_f = psi;
-    delta_f = delta;
-  } else {
-    double acos_tmp = acos(tmp);
-    delta_f = eta_f + acos_tmp;
-    if (!(delta_f >= eta_f && delta_f <= PI+eta_f)) {
-      cout << "yes2\n";
-      delta_f = eta_f - acos_tmp;
-      assert(delta_f >= eta_f && delta_f <= PI+eta_f);
-    }
-  }
-  assert(!boost::math::isnan(delta_f));
-  spherical[1] = psi_f; spherical[2] = delta_f;
-  spherical2cartesian(spherical,estimates.major_axis);
-  estimates.minor_axis = crossProduct(estimates.mean,estimates.major_axis);
   estimates.kappa = theta(3);
   estimates.beta = theta(4);
+  Kent kent(psi_f,alpha_f,eta_f,estimates.kappa,estimates.beta);
+  estimates.mean = kent.Mean();
+  estimates.major_axis = kent.MajorAxis();
+  estimates.minor_axis = kent.MinorAxis();
 }
 
 column_vector Optimize::minimize(Vector &sample_mean, Matrix &S, int num_params)
@@ -137,6 +113,7 @@ column_vector Optimize::minimize(Vector &sample_mean, Matrix &S, int num_params)
 
     case MLE_CONSTRAINED:
     {
+      double c1 = 1000; double c2 = 1000;
       starting_point = alpha,eta,psi,kappa,beta,c1,c2; 
       column_vector min_values(num_params);
       column_vector max_values(num_params);
@@ -152,7 +129,7 @@ column_vector Optimize::minimize(Vector &sample_mean, Matrix &S, int num_params)
       break;
     }
 
-    case MML_SCALE:
+    /*case MML_SCALE:
     {
       starting_point = kappa,beta; 
       find_min_using_approximate_derivatives(
@@ -176,7 +153,7 @@ column_vector Optimize::minimize(Vector &sample_mean, Matrix &S, int num_params)
         -100
       );
       break;
-    }
+    }*/
   }
   /*find_min_box_constrained(bfgs_search_strategy(),  
                            objective_delta_stop_strategy(1e-9),  
