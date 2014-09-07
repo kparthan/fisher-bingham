@@ -446,7 +446,7 @@ void Test::ml_estimation(void)
   }
   kent.computeAllEstimators(sample_mean,S,N);*/
 }
-/*
+
 void Test::expectation()
 {
   Vector m0,m1,m2;
@@ -460,7 +460,6 @@ void Test::expectation()
   cout << "E_x: "; print(cout,constants.E_x,0); cout << endl;
   cout << "E_xx: " << constants.E_xx << endl;
 }
-
 void Test::kl_divergence()
 {
   Vector m0,m1,m2;
@@ -484,37 +483,33 @@ void Test::fisher()
   Vector m0,m1,m2;
   long double kappa = 100;
   long double beta = 14.5;
+  long double psi,alpha,eta;
 
   generateRandomOrthogonalVectors(m0,m1,m2);
   Vector spherical(3,0);
 
+  computeOrthogonalTransformation(m0,m1,psi,alpha,eta);
   cartesian2spherical(m0,spherical);
-  //cout << "m0: "; print(cout,spherical,0); cout << endl;
-  long double alpha = spherical[1];
-  long double eta = spherical[2];
-  cout << "alpha: " << alpha << "; eta: " << eta << endl;
+  cout << "m0: "; print(cout,spherical,0); cout << endl;
 
   cartesian2spherical(m1,spherical);
-  long double psi = spherical[1];
-  long double delta = spherical[2];
-  //cout << "m1: "; print(cout,spherical,0); cout << endl;
-  cout << "psi: " << psi << "; delta: " << delta << endl;
+  cout << "m1: "; print(cout,spherical,0); cout << endl;
 
-  cout << "cos(delta-eta): " << cos(delta-eta) << endl;
-  cout << "cot(alpha)*cot(psi): " << 1 / (tan(alpha)*tan(psi)) << endl;
-
-  Kent kent(alpha,eta,psi,delta,kappa,beta);
+  Kent kent(psi,alpha,eta,kappa,beta);
   kent.computeExpectation();
+  Kent::Constants constants = kent.getConstants();
+  cout << "ck_c: " << constants.ck_c << endl;
   long double log_det_fkb = kent.computeLogFisherScale();
   cout << "log(det(f_kb)): " << log_det_fkb << endl;
   cout << "det(f_kb): " << exp(log_det_fkb) << endl;
-  long double log_det_faxes = kent.computeLogFisherAxes();
+  /*long double log_det_faxes = kent.computeLogFisherAxes();
   cout << "log(det(f_axes)): " << log_det_faxes << endl;
   cout << "det(f_axes): " << exp(log_det_faxes) << endl;
   cout << "log(det(fisher)): " << log_det_fkb+log_det_faxes << endl;
-  cout << "log(fisher): " << kent.computeLogFisherInformation() << endl;
+  cout << "log(fisher): " << kent.computeLogFisherInformation() << endl;*/
 }
 
+/*
 void Test::mml_estimation(void)
 {
   Vector spherical(3,0);
