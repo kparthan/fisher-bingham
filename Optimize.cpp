@@ -109,7 +109,7 @@ column_vector Optimize::minimize(Vector &sample_mean, Matrix &S, int num_params)
       find_min_using_approximate_derivatives(
         bfgs_search_strategy(),
         objective_delta_stop_strategy(1e-10),
-        MMLObjectiveFunctionScale(psi,alpha,eta,sample_mean,S,N),
+        MMLObjectiveFunctionScale(psi,alpha,eta,kappa,beta,sample_mean,S,N),
         starting_point,
         -100
       );

@@ -85,21 +85,24 @@ class MMLObjectiveFunctionScale
 
     int N;
 
-    double psi,alpha,eta;
+    double psi,alpha,eta,kappa_init,beta_init;
 
     double k2;
 
-    double log_prior_axes;
+    double log_prior_axes,log_fisher_axes;
 
   public:
     MMLObjectiveFunctionScale(
-      double psi, double alpha, double eta, Vector &sample_mean, Matrix &S, int sample_size
-    ) : psi(psi), alpha(alpha), eta(eta), N(sample_size),
-        sample_mean(sample_mean), S(S)
+      double psi, double alpha, double eta, double k, double b,
+      Vector &sample_mean, Matrix &S, int sample_size
+    ) : psi(psi), alpha(alpha), eta(eta), kappa_init(k), beta_init(b),
+        sample_mean(sample_mean), S(S), N(sample_size)
     {
       k2 = 0.08019;
-      Kent kent(psi,alpha,eta,100,20);
+      Kent kent(psi,alpha,eta,kappa_init,beta_init);
+      kent.computeExpectation();
       log_prior_axes = kent.computeLogPriorAxes();
+      log_fisher_axes = kent.computeLogFisherAxes();
     }
 
     /*!
@@ -115,11 +118,13 @@ class MMLObjectiveFunctionScale
       double b = x(1);
 
       Kent kent(psi,alpha,eta,k,b);
-      long double log_prior = kent.computeLogPriorScale();
       kent.computeExpectation();
-      long double log_fisher = kent.computeLogFisherScale() + 2 * log(N);
+      long double log_prior_scale = kent.computeLogPriorScale();
+      long double log_fisher_scale = kent.computeLogFisherScale();
+      long double log_fisher = log_fisher_axes + log_fisher_scale + 5 * log(N);
+
       Vector sample_mean1 = sample_mean; Matrix S1 = S;
-      double part1 = log(k2) - log_prior + 0.5 * log_fisher;
+      double part1 = log(k2) - log_prior_axes - log_prior_scale + 0.5 * log_fisher;
       double part2 = kent.computeNegativeLogLikelihood(sample_mean1,S1,N) + 1
                      - 2 * N * log(AOM);
       double fval = part1 + part2;
