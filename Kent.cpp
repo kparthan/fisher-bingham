@@ -122,7 +122,12 @@ long double Kent::log_dc_dk(void)
 
 long double Kent::log_d2c_dk2(void)
 {
-  return computeSeriesSum(kappa,beta,2.5);
+  long double x = computeSeriesSum(kappa,beta,2.5); // log a
+  long double y = constants.log_ck; // log b
+  long double tmp1 = x - y;
+  long double tmp2 = exp(tmp1) + (1/kappa);
+  long double ans = y + log(tmp2);
+  return ans;
 }
 
 long double Kent::computeSeriesSum(long double k, long double b, long double d)
@@ -300,9 +305,12 @@ void Kent::computeExpectation()
   }
 
   Matrix expectation_std = ZeroMatrix(3,3);
-  expectation_std(0,0) = 0.5 * (1 - constants.ckk_c + constants.cb_c);  // lambda_1
-  expectation_std(1,1) = 0.5 * (1 - constants.ckk_c - constants.cb_c);  // lambda_2
-  expectation_std(2,2) = constants.ckk_c;  // lambda_3
+  expectation_std(0,0) = 0.5 * (1 - constants.ckk_c + constants.cb_c);  // lambda_2
+  constants.lambda2 = expectation_std(0,0);
+  expectation_std(1,1) = 0.5 * (1 - constants.ckk_c - constants.cb_c);  // lambda_3
+  constants.lambda3 = expectation_std(1,1);
+  expectation_std(2,2) = constants.ckk_c;  // lambda_1
+  constants.lambda1 = expectation_std(2,2);
 
   assert(expectation_std(0,0) > 0);
   assert(expectation_std(1,1) > 0);
@@ -382,253 +390,61 @@ long double Kent::computeLogFisherInformation(int N)
 
 long double Kent::computeLogFisherAxes()
 {
-  computeFirstOrderDifferentials();
-  computeSecondOrderDifferentials();
-  computeFisherMatrixAxes();
-  long double det = determinant(df.fisher_axes);
+  long double sin_psi = sin(psi);
+  long double sinsq_psi = sin_psi * sin_psi;
+  long double cos_psi = cos(psi);
+  long double cossq_psi = cos_psi * cos_psi; 
+  long double sin_alpha = sin(alpha);
+  long double sinsq_alpha = sin_alpha * sin_alpha;
+  long double cos_alpha = cos(alpha);
+  long double cossq_alpha = cos_alpha * cos_alpha; 
+
+  constants.fisher_axes = ZeroMatrix(3,3);
+  
+  long double ans,tmp1,tmp2,tmp3;
+  // E [d^2 L / d a^2]
+  ans = kappa * constants.ck_c;
+  tmp1 = (constants.lambda1 - constants.lambda3) * sinsq_psi;
+  tmp2 = (constants.lambda1 - constants.lambda2) * cossq_psi;
+  ans += 2 * beta * (tmp1 - tmp2);
+  constants.fisher_axes(0,0) = ans;
+
+  // E [d^2 L / d n^2]
+  ans = kappa * constants.ck_c * sinsq_alpha;
+  tmp1 = cossq_alpha * cossq_psi + sinsq_psi;
+  tmp1 *= constants.lambda2;
+  tmp2 = cossq_alpha * sinsq_psi + cossq_psi;
+  tmp2 *= constants.lambda3;
+  tmp3 = tmp1 - tmp2;
+  tmp1 = constants.cb_c * cossq_alpha;
+  tmp2 = constants.lambda1 * sinsq_alpha * (cossq_psi - sinsq_psi);
+  tmp3 += (tmp1 + tmp2);
+  ans += 2 * beta * tmp3;
+  constants.fisher_axes(1,1) = ans;
+  
+  // E [d^2 L / d s^2]
+  ans = 4 * beta * constants.cb_c;
+  constants.fisher_axes(2,2) = ans;
+
+  // E [d^2 L / dadn]
+  tmp1 = 1 - (3 * constants.lambda1);
+  ans = tmp1 * 2 * beta * sin_alpha * sin_psi * cos_psi;
+  constants.fisher_axes(0,1) = ans;
+
+  // E [d^2 L / dads]
+  constants.fisher_axes(0,2) = 0;
+
+  // E [d^2 L / dnds]
+  ans = constants.fisher_axes(2,2) * cos_alpha;
+  constants.fisher_axes(1,2) = ans;
+
+  constants.fisher_axes(1,0) = constants.fisher_axes(0,1);
+  constants.fisher_axes(2,0) = constants.fisher_axes(0,2);
+  constants.fisher_axes(2,1) = constants.fisher_axes(1,2);
+
+  long double det = determinant(constants.fisher_axes);
   //cout << "det: " << det << endl; //exit(1);
   return log(det);
-}
-
-void Kent::computeFirstOrderDifferentials()
-{
-  std::vector<Vector > first_order(3);
-  Vector d1(3,0);
-
-  // d1_mu[0]: dmu_da
-  d1[0] = tc.cos_alpha * tc.cos_eta;  // d1 y11_da
-  d1[1] = tc.cos_alpha * tc.sin_eta;  // d1 y12_da
-  d1[2] = -tc.sin_alpha;              // d1 y13_da
-  first_order[0] = d1;
-
-  // d1_mu[1]: dmu_dn
-  d1[0] = -tc.sin_alpha * tc.sin_eta;  // d1 y11_dn
-  d1[1] = tc.sin_alpha * tc.cos_eta;   // d1 y12_dn
-  d1[2] = 0;                           // d1 y13_dn
-  first_order[1] = d1;
-
-  // d1_mu[2]: dmu_ds = 0
-  d1[0] = 0;
-  d1[1] = 0;
-  d1[2] = 0;
-  first_order[2] = d1;
-
-  df.d1_mu = first_order;
-
-  computeDeltaDifferentials();
-  // d1_mj[0]: dmj_da
-  d1[0] = -tc.sin_psi * tc.sin_delta * df.ddel_da;
-  d1[1] = tc.sin_psi * tc.cos_delta * df.ddel_da;
-  d1[2] = 0; 
-  first_order[0] = d1;
-
-  // d1_mj[1]: dmj_dn
-  d1[0] = -tc.sin_psi * tc.sin_delta;
-  d1[1] = tc.sin_psi * tc.cos_delta;
-  d1[2] = 0; 
-  first_order[1] = d1;
-
-  // d1_mj[2]: dmj_ds
-  d1[0] = tc.cos_psi * tc.cos_delta - tc.sin_psi * tc.sin_delta * df.ddel_ds;
-  d1[1] = tc.cos_psi * tc.sin_delta + tc.sin_psi * tc.cos_delta * df.ddel_ds;
-  d1[2] = -tc.sin_psi;
-  first_order[2] = d1;
-
-  df.d1_mj = first_order;
-
-  // d1_mi[0]: dmi_da
-  // d1_mi[1]: dmi_dn
-  // d1_mi[2]: dmi_ds
-  for (int i=0; i<3; i++) {
-    first_order[i] = computeFirstOrderDifferentialsMinorAxis(i);
-  }
-  df.d1_mi = first_order;
-}
-
-Vector Kent::computeFirstOrderDifferentialsMinorAxis(int i)
-{
-  Vector cross1 = crossProduct(df.d1_mu[i],major_axis);
-  Vector cross2 = crossProduct(mu,df.d1_mj[i]);
-  Vector ans(3,0);
-  for (int i=0; i<3; i++) {
-    ans[i] = cross1[i] + cross2[i];
-  }
-  return ans;
-}
-
-void Kent::computeDeltaDifferentials()
-{
-  long double tmp1,tmp2;
-
-  // d(delta)_d(alpha)
-  tmp1 = tc.sin_d_n * tc.tan_psi * tc.sin_alpha * tc.sin_alpha;
-  df.ddel_da = -1/tmp1;
-
-  // d(delta)_d(psi)
-  tmp1 = tc.sin_d_n * tc.tan_alpha * tc.sin_psi * tc.sin_psi;
-  df.ddel_ds = -1/tmp1;
-
-  // d2(delta)_d(alpha)2
-  tmp1 = tc.tan_psi * tc.sin_alpha * tc.sin_alpha * tc.tan_alpha;
-  tmp2 = 2/tmp1;
-  tmp1 = df.ddel_da * df.ddel_da * tc.cos_d_n;
-  df.d2del_da2 = (tmp2 - tmp1) / tc.sin_d_n;
-
-  // d2(delta)_d(psi)2
-  tmp1 = tc.tan_alpha * tc.sin_psi * tc.sin_psi * tc.tan_psi;
-  tmp2 = 2/tmp1;
-  tmp1 = df.ddel_ds * df.ddel_ds * tc.cos_d_n;
-  df.d2del_ds2 = (tmp2 - tmp1) / tc.sin_d_n;
-
-  // d2(delta)_d(alpha)d(psi)
-  tmp1 = tc.sin_alpha * tc.sin_alpha * tc.sin_psi * tc.sin_psi;
-  tmp2 = 1/tmp1;
-  tmp1 = df.ddel_da * df.ddel_ds * tc.cos_d_n;
-  df.d2del_dads = (tmp2 - tmp1) / tc.sin_d_n;
-}
-
-void Kent::computeSecondOrderDifferentials()
-{
-  std::vector<Vector > second_order(6);
-  Vector d2(3,0);
-
-  // d2_mu[0]: d2mu_da2
-  d2[0] = -tc.sin_alpha * tc.cos_eta;
-  d2[1] = -tc.sin_alpha * tc.sin_eta;
-  d2[2] = -tc.cos_alpha;
-  second_order[0] = d2;
-
-  // d2_mu[1]: d2mu_dn2
-  d2[2] = 0;
-  second_order[1] = d2;
-
-  // d2_mu[2]: d2mu_ds2
-  d2[0] = 0;
-  d2[1] = 0;
-  second_order[2] = d2;
-
-  // d2_mu[3]: d2mu_dadn
-  d2[0] = -tc.cos_alpha * tc.sin_eta;
-  d2[1] = tc.cos_alpha * tc.cos_eta;
-  second_order[3] = d2;
-
-  // d2_mu[4]: d2mu_dads
-  d2[0] = 0;
-  d2[1] = 0;
-  second_order[4] = d2;
-
-  // d2_mu[5]: d2mu_dnds
-  second_order[5] = d2;
-
-  df.d2_mu = second_order;
-
-  // d2_mj[0]: d2mj_da2
-  d2[0] = -tc.sin_psi * (tc.sin_delta * df.d2del_da2 + tc.cos_delta * df.ddel_da * df.ddel_da);
-  d2[1] = tc.sin_psi * (tc.cos_delta * df.d2del_da2 - tc.sin_delta * df.ddel_da * df.ddel_da);
-  d2[2] = 0;
-  second_order[0] = d2;
-
-  // d2_mj[1]: d2mj_dn2
-  d2[0] = -tc.sin_psi * tc.cos_delta;
-  d2[1] = -tc.sin_psi * tc.sin_delta;
-  d2[2] = 0; 
-  second_order[1] = d2;
-
-  // d2_mj[2]: d2mj_ds2
-  d2[0] = -tc.cos_delta * tc.sin_psi - 2 * tc.cos_psi * tc.sin_delta * df.ddel_ds
-          - tc.sin_psi * (tc.sin_delta * df.d2del_ds2 + tc.cos_delta * df.ddel_ds * df.ddel_ds);
-  d2[1] = -tc.sin_delta * tc.sin_psi + 2 * tc.cos_delta * tc.cos_psi * df.ddel_ds
-          + tc.sin_psi * (tc.cos_delta * df.d2del_ds2 - tc.sin_delta * df.ddel_ds * df.ddel_ds);
-  d2[2] = -tc.cos_psi;
-  second_order[2] = d2;
-
-  // d2_mj[3]: d2mj_dadn
-  d2[0] = -df.ddel_da * major_axis[0];
-  d2[1] = -df.ddel_da * major_axis[1];
-  d2[2] = 0;
-  second_order[3] = d2;
-
-  // d2_mj[4]: d2mj_dads
-  d2[0] = -tc.sin_psi * (tc.sin_delta * df.d2del_dads + tc.cos_delta * df.ddel_da * df.ddel_ds)
-          - tc.cos_psi * tc.sin_delta * df.ddel_da;
-  d2[1] = tc.sin_psi * (tc.cos_delta * df.d2del_dads - tc.sin_delta * df.ddel_da * df.ddel_ds)
-          + tc.cos_psi * tc.cos_delta * df.ddel_da;
-  d2[2] = 0; 
-  second_order[4] = d2;
-
-  // d2_mj[5]: d2mj_dnds
-  d2[0] = -tc.cos_psi * tc.sin_delta - tc.sin_psi * tc.cos_delta * df.ddel_ds;
-  d2[1] = tc.cos_psi * tc.cos_delta - tc.sin_psi * tc.sin_delta * df.ddel_ds;
-  d2[2] = 0; 
-  second_order[5] = d2;
-
-  df.d2_mj = second_order;
-
-  // d2_mi[0]: d2mi_da2
-  second_order[0] = computeSecondOrderDifferentialsMinorAxis(0,0,0,0,0,0);
-  // d2_mi[1]: d2mi_dn2
-  second_order[1] = computeSecondOrderDifferentialsMinorAxis(1,1,1,1,1,1);
-  // d2_mi[2]: d2mi_ds2
-  second_order[2] = computeSecondOrderDifferentialsMinorAxis(2,2,2,2,2,2);
-  // d2_mi[3]: d2mi_dadn
-  second_order[3] = computeSecondOrderDifferentialsMinorAxis(3,1,0,3,0,1);
-  // d2_mi[4]: d2mi_dads
-  second_order[4] = computeSecondOrderDifferentialsMinorAxis(4,2,0,4,0,2);
-  // d2_mi[5]: d2mi_dnds
-  second_order[5] = computeSecondOrderDifferentialsMinorAxis(5,2,1,5,1,2);
-
-  df.d2_mi = second_order;
-}
-
-Vector Kent::computeSecondOrderDifferentialsMinorAxis(
-  int i0, int i1, int i2, int i3, int i4, int i5
-) {
-  Vector c1 = crossProduct(df.d2_mu[i0],major_axis);
-  Vector c2 = crossProduct(df.d1_mu[i1],df.d1_mj[i2]);
-  Vector c3 = crossProduct(mu,df.d2_mj[i3]);
-  Vector c4 = crossProduct(df.d1_mu[i4],df.d1_mj[i5]);
-
-  Vector ans(3,0);
-  for (int i=0; i<3; i++) {
-    ans[i] = c1[i] + c2[i] + c3[i] + c4[i];
-  }
-  return ans;
-}
-
-void Kent::computeFisherMatrixAxes()
-{
-  df.fisher_axes = ZeroMatrix(3,3);
-  // E[d^2 L / da^2]
-  df.fisher_axes(0,0) = computeExpectationLikelihood(0,0,0);
-  // E[d^2 L / dadn]
-  df.fisher_axes(0,1) = computeExpectationLikelihood(3,0,1);
-  // E[d^2 L / dads]
-  df.fisher_axes(0,2) = computeExpectationLikelihood(4,0,2);
-  // E[d^2 L / dn^2]
-  df.fisher_axes(1,1) = computeExpectationLikelihood(1,1,1);
-  // E[d^2 L / dnds]
-  df.fisher_axes(1,2) = computeExpectationLikelihood(5,1,2);
-  // E[d^2 L / ds^2]
-  df.fisher_axes(2,2) = computeExpectationLikelihood(2,2,2);
-  df.fisher_axes(1,0) = df.fisher_axes(0,1);
-  df.fisher_axes(2,0) = df.fisher_axes(0,2);
-  df.fisher_axes(2,1) = df.fisher_axes(1,2);
-  //cout << "FisherAxes: " << df.fisher_axes << endl;
-}
-
-long double Kent::computeExpectationLikelihood(int i1, int i2, int i3)
-{
-  long double t1 = computeDotProduct(constants.kappa_E_x,df.d2_mu[i1]);
-
-  long double t2 = prod_xMy(major_axis,constants.beta_E_xx,df.d2_mj[i1]);
-  t2 += prod_xMy(df.d1_mj[i2],constants.beta_E_xx,df.d1_mj[i3]);
-  t2 *= 2;
-
-  long double t3 = prod_xMy(minor_axis,constants.beta_E_xx,df.d2_mi[i1]);
-  t3 += prod_xMy(df.d1_mi[i2],constants.beta_E_xx,df.d1_mi[i3]);
-  t3 *= 2;
-
-  return -t1-t2+t3;
 }
 
 long double Kent::computeLogFisherScale()
@@ -642,7 +458,8 @@ long double Kent::computeLogFisherScale()
   // E [d^2 L / dk db]
   long double t3 = constants.ckb_c - (constants.ck_c * constants.cb_c);
 
-  long double det = t1 * t2 - t3;
+  long double det = t1 * t2 - t3 * t3;
+  //cout << "det: " << det << endl;
   return log(det);
 }
 
@@ -659,21 +476,21 @@ void Kent::computeAllEstimators(Vector &sample_mean, Matrix &S, int N)
   struct Estimates moment_est = computeMomentEstimates(sample_mean,S,N);
   print(type,moment_est);
 
-  type = "MLE_UNCONSTRAINED";
-  struct Estimates ml_est1 = moment_est;
+  type = "MLE";
+  struct Estimates ml_est = moment_est;
   Optimize opt1(type);
-  opt1.initialize(N,ml_est1.mean,ml_est1.major_axis,ml_est1.minor_axis,
-                 ml_est1.kappa,ml_est1.beta);
-  opt1.computeEstimates(sample_mean,S,ml_est1);
-  print(type,ml_est1);
+  opt1.initialize(N,ml_est.mean,ml_est.major_axis,ml_est.minor_axis,
+                 ml_est.kappa,ml_est.beta);
+  opt1.computeEstimates(sample_mean,S,ml_est);
+  print(type,ml_est);
 
-  /*type = "MML_SCALE";
+  type = "MML_SCALE";
   struct Estimates mml_est1 = moment_est;
   Optimize opt2(type);
   opt2.initialize(N,mml_est1.mean,mml_est1.major_axis,mml_est1.minor_axis,
                  mml_est1.kappa,mml_est1.beta);
   opt2.computeEstimates(sample_mean,S,mml_est1);
-  print(type,mml_est1);*/
+  print(type,mml_est1);
 
   /*type = "MML";
   struct Estimates mml_est2 = moment_est;

@@ -258,8 +258,8 @@ void Test::randomSampleGeneration(void)
 void Test::normalization_constant(void)
 {
   cout << "ZERO: " << ZERO << endl;
-  long double kappa = 1000;
-  long double beta = 47.5;
+  long double kappa = 100;
+  long double beta = 14.5;
   Vector m0 = ZAXIS;
   Vector m1 = XAXIS;
   Vector m2 = YAXIS;
@@ -274,13 +274,15 @@ void Test::normalization_constant(void)
   cout << "A: " << A << endl;
   //Kent kent(100,30);
   Kent kent(kappa,beta);
-  long double log_norm = kent.computeLogNormalizationConstant();
-  cout << "log_norm: " << log_norm << endl;
-  cout << "dc_db: " << kent.log_dc_db() << endl;
-  cout << "dc_dk: " << kent.log_dc_dk() << endl;
-  cout << "d2c_dk2: " << kent.log_d2c_dk2() << endl;
+  Kent::Constants constants = kent.getConstants();
+  cout << "log_norm: " << constants.log_c << endl;
+  cout << "dc_db: " << constants.log_cb << endl;
+  cout << "dc_dk: " << constants.log_ck << endl;
+  cout << "d2c_dk2: " << constants.log_ckk << endl;
+  cout << "d2c_db2: " << constants.log_cbb << endl;
+  cout << "d2c_dkdb: " << constants.log_ckb << endl;
 
-  std::vector<Vector > random_sample;
+  /*std::vector<Vector > random_sample;
   generateRandomOrthogonalVectors(m0,m1,m2);
   cout << "m0: "; print(cout,m0,0); cout << endl;
   cout << "m1: "; print(cout,m1,0); cout << endl;
@@ -299,6 +301,8 @@ void Test::normalization_constant(void)
   cout << "dc_db: " << kent1.log_dc_db() << endl;
   cout << "dc_dk: " << kent1.log_dc_dk() << endl;
   cout << "d2c_dk2: " << kent1.log_d2c_dk2() << endl;
+  cout << "d2c_db2: " << kent1.log_d2c_db2() << endl;
+  cout << "d2c_dkdb: " << kent1.log_d2c_dkdb() << endl;*/
 }
 
 void Test::optimization(void)
@@ -460,6 +464,7 @@ void Test::expectation()
   cout << "E_x: "; print(cout,constants.E_x,0); cout << endl;
   cout << "E_xx: " << constants.E_xx << endl;
 }
+
 void Test::kl_divergence()
 {
   Vector m0,m1,m2;
@@ -482,7 +487,7 @@ void Test::fisher()
 {
   Vector m0,m1,m2;
   long double kappa = 100;
-  long double beta = 14.5;
+  long double beta = 30;
   long double psi,alpha,eta;
 
   generateRandomOrthogonalVectors(m0,m1,m2);
@@ -498,18 +503,16 @@ void Test::fisher()
   Kent kent(psi,alpha,eta,kappa,beta);
   kent.computeExpectation();
   Kent::Constants constants = kent.getConstants();
-  cout << "ck_c: " << constants.ck_c << endl;
   long double log_det_fkb = kent.computeLogFisherScale();
   cout << "log(det(f_kb)): " << log_det_fkb << endl;
   cout << "det(f_kb): " << exp(log_det_fkb) << endl;
-  /*long double log_det_faxes = kent.computeLogFisherAxes();
+  long double log_det_faxes = kent.computeLogFisherAxes();
   cout << "log(det(f_axes)): " << log_det_faxes << endl;
   cout << "det(f_axes): " << exp(log_det_faxes) << endl;
   cout << "log(det(fisher)): " << log_det_fkb+log_det_faxes << endl;
-  cout << "log(fisher): " << kent.computeLogFisherInformation() << endl;*/
+  cout << "log(fisher): " << kent.computeLogFisherInformation() << endl;
 }
 
-/*
 void Test::mml_estimation(void)
 {
   Vector spherical(3,0);
@@ -517,7 +520,7 @@ void Test::mml_estimation(void)
   std::vector<Vector> random_sample;
   Vector m0,m1,m2;
   long double kappa = 100;
-  long double beta = 30;
+  long double beta = 47.5;
 
   generateRandomOrthogonalVectors(m0,m1,m2);
   cartesian2spherical(m0,spherical);
@@ -531,7 +534,7 @@ void Test::mml_estimation(void)
   cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
 
   Kent kent(m0,m1,m2,kappa,beta);
-  random_sample = kent.generate(1000);
+  random_sample = kent.generate(100);
   kent.computeAllEstimators(random_sample);
-}*/
+}
 

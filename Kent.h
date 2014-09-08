@@ -18,32 +18,12 @@ class Kent  // FB5
     struct Constants {
       long double log_c,log_cb,log_ck,log_ckk,log_ckb,log_cbb;
       long double ck_c,ckk_c,cb_c,cbb_c,ckb_c;
+      long double lambda1,lambda2,lambda3;
       Vector E_x,kappa_E_x;
       Matrix E_xx,beta_E_xx;
       Matrix R,Rt;  // R: standard -> current orientation
-    } constants;
-
-    struct TrignometryConstants {
-      long double cos_alpha,sin_alpha,tan_alpha;
-      long double cos_eta,sin_eta;
-      long double cos_psi,sin_psi,tan_psi;
-      long double cos_delta,sin_delta;
-      long double d_n,cos_d_n,sin_d_n;
-    } tc;
-
-    //  d1_mu (3 X 3): <dmu_da> <dmu_dn> <dmu_ds>
-    //  d2_mu (6 X 3): [0] <d2mu_da2> 
-    //                 [1] <d2mu_dn2> 
-    //                 [2] <d2mu_ds2> 
-    //                 [3] <d2mu_dadn> 
-    //                 [4] <d2mu_dads> 
-    //                 [5] <d2mu_dnds>
-    struct Differentials {
-      std::vector<Vector > d1_mu,d1_mj,d1_mi;
-      std::vector<Vector > d2_mu,d2_mj,d2_mi;
-      long double ddel_da,ddel_ds,d2del_da2,d2del_ds2,d2del_dads;
       Matrix fisher_axes;
-    } df;
+    } constants;
 
     int computed;
 
@@ -87,20 +67,6 @@ class Kent  // FB5
     void computeExpectation();
 
     long double computeLogFisherAxes();
-
-    long double computeExpectationLikelihood(int, int, int);
-
-    void computeFirstOrderDifferentials();
-
-    Vector computeFirstOrderDifferentialsMinorAxis(int);
-
-    void computeDeltaDifferentials();
-
-    void computeSecondOrderDifferentials();
-
-    Vector computeSecondOrderDifferentialsMinorAxis(int, int, int, int, int, int);
-
-    void computeFisherMatrixAxes();
 
     long double computeLogFisherScale();
 

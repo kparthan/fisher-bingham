@@ -889,8 +889,8 @@ void TestFunctions(void)
 
   //test.kl_divergence();
 
-  test.fisher();
+  //test.fisher();
 
-  //test.mml_estimation();
+  test.mml_estimation();
 }
 

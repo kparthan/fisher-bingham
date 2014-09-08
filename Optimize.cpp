@@ -4,10 +4,8 @@ Optimize::Optimize(string type)
 {
   if (type.compare("MOMENT") == 0) {
     estimation = MOMENT;
-  } else if (type.compare("MLE_UNCONSTRAINED") == 0) {
-    estimation = MLE_UNCONSTRAINED;
-  } else if (type.compare("MLE_CONSTRAINED") == 0) {
-    estimation = MLE_CONSTRAINED;
+  } else if (type.compare("MLE") == 0) {
+    estimation = MLE;
   } else if (type.compare("MML_SCALE") == 0) {
     estimation = MML_SCALE;
   } else if (type.compare("MML") == 0) {
@@ -36,7 +34,7 @@ void Optimize::computeEstimates(Vector &sample_mean, Matrix &S, struct Estimates
       break;
     }
 
-    case MLE_UNCONSTRAINED:
+    case MLE:
     {
       computeOrthogonalTransformation(mean,major,psi,alpha,eta);
       column_vector theta = minimize(sample_mean,S,5);
@@ -44,22 +42,16 @@ void Optimize::computeEstimates(Vector &sample_mean, Matrix &S, struct Estimates
       break;
     }
 
-    /*case MLE_CONSTRAINED:
-    {
-      column_vector theta = minimize(sample_mean,S,7);
-      finalize(theta,estimates);
-      break;
-    }
-
     case MML_SCALE:
     {
+      computeOrthogonalTransformation(mean,major,psi,alpha,eta);
       column_vector theta = minimize(sample_mean,S,2);
       estimates.kappa = theta(0);
       estimates.beta = theta(1);
       break;
     }
 
-    case MML:
+    /*case MML:
     {
       column_vector theta = minimize(sample_mean,S,5);
       finalize(theta,estimates);
@@ -98,51 +90,33 @@ column_vector Optimize::minimize(Vector &sample_mean, Matrix &S, int num_params)
       break;
     }
 
-    case MLE_UNCONSTRAINED:
+    case MLE:
     {
       starting_point = alpha,eta,psi,kappa,beta; 
       find_min_using_approximate_derivatives(
         bfgs_search_strategy(),
         objective_delta_stop_strategy(1e-10),
-        MaximumLikelihoodObjectiveFunctionUnconstrained(sample_mean,S,N,starting_point),
+        MaximumLikelihoodObjectiveFunction(sample_mean,S,N,starting_point),
         starting_point,
         -100
       );
       break;
     }
 
-    case MLE_CONSTRAINED:
-    {
-      double c1 = 1000; double c2 = 1000;
-      starting_point = alpha,eta,psi,kappa,beta,c1,c2; 
-      column_vector min_values(num_params);
-      column_vector max_values(num_params);
-      min_values = -1e10,-1e10,-1e10,0,0,1e-10,1e-10;
-      max_values = uniform_matrix<double>(num_params,1,1e10);
-      find_min_box_constrained(
-        bfgs_search_strategy(),  
-        objective_delta_stop_strategy(1e-9),  
-        MaximumLikelihoodObjectiveFunctionConstrained(sample_mean,S,N,starting_point), 
-        derivative(MaximumLikelihoodObjectiveFunctionConstrained(sample_mean,S,N,starting_point)), 
-        starting_point,min_values,max_values 
-      );
-      break;
-    }
-
-    /*case MML_SCALE:
+    case MML_SCALE:
     {
       starting_point = kappa,beta; 
       find_min_using_approximate_derivatives(
         bfgs_search_strategy(),
         objective_delta_stop_strategy(1e-10),
-        MMLObjectiveFunctionScale(alpha,eta,psi,delta,sample_mean,S,N),
+        MMLObjectiveFunctionScale(psi,alpha,eta,sample_mean,S,N),
         starting_point,
         -100
       );
       break;
     }
 
-    case MML:
+    /*case MML:
     {
       starting_point = alpha,eta,psi,kappa,beta; 
       find_min_using_approximate_derivatives(

@@ -57,16 +57,15 @@ typedef number<mpfr_float_backend<1000> > my_float;
 #define PI boost::math::constants::pi<double>()
 #define LOG_PI log(PI)
 #define ZERO std::numeric_limits<long double>::epsilon()
-#define TOLERANCE 1e-8
+#define TOLERANCE 1e-10
 
 #define SET 1 
 #define UNSET 0
 
 #define MOMENT 1
-#define MLE_UNCONSTRAINED 2
-#define MLE_CONSTRAINED 3 
-#define MML_SCALE 4
-#define MML 5
+#define MLE 2
+#define MML_SCALE 3 
+#define MML 4
 
 #define PRINT_NON_DETAIL 0
 #define PRINT_DETAIL 1
