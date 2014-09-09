@@ -1,5 +1,5 @@
 CFLAGS=-std=c++0x -g -I./support/dlib-18.9/
-LDFLAGS=-lboost_program_options -lboost_system -lboost_filesystem -lmpfr 
+LDFLAGS=-lboost_program_options -lboost_system -lboost_filesystem 
 
 OBJECTS = main.o \
   Support.o \
@@ -9,7 +9,8 @@ OBJECTS = main.o \
   Kent.o \
   FB6.o \
   Optimize.o \
-  Test.o
+  Test.o \
+  Experiments.o
 
 all: main 
 
@@ -41,6 +42,9 @@ Optimize.o: Optimize.cpp Optimize.h Header.h
 	g++ -c $(CFLAGS) $< -o $@
 
 Test.o: Test.cpp Test.h Header.h
+	g++ -c $(CFLAGS) $< -o $@
+
+Experiments.o: Experiments.cpp Experiments.h Header.h
 	g++ -c $(CFLAGS) $< -o $@
 
 clean:

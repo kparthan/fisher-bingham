@@ -6,6 +6,8 @@ Optimize::Optimize(string type)
     estimation = MOMENT;
   } else if (type.compare("MLE") == 0) {
     estimation = MLE;
+  } else if (type.compare("MAP") == 0) {
+    estimation = MAP;
   } else if (type.compare("MML_SCALE") == 0) {
     estimation = MML_SCALE;
   } else if (type.compare("MML") == 0) {
@@ -42,6 +44,14 @@ void Optimize::computeEstimates(Vector &sample_mean, Matrix &S, struct Estimates
       break;
     }
 
+    case MAP:
+    {
+      computeOrthogonalTransformation(mean,major,psi,alpha,eta);
+      column_vector theta = minimize(sample_mean,S,5);
+      finalize(theta,estimates);
+      break;
+    }
+
     case MML_SCALE:
     {
       computeOrthogonalTransformation(mean,major,psi,alpha,eta);
@@ -51,12 +61,13 @@ void Optimize::computeEstimates(Vector &sample_mean, Matrix &S, struct Estimates
       break;
     }
 
-    /*case MML:
+    case MML:
     {
+      computeOrthogonalTransformation(mean,major,psi,alpha,eta);
       column_vector theta = minimize(sample_mean,S,5);
       finalize(theta,estimates);
       break;
-    }*/
+    }
   }
 }
 
@@ -96,7 +107,20 @@ column_vector Optimize::minimize(Vector &sample_mean, Matrix &S, int num_params)
       find_min_using_approximate_derivatives(
         bfgs_search_strategy(),
         objective_delta_stop_strategy(1e-10),
-        MaximumLikelihoodObjectiveFunction(sample_mean,S,N,starting_point),
+        MaximumLikelihoodObjectiveFunction(sample_mean,S,N),
+        starting_point,
+        -100
+      );
+      break;
+    }
+
+    case MAP:
+    {
+      starting_point = alpha,eta,psi,kappa,beta; 
+      find_min_using_approximate_derivatives(
+        bfgs_search_strategy(),
+        objective_delta_stop_strategy(1e-10),
+        MAPObjectiveFunction(sample_mean,S,N),
         starting_point,
         -100
       );
@@ -116,18 +140,18 @@ column_vector Optimize::minimize(Vector &sample_mean, Matrix &S, int num_params)
       break;
     }
 
-    /*case MML:
+    case MML:
     {
       starting_point = alpha,eta,psi,kappa,beta; 
       find_min_using_approximate_derivatives(
         bfgs_search_strategy(),
         objective_delta_stop_strategy(1e-10),
-        MMLObjectiveFunction(sample_mean,S,N,starting_point),
+        MMLObjectiveFunction(sample_mean,S,N),
         starting_point,
         -100
       );
       break;
-    }*/
+    }
   }
   /*find_min_box_constrained(bfgs_search_strategy(),  
                            objective_delta_stop_strategy(1e-9),  
@@ -144,7 +168,7 @@ column_vector Optimize::minimize(Vector &sample_mean, Matrix &S, int num_params)
                   1e-6,  // stopping trust region radius
                   100    // max number of objective function evaluations
   );*/
-  cout << "solution:\n" << starting_point << endl;
+  //cout << "solution:\n" << starting_point << endl;
   return starting_point;
 }
 

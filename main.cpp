@@ -16,6 +16,10 @@ int main(int argc, char **argv)
     TestFunctions();
   }
 
+  if (parameters.experiments == SET) {
+    RunExperiments(parameters.iterations);
+  }
+
   return 0;
 }
 

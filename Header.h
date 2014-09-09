@@ -20,7 +20,6 @@
 #include <boost/foreach.hpp>
 #include <boost/tokenizer.hpp>
 #include <boost/filesystem.hpp>
-#include <boost/multiprecision/mpfr.hpp>
 
 #include <boost/math/constants/constants.hpp>
 #include <boost/math/special_functions.hpp>
@@ -41,7 +40,6 @@ using namespace std;
 using namespace boost::program_options;
 using namespace boost::filesystem;
 using namespace boost::math;
-using namespace boost::multiprecision;
 using namespace boost::numeric::ublas;
 using namespace boost::numeric::odeint;
 
@@ -49,7 +47,6 @@ typedef std::vector<long double> Vector;
 typedef boost::numeric::ublas::matrix<long double> Matrix;
 typedef boost::numeric::ublas::identity_matrix<long double> IdentityMatrix;
 typedef boost::numeric::ublas::zero_matrix<long double> ZeroMatrix;
-typedef number<mpfr_float_backend<1000> > my_float; 
 
 // numeric constants
 #define AOM 0.001
@@ -62,10 +59,12 @@ typedef number<mpfr_float_backend<1000> > my_float;
 #define SET 1 
 #define UNSET 0
 
-#define MOMENT 1
-#define MLE 2
-#define MML_SCALE 3 
-#define MML 4
+#define NUM_METHODS 4
+#define MOMENT 0 
+#define MLE 1
+#define MAP 2
+#define MML 3
+#define MML_SCALE 4
 
 #define PRINT_NON_DETAIL 0
 #define PRINT_DETAIL 1

@@ -6,6 +6,8 @@
 struct Parameters
 {
   int test;                 // flag to test some modules
+  int experiments;          // flag to run some experiments 
+  int iterations;           // number of iterations
 };
 
 struct Estimates
@@ -63,6 +65,7 @@ void track(const std::vector<double> &, const double);
 void rhs(const std::vector<double> &, std::vector<double> &, const double);
 
 void TestFunctions(void);
+void RunExperiments(int);
 
 #endif
 

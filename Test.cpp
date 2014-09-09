@@ -430,7 +430,7 @@ void Test::ml_estimation(void)
   kent.computeAllEstimators(random_sample);
 
   // Kent example from paper
-  /*cout << "\nExample from paper:\n";
+  cout << "\nExample from paper:\n";
   kent = Kent(100,20);
   Vector sample_mean(3,0);
   sample_mean[0] = 0.083; sample_mean[1] = -0.959; sample_mean[2] = 0.131;
@@ -448,7 +448,7 @@ void Test::ml_estimation(void)
       S(i,j) *= N;
     }
   }
-  kent.computeAllEstimators(sample_mean,S,N);*/
+  kent.computeAllEstimators(sample_mean,S,N);
 }
 
 void Test::expectation()
@@ -520,7 +520,7 @@ void Test::mml_estimation(void)
   std::vector<Vector> random_sample;
   Vector m0,m1,m2;
   long double kappa = 100;
-  long double beta = 47.5;
+  long double beta = 30;
 
   generateRandomOrthogonalVectors(m0,m1,m2);
   cartesian2spherical(m0,spherical);

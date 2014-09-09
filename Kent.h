@@ -7,6 +7,7 @@
 class Kent  // FB5
 {
   friend class Test;
+  friend class Experiments;
 
   private:
     Vector mu,major_axis,minor_axis;
@@ -88,6 +89,8 @@ class Kent  // FB5
 
     void computeAllEstimators(Vector &, Matrix &, int);
 
+    void computeAllEstimators(std::vector<Vector >, std::vector<struct Estimates> &);
+
     struct Estimates computeMomentEstimates(std::vector<Vector> &);
 
     struct Estimates computeMomentEstimates(Vector &, Matrix &, int);
@@ -111,6 +114,12 @@ class Kent  // FB5
     long double Beta();
 
     long double computeKLDivergence(Kent &);
+
+    long double computeKLDivergence(struct Estimates &);
+
+    long double computeMessageLength(Vector &, Matrix &, int);
+
+    long double computeMessageLength(struct Estimates &, Vector &, Matrix &, int);
 };
 
 #endif

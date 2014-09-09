@@ -361,8 +361,9 @@ long double Kent::computeLogPriorProbability()
 long double Kent::computeLogPriorAxes()
 {
   long double log_prior = 0;
-  log_prior += log(4) - 4*log(PI);
-  log_prior += log(sin(alpha));
+  //log_prior += log(4) - 4*log(PI);
+  //log_prior += log(sin(alpha));
+  log_prior = -log(4) - 3 * log(PI);
   return log_prior;
 }
 
@@ -371,6 +372,7 @@ long double Kent::computeLogPriorScale()
   long double log_prior = 0;
   log_prior += 2 * log(kappa);
   log_prior -= 2 * log(1+kappa*kappa);
+  log_prior += 2 * log(4/PI);
   return log_prior;
 }
 
@@ -475,30 +477,86 @@ void Kent::computeAllEstimators(Vector &sample_mean, Matrix &S, int N)
   string type = "MOMENT";
   struct Estimates moment_est = computeMomentEstimates(sample_mean,S,N);
   print(type,moment_est);
+  cout << "msglen: " << computeMessageLength(moment_est,sample_mean,S,N) << endl;
+  cout << "KL-divergence: " << computeKLDivergence(moment_est) << endl << endl;
 
   type = "MLE";
   struct Estimates ml_est = moment_est;
   Optimize opt1(type);
   opt1.initialize(N,ml_est.mean,ml_est.major_axis,ml_est.minor_axis,
-                 ml_est.kappa,ml_est.beta);
+                  ml_est.kappa,ml_est.beta);
   opt1.computeEstimates(sample_mean,S,ml_est);
   print(type,ml_est);
+  cout << "msglen: " << computeMessageLength(ml_est,sample_mean,S,N) << endl;
+  cout << "KL-divergence: " << computeKLDivergence(ml_est) << endl << endl;
 
-  type = "MML_SCALE";
-  struct Estimates mml_est1 = moment_est;
+  type = "MAP";
+  struct Estimates map_est = moment_est;
   Optimize opt2(type);
-  opt2.initialize(N,mml_est1.mean,mml_est1.major_axis,mml_est1.minor_axis,
-                 mml_est1.kappa,mml_est1.beta);
-  opt2.computeEstimates(sample_mean,S,mml_est1);
-  print(type,mml_est1);
+  opt2.initialize(N,map_est.mean,map_est.major_axis,map_est.minor_axis,
+                  map_est.kappa,map_est.beta);
+  opt2.computeEstimates(sample_mean,S,map_est);
+  print(type,map_est);
+  cout << "msglen: " << computeMessageLength(map_est,sample_mean,S,N) << endl;
+  cout << "KL-divergence: " << computeKLDivergence(map_est) << endl << endl;
 
-  /*type = "MML";
-  struct Estimates mml_est2 = moment_est;
+  /*type = "MML_SCALE";
+  struct Estimates mml_est1 = moment_est;
   Optimize opt3(type);
-  opt3.initialize(N,mml_est2.mean,mml_est2.major_axis,mml_est2.minor_axis,
-                 mml_est2.kappa,mml_est2.beta);
-  opt3.computeEstimates(sample_mean,S,mml_est2);
-  print(type,mml_est2);*/
+  opt3.initialize(N,mml_est1.mean,mml_est1.major_axis,mml_est1.minor_axis,
+                  mml_est1.kappa,mml_est1.beta);
+  opt3.computeEstimates(sample_mean,S,mml_est1);
+  print(type,mml_est1);
+  cout << "msglen: " << computeMessageLength(mml_est1,sample_mean,S,N) << endl;
+  cout << "KL-divergence: " << computeKLDivergence(mml_est1) << endl << endl;*/
+
+  type = "MML";
+  struct Estimates mml_est2 = moment_est;
+  Optimize opt4(type);
+  opt4.initialize(N,mml_est2.mean,mml_est2.major_axis,mml_est2.minor_axis,
+                  mml_est2.kappa,mml_est2.beta);
+  opt4.computeEstimates(sample_mean,S,mml_est2);
+  print(type,mml_est2);
+  cout << "msglen: " << computeMessageLength(mml_est2,sample_mean,S,N) << endl;
+  cout << "KL-divergence: " << computeKLDivergence(mml_est2) << endl << endl;
+}
+
+void Kent::computeAllEstimators(
+  std::vector<Vector > &data, 
+  std::vector<struct Estimates> &all_estimates
+) {
+  Vector sample_mean = computeVectorSum(data);
+  Matrix S = computeDispersionMatrix(data);
+
+  all_estimates.clear();
+
+  // MOMENT
+  struct Estimates moment_est = computeMomentEstimates(sample_mean,S,N);
+  all_estimates.push_back(moment_est);
+
+  // MLE
+  struct Estimates ml_est = moment_est;
+  Optimize opt1(type);
+  opt1.initialize(N,ml_est.mean,ml_est.major_axis,ml_est.minor_axis,
+                  ml_est.kappa,ml_est.beta);
+  opt1.computeEstimates(sample_mean,S,ml_est);
+  all_estimates.push_back(ml_est);
+
+  // MAP
+  struct Estimates map_est = moment_est;
+  Optimize opt2(type);
+  opt2.initialize(N,map_est.mean,map_est.major_axis,map_est.minor_axis,
+                  map_est.kappa,map_est.beta);
+  opt2.computeEstimates(sample_mean,S,map_est);
+  all_estimates.push_back(map_est);
+
+  // MML
+  struct Estimates mml_est = moment_est;
+  Optimize opt3(type);
+  opt3.initialize(N,mml_est.mean,mml_est.major_axis,mml_est.minor_axis,
+                  mml_est.kappa,mml_est.beta);
+  opt3.computeEstimates(sample_mean,S,mml_est);
+  all_estimates.push_back(mml_est);
 }
 
 /*!
@@ -696,5 +754,31 @@ long double Kent::computeKLDivergence(Kent &other)
   ans -= beta2 * (tmp1 - tmp2);
 
   return ans;
+}
+
+long double Kent::computeKLDivergence(struct Estimates &estimates)
+{
+  Kent kent_est(estimates.mean,estimates.major_axis,estimates.minor_axis,
+                estimates.kappa,estimates.beta);
+  return computeKLDivergence(kent_est);
+}
+
+long double Kent::computeMessageLength(Vector &sample_mean, Matrix &S, int N)
+{
+  long double log_prior = computeLogPriorProbability();
+  long double log_fisher = computeLogFisherInformation(N);
+  long double part1 = -6.455 - log_prior + 0.5 * log_fisher;
+  long double part2 = computeNegativeLogLikelihood(sample_mean,S,N) + 2.5
+                 - 2 * N * log(AOM);
+  long double msglen = part1 + part2;
+  return msglen;
+}
+
+long double Kent::computeMessageLength(struct Estimates &estimates, 
+                                       Vector &sample_mean, Matrix &S, int N)
+{
+  Kent kent_est(estimates.mean,estimates.major_axis,estimates.minor_axis,
+                estimates.kappa,estimates.beta);
+  return kent_est.computeMessageLength(sample_mean,S,N);
 }
 

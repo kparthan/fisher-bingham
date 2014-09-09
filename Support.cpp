@@ -1,5 +1,6 @@
 #include "Support.h"
 #include "Test.h"
+#include "Experiments.h"
 
 Vector XAXIS,YAXIS,ZAXIS;
 
@@ -24,6 +25,8 @@ struct Parameters parseCommandLineInput(int argc, char **argv)
   desc.add_options()
        ("help","produce help component")
        ("test","run some test cases")
+       ("experiments","run experiments")
+       ("iter",value<int>(&parameters.iterations),"number of iterations")
   ;
   variables_map vm;
   store(command_line_parser(argc,argv).options(desc).run(),vm);
@@ -37,6 +40,15 @@ struct Parameters parseCommandLineInput(int argc, char **argv)
     parameters.test = SET;
   } else {
     parameters.test = UNSET;
+  }
+
+  if (vm.count("experiments")) {
+    parameters.experiments = SET;
+    if (!vm.count("iter")) {
+      parameters.iterations = 1;
+    }
+  } else {
+    parameters.experiments = UNSET;
   }
 
   return parameters;
@@ -892,5 +904,14 @@ void TestFunctions(void)
   //test.fisher();
 
   test.mml_estimation();
+}
+
+////////////////////// EXPERIMENTS \\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+void RunExperiments(int iterations)
+{
+  Experiments experiments(iterations);
+
+  experiments.plotBias(100,30);
 }
 
