@@ -912,6 +912,121 @@ void RunExperiments(int iterations)
 {
   Experiments experiments(iterations);
 
-  experiments.plotBias(100,30);
+  //experiments.plotBias(100,30);
+  experiments.plotBias(10,3);
+}
+
+/*!
+ *  \brief This function sorts the elements in the list
+ *  \param list a reference to a vector<double>
+ *  \return the sorted list
+ */
+Vector sort(Vector &list)
+{
+  int num_samples = list.size();
+	Vector sortedList(list);
+  std::vector<int> index(num_samples,0);
+	for(int i=0; i<num_samples; i++) {
+			index[i] = i;
+  }
+	quicksort(sortedList,index,0,num_samples-1);
+  return sortedList;
+}
+
+/*!
+ *  This is an implementation of the classic quicksort() algorithm to sort a
+ *  list of data values. The module uses the overloading operator(<) to 
+ *  compare two Point<T> objects. 
+ *  Pivot is chosen as the right most element in the list(default)
+ *  This function is called recursively.
+ *  \param list a reference to a Vector
+ *	\param index a reference to a std::vector<int>
+ *  \param left an integer
+ *  \param right an integer
+ */
+void quicksort(Vector &list, std::vector<int> &index, int left, int right)
+{
+	if(left < right)
+	{
+		int pivotNewIndex = partition(list,index,left,right);
+		quicksort(list,index,left,pivotNewIndex-1);
+		quicksort(list,index,pivotNewIndex+1,right);
+	}
+}
+
+/*!
+ *  This function is called from the quicksort() routine to compute the new
+ *  pivot index.
+ *  \param list a reference to a Vector
+ *	\param index a reference to a std::vector<int>
+ *  \param left an integer
+ *  \param right an integer
+ *  \return the new pivot index
+ */
+int partition(Vector &list, std::vector<int> &index, int left, int right)
+{
+	long double temp,pivotPoint = list[right];
+	int storeIndex = left,temp_i;
+	for(int i=left; i<right; i++) {
+		if(list[i] < pivotPoint) {
+			temp = list[i];
+			list[i] = list[storeIndex];
+			list[storeIndex] = temp;
+			temp_i = index[i];
+			index[i] = index[storeIndex];
+			index[storeIndex] = temp_i;
+			storeIndex += 1;	
+		}
+	}
+	temp = list[storeIndex];
+	list[storeIndex] = list[right];
+	list[right] = temp;
+	temp_i = index[storeIndex];
+	index[storeIndex] = index[right];
+	index[right] = temp_i;
+	return storeIndex;
+}
+
+/*!
+ *  \brief This module computes the median of a sorted set of samples
+ *  \param list a reference to a std::vector<double>
+ *  \return the median value
+ */
+long double computeMedian(Vector &list)
+{
+  Vector sorted_list = sort(list);
+  int n = sorted_list.size();
+  if (n % 2 == 1) {
+    return sorted_list[n/2];
+  } else {
+    return (sorted_list[n/2-1]+sorted_list[n/2])/2;
+  }
+}
+
+/*!
+ *  \brief This module computes the mean of a set of samples
+ *  \param list a reference to a std::vector<double>
+ *  \return the mean value
+ */
+long double computeMean(Vector &list)
+{
+  long double sum = 0;
+  for (int i=0; i<list.size(); i++) {
+    sum += list[i];
+  }
+  return sum / (long double)list.size();
+}
+
+/*!
+ *  \brief Computes the variance
+ */
+long double computeVariance(Vector &list)
+{
+  long double mean = computeMean(list);
+  long double sum = 0;
+  for (int i=0; i<list.size(); i++) {
+    sum += (list[i]-mean) * (list[i]-mean);
+  }
+  return sum / (long double) (list.size()-1);
 }
 

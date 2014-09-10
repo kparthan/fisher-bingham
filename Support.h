@@ -67,5 +67,12 @@ void rhs(const std::vector<double> &, std::vector<double> &, const double);
 void TestFunctions(void);
 void RunExperiments(int);
 
+Vector sort(Vector &);
+void quicksort(Vector &, std::vector<int> &, int, int);
+int partition(Vector &, std::vector<int> &, int, int);
+long double computeMedian(Vector &);
+long double computeMean(Vector &);
+long double computeVariance(Vector &);
+
 #endif
 

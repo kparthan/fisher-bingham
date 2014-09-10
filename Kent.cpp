@@ -360,10 +360,18 @@ long double Kent::computeLogPriorProbability()
 
 long double Kent::computeLogPriorAxes()
 {
+  long double angle = alpha;
+  while (angle < 0) {
+    angle += 2 * PI;
+  }
+  while (angle > PI) {
+    angle -= PI;
+  }
+  
   long double log_prior = 0;
   //log_prior += log(4) - 4*log(PI);
-  //log_prior += log(sin(alpha));
-  log_prior = -log(4) - 3 * log(PI);
+  log_prior += log(sin(angle));
+  log_prior += -log(4) - 3 * log(PI);
   return log_prior;
 }
 
@@ -525,16 +533,17 @@ void Kent::computeAllEstimators(
   std::vector<Vector > &data, 
   std::vector<struct Estimates> &all_estimates
 ) {
+  int N = data.size();
   Vector sample_mean = computeVectorSum(data);
   Matrix S = computeDispersionMatrix(data);
 
   all_estimates.clear();
 
-  // MOMENT
+  string type = "MOMENT";
   struct Estimates moment_est = computeMomentEstimates(sample_mean,S,N);
   all_estimates.push_back(moment_est);
 
-  // MLE
+  type = "MLE";
   struct Estimates ml_est = moment_est;
   Optimize opt1(type);
   opt1.initialize(N,ml_est.mean,ml_est.major_axis,ml_est.minor_axis,
@@ -542,7 +551,7 @@ void Kent::computeAllEstimators(
   opt1.computeEstimates(sample_mean,S,ml_est);
   all_estimates.push_back(ml_est);
 
-  // MAP
+  type = "MAP";
   struct Estimates map_est = moment_est;
   Optimize opt2(type);
   opt2.initialize(N,map_est.mean,map_est.major_axis,map_est.minor_axis,
@@ -550,7 +559,7 @@ void Kent::computeAllEstimators(
   opt2.computeEstimates(sample_mean,S,map_est);
   all_estimates.push_back(map_est);
 
-  // MML
+  type = "MML";
   struct Estimates mml_est = moment_est;
   Optimize opt3(type);
   opt3.initialize(N,mml_est.mean,mml_est.major_axis,mml_est.minor_axis,

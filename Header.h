@@ -54,7 +54,7 @@ typedef boost::numeric::ublas::zero_matrix<long double> ZeroMatrix;
 #define PI boost::math::constants::pi<double>()
 #define LOG_PI log(PI)
 #define ZERO std::numeric_limits<long double>::epsilon()
-#define TOLERANCE 1e-10
+#define TOLERANCE 1e-6
 
 #define SET 1 
 #define UNSET 0

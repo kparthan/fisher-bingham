@@ -150,15 +150,18 @@ column_vector Optimize::minimize(Vector &sample_mean, Matrix &S, int num_params)
         starting_point,
         -100
       );
+      /*find_min_box_constrained(
+        bfgs_search_strategy(),  
+        objective_delta_stop_strategy(1e-9),  
+        MMLObjectiveFunction(sample_mean,S,N),
+        derivative(MMLObjectiveFunction(sample_mean,S,N)), 
+        starting_point, 
+        uniform_matrix<double>(5,1,5.0),
+        uniform_matrix<double>(5,1,2000.0)
+      );*/
       break;
     }
   }
-  /*find_min_box_constrained(bfgs_search_strategy(),  
-                           objective_delta_stop_strategy(1e-9),  
-                           momentObjectiveFunction, derivative(momentObjectiveFunction), 
-                           starting_point, 
-                           uniform_matrix<double>(2,1,0.0),
-                           uniform_matrix<double>(2,1,2000.0));*/
   /*find_min_bobyqa(momentObjectiveFunction,
                   starting_point, 
                   5,    // number of interpolation points

@@ -206,6 +206,8 @@ class MMLObjectiveFunction
       double k = x(3);
       double b = x(4);
 
+      //assert(b > 0);
+
       Kent kent(psi,alpha,eta,k,b);
       long double log_prior = kent.computeLogPriorProbability();
       long double log_fisher = kent.computeLogFisherInformation(N);

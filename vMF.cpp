@@ -48,8 +48,8 @@ long double vMF::computeLogNormalizationConstant()
     long double log_area = computeLogSurfaceAreaSphere(D);
     return log_area;
   } else {
-    long double log_bessel = logModifiedBesselFirstKind(D/2.0-1,kappa);
-    if (log_bessel >= INFINITY) {
+    long double log_bessel = log(cyl_bessel_i(D/2.0-1,kappa));
+    /*if (log_bessel >= INFINITY) {
       my_float d2_1 = (D / 2.0) - 1;
       my_float bessel = cyl_bessel_i(d2_1,kappa);
       my_float large_log_bessel = log(bessel);
@@ -58,7 +58,7 @@ long double vMF::computeLogNormalizationConstant()
       cout << scientific << "bessel: " << bessel;
       cout << scientific << "; log_bessel: " << log_bessel << endl;
       cout << "D: " << D << "; kappa: " << kappa << endl;
-    }
+    }*/
     if (D == 2) {
       long double log_cd = -log(2*PI) - log_bessel;
     } else {
