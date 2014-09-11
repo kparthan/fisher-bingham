@@ -912,8 +912,9 @@ void RunExperiments(int iterations)
 {
   Experiments experiments(iterations);
 
-  //experiments.plotBias(100,30);
+  //experiments.plotBias(10,4.5);
   experiments.plotBias(10,3);
+  //experiments.plotBias(10,3);
 }
 
 /*!

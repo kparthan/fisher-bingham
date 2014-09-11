@@ -378,9 +378,14 @@ long double Kent::computeLogPriorAxes()
 long double Kent::computeLogPriorScale()
 {
   long double log_prior = 0;
+  /*log_prior += log(kappa);
+  log_prior -= 2 * log(1+kappa*kappa);
+  log_prior += log(8/PI);*/
+  log_prior += 2 * log(4/PI);
   log_prior += 2 * log(kappa);
   log_prior -= 2 * log(1+kappa*kappa);
-  log_prior += 2 * log(4/PI);
+  log_prior += 2 * log(beta);
+  log_prior -= 2 * log(1+beta*beta);
   return log_prior;
 }
 

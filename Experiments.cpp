@@ -73,11 +73,11 @@ void Experiments::plotBias(long double kappa, long double beta)
     mediansb << fixed << setw(10) << sample_sizes[i] << "\t";
     varianceb << fixed << setw(10) << sample_sizes[i] << "\t";
     for (int j=0; j<NUM_METHODS; j++) {
-      long double median_kappa = computeMedian(kappa_est_all[j]);
+      long double median_kappa = computeMean(kappa_est_all[j]);
       long double var_kappa = computeVariance(errors_kappa[j]);
       mediansk << scientific << median_kappa << "\t";
       variancek << scientific << var_kappa << "\t";
-      long double median_beta = computeMedian(beta_est_all[j]);
+      long double median_beta = computeMean(beta_est_all[j]);
       long double var_beta = computeVariance(errors_beta[j]);
       mediansb << scientific << median_beta << "\t";
       varianceb << scientific << var_beta << "\t";
