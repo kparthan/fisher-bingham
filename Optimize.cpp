@@ -143,22 +143,22 @@ column_vector Optimize::minimize(Vector &sample_mean, Matrix &S, int num_params)
     case MML:
     {
       starting_point = alpha,eta,psi,kappa,beta; 
-      find_min_using_approximate_derivatives(
+      /*find_min_using_approximate_derivatives(
         bfgs_search_strategy(),
         objective_delta_stop_strategy(1e-10),
         MMLObjectiveFunction(sample_mean,S,N),
         starting_point,
         -100
-      );
-      /*find_min_box_constrained(
+      );*/
+      find_min_box_constrained(
         bfgs_search_strategy(),  
         objective_delta_stop_strategy(1e-9),  
         MMLObjectiveFunction(sample_mean,S,N),
         derivative(MMLObjectiveFunction(sample_mean,S,N)), 
         starting_point, 
-        uniform_matrix<double>(5,1,5.0),
-        uniform_matrix<double>(5,1,2000.0)
-      );*/
+        uniform_matrix<double>(5,1,0.0),
+        uniform_matrix<double>(5,1,100.0)
+      );
       break;
     }
   }

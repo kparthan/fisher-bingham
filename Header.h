@@ -70,8 +70,14 @@ typedef boost::numeric::ublas::zero_matrix<long double> ZeroMatrix;
 #define PRINT_DETAIL 1
 
 #define DEFAULT_RESOLUTION 1
-
 #define MAX_COMPONENTS 100
+#define DEFAULT_FIT_COMPONENTS 2
+#define DEFAULT_SIMULATE_COMPONENTS 2
+#define DEFAULT_SAMPLE_SIZE 2000
+
+#define SPLIT 0
+#define KILL 1
+#define JOIN 2
 
 #endif
 

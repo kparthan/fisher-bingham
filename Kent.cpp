@@ -12,6 +12,7 @@ Kent::Kent() : kappa(1), beta(0)
   mu = ZAXIS;
   major_axis = XAXIS;
   minor_axis = YAXIS;
+  computed = UNSET;
 }
 
 /*!
@@ -23,6 +24,7 @@ Kent::Kent(long double kappa, long double beta) : kappa(kappa), beta(beta)
   major_axis = XAXIS;
   minor_axis = YAXIS;
   //assert(eccentricity() < 1);
+  computed = UNSET;
 }
 
 /*!
@@ -41,6 +43,7 @@ Kent::Kent(Vector &mu, Vector &major_axis, Vector &minor_axis,
   Vector mj = prod(r,major_axis);
   cartesian2spherical(mj,spherical);
   psi = spherical[2];
+  computed = UNSET;
 }
 
 Kent::Kent(long double psi, long double alpha, long double eta, 
@@ -54,6 +57,7 @@ Kent::Kent(long double psi, long double alpha, long double eta,
     minor_axis[i] = r(i,1);
     mu[i] = r(i,2);
   }
+  computed = UNSET;
 }
 
 /*!
@@ -335,8 +339,6 @@ void Kent::computeExpectation()
 
 long double Kent::log_density(Vector &x)
 {
-  long double ans;
-
   long double c1 = computeDotProduct(mu,x);
 
   Matrix xx = outer_prod(x,x);
@@ -352,7 +354,6 @@ long double Kent::log_density(Vector &x)
   }
 
   long double ans = -log_norm + kappa * c1 + beta * c2;
-
   return ans;
 }
 
@@ -423,7 +424,9 @@ long double Kent::computeLogPriorScale()
 
 long double Kent::computeLogFisherInformation()
 {
-  computeExpectation();
+  if (computed == UNSET) {
+    computeExpectation();
+  }
   long double log_det_axes = computeLogFisherAxes();
   long double log_det_kb = computeLogFisherScale();
   return log_det_axes + log_det_kb; 
@@ -761,7 +764,7 @@ void Kent::estimateParameters(std::vector<Vector > &data, Vector &weights)
   psi = estimates.psi;
   alpha = estimates.alpha;
   eta = estimates.eta;
-  computed = UNSET;
+  computeExpectation();
 }
 
 Vector Kent::Mean()
@@ -843,5 +846,19 @@ long double Kent::computeMessageLength(struct Estimates &estimates,
   Kent kent_est(estimates.mean,estimates.major_axis,estimates.minor_axis,
                 estimates.kappa,estimates.beta);
   return kent_est.computeMessageLength(sample_mean,S,N);
+}
+
+void Kent::printParameters(ostream &os)
+{
+  os << "[mu]: "; print(os,mu,3);
+  os << "\t[mj]: "; print(os,major_axis,3);
+  os << "\t[mi]: "; print(os,minor_axis,3);
+  os << "\t[kappa]:" << setw(10) << setprecision(3) << kappa;
+  os << "\t[beta]:" << setw(10) << setprecision(3) << beta << endl;
+  /*vector<long double> spherical(3,0);
+  cartesian2spherical(estimates.mu,spherical);
+  spherical[1] *= 180/PI; 
+  spherical[2] *= 180/PI; 
+  print(os,spherical);*/
 }
 

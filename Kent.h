@@ -124,6 +124,8 @@ class Kent  // FB5
     long double computeMessageLength(Vector &, Matrix &, int);
 
     long double computeMessageLength(struct Estimates &, Vector &, Matrix &, int);
+
+    void printParameters(ostream &);
 };
 
 #endif

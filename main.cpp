@@ -20,6 +20,14 @@ int main(int argc, char **argv)
     RunExperiments(parameters.iterations);
   }
 
+  if (parameters.read_profiles == SET && parameters.simulation == UNSET) {
+    computeEstimators(parameters);
+  } 
+
+  if (parameters.simulation == SET) {
+    //simulateMixtureModel(parameters);
+  }
+
   return 0;
 }
 

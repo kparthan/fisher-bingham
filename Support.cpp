@@ -1,9 +1,17 @@
 #include "Support.h"
 #include "Test.h"
 #include "Experiments.h"
+#include "Mixture.h"
+#include "Structure.h"
 
 Vector XAXIS,YAXIS,ZAXIS;
-int MIXTURE_ID = 0;
+int MIXTURE_ID = 1;
+int MIXTURE_SIMULATION;
+int INFER_COMPONENTS;
+int ENABLE_DATA_PARALLELISM;
+int NUM_THREADS;
+long double MAX_KAPPA;
+long double IMPROVEMENT_RATE;
 
 ////////////////////// GENERAL PURPOSE FUNCTIONS \\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
@@ -18,6 +26,7 @@ struct Parameters parseCommandLineInput(int argc, char **argv)
 {
   struct Parameters parameters;
   string constrain;
+  long double improvement_rate;
 
   bool noargs = 1;
 
@@ -28,6 +37,23 @@ struct Parameters parseCommandLineInput(int argc, char **argv)
        ("test","run some test cases")
        ("experiments","run experiments")
        ("iter",value<int>(&parameters.iterations),"number of iterations")
+       ("profile",value<string>(&parameters.profile_file),"path to the profile")
+       ("profiles",value<string>(&parameters.profiles_dir),"path to all profiles")
+       ("mixture","flag to do mixture modelling")
+       ("k",value<int>(&parameters.fit_num_components),"number of components")
+       ("infer_components","flag to infer the number of components")
+       ("min_k",value<int>(&parameters.min_components),"min components to infer")
+       ("max_k",value<int>(&parameters.max_components),"max components to infer")
+       ("log",value<string>(&parameters.infer_log),"log file")
+       ("continue","flag to continue inference from some state")
+       ("begin",value<int>(&parameters.start_from),"# of components to begin inference from")
+       ("simulate","to simulate a mixture model")
+       ("load",value<string>(&parameters.mixture_file),"mixture file")
+       ("components",value<int>(&parameters.simulated_components),"# of simulated components")
+       ("samples",value<int>(&parameters.sample_size),"sample size generated")
+       ("bins","parameter to generate heat maps")
+       ("res",value<long double>(&parameters.res),"resolution used in heat map images")
+       ("mt",value<int>(&parameters.num_threads),"flag to enable multithreading")
   ;
   variables_map vm;
   store(command_line_parser(argc,argv).options(desc).run(),vm);
@@ -50,6 +76,81 @@ struct Parameters parseCommandLineInput(int argc, char **argv)
     }
   } else {
     parameters.experiments = UNSET;
+  }
+
+  if (vm.count("bins")) {
+    parameters.heat_map = SET;
+    if (!vm.count("res")) {
+      parameters.res = DEFAULT_RESOLUTION;
+    }
+  } else {
+    parameters.heat_map = UNSET;
+  }
+
+  if (vm.count("profiles") || vm.count("profile")) {
+    parameters.read_profiles = SET;
+  } else {
+    parameters.read_profiles = UNSET;
+  }
+
+  if (vm.count("mixture")) {
+    parameters.mixture_model = SET;
+    if (!vm.count("k")) {
+      parameters.fit_num_components = DEFAULT_FIT_COMPONENTS;
+    }
+    if (vm.count("infer_components")) {
+      parameters.infer_num_components = SET;
+      INFER_COMPONENTS = SET;
+      if (!vm.count("max_k")) {
+        parameters.max_components = -1;
+        if (vm.count("continue")) {
+          parameters.continue_inference = SET;
+        } else {
+          parameters.continue_inference = UNSET;
+        }
+        if (!vm.count("begin")) {
+          parameters.start_from = 1;
+        }
+      }
+    } else {
+      parameters.infer_num_components = UNSET;
+      INFER_COMPONENTS = UNSET;
+    }
+  } else {
+    parameters.mixture_model = UNSET;
+  }
+
+  if (vm.count("simulate")) {
+    parameters.simulation = SET;
+    MIXTURE_SIMULATION = SET;
+    if (!vm.count("samples")) {
+      parameters.sample_size = DEFAULT_SAMPLE_SIZE;
+    }
+    if (vm.count("load")) {
+      parameters.load_mixture = SET;
+    } else {
+      parameters.load_mixture = UNSET;
+      if (!vm.count("components")) {
+        parameters.simulated_components = DEFAULT_SIMULATE_COMPONENTS;
+      }
+    }
+  } else {
+    parameters.simulation = UNSET;
+    MIXTURE_SIMULATION = UNSET;
+  }
+
+  if (vm.count("mt")) {
+    NUM_THREADS = parameters.num_threads;
+    ENABLE_DATA_PARALLELISM = SET;
+  } else {
+    ENABLE_DATA_PARALLELISM = UNSET;
+    NUM_THREADS = 1;
+  }
+
+  if (vm.count("improvement")) {
+    IMPROVEMENT_RATE = improvement_rate;
+  } else {
+    IMPROVEMENT_RATE = 0.0001; // 0.01 % default
   }
 
   return parameters;
@@ -910,6 +1011,215 @@ long double computeConstantTerm(int d)
   return ad;
 }
 
+/*!
+ *  \brief This function bins the sample data 
+ *  \param res a long double
+ *  \param unit_coordinates a reference to a vector<vector<long double> > 
+ */
+std::vector<std::vector<int> > updateBins(std::vector<Vector > &unit_coordinates, long double res)
+{
+  std::vector<std::vector<int> > bins;
+  int num_rows = 180 / res;
+  int num_cols = 360 / res;
+  std::vector<int> tmp(num_cols,0);
+  for (int i=0; i<num_rows; i++) {
+    bins.push_back(tmp);
+  }
+
+  long double theta,phi;
+  int row,col;
+  Vector spherical(3,0);
+  for (int i=0; i<unit_coordinates.size(); i++) {
+    //cout << "i: " << i << endl; 
+    cartesian2spherical(unit_coordinates[i],spherical);
+    theta = spherical[1] * 180 / PI;
+    if (fabs(theta) <= ZERO) {
+      row = 0;
+    } else {
+      row = (int)(ceil(theta/res) - 1);
+    }
+    phi = spherical[2] * 180 / PI;
+    if (fabs(phi) <= ZERO) {
+      col = 0;
+    } else {
+      col = (int)(ceil(phi/res) - 1);
+    }
+    if (row >= bins.size() || col >= bins[0].size()) {
+      cout << "outside bounds: " << row << " " << col << "\n";
+      cout << "theta: " << theta << " phi: " << phi << endl;
+      cout << "spherical_1: " << spherical[1] << " spherical_2: " << spherical[2] << endl;
+      cout << "unit_coordinates[i]_1: " << unit_coordinates[i][1] << " unit_coordinates[i]_2: " << unit_coordinates[i][2] << endl;
+      fflush(stdout);
+    }
+    bins[row][col]++;
+    //cout << "row,col: " << row << "," << col << endl;
+  }
+  return bins;
+}
+
+/*!
+ *  \brief This function outputs the bin data.
+ *  \param bins a reference to a std::vector<std::vector<int> >
+ */
+void outputBins(std::vector<std::vector<int> > &bins, long double res)
+{
+  long double theta=0,phi;
+  string fbins2D_file,fbins3D_file;
+  fbins2D_file = "./visualize/bins2D.dat";
+  fbins3D_file = "./visualize/bins3D.dat";
+  ofstream fbins2D(fbins2D_file.c_str());
+  ofstream fbins3D(fbins3D_file.c_str());
+  Vector cartesian(3,0);
+  Vector spherical(3,1);
+  for (int i=0; i<bins.size(); i++) {
+    phi = 0;
+    spherical[1] = theta * PI / 180;
+    for (int j=0; j<bins[i].size(); j++) {
+      fbins2D << fixed << setw(10) << bins[i][j];
+      phi += res;
+      spherical[2] = phi * PI / 180;
+      spherical2cartesian(spherical,cartesian);
+      for (int k=0; k<3; k++) {
+        fbins3D << fixed << setw(10) << setprecision(4) << cartesian[k];
+      }
+      fbins3D << fixed << setw(10) << bins[i][j] << endl;
+    }
+    theta += res;
+    fbins2D << endl;
+  }
+  fbins2D.close();
+  fbins3D.close();
+}
+
+/*!
+ *  \brief This function is used to read the angular profiles and use this data
+ *  to estimate parameters of a Von Mises distribution.
+ *  \param parameters a reference to a struct Parameters
+ */
+void computeEstimators(struct Parameters &parameters)
+{
+  std::vector<Vector > unit_coordinates;
+  bool success = gatherData(parameters,unit_coordinates);
+  if (parameters.heat_map == SET) {
+    std::vector<std::vector<int> > bins = updateBins(unit_coordinates,parameters.res);
+    outputBins(bins,parameters.res);
+  }
+  if (success && parameters.mixture_model == UNSET) {  // no mixture modelling
+    modelOneComponent(parameters,unit_coordinates);
+  } else if (success && parameters.mixture_model == SET) { // mixture modelling
+    modelMixture(parameters,unit_coordinates);
+  }
+}
+
+/*!
+ *  \brief This function reads through the profiles from a given directory
+ *  and collects the data to do mixture modelling.
+ *  \param parameters a reference to a struct Parameters
+ *  \param unit_coordinates a reference to a std::vector<Vector >
+ */
+bool gatherData(struct Parameters &parameters, std::vector<Vector > &unit_coordinates)
+{
+  if (parameters.profile_file.compare("") == 0) {
+    path p(parameters.profiles_dir);
+    cout << "path: " << p.string() << endl;
+    if (exists(p)) { 
+      if (is_directory(p)) { 
+        std::vector<path> files; // store paths,
+        copy(directory_iterator(p), directory_iterator(), back_inserter(files));
+        cout << "# of profiles: " << files.size() << endl;
+        int tid;
+        std::vector<std::vector<Vector > > _unit_coordinates(NUM_THREADS);
+        #pragma omp parallel num_threads(NUM_THREADS) private(tid)
+        {
+          tid = omp_get_thread_num();
+          if (tid == 0) {
+            cout << "# of threads: " << omp_get_num_threads() << endl;
+          }
+          #pragma omp for 
+          for (int i=0; i<files.size(); i++) {
+            Structure structure;
+            structure.load(files[i]);
+            std::vector<Vector > coords = structure.getUnitCoordinates();
+            for (int j=0; j<coords.size(); j++) {
+              _unit_coordinates[tid].push_back(coords[j]);
+            }
+          }
+        }
+        for (int i=0; i<NUM_THREADS; i++) {
+          for (int j=0; j<_unit_coordinates[i].size(); j++) {
+            unit_coordinates.push_back(_unit_coordinates[i][j]);
+          }
+        }
+        cout << "# of profiles read: " << files.size() << endl;
+        return 1;
+      } else {
+        cout << p << " exists, but is neither a regular file nor a directory\n";
+      }
+    } else {
+      cout << p << " does not exist\n";
+    }
+    return 0;
+  } else if (parameters.profiles_dir.compare("") == 0) {
+    if (checkFile(parameters.profile_file)) {
+      // read a single profile
+      Structure structure;
+      structure.load(parameters.profile_file);
+      unit_coordinates = structure.getUnitCoordinates();
+      return 1;
+    } else {
+      cout << "Profile " << parameters.profile_file << " does not exist ...\n";
+      return 0;
+    }
+  }
+}
+
+/*!
+ *  \brief This function models a single component.
+ *  \param parameters a reference to a struct Parameters
+ *  \param data a reference to a std::vector<Vector >
+ */
+void modelOneComponent(struct Parameters &parameters, std::vector<Vector > &data)
+{
+  cout << "Sample size: " << data.size() << endl;
+  Kent kent;
+  Vector weights(data.size(),1);
+  kent.estimateParameters(data,weights);
+}
+
+/*!
+ *  \brief This function models a mixture of several components.
+ *  \param parameters a reference to a struct Parameters
+ *  \param data a reference to a std::vector<std::vector<long double,3> >
+ */
+void modelMixture(struct Parameters &parameters, std::vector<Vector > &data)
+{
+  Vector data_weights(data.size(),1);
+  // if the optimal number of components need to be determined
+  /*if (parameters.infer_num_components == SET) {
+    if (parameters.max_components == -1) {
+      Mixture mixture;
+      if (parameters.continue_inference == UNSET) {
+        Mixture m(parameters.start_from,data,data_weights);
+        mixture = m;
+        mixture.estimateParameters();
+      } else if (parameters.continue_inference == SET) {
+        mixture.load(parameters.mixture_file,parameters.D,data,data_weights);
+      } // continue_inference
+      ofstream log(parameters.infer_log.c_str());
+      Mixture stable = inferComponents(mixture,data.size(),log);
+      NUM_STABLE_COMPONENTS = stable.getNumberOfComponents();
+      log.close();
+    } else {  // parameters.max_components == -1
+      inferStableMixtures(data,parameters.min_components,parameters.max_components,
+                          parameters.infer_log);
+    }
+  } else*/ if (parameters.infer_num_components == UNSET) {
+    // for a given value of number of components
+    // do the mixture modelling
+    Mixture mixture(parameters.fit_num_components,data,data_weights);
+    mixture.estimateParameters();
+  }
+}
 
 
 ////////////////////// TESTING FUNCTIONS \\\\\\\\\\\\\\\\\\\\\\\\\\\\

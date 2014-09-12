@@ -6,8 +6,6 @@
 class Mixture
 {
   private:
-    friend class Experiments;
-
     //! ID
     int id;
 
@@ -138,14 +136,11 @@ class Mixture
     //! Prints the model parameters
     void printParameters(ostream &);
 
-    //! Plot the variation in message length
-    void plotMessageLengthEM();
-
     //! Loads the mixture file
-    void load(string &, int);
+    void load(string &);
 
     //! Loads the mixture file with the corresponding data
-    void load(string &, int, std::vector<Vector > &, Vector &);
+    void load(string &, std::vector<Vector > &, Vector &);
 
     //! Randomly choose a component
     int randomComponent();

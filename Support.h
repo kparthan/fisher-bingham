@@ -8,6 +8,30 @@ struct Parameters
   int test;                 // flag to test some modules
   int experiments;          // flag to run some experiments 
   int iterations;           // number of iterations
+  string profile_file;      // path to a single profile
+  string profiles_dir;      // path to the directory containing the profiles
+  int heat_map;             // flag to generate heat map images
+  long double res;          // resolution used in heat map images
+  int read_profiles;        // flag to read profile(s)
+  int mixture_model;        // flag to model a mixture
+  int fit_num_components;   // # of components in the mixture model
+  int infer_num_components; // flag to infer # of components
+  int min_components;       // min components to infer
+  int max_components;       // max components to infer
+  string infer_log;         // log file
+  int continue_inference;   // flag to continue inference from some state
+  int simulation;           // flag to run mixture model simulation
+  int load_mixture;         // flag to read mixture from a file
+  int simulated_components; // # of components to be simulated
+  string mixture_file;      // file containing the mixture information
+  int D;                    // dimensionality of data
+  int sample_size;          // sample size to be generated from the simulated mixture
+  int num_threads;          // flag to enable multithreading
+  long double max_kappa;    // max value of kappa allowed
+  int start_from;           // starting value of number of components
+                            // during inference
+  int estimate_all;         // estimate using all methods
+  int compute_responsibility_matrix;  // flag
 };
 
 struct Estimates
@@ -68,6 +92,12 @@ void track(const std::vector<double> &, const double);
 void rhs(const std::vector<double> &, std::vector<double> &, const double);
 
 long double computeConstantTerm(int);
+std::vector<std::vector<int> > updateBins(std::vector<Vector > &, long double);
+void outputBins(std::vector<std::vector<int> > &, long double);
+void computeEstimators(struct Parameters &);
+bool gatherData(struct Parameters &, std::vector<Vector > &);
+void modelOneComponent(struct Parameters &, std::vector<Vector > &);
+void modelMixture(struct Parameters &, std::vector<Vector > &);
 
 void TestFunctions(void);
 void RunExperiments(int);
