@@ -71,9 +71,11 @@ class Kent  // FB5
 
     long double computeLogFisherScale();
 
+    long double log_density(Vector &);
+
     long double computeNegativeLogLikelihood(std::vector<Vector> &);
 
-    long double computeNegativeLogLikelihood(Vector &, Matrix &, int);
+    long double computeNegativeLogLikelihood(Vector &, Matrix &, long double);
 
     long double computeLogPriorProbability();
 
@@ -83,25 +85,27 @@ class Kent  // FB5
 
     long double computeLogFisherInformation();
 
-    long double computeLogFisherInformation(int);
+    long double computeLogFisherInformation(long double);
 
     void computeAllEstimators(std::vector<Vector> &);
 
-    void computeAllEstimators(Vector &, Matrix &, int);
+    void computeAllEstimators(Vector &, Matrix &, long double);
 
     void computeAllEstimators(std::vector<Vector > &, std::vector<struct Estimates> &);
 
     struct Estimates computeMomentEstimates(std::vector<Vector> &);
 
-    struct Estimates computeMomentEstimates(Vector &, Matrix &, int);
+    struct Estimates computeMomentEstimates(Vector &, Matrix &, long double);
 
     struct Estimates computeMLEstimates(std::vector<Vector> &, string);
 
-    struct Estimates computeMLEstimates(Vector &, Matrix &, int, string);
+    struct Estimates computeMLEstimates(Vector &, Matrix &, long double, string);
 
     struct Estimates computeMMLEstimates(std::vector<Vector> &);
 
-    struct Estimates computeMMLEstimates(Vector &, Matrix &, int);
+    struct Estimates computeMMLEstimates(Vector &, Matrix &, long double);
+
+    void estimateParameters(std::vector<Vector > &, Vector &);
 
     Vector Mean();
 

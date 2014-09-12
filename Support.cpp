@@ -3,6 +3,7 @@
 #include "Experiments.h"
 
 Vector XAXIS,YAXIS,ZAXIS;
+int MIXTURE_ID = 0;
 
 ////////////////////// GENERAL PURPOSE FUNCTIONS \\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
@@ -528,6 +529,20 @@ Vector computeVectorSum(std::vector<Vector > &sample)
   return sum;
 }
 
+Vector computeVectorSum(std::vector<Vector > &sample, Vector &weights, long double &Neff) 
+{
+  int d = sample[0].size();
+  Vector sum(d,0);
+  Neff = 0;
+  for (int i=0; i<sample.size(); i++) {
+    for (int j=0; j<d; j++) {
+      sum[j] += sample[i][j] * weights[i];
+    }
+    Neff += weights[i];
+  }
+  return sum;
+}
+
 /*!
  *  Computes \sum x / N (x is a vector)
  */
@@ -549,6 +564,18 @@ Matrix computeDispersionMatrix(std::vector<Vector > &sample)
   Matrix dispersion = ZeroMatrix(d,d);
   for (int i=0; i<sample.size(); i++) {
     dispersion += outer_prod(sample[i],sample[i]);
+  }
+  return dispersion;
+}
+
+Matrix computeDispersionMatrix(std::vector<Vector > &sample, Vector &weights)
+{
+  int d = sample[0].size();
+  Matrix dispersion = ZeroMatrix(d,d);
+  Matrix tmp;
+  for (int i=0; i<sample.size(); i++) {
+    tmp = outer_prod(sample[i],sample[i]);
+    dispersion += (weights[i] * tmp);
   }
   return dispersion;
 }
@@ -867,6 +894,24 @@ void track(const std::vector<double> &x, const double t)
     cout << t << "\t" << x[0] << endl;
 }
 
+////////////////////// MIXTURE FUNCTIONS \\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+/*!
+ *  \brief This function computes the approximation of the constant term for
+ *  the constant term in the message length expression (pg. 257 Wallace)
+ *  \param d an integer
+ *  \return the constant term
+ */
+long double computeConstantTerm(int d)
+{
+  long double ad = 0;
+  ad -= 0.5 * d * log(2 * PI);
+  ad += 0.5 * log(d * PI);
+  return ad;
+}
+
+
+
 ////////////////////// TESTING FUNCTIONS \\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
 void TestFunctions(void)
@@ -1029,5 +1074,18 @@ long double computeVariance(Vector &list)
     sum += (list[i]-mean) * (list[i]-mean);
   }
   return sum / (long double) (list.size()-1);
+}
+
+int maximumIndex(Vector &values)
+{
+  int max_index = 0;
+  long double max_val = values[0];
+  for (int i=1; i<values.size(); i++) { 
+    if (values[i] > max_val) {
+      max_index = i;
+      max_val = values[i];
+    }
+  }
+  return max_index;
 }
 

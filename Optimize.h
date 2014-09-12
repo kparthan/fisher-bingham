@@ -15,7 +15,7 @@ class MomentObjectiveFunction
 
   public:
     MomentObjectiveFunction(Vector &m0, Vector &m1, Vector &m2,
-                            Vector &sample_mean, Matrix &S, int sample_size) {
+                            Vector &sample_mean, Matrix &S, double sample_size) {
       C1 = computeDotProduct(sample_mean,m0) / sample_size;
 
       long double mj = prod_xMy(m1,S,m1);
@@ -45,11 +45,11 @@ class MaximumLikelihoodObjectiveFunction
 
     Matrix S;
 
-    int N;
+    double N;
 
   public:
     MaximumLikelihoodObjectiveFunction(
-      Vector &sample_mean, Matrix &S, int sample_size
+      Vector &sample_mean, Matrix &S, double sample_size
     ) : sample_mean(sample_mean), S(S), N(sample_size)
     {}
 
@@ -83,11 +83,11 @@ class MAPObjectiveFunction
 
     Matrix S;
 
-    int N;
+    double N;
 
   public:
     MAPObjectiveFunction(
-      Vector &sample_mean, Matrix &S, int sample_size
+      Vector &sample_mean, Matrix &S, double sample_size
     ) : sample_mean(sample_mean), S(S), N(sample_size)
     {}
 
@@ -121,7 +121,7 @@ class MMLObjectiveFunctionScale
 
     Matrix S;
 
-    int N;
+    double N;
 
     double psi,alpha,eta,kappa_init,beta_init;
 
@@ -132,7 +132,7 @@ class MMLObjectiveFunctionScale
   public:
     MMLObjectiveFunctionScale(
       double psi, double alpha, double eta, double k, double b,
-      Vector &sample_mean, Matrix &S, int sample_size
+      Vector &sample_mean, Matrix &S, double sample_size
     ) : psi(psi), alpha(alpha), eta(eta), kappa_init(k), beta_init(b),
         sample_mean(sample_mean), S(S), N(sample_size)
     {
@@ -178,13 +178,13 @@ class MMLObjectiveFunction
 
     Matrix S;
 
-    int N;
+    double N;
 
     double const_lattk;
 
   public:
     MMLObjectiveFunction(
-      Vector &sample_mean, Matrix &S, int sample_size
+      Vector &sample_mean, Matrix &S, double sample_size
     ) : sample_mean(sample_mean), S(S), N(sample_size)
     {
       //k5 = 0.0756226;
@@ -226,7 +226,7 @@ class Optimize
   private:
     int estimation;
 
-    int N;
+    double N;
 
     Vector mean,major,minor; 
 
@@ -237,7 +237,7 @@ class Optimize
   public:
     Optimize(string);
 
-    void initialize(int, Vector &, Vector &, Vector &, long double, long double);
+    void initialize(double, Vector &, Vector &, Vector &, long double, long double);
 
     void computeEstimates(Vector &, Matrix &, struct Estimates &);
 

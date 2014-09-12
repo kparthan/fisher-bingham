@@ -9,6 +9,7 @@ OBJECTS = main.o \
   Kent.o \
   FB6.o \
   Optimize.o \
+  Mixture.o \
   Test.o \
   Experiments.o
 
@@ -36,6 +37,9 @@ Kent.o: Kent.cpp Kent.h Header.h
 	g++ -c $(CFLAGS) $< -o $@
 
 FB6.o: FB6.cpp FB6.h Header.h
+	g++ -c $(CFLAGS) $< -o $@
+
+Mixture.o: Mixture.cpp Mixture.h Header.h
 	g++ -c $(CFLAGS) $< -o $@
 
 Optimize.o: Optimize.cpp Optimize.h Header.h

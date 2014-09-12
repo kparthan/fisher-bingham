@@ -15,7 +15,7 @@ Optimize::Optimize(string type)
   }
 }
 
-void Optimize::initialize(int sample_size, Vector &m0, Vector &m1, Vector &m2, long double k, long double b)
+void Optimize::initialize(double sample_size, Vector &m0, Vector &m1, Vector &m2, long double k, long double b)
 {
   N = sample_size;
   mean = m0;
@@ -73,12 +73,12 @@ void Optimize::computeEstimates(Vector &sample_mean, Matrix &S, struct Estimates
 
 void Optimize::finalize(column_vector &theta, struct Estimates &estimates)
 {
-  double alpha_f = theta(0);
-  double eta_f = theta(1);
-  double psi_f = theta(2);
+  estimates.alpha = theta(0);
+  estimates.eta = theta(1);
+  estimates.psi = theta(2);
   estimates.kappa = theta(3);
   estimates.beta = theta(4);
-  Kent kent(psi_f,alpha_f,eta_f,estimates.kappa,estimates.beta);
+  Kent kent(estimates.psi,estimates.alpha,estimates.eta,estimates.kappa,estimates.beta);
   estimates.mean = kent.Mean();
   estimates.major_axis = kent.MajorAxis();
   estimates.minor_axis = kent.MinorAxis();

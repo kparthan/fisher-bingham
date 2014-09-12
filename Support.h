@@ -12,6 +12,7 @@ struct Parameters
 
 struct Estimates
 {
+  long double psi,alpha,eta;
   Vector mean,major_axis,minor_axis;
   long double kappa,beta;
 };
@@ -45,8 +46,10 @@ long double prod_vMv(Vector &, Matrix &);
 long double prod_xMy(Vector &, Matrix &, Vector &);
 long double determinant(Matrix &);
 Vector computeVectorSum(std::vector<Vector > &);
+Vector computeVectorSum(std::vector<Vector > &, Vector &, long double &);
 Vector computeNormalizedVectorSum(std::vector<Vector > &);
 Matrix computeDispersionMatrix(std::vector<Vector > &);
+Matrix computeDispersionMatrix(std::vector<Vector > &, Vector &);
 Matrix computeNormalizedDispersionMatrix(std::vector<Vector > &);
 Matrix rotate_about_yaxis(long double);
 Matrix rotate_about_zaxis(long double);
@@ -64,6 +67,8 @@ long double computeDawsonsIntegral(double);
 void track(const std::vector<double> &, const double);
 void rhs(const std::vector<double> &, std::vector<double> &, const double);
 
+long double computeConstantTerm(int);
+
 void TestFunctions(void);
 void RunExperiments(int);
 
@@ -73,6 +78,7 @@ int partition(Vector &, std::vector<int> &, int, int);
 long double computeMedian(Vector &);
 long double computeMean(Vector &);
 long double computeVariance(Vector &);
+int maximumIndex(Vector &);
 
 #endif
 

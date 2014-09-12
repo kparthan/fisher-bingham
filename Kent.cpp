@@ -68,6 +68,10 @@ Kent Kent::operator=(const Kent &source)
     psi = source.psi;
     alpha = source.alpha;
     eta = source.eta;
+    kappa = source.kappa;
+    beta = source.beta;
+    constants = source.constants;
+    computed = source.computed;
   }
   return *this;
 }
@@ -329,6 +333,29 @@ void Kent::computeExpectation()
   computed = SET;
 }
 
+long double Kent::log_density(Vector &x)
+{
+  long double ans;
+
+  long double c1 = computeDotProduct(mu,x);
+
+  Matrix xx = outer_prod(x,x);
+  long double mj = prod_xMy(major_axis,xx,major_axis);
+  long double mi = prod_xMy(minor_axis,xx,minor_axis);
+  long double c2 = mj - mi;
+
+  long double log_norm; 
+  if (computed == UNSET) {
+    log_norm = computeLogNormalizationConstant();
+  } else {
+    log_norm = constants.log_c;
+  }
+
+  long double ans = -log_norm + kappa * c1 + beta * c2;
+
+  return ans;
+}
+
 long double Kent::computeNegativeLogLikelihood(std::vector<Vector> &data)
 {
   Vector sample_mean = computeVectorSum(data);
@@ -336,7 +363,7 @@ long double Kent::computeNegativeLogLikelihood(std::vector<Vector> &data)
   return computeNegativeLogLikelihood(sample_mean,S,data.size());
 }
 
-long double Kent::computeNegativeLogLikelihood(Vector &sample_mean, Matrix &S, int N)
+long double Kent::computeNegativeLogLikelihood(Vector &sample_mean, Matrix &S, long double N)
 {
   long double c1 = computeDotProduct(sample_mean,mu);
 
@@ -344,7 +371,12 @@ long double Kent::computeNegativeLogLikelihood(Vector &sample_mean, Matrix &S, i
   long double mi = prod_xMy(minor_axis,S,minor_axis);
   long double c2 = mj - mi;
 
-  long double log_norm = computeLogNormalizationConstant();
+  long double log_norm;
+  if (computed == UNSET) {
+    log_norm = computeLogNormalizationConstant();
+  } else {
+    log_norm = constants.log_c;
+  }
 
   long double ans = N * log_norm - kappa * c1 - beta * c2;
   return ans;
@@ -362,7 +394,7 @@ long double Kent::computeLogPriorAxes()
 {
   long double angle = alpha;
   while (angle < 0) {
-    angle += 2 * PI;
+    angle += PI;
   }
   while (angle > PI) {
     angle -= PI;
@@ -397,7 +429,7 @@ long double Kent::computeLogFisherInformation()
   return log_det_axes + log_det_kb; 
 }
 
-long double Kent::computeLogFisherInformation(int N)
+long double Kent::computeLogFisherInformation(long double N)
 {
   long double log_fisher = computeLogFisherInformation(); 
   return log_fisher + 5 * log(N);
@@ -485,7 +517,7 @@ void Kent::computeAllEstimators(std::vector<Vector> &data)
   computeAllEstimators(sample_mean,S,data.size());
 }
 
-void Kent::computeAllEstimators(Vector &sample_mean, Matrix &S, int N)
+void Kent::computeAllEstimators(Vector &sample_mean, Matrix &S, long double N)
 {
   string type = "MOMENT";
   struct Estimates moment_est = computeMomentEstimates(sample_mean,S,N);
@@ -588,7 +620,7 @@ struct Estimates Kent::computeMomentEstimates(std::vector<Vector> &data)
  *  (similar to used in Kent (1982) paper)
  *  (sample_mean1 and S1 are \sum_x and \sum_ x x')
  */
-struct Estimates Kent::computeMomentEstimates(Vector &sample_mean1, Matrix &S1, int N)
+struct Estimates Kent::computeMomentEstimates(Vector &sample_mean1, Matrix &S1, long double N)
 {
   Vector sample_mean = sample_mean1;
   Matrix S = S1; 
@@ -685,7 +717,7 @@ struct Estimates Kent::computeMLEstimates(std::vector<Vector> &data, string type
   return computeMLEstimates(sample_mean,S,data.size(),type);
 }
 
-struct Estimates Kent::computeMLEstimates(Vector &sample_mean, Matrix &S, int N, string type)
+struct Estimates Kent::computeMLEstimates(Vector &sample_mean, Matrix &S, long double N, string type)
 {
   struct Estimates estimates = computeMomentEstimates(sample_mean,S,N);
   Optimize opt(type);
@@ -705,7 +737,7 @@ struct Estimates Kent::computeMMLEstimates(std::vector<Vector> &data)
   return computeMMLEstimates(sample_mean,S,data.size());
 }
 
-struct Estimates Kent::computeMMLEstimates(Vector &sample_mean, Matrix &S, int N)
+struct Estimates Kent::computeMMLEstimates(Vector &sample_mean, Matrix &S, long double N)
 {
   struct Estimates estimates = computeMomentEstimates(sample_mean,S,N);
   Optimize opt("MML");
@@ -713,6 +745,23 @@ struct Estimates Kent::computeMMLEstimates(Vector &sample_mean, Matrix &S, int N
                  estimates.kappa,estimates.beta);
   opt.computeEstimates(sample_mean,S,estimates);
   return estimates;
+}
+
+void Kent::estimateParameters(std::vector<Vector > &data, Vector &weights)
+{
+  long double Neff;
+  Vector sample_mean = computeVectorSum(data,weights,Neff);
+  Matrix S = computeDispersionMatrix(data,weights);
+  struct Estimates estimates = computeMMLEstimates(sample_mean,S,Neff);
+  mu = estimates.mean;
+  major_axis = estimates.major_axis;
+  minor_axis = estimates.minor_axis;
+  kappa = estimates.kappa;
+  beta = estimates.beta;
+  psi = estimates.psi;
+  alpha = estimates.alpha;
+  eta = estimates.eta;
+  computed = UNSET;
 }
 
 Vector Kent::Mean()
