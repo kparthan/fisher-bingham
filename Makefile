@@ -1,6 +1,8 @@
 CFLAGS=-std=c++0x -g -I./support/dlib-18.9/
 LDFLAGS=-lboost_program_options -lboost_system -lboost_filesystem -fopenmp
 
+#g++ -DHAVE_STD -DHAVE_NAMESPACES -I./optpp-2.4/include -I./optpp-2.4/newmat11/ sandia_opt_constrained3.cpp -L./optpp-2.4/lib/.libs/ -lopt -lnewmat -lcblas -lf77blas -latlas
+
 OBJECTS = main.o \
   Support.o \
   Normal.o  \

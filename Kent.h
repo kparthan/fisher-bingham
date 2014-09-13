@@ -2,7 +2,7 @@
 #define KENT_H
 
 #include "Header.h"
-#include "Support.h"
+//#include "Support.h"
 
 class Kent  // FB5
 {
@@ -107,6 +107,8 @@ class Kent  // FB5
 
     void estimateParameters(std::vector<Vector > &, Vector &);
 
+    void updateParameters(struct Estimates &);
+
     Vector Mean();
 
     Vector MajorAxis();
@@ -121,9 +123,9 @@ class Kent  // FB5
 
     long double computeKLDivergence(struct Estimates &);
 
-    long double computeMessageLength(Vector &, Matrix &, int);
+    long double computeMessageLength(Vector &, Matrix &, long double);
 
-    long double computeMessageLength(struct Estimates &, Vector &, Matrix &, int);
+    long double computeMessageLength(struct Estimates &, Vector &, Matrix &, long double);
 
     void printParameters(ostream &);
 };

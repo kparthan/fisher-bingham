@@ -465,7 +465,7 @@ void Mixture::EM()
       // ... an infinite loop!
       if (iter > 10 && (prev - current) <= IMPROVEMENT_RATE * prev) {
         log << "\nSample size: " << N << endl;
-        log << "vMF encoding rate: " << current/N << " bits/point" << endl;
+        log << "Kent encoding rate: " << current/N << " bits/point" << endl;
         log << "Null model encoding: " << null_msglen << " bits.";
         log << "\t(" << null_msglen/N << " bits/point)" << endl;
         break;
@@ -1135,38 +1135,38 @@ Mixture::generate(int num_samples, bool save_data)
 //  modified = intermediate;
 //}
 //
-///*!
-// *  \brief This function generates data to visualize the 2D/3D heat maps.
-// *  \param res a long double
-// */
-//void Mixture::generateHeatmapData(long double res)
-//{
-//  string data_fbins2D = "./visualize/prob_bins2D.dat";
-//  string data_fbins3D = "./visualize/prob_bins3D.dat";
-//  ofstream fbins2D(data_fbins2D.c_str());
-//  ofstream fbins3D(data_fbins3D.c_str());
-//  Vector x(3,1);
-//  Vector point(3,0);
-//  for (long double theta=0; theta<180; theta+=res) {
-//    x[1] = theta * PI/180;
-//    for (long double phi=0; phi<360; phi+=res) {
-//      x[2] = phi * PI/180;
-//      spherical2cartesian(x,point);
-//      long double pr = probability(point);
-//      // 2D bins
-//      fbins2D << fixed << setw(10) << setprecision(4) << floor(pr * 100);
-//      // 3D bins
-//      for (int k=0; k<3; k++) {
-//        fbins3D << fixed << setw(10) << setprecision(4) << point[k];
-//      }
-//      fbins3D << fixed << setw(10) << setprecision(4) << pr << endl;
-//    }
-//    fbins2D << endl;
-//  }
-//  fbins2D.close();
-//  fbins3D.close();
-//}
-//
+/*!
+ *  \brief This function generates data to visualize the 2D/3D heat maps.
+ *  \param res a long double
+ */
+void Mixture::generateHeatmapData(long double res)
+{
+  string data_fbins2D = "./visualize/prob_bins2D.dat";
+  string data_fbins3D = "./visualize/prob_bins3D.dat";
+  ofstream fbins2D(data_fbins2D.c_str());
+  ofstream fbins3D(data_fbins3D.c_str());
+  Vector x(3,1);
+  Vector point(3,0);
+  for (long double theta=0; theta<180; theta+=res) {
+    x[1] = theta * PI/180;
+    for (long double phi=0; phi<360; phi+=res) {
+      x[2] = phi * PI/180;
+      spherical2cartesian(x,point);
+      long double pr = exp(log_probability(point));
+      // 2D bins
+      fbins2D << fixed << setw(10) << setprecision(4) << floor(pr * 100);
+      // 3D bins
+      for (int k=0; k<3; k++) {
+        fbins3D << fixed << setw(10) << setprecision(4) << point[k];
+      }
+      fbins3D << fixed << setw(10) << setprecision(4) << pr << endl;
+    }
+    fbins2D << endl;
+  }
+  fbins2D.close();
+  fbins3D.close();
+}
+
 ///*!
 // *  \brief This function computes the nearest component to a given component.
 // *  \param c an integer

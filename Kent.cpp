@@ -1,6 +1,7 @@
 #include "Kent.h"
 #include "FB6.h"
 #include "Optimize.h"
+#include "Support.h"
 
 extern Vector XAXIS,YAXIS,ZAXIS;
 
@@ -742,11 +743,24 @@ struct Estimates Kent::computeMMLEstimates(std::vector<Vector> &data)
 
 struct Estimates Kent::computeMMLEstimates(Vector &sample_mean, Matrix &S, long double N)
 {
+  string type = "MOMENT";
   struct Estimates estimates = computeMomentEstimates(sample_mean,S,N);
-  Optimize opt("MML");
+  print(type,estimates);
+  long double msglen = computeMessageLength(estimates,sample_mean,S,N);
+  cout << "msglen: " << msglen << endl;
+  cout << "msglen (bpr): " << msglen/N << endl;
+
+  type = "MML_SCALE";
+  //type = "MML";
+  Optimize opt(type);
   opt.initialize(N,estimates.mean,estimates.major_axis,estimates.minor_axis,
                  estimates.kappa,estimates.beta);
   opt.computeEstimates(sample_mean,S,estimates);
+  print(type,estimates);
+  msglen = computeMessageLength(estimates,sample_mean,S,N);
+  cout << "msglen: " << msglen << endl;
+  cout << "msglen (bpr): " << msglen/N << endl;
+
   return estimates;
 }
 
@@ -756,6 +770,11 @@ void Kent::estimateParameters(std::vector<Vector > &data, Vector &weights)
   Vector sample_mean = computeVectorSum(data,weights,Neff);
   Matrix S = computeDispersionMatrix(data,weights);
   struct Estimates estimates = computeMMLEstimates(sample_mean,S,Neff);
+  updateParameters(estimates);
+}
+
+void Kent::updateParameters(struct Estimates &estimates)
+{
   mu = estimates.mean;
   major_axis = estimates.major_axis;
   minor_axis = estimates.minor_axis;
@@ -829,7 +848,7 @@ long double Kent::computeKLDivergence(struct Estimates &estimates)
   return computeKLDivergence(kent_est);
 }
 
-long double Kent::computeMessageLength(Vector &sample_mean, Matrix &S, int N)
+long double Kent::computeMessageLength(Vector &sample_mean, Matrix &S, long double N)
 {
   long double log_prior = computeLogPriorProbability();
   long double log_fisher = computeLogFisherInformation(N);
@@ -837,11 +856,11 @@ long double Kent::computeMessageLength(Vector &sample_mean, Matrix &S, int N)
   long double part2 = computeNegativeLogLikelihood(sample_mean,S,N) + 2.5
                  - 2 * N * log(AOM);
   long double msglen = part1 + part2;
-  return msglen;
+  return msglen/log(2);
 }
 
 long double Kent::computeMessageLength(struct Estimates &estimates, 
-                                       Vector &sample_mean, Matrix &S, int N)
+                                       Vector &sample_mean, Matrix &S, long double N)
 {
   Kent kent_est(estimates.mean,estimates.major_axis,estimates.minor_axis,
                 estimates.kappa,estimates.beta);

@@ -39,6 +39,7 @@ struct Parameters parseCommandLineInput(int argc, char **argv)
        ("iter",value<int>(&parameters.iterations),"number of iterations")
        ("profile",value<string>(&parameters.profile_file),"path to the profile")
        ("profiles",value<string>(&parameters.profiles_dir),"path to all profiles")
+       ("max_kappa",value<long double>(&parameters.max_kappa),"maximum value of kappa allowed")
        ("mixture","flag to do mixture modelling")
        ("k",value<int>(&parameters.fit_num_components),"number of components")
        ("infer_components","flag to infer the number of components")
@@ -91,6 +92,12 @@ struct Parameters parseCommandLineInput(int argc, char **argv)
     parameters.read_profiles = SET;
   } else {
     parameters.read_profiles = UNSET;
+  }
+
+  if (!vm.count("max_kappa")) {
+    MAX_KAPPA = DEFAULT_MAX_KAPPA;
+  } else {
+    MAX_KAPPA = parameters.max_kappa;
   }
 
   if (vm.count("mixture")) {
@@ -150,7 +157,7 @@ struct Parameters parseCommandLineInput(int argc, char **argv)
   if (vm.count("improvement")) {
     IMPROVEMENT_RATE = improvement_rate;
   } else {
-    IMPROVEMENT_RATE = 0.0001; // 0.01 % default
+    IMPROVEMENT_RATE = 0.001; // 0.1 % default
   }
 
   return parameters;
@@ -1221,6 +1228,130 @@ void modelMixture(struct Parameters &parameters, std::vector<Vector > &data)
   }
 }
 
+/*!
+ *  \brief This function is used to simulate the mixture model.
+ *  \param parameters a reference to a struct Parameters
+ */
+void simulateMixtureModel(struct Parameters &parameters)
+{
+  std::vector<Vector > data;
+  if (parameters.load_mixture == SET) {
+    Mixture original;
+    original.load(parameters.mixture_file);
+    bool save = 1;
+    if (parameters.read_profiles == SET) {
+      bool success = gatherData(parameters,data);
+      if (!success) {
+        cout << "Error in reading data...\n";
+        exit(1);
+      }
+    } else if (parameters.read_profiles == UNSET) {
+      data = original.generate(parameters.sample_size,save);
+    }
+    if (parameters.heat_map == SET) {
+      original.generateHeatmapData(parameters.res);
+      std::vector<std::vector<int> > bins = updateBins(data,parameters.res);
+      outputBins(bins,parameters.res);
+    }
+  } else if (parameters.load_mixture == UNSET) {
+    int k = parameters.simulated_components;
+    //srand(time(NULL));
+    Vector weights = generateFromSimplex(k);
+    std::vector<Kent> components = generateRandomComponents(k);
+    Mixture original(k,components,weights);
+    bool save = 1;
+    data = original.generate(parameters.sample_size,save);
+    // save the simulated mixture
+    ofstream file("./simulation/simulated_mixture");
+    for (int i=0; i<k; i++) {
+      file << fixed << setw(10) << setprecision(5) << weights[i];
+      file << "\t";
+      components[i].printParameters(file);
+    }
+    file.close();
+  }
+  // model a mixture using the original data
+  if (parameters.mixture_model == UNSET) {
+    modelOneComponent(parameters,data);
+  } else if (parameters.mixture_model == SET) {
+    modelMixture(parameters,data);
+  }
+}
+
+/*!
+ *  \brief This function is used to generate random weights such that
+ *  0 < w_i < 1 and \sum_i w_i = 1
+ *  \param K an integer
+ *  \return the list of weights
+ */
+Vector generateFromSimplex(int K)
+{
+  Vector values(K,0);
+  long double random,sum = 0;
+  for (int i=0; i<K; i++) {
+    // generate a random value in (0,1)
+    random = rand() / (long double)RAND_MAX;
+    assert(random > 0 && random < 1);
+    // sampling from an exponential distribution with \lambda = 1
+    values[i] = -log(1-random);
+    sum += values[i];
+  }
+  for (int i=0; i<K; i++) {
+    values[i] /= sum;
+  }
+  return values;
+}
+
+/*!
+ *  \brief This function is used to generate random components.
+ *  \param num_components an integer
+ *  \param D an integer
+ *  \return the list of components
+ */
+std::vector<Kent> generateRandomComponents(int num_components)
+{
+  Vector mean(3,0),major_axis(3,0),minor_axis(3,0);
+
+  // generate random kappas
+  Vector kappas = generateRandomKappas(num_components);
+
+  // generate random betas 
+  Vector betas = generateRandomBetas(kappas);
+
+  std::vector<Kent> components;
+  for (int i=0; i<num_components; i++) {
+    generateRandomOrthogonalVectors(mean,major_axis,minor_axis);
+    // initialize component parameters
+    Kent kent(mean,major_axis,minor_axis,kappas[i],betas[i]);
+    components.push_back(kent);
+  }
+  return components;
+}
+
+/*!
+ *  \brief This function generates random kappas 
+ *  \param num_components an integer
+ *  \return the list of random kappas 
+ */
+Vector generateRandomKappas(int K)
+{
+  Vector random_kappas;
+  for (int i=0; i<K; i++) {
+    long double kappa = (rand() / (long double) RAND_MAX) * MAX_KAPPA;
+    random_kappas.push_back(kappa);
+  }
+  return random_kappas;
+}
+
+Vector generateRandomBetas(Vector &kappas)
+{
+  Vector random_betas;
+  for (int i=0; i<kappas.size(); i++) {
+    long double beta = (rand() / (long double) RAND_MAX) * (kappas[i]/2);
+    random_betas.push_back(beta);
+  }
+  return random_betas;
+}
 
 ////////////////////// TESTING FUNCTIONS \\\\\\\\\\\\\\\\\\\\\\\\\\\\
 

@@ -25,7 +25,7 @@ int main(int argc, char **argv)
   } 
 
   if (parameters.simulation == SET) {
-    //simulateMixtureModel(parameters);
+    simulateMixtureModel(parameters);
   }
 
   return 0;

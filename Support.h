@@ -2,6 +2,7 @@
 #define SUPPORT_H
 
 #include "Header.h"
+#include "Kent.h"
 
 struct Parameters
 {
@@ -24,7 +25,6 @@ struct Parameters
   int load_mixture;         // flag to read mixture from a file
   int simulated_components; // # of components to be simulated
   string mixture_file;      // file containing the mixture information
-  int D;                    // dimensionality of data
   int sample_size;          // sample size to be generated from the simulated mixture
   int num_threads;          // flag to enable multithreading
   long double max_kappa;    // max value of kappa allowed
@@ -98,6 +98,11 @@ void computeEstimators(struct Parameters &);
 bool gatherData(struct Parameters &, std::vector<Vector > &);
 void modelOneComponent(struct Parameters &, std::vector<Vector > &);
 void modelMixture(struct Parameters &, std::vector<Vector > &);
+void simulateMixtureModel(struct Parameters &);
+Vector generateFromSimplex(int);
+std::vector<Kent> generateRandomComponents(int);
+Vector generateRandomKappas(int);
+Vector generateRandomBetas(Vector &);
 
 void TestFunctions(void);
 void RunExperiments(int);

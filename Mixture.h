@@ -100,7 +100,6 @@ class Mixture
     void computeResponsibilityMatrix(std::vector<Vector > &, string &);
                                           
     //! Probability of a datum
-    long double probability(Vector &);
     long double log_probability(Vector &);
 
     //! Computes the negative log likelihood
@@ -172,22 +171,8 @@ class Mixture
     //! Generate heat maps (for d=3)
     void generateHeatmapData(long double);
 
-    //! Identifies identical components in two Mixtures
-    void mapComponents(Mixture &, std::vector<int> &);
-
-    //! Classifies the data
-    void classify(std::vector<Vector > &);
-
     //! Get the nearest component
     int getNearestComponent(int);
-
-    //! Computes the Akaike information criterion 
-    long double computeAIC();
-    long double computeAIC_2();
-
-    //! Computes the Bayesian information criterion 
-    long double computeBIC();
-    long double computeBIC_2();
 
     //! Computes the approx KL divergence between two mixtures
     long double computeKLDivergence(Mixture &);
