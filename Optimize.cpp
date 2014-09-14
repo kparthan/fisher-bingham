@@ -36,7 +36,7 @@ void Optimize::computeEstimates(Vector &sample_mean, Matrix &S, struct Estimates
       break;
     }
 
-    /*case MLE:
+    case MLE:
     {
       computeOrthogonalTransformation(mean,major,psi,alpha,eta);
       column_vector theta = minimize(sample_mean,S,5);
@@ -67,7 +67,7 @@ void Optimize::computeEstimates(Vector &sample_mean, Matrix &S, struct Estimates
       column_vector theta = minimize(sample_mean,S,5);
       finalize(theta,estimates);
       break;
-    }*/
+    }
   }
 }
 
@@ -101,7 +101,7 @@ column_vector Optimize::minimize(Vector &sample_mean, Matrix &S, int num_params)
       break;
     }
 
-    /*case MLE:
+    case MLE:
     {
       starting_point = alpha,eta,psi,kappa,beta; 
       find_min_using_approximate_derivatives(
@@ -150,7 +150,7 @@ column_vector Optimize::minimize(Vector &sample_mean, Matrix &S, int num_params)
         starting_point,
         -100
       );
-      find_min_box_constrained(
+      /*find_min_box_constrained(
         bfgs_search_strategy(),  
         objective_delta_stop_strategy(1e-9),  
         MMLObjectiveFunction(sample_mean,S,N),
@@ -158,9 +158,9 @@ column_vector Optimize::minimize(Vector &sample_mean, Matrix &S, int num_params)
         starting_point, 
         uniform_matrix<double>(5,1,0.0),
         uniform_matrix<double>(5,1,100.0)
-      );
+      );*/
       break;
-    }*/
+    }
   }
   /*find_min_bobyqa(momentObjectiveFunction,
                   starting_point, 

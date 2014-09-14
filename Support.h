@@ -1,8 +1,8 @@
 #ifndef SUPPORT_H
 #define SUPPORT_H
 
-#include "Header.h"
 #include "Kent.h"
+#include "Support.h"
 
 struct Parameters
 {
