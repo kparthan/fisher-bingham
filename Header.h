@@ -43,6 +43,43 @@ using namespace boost::math;
 using namespace boost::numeric::ublas;
 using namespace boost::numeric::odeint;
 
+#ifdef HAVE_CONFIG_H
+#include "OPT++_config.h"
+#endif
+
+#if defined(SGI) || defined(RS6K)
+#define WANT_MATH
+#else
+#define WANT_STREAM
+#define WANT_MATH
+#endif
+
+#ifdef HAVE_STD
+#include <cstdio>
+#include <cstdlib>
+#include <cmath>
+#else
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#endif
+
+#include "newmatap.h"
+
+#include "NLP.h"
+#include "NLF.h"
+#include "BoundConstraint.h"
+#include "NonLinearInequality.h"
+#include "CompoundConstraint.h"
+#include "OptNIPS.h"
+#include "OptQNIPS.h"
+#include "OptLBFGS.h"
+
+using NEWMAT::ColumnVector;
+//using NEWMAT::Matrix;
+//using NEWMAT::SymmetricMatrix;
+using namespace OPTPP;
+
 typedef std::vector<long double> Vector;
 typedef boost::numeric::ublas::matrix<long double> Matrix;
 typedef boost::numeric::ublas::identity_matrix<long double> IdentityMatrix;

@@ -1,5 +1,7 @@
-CFLAGS=-std=c++0x -g -I./support/dlib-18.9/
-LDFLAGS=-lboost_program_options -lboost_system -lboost_filesystem -fopenmp
+#CFLAGS=-std=c++0x -g -I./support/dlib-18.9/
+#LDFLAGS=-lboost_program_options -lboost_system -lboost_filesystem -fopenmp
+CFLAGS=-std=c++0x -DHAVE_STD -DHAVE_NAMESPACES -g -I./support/optpp-2.4/include -I./support/optpp-2.4/newmat11/
+LDFLAGS=-lboost_program_options -lboost_system -lboost_filesystem -fopenmp -L./support/optpp-2.4/lib/.libs/ -lopt -lnewmat -lcblas -lf77blas -latlas
 
 OBJECTS = main.o \
   Support.o \
