@@ -1002,6 +1002,13 @@ void track(const std::vector<double> &x, const double t)
     cout << t << "\t" << x[0] << endl;
 }
 
+double Constraint(const std::vector<double> &x, std::vector<double> &grad, void *data)
+{
+    //double k = x[0];
+    //double b = x[1];
+    return (2 * x[1] - x[0]);
+}
+
 ////////////////////// MIXTURE FUNCTIONS \\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
 /*!

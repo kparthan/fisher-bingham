@@ -31,8 +31,8 @@ void Optimize::computeEstimates(Vector &sample_mean, Matrix &S, struct Estimates
     case MOMENT:
     {
       std::vector<double> theta = minimize(sample_mean,S,2);
-      estimates.kappa = theta(0);
-      estimates.beta = theta(1);
+      estimates.kappa = theta[0];
+      estimates.beta = theta[1];
       break;
     }
 
@@ -56,8 +56,8 @@ void Optimize::computeEstimates(Vector &sample_mean, Matrix &S, struct Estimates
     {
       computeOrthogonalTransformation(mean,major,psi,alpha,eta);
       std::vector<double> theta = minimize(sample_mean,S,2);
-      estimates.kappa = theta(0);
-      estimates.beta = theta(1);
+      estimates.kappa = theta[0];
+      estimates.beta = theta[1];
       break;
     }
 
@@ -73,11 +73,11 @@ void Optimize::computeEstimates(Vector &sample_mean, Matrix &S, struct Estimates
 
 void Optimize::finalize(std::vector<double> &theta, struct Estimates &estimates)
 {
-  estimates.alpha = theta(0);
-  estimates.eta = theta(1);
-  estimates.psi = theta(2);
-  estimates.kappa = theta(3);
-  estimates.beta = theta(4);
+  estimates.alpha = theta[0];
+  estimates.eta = theta[1];
+  estimates.psi = theta[2];
+  estimates.kappa = theta[3];
+  estimates.beta = theta[4];
   Kent kent(estimates.psi,estimates.alpha,estimates.eta,estimates.kappa,estimates.beta);
   estimates.mean = kent.Mean();
   estimates.major_axis = kent.MajorAxis();
@@ -86,91 +86,96 @@ void Optimize::finalize(std::vector<double> &theta, struct Estimates &estimates)
 
 std::vector<double> Optimize::minimize(Vector &sample_mean, Matrix &S, int num_params)
 {
-  std::vector<double> starting_point(num_params);
+  std::vector<double> x(num_params);
+  nlopt::opt opt(nlopt::LN_COBYLA, num_params);
+  std::vector<double> lb(num_params,TOLERANCE);
+  std::vector<double> ub(num_params,HUGE_VAL);
+  double minf;
+
   switch(estimation) {
     case MOMENT:
     {
-      nlopt::opt opt(nlopt::LN_COBYLA, 2);
-      std::vector<double> lb(2);
-      lb[0] = TOLERANCE; lb[1] = TOLERANCE;
       opt.set_lower_bounds(lb);
-      std::vector<double> ub(2);
-      ub[0] = HUGE_VAL; ub[1] = HUGE_VAL;
       opt.set_upper_bounds(ub);
 
-      //opt.set_min_objective(myvfunc, NULL);
       MomentObjectiveFunction moment(mean,major,minor,sample_mean,S,N);
       opt.set_min_objective(MomentObjectiveFunction::wrap, &moment);
+      opt.add_inequality_constraint(Constraint, NULL, TOLERANCE);
+      opt.set_xtol_rel(TOLERANCE);
 
-      my_constraint_data data[2] = { {2,0}, {-1,1} };
-      opt.add_inequality_constraint(myvconstraint, &data[0], 1e-8);
-      opt.add_inequality_constraint(myvconstraint, &data[1], 1e-8);
-
-      opt.set_xtol_rel(1e-4);
-
-      std::vector<double> x(2);
-      x[0] = 1.234; x[1] = 5.678;
-      double minf;
+      x[0] = kappa; x[1] = beta;
       nlopt::result result = opt.optimize(x, minf);
       break;
     }
 
-    /*case MLE:
+    case MLE:
     {
-      starting_point = alpha,eta,psi,kappa,beta; 
-      find_min_using_approximate_derivatives(
-        bfgs_search_strategy(),
-        objective_delta_stop_strategy(1e-10),
-        MaximumLikelihoodObjectiveFunction(sample_mean,S,N),
-        starting_point,
-        -100
-      );
+      lb[0] = -HUGE_VAL; lb[1] = -HUGE_VAL; lb[2] = -HUGE_VAL;
+      opt.set_lower_bounds(lb);
+      opt.set_upper_bounds(ub);
+
+      MaximumLikelihoodObjectiveFunction mle(sample_mean,S,N);
+      opt.set_min_objective(MaximumLikelihoodObjectiveFunction::wrap, &mle);
+      opt.add_inequality_constraint(Constraint, NULL, TOLERANCE);
+      opt.set_xtol_rel(1e-4);
+
+      x[0] = alpha; x[1] = eta; x[2] = psi; x[3] = kappa; x[4] = beta;
+      nlopt::result result = opt.optimize(x, minf);
       break;
     }
 
     case MAP:
     {
-      starting_point = alpha,eta,psi,kappa,beta; 
-      find_min_using_approximate_derivatives(
-        bfgs_search_strategy(),
-        objective_delta_stop_strategy(1e-10),
-        MAPObjectiveFunction(sample_mean,S,N),
-        starting_point,
-        -100
-      );
+      lb[0] = -HUGE_VAL; lb[1] = -HUGE_VAL; lb[2] = -HUGE_VAL;
+      opt.set_lower_bounds(lb);
+      opt.set_upper_bounds(ub);
+
+      MAPObjectiveFunction map(sample_mean,S,N);
+      opt.set_min_objective(MAPObjectiveFunction::wrap, &map);
+      opt.add_inequality_constraint(Constraint, NULL, TOLERANCE);
+      opt.set_xtol_rel(1e-4);
+
+      x[0] = alpha; x[1] = eta; x[2] = psi; x[3] = kappa; x[4] = beta;
+      nlopt::result result = opt.optimize(x, minf);
       break;
     }
 
     case MML_SCALE:
     {
-      starting_point = kappa,beta; 
-      find_min_using_approximate_derivatives(
-        bfgs_search_strategy(),
-        objective_delta_stop_strategy(1e-10),
-        MMLObjectiveFunctionScale(psi,alpha,eta,kappa,beta,sample_mean,S,N),
-        starting_point,
-        -100
-      );
+      opt.set_lower_bounds(lb);
+      opt.set_upper_bounds(ub);
+
+      MMLObjectiveFunctionScale mml(psi,alpha,eta,kappa,beta,sample_mean,S,N);
+      opt.set_min_objective(MMLObjectiveFunctionScale::wrap, &mml);
+      opt.add_inequality_constraint(Constraint, NULL, TOLERANCE);
+      opt.set_xtol_rel(1e-4);
+
+      x[0] = kappa; x[1] = beta;
+      nlopt::result result = opt.optimize(x, minf);
+      break;
       break;
     }
 
     case MML:
     {
-      starting_point = alpha,eta,psi,kappa,beta; 
-      find_min_using_approximate_derivatives(
-        bfgs_search_strategy(),
-        objective_delta_stop_strategy(1e-10),
-        MMLObjectiveFunction(sample_mean,S,N),
-        starting_point,
-        -100
-      );
+      lb[0] = -HUGE_VAL; lb[1] = -HUGE_VAL; lb[2] = -HUGE_VAL;
+      opt.set_lower_bounds(lb);
+      opt.set_upper_bounds(ub);
+
+      MMLObjectiveFunction mml(sample_mean,S,N);
+      opt.set_min_objective(MMLObjectiveFunction::wrap, &mml);
+      opt.add_inequality_constraint(Constraint, NULL, TOLERANCE);
+      opt.set_xtol_rel(1e-4);
+
+      x[0] = alpha; x[1] = eta; x[2] = psi; x[3] = kappa; x[4] = beta;
+      nlopt::result result = opt.optimize(x, minf);
       break;
-    }*/
+    }
 
     default:
       break;
   }
-  //cout << "solution:\n" << starting_point << endl;
-  return starting_point;
+  //cout << "solution: (" << x[0] << ", " << x[1] << ")\n";
+  return x;
 }
 

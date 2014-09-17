@@ -389,6 +389,7 @@ long double Kent::computeLogPriorProbability()
   long double log_prior_axes = computeLogPriorAxes();
   long double log_prior_scale = computeLogPriorScale();
   long double log_joint_prior = log_prior_axes + log_prior_scale;
+  assert(!boost::math::isnan(log_joint_prior));
   return log_joint_prior;
 }
 
@@ -401,6 +402,8 @@ long double Kent::computeLogPriorAxes()
   while (angle > PI) {
     angle -= PI;
   }
+
+  if (angle < TOLERANCE) angle = TOLERANCE;
   
   long double log_prior = 0;
   //log_prior += log(4) - 4*log(PI);
@@ -549,7 +552,7 @@ void Kent::computeAllEstimators(Vector &sample_mean, Matrix &S, long double N)
   cout << "msglen: " << computeMessageLength(map_est,sample_mean,S,N) << endl;
   cout << "KL-divergence: " << computeKLDivergence(map_est) << endl << endl;
 
-  /*type = "MML_SCALE";
+  type = "MML_SCALE";
   struct Estimates mml_est1 = moment_est;
   Optimize opt3(type);
   opt3.initialize(N,mml_est1.mean,mml_est1.major_axis,mml_est1.minor_axis,
@@ -557,7 +560,7 @@ void Kent::computeAllEstimators(Vector &sample_mean, Matrix &S, long double N)
   opt3.computeEstimates(sample_mean,S,mml_est1);
   print(type,mml_est1);
   cout << "msglen: " << computeMessageLength(mml_est1,sample_mean,S,N) << endl;
-  cout << "KL-divergence: " << computeKLDivergence(mml_est1) << endl << endl;*/
+  cout << "KL-divergence: " << computeKLDivergence(mml_est1) << endl << endl;
 
   type = "MML";
   struct Estimates mml_est2 = moment_est;

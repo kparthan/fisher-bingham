@@ -2,7 +2,6 @@
 #define KENT_H
 
 #include "Header.h"
-//#include "Support.h"
 
 class Kent  // FB5
 {

@@ -13,14 +13,16 @@ typedef struct {
 class Function
 {
   private:
-    my_constraint_data *d;
+    //my_constraint_data *d;
+    //void *d;
 
   public:
-    Function() {}
+    //Function() {}
 
-    Function(void *data) {
-      d = reinterpret_cast<my_constraint_data*>(data);
-    }
+    //Function(void *data) {
+      //d = reinterpret_cast<my_constraint_data*>(data);
+      //d = data;
+    //}
 
     static double wrap(
       const std::vector<double> &x, 

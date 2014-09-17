@@ -341,7 +341,7 @@ void Test::moment_estimation(void)
   std::vector<Vector> random_sample;
   Vector m0,m1,m2;
   long double kappa = 100;
-  long double beta = 30;
+  long double beta = 47.5;
 
   generateRandomOrthogonalVectors(m0,m1,m2);
   cartesian2spherical(m0,spherical);
@@ -355,7 +355,7 @@ void Test::moment_estimation(void)
   cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
 
   Kent kent(m0,m1,m2,kappa,beta);
-  random_sample = kent.generate(1000);
+  random_sample = kent.generate(100);
   estimates = kent.computeMomentEstimates(random_sample);
 
   cartesian2spherical(estimates.mean,spherical);
@@ -521,6 +521,7 @@ void Test::mml_estimation(void)
   Vector m0,m1,m2;
   long double kappa = 100;
   long double beta = 30;
+  int sample_size = 100;
 
   generateRandomOrthogonalVectors(m0,m1,m2);
   cartesian2spherical(m0,spherical);
@@ -534,7 +535,7 @@ void Test::mml_estimation(void)
   cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
 
   Kent kent(m0,m1,m2,kappa,beta);
-  random_sample = kent.generate(100);
+  random_sample = kent.generate(sample_size);
   kent.computeAllEstimators(random_sample);
 }
 
