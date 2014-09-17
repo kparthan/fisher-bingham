@@ -1,5 +1,5 @@
-CFLAGS=-std=c++0x -g -I./support/dlib-18.9/
-LDFLAGS=-lboost_program_options -lboost_system -lboost_filesystem -fopenmp
+CFLAGS=-std=c++0x -g 
+LDFLAGS=-lboost_program_options -lboost_system -lboost_filesystem -fopenmp -lnlopt -lm
 
 OBJECTS = main.o \
   Support.o \

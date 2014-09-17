@@ -30,7 +30,7 @@ void Optimize::computeEstimates(Vector &sample_mean, Matrix &S, struct Estimates
   switch(estimation) {
     case MOMENT:
     {
-      column_vector theta = minimize(sample_mean,S,2);
+      std::vector<double> theta = minimize(sample_mean,S,2);
       estimates.kappa = theta(0);
       estimates.beta = theta(1);
       break;
@@ -39,7 +39,7 @@ void Optimize::computeEstimates(Vector &sample_mean, Matrix &S, struct Estimates
     case MLE:
     {
       computeOrthogonalTransformation(mean,major,psi,alpha,eta);
-      column_vector theta = minimize(sample_mean,S,5);
+      std::vector<double> theta = minimize(sample_mean,S,5);
       finalize(theta,estimates);
       break;
     }
@@ -47,7 +47,7 @@ void Optimize::computeEstimates(Vector &sample_mean, Matrix &S, struct Estimates
     case MAP:
     {
       computeOrthogonalTransformation(mean,major,psi,alpha,eta);
-      column_vector theta = minimize(sample_mean,S,5);
+      std::vector<double> theta = minimize(sample_mean,S,5);
       finalize(theta,estimates);
       break;
     }
@@ -55,7 +55,7 @@ void Optimize::computeEstimates(Vector &sample_mean, Matrix &S, struct Estimates
     case MML_SCALE:
     {
       computeOrthogonalTransformation(mean,major,psi,alpha,eta);
-      column_vector theta = minimize(sample_mean,S,2);
+      std::vector<double> theta = minimize(sample_mean,S,2);
       estimates.kappa = theta(0);
       estimates.beta = theta(1);
       break;
@@ -64,14 +64,14 @@ void Optimize::computeEstimates(Vector &sample_mean, Matrix &S, struct Estimates
     case MML:
     {
       computeOrthogonalTransformation(mean,major,psi,alpha,eta);
-      column_vector theta = minimize(sample_mean,S,5);
+      std::vector<double> theta = minimize(sample_mean,S,5);
       finalize(theta,estimates);
       break;
     }
   }
 }
 
-void Optimize::finalize(column_vector &theta, struct Estimates &estimates)
+void Optimize::finalize(std::vector<double> &theta, struct Estimates &estimates)
 {
   estimates.alpha = theta(0);
   estimates.eta = theta(1);
@@ -84,24 +84,38 @@ void Optimize::finalize(column_vector &theta, struct Estimates &estimates)
   estimates.minor_axis = kent.MinorAxis();
 }
 
-column_vector Optimize::minimize(Vector &sample_mean, Matrix &S, int num_params)
+std::vector<double> Optimize::minimize(Vector &sample_mean, Matrix &S, int num_params)
 {
-  column_vector starting_point(num_params);
+  std::vector<double> starting_point(num_params);
   switch(estimation) {
     case MOMENT:
     {
-      starting_point = kappa,beta; 
-      find_min_using_approximate_derivatives(
-        bfgs_search_strategy(),
-        objective_delta_stop_strategy(1e-10),
-        MomentObjectiveFunction(mean,major,minor,sample_mean,S,N),
-        starting_point,
-        -100
-      );
+      nlopt::opt opt(nlopt::LN_COBYLA, 2);
+      std::vector<double> lb(2);
+      lb[0] = TOLERANCE; lb[1] = TOLERANCE;
+      opt.set_lower_bounds(lb);
+      std::vector<double> ub(2);
+      ub[0] = HUGE_VAL; ub[1] = HUGE_VAL;
+      opt.set_upper_bounds(ub);
+
+      //opt.set_min_objective(myvfunc, NULL);
+      MomentObjectiveFunction moment(mean,major,minor,sample_mean,S,N);
+      opt.set_min_objective(MomentObjectiveFunction::wrap, &moment);
+
+      my_constraint_data data[2] = { {2,0}, {-1,1} };
+      opt.add_inequality_constraint(myvconstraint, &data[0], 1e-8);
+      opt.add_inequality_constraint(myvconstraint, &data[1], 1e-8);
+
+      opt.set_xtol_rel(1e-4);
+
+      std::vector<double> x(2);
+      x[0] = 1.234; x[1] = 5.678;
+      double minf;
+      nlopt::result result = opt.optimize(x, minf);
       break;
     }
 
-    case MLE:
+    /*case MLE:
     {
       starting_point = alpha,eta,psi,kappa,beta; 
       find_min_using_approximate_derivatives(
@@ -150,27 +164,12 @@ column_vector Optimize::minimize(Vector &sample_mean, Matrix &S, int num_params)
         starting_point,
         -100
       );
-      /*find_min_box_constrained(
-        bfgs_search_strategy(),  
-        objective_delta_stop_strategy(1e-9),  
-        MMLObjectiveFunction(sample_mean,S,N),
-        derivative(MMLObjectiveFunction(sample_mean,S,N)), 
-        starting_point, 
-        uniform_matrix<double>(5,1,0.0),
-        uniform_matrix<double>(5,1,100.0)
-      );*/
       break;
-    }
+    }*/
+
+    default:
+      break;
   }
-  /*find_min_bobyqa(momentObjectiveFunction,
-                  starting_point, 
-                  5,    // number of interpolation points
-                  uniform_matrix<double>(2,1,-1e100),  // lower bound constraint
-                  uniform_matrix<double>(2,1, 2000),   // upper bound constraint
-                  10,    // initial trust region radius
-                  1e-6,  // stopping trust region radius
-                  100    // max number of objective function evaluations
-  );*/
   //cout << "solution:\n" << starting_point << endl;
   return starting_point;
 }
