@@ -396,33 +396,32 @@ long double Kent::computeLogPriorProbability()
 long double Kent::computeLogPriorAxes()
 {
   long double angle = alpha;
-  while (angle < 0) {
+  /*while (angle < 0) {
     angle += PI;
   }
   while (angle > PI) {
     angle -= PI;
   }
 
-  if (angle < TOLERANCE) angle = TOLERANCE;
+  if (angle < TOLERANCE) angle = TOLERANCE;*/
   
   long double log_prior = 0;
-  //log_prior += log(4) - 4*log(PI);
+  log_prior += -log(4) - 3*log(PI);
   log_prior += log(sin(angle));
-  log_prior += -log(4) - 3 * log(PI);
   return log_prior;
 }
 
 long double Kent::computeLogPriorScale()
 {
   long double log_prior = 0;
-  /*log_prior += log(kappa);
+  log_prior += log(kappa);
   log_prior -= 2 * log(1+kappa*kappa);
-  log_prior += log(8/PI);*/
-  log_prior += 2 * log(4/PI);
+  log_prior += log(8/PI);
+  /*log_prior += 2 * log(4/PI);
   log_prior += 2 * log(kappa);
   log_prior -= 2 * log(1+kappa*kappa);
   log_prior += 2 * log(beta);
-  log_prior -= 2 * log(1+beta*beta);
+  log_prior -= 2 * log(1+beta*beta);*/
   return log_prior;
 }
 
@@ -552,7 +551,7 @@ void Kent::computeAllEstimators(Vector &sample_mean, Matrix &S, long double N)
   cout << "msglen: " << computeMessageLength(map_est,sample_mean,S,N) << endl;
   cout << "KL-divergence: " << computeKLDivergence(map_est) << endl << endl;
 
-  type = "MML_SCALE";
+  type = "MML_2";
   struct Estimates mml_est1 = moment_est;
   Optimize opt3(type);
   opt3.initialize(N,mml_est1.mean,mml_est1.major_axis,mml_est1.minor_axis,
@@ -562,7 +561,7 @@ void Kent::computeAllEstimators(Vector &sample_mean, Matrix &S, long double N)
   cout << "msglen: " << computeMessageLength(mml_est1,sample_mean,S,N) << endl;
   cout << "KL-divergence: " << computeKLDivergence(mml_est1) << endl << endl;
 
-  type = "MML";
+  type = "MML_5";
   struct Estimates mml_est2 = moment_est;
   Optimize opt4(type);
   opt4.initialize(N,mml_est2.mean,mml_est2.major_axis,mml_est2.minor_axis,
@@ -603,7 +602,7 @@ void Kent::computeAllEstimators(
   opt2.computeEstimates(sample_mean,S,map_est);
   all_estimates.push_back(map_est);
 
-  type = "MML";
+  type = "MML_5";
   struct Estimates mml_est = moment_est;
   Optimize opt3(type);
   opt3.initialize(N,mml_est.mean,mml_est.major_axis,mml_est.minor_axis,
@@ -753,8 +752,8 @@ struct Estimates Kent::computeMMLEstimates(Vector &sample_mean, Matrix &S, long 
   cout << "msglen: " << msglen << endl;
   cout << "msglen (bpr): " << msglen/N << endl;
 
-  type = "MML_SCALE";
-  //type = "MML";
+  //type = "MML_2";
+  type = "MML_5";
   Optimize opt(type);
   opt.initialize(N,estimates.mean,estimates.major_axis,estimates.minor_axis,
                  estimates.kappa,estimates.beta);
@@ -859,7 +858,8 @@ long double Kent::computeMessageLength(Vector &sample_mean, Matrix &S, long doub
   long double part2 = computeNegativeLogLikelihood(sample_mean,S,N) + 2.5
                  - 2 * N * log(AOM);
   long double msglen = part1 + part2;
-  return msglen/log(2);
+  //return msglen/log(2);
+  return msglen;
 }
 
 long double Kent::computeMessageLength(struct Estimates &estimates, 

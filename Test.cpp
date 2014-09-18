@@ -520,8 +520,8 @@ void Test::mml_estimation(void)
   std::vector<Vector> random_sample;
   Vector m0,m1,m2;
   long double kappa = 100;
-  long double beta = 30;
-  int sample_size = 100;
+  long double beta = 47.5;
+  int sample_size = 10;
 
   generateRandomOrthogonalVectors(m0,m1,m2);
   cartesian2spherical(m0,spherical);

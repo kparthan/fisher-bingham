@@ -1002,11 +1002,18 @@ void track(const std::vector<double> &x, const double t)
     cout << t << "\t" << x[0] << endl;
 }
 
-double Constraint(const std::vector<double> &x, std::vector<double> &grad, void *data)
+double Constraint2(const std::vector<double> &x, std::vector<double> &grad, void *data)
 {
     //double k = x[0];
     //double b = x[1];
     return (2 * x[1] - x[0]);
+}
+
+double Constraint5(const std::vector<double> &x, std::vector<double> &grad, void *data)
+{
+    //double k = x[3];
+    //double b = x[4];
+    return (2 * x[4] - x[3]);
 }
 
 ////////////////////// MIXTURE FUNCTIONS \\\\\\\\\\\\\\\\\\\\\\\\\\\\
@@ -1197,7 +1204,9 @@ void modelOneComponent(struct Parameters &parameters, std::vector<Vector > &data
   cout << "Sample size: " << data.size() << endl;
   Kent kent;
   Vector weights(data.size(),1);
-  kent.estimateParameters(data,weights);
+  //kent.estimateParameters(data,weights);
+  std::vector<struct Estimates> all_estimates;
+  kent.computeAllEstimators(data,all_estimates);
 }
 
 /*!

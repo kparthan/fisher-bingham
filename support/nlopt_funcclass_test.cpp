@@ -64,15 +64,17 @@ int main(int argc, char **argv)
 
   // C++ style ...
   //nlopt::opt opt(nlopt::LD_MMA, 2);
-  nlopt::opt opt(nlopt::LN_COBYLA, 2);
+  //nlopt::opt opt(nlopt::LN_COBYLA, 2);
   //nlopt::opt opt(nlopt::GN_ISRES, 2);
-  //opt::opt opt(nlopt::GN_ORIG_DIRECT, 2);
+  nlopt::opt opt(nlopt::GN_ORIG_DIRECT, 2);
 
   std::vector<double> lb(2);
-  lb[0] = -HUGE_VAL; lb[1] = 1e-6;
+  //lb[0] = -HUGE_VAL; lb[1] = 1e-6;
+  lb[0] = -10; lb[1] = 1e-6;
   opt.set_lower_bounds(lb);
   std::vector<double> ub(2);
-  ub[0] = HUGE_VAL; ub[1] = HUGE_VAL;
+  //ub[0] = HUGE_VAL; ub[1] = HUGE_VAL;
+  ub[0] = 10; ub[1] = 10;
   opt.set_upper_bounds(ub);
 
   //opt.set_min_objective(myvfunc, NULL);

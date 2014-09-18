@@ -90,7 +90,8 @@ void jacobiRotateMatrix(Matrix &, Matrix &, int, int);
 long double computeDawsonsIntegral(double);
 void track(const std::vector<double> &, const double);
 void rhs(const std::vector<double> &, std::vector<double> &, const double);
-double Constraint(const std::vector<double> &x, std::vector<double> &grad, void *data);
+double Constraint2(const std::vector<double> &, std::vector<double> &, void *);
+double Constraint5(const std::vector<double> &, std::vector<double> &, void *);
 
 long double computeConstantTerm(int);
 std::vector<std::vector<int> > updateBins(std::vector<Vector > &, long double);

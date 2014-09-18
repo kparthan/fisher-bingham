@@ -182,7 +182,13 @@ class MMLObjectiveFunctionScale
       double b = x[1];
 
       Kent kent(psi,alpha,eta,k,b);
-      kent.computeExpectation();
+      long double log_prior = kent.computeLogPriorProbability();
+      long double log_fisher = kent.computeLogFisherInformation(N);
+      double part1 = log(k2) - log_prior + 0.5 * log_fisher;
+      double part2 = kent.computeNegativeLogLikelihood(sample_mean,S,N) + 1
+                     - 2 * N * log(AOM);
+      double fval = part1 + part2;
+      /*kent.computeExpectation();
       long double log_prior_scale = kent.computeLogPriorScale();
       long double log_fisher_scale = kent.computeLogFisherScale();
       long double log_fisher = log_fisher_axes + log_fisher_scale + 5 * log(N);
@@ -190,7 +196,7 @@ class MMLObjectiveFunctionScale
       double part1 = log(k2) - log_prior_axes - log_prior_scale + 0.5 * log_fisher;
       double part2 = kent.computeNegativeLogLikelihood(sample_mean,S,N) + 1
                      - 2 * N * log(AOM);
-      double fval = part1 + part2;
+      double fval = part1 + part2;*/
       //assert(!boost::math::isnan(fval));
       return fval;
     }
@@ -221,7 +227,7 @@ class MMLObjectiveFunction
       const std::vector<double> &x, 
       std::vector<double> &grad, 
       void *data) {
-        return (*reinterpret_cast<MAPObjectiveFunction*>(data))(x, grad); 
+        return (*reinterpret_cast<MMLObjectiveFunction*>(data))(x, grad); 
     }
 
     /*!
