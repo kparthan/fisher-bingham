@@ -12,6 +12,7 @@ int ENABLE_DATA_PARALLELISM;
 int NUM_THREADS;
 long double MAX_KAPPA;
 long double IMPROVEMENT_RATE;
+int CONSTRAIN_KAPPA;
 
 ////////////////////// GENERAL PURPOSE FUNCTIONS \\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
@@ -39,15 +40,15 @@ struct Parameters parseCommandLineInput(int argc, char **argv)
        ("iter",value<int>(&parameters.iterations),"number of iterations")
        ("profile",value<string>(&parameters.profile_file),"path to the profile")
        ("profiles",value<string>(&parameters.profiles_dir),"path to all profiles")
+       ("constrain",value<string>(&constrain),"to constrain kappa")
        ("max_kappa",value<long double>(&parameters.max_kappa),"maximum value of kappa allowed")
        ("mixture","flag to do mixture modelling")
        ("k",value<int>(&parameters.fit_num_components),"number of components")
        ("infer_components","flag to infer the number of components")
-       ("min_k",value<int>(&parameters.min_components),"min components to infer")
+       ("begin",value<int>(&parameters.start_from),"# of components to begin inference from")
        ("max_k",value<int>(&parameters.max_components),"max components to infer")
        ("log",value<string>(&parameters.infer_log),"log file")
        ("continue","flag to continue inference from some state")
-       ("begin",value<int>(&parameters.start_from),"# of components to begin inference from")
        ("simulate","to simulate a mixture model")
        ("load",value<string>(&parameters.mixture_file),"mixture file")
        ("components",value<int>(&parameters.simulated_components),"# of simulated components")
@@ -55,6 +56,7 @@ struct Parameters parseCommandLineInput(int argc, char **argv)
        ("bins","parameter to generate heat maps")
        ("res",value<long double>(&parameters.res),"resolution used in heat map images")
        ("mt",value<int>(&parameters.num_threads),"flag to enable multithreading")
+       ("improvement",value<long double>(&improvement_rate),"improvement rate")
   ;
   variables_map vm;
   store(command_line_parser(argc,argv).options(desc).run(),vm);
@@ -94,10 +96,16 @@ struct Parameters parseCommandLineInput(int argc, char **argv)
     parameters.read_profiles = UNSET;
   }
 
-  if (!vm.count("max_kappa")) {
-    MAX_KAPPA = DEFAULT_MAX_KAPPA;
+  if (vm.count("constrain")) {
+    CONSTRAIN_KAPPA = SET;
+    if (!vm.count("max_kappa")) {
+      MAX_KAPPA = DEFAULT_MAX_KAPPA;
+    } else {
+      MAX_KAPPA = parameters.max_kappa;
+    }
   } else {
-    MAX_KAPPA = parameters.max_kappa;
+    CONSTRAIN_KAPPA = UNSET;
+    MAX_KAPPA = HUGE_VAL;
   }
 
   if (vm.count("mixture")) {
@@ -108,15 +116,15 @@ struct Parameters parseCommandLineInput(int argc, char **argv)
     if (vm.count("infer_components")) {
       parameters.infer_num_components = SET;
       INFER_COMPONENTS = SET;
+      if (!vm.count("begin")) {
+        parameters.start_from = 1;
+      }
       if (!vm.count("max_k")) {
         parameters.max_components = -1;
         if (vm.count("continue")) {
           parameters.continue_inference = SET;
         } else {
           parameters.continue_inference = UNSET;
-        }
-        if (!vm.count("begin")) {
-          parameters.start_from = 1;
         }
       }
     } else {
@@ -1195,56 +1203,6 @@ bool gatherData(struct Parameters &parameters, std::vector<Vector > &unit_coordi
 }
 
 /*!
- *  \brief This function models a single component.
- *  \param parameters a reference to a struct Parameters
- *  \param data a reference to a std::vector<Vector >
- */
-void modelOneComponent(struct Parameters &parameters, std::vector<Vector > &data)
-{
-  cout << "Sample size: " << data.size() << endl;
-  Kent kent;
-  Vector weights(data.size(),1);
-  //kent.estimateParameters(data,weights);
-  std::vector<struct Estimates> all_estimates;
-  kent.computeAllEstimators(data,all_estimates);
-}
-
-/*!
- *  \brief This function models a mixture of several components.
- *  \param parameters a reference to a struct Parameters
- *  \param data a reference to a std::vector<std::vector<long double,3> >
- */
-void modelMixture(struct Parameters &parameters, std::vector<Vector > &data)
-{
-  Vector data_weights(data.size(),1);
-  // if the optimal number of components need to be determined
-  /*if (parameters.infer_num_components == SET) {
-    if (parameters.max_components == -1) {
-      Mixture mixture;
-      if (parameters.continue_inference == UNSET) {
-        Mixture m(parameters.start_from,data,data_weights);
-        mixture = m;
-        mixture.estimateParameters();
-      } else if (parameters.continue_inference == SET) {
-        mixture.load(parameters.mixture_file,parameters.D,data,data_weights);
-      } // continue_inference
-      ofstream log(parameters.infer_log.c_str());
-      Mixture stable = inferComponents(mixture,data.size(),log);
-      NUM_STABLE_COMPONENTS = stable.getNumberOfComponents();
-      log.close();
-    } else {  // parameters.max_components == -1
-      inferStableMixtures(data,parameters.min_components,parameters.max_components,
-                          parameters.infer_log);
-    }
-  } else*/ if (parameters.infer_num_components == UNSET) {
-    // for a given value of number of components
-    // do the mixture modelling
-    Mixture mixture(parameters.fit_num_components,data,data_weights);
-    mixture.estimateParameters();
-  }
-}
-
-/*!
  *  \brief This function is used to simulate the mixture model.
  *  \param parameters a reference to a struct Parameters
  */
@@ -1367,6 +1325,131 @@ Vector generateRandomBetas(Vector &kappas)
     random_betas.push_back(beta);
   }
   return random_betas;
+}
+
+/*!
+ *  \brief This function models a single component.
+ *  \param parameters a reference to a struct Parameters
+ *  \param data a reference to a std::vector<Vector >
+ */
+void modelOneComponent(struct Parameters &parameters, std::vector<Vector > &data)
+{
+  cout << "Sample size: " << data.size() << endl;
+  Kent kent;
+  Vector weights(data.size(),1);
+  //kent.estimateParameters(data,weights);
+  std::vector<struct Estimates> all_estimates;
+  kent.computeAllEstimators(data,all_estimates);
+}
+
+/*!
+ *  \brief This function models a mixture of several components.
+ *  \param parameters a reference to a struct Parameters
+ *  \param data a reference to a std::vector<std::vector<long double,3> >
+ */
+void modelMixture(struct Parameters &parameters, std::vector<Vector > &data)
+{
+  Vector data_weights(data.size(),1);
+  // if the optimal number of components need to be determined
+  if (parameters.infer_num_components == SET) {
+    Mixture mixture;
+    if (parameters.continue_inference == UNSET) {
+      Mixture m(parameters.start_from,data,data_weights);
+      mixture = m;
+      mixture.estimateParameters();
+    } else if (parameters.continue_inference == SET) {
+      mixture.load(parameters.mixture_file,data,data_weights);
+    } // continue_inference
+    ofstream log(parameters.infer_log.c_str());
+    Mixture stable = inferComponents(mixture,data.size(),log);
+    log.close();
+  } else if (parameters.infer_num_components == UNSET) {
+    // for a given value of number of components
+    // do the mixture modelling
+    Mixture mixture(parameters.fit_num_components,data,data_weights);
+    mixture.estimateParameters();
+  }
+}
+
+Mixture inferComponents(Mixture &mixture, int N, ostream &log)
+{
+  int K,iter = 0;
+  std::vector<Kent> components;
+  Mixture modified,improved,parent;
+  Vector sample_size;
+  //long double min_n = 0.01 * N;
+  long double min_n = 1;
+  long double null_msglen = mixture.computeNullModelMessageLength();
+  log << "Null model encoding: " << null_msglen << " bits."
+      << "\t(" << null_msglen/N << " bits/point)\n\n";
+
+  improved = mixture;
+
+  while (1) {
+    parent = improved;
+    iter++;
+    log << "Iteration #" << iter << endl;
+    log << "Parent:\n";
+    parent.printParameters(log,1);
+    components = parent.getComponents();
+    sample_size = parent.getSampleSize();
+    K = components.size();
+    for (int i=0; i<K; i++) { // split() ...
+      if (sample_size[i] > min_n) {
+        modified = parent.split(i,log);
+        updateInference(modified,improved,log,SPLIT);
+      }
+    }
+    if (K >= 2) {  // kill() ...
+      for (int i=0; i<K; i++) {
+        modified = parent.kill(i,log);
+        updateInference(modified,improved,log,KILL);
+      } // killing each component
+    } // if (K > 2) loop
+    if (K > 1) {  // join() ...
+      for (int i=0; i<K; i++) {
+        int j = parent.getNearestComponent(i); // closest component
+        modified = parent.join(i,j,log);
+        updateInference(modified,improved,log,JOIN);
+      } // join() ing nearest components
+    } // if (K > 1) loop
+    if (improved == parent) goto finish;
+  } // if (improved == parent || iter%2 == 0) loop
+  finish:
+  return parent;
+}
+
+/*!
+ *  \brief Updates the inference
+ *  \param modified a reference to a Mixture
+ *  \param current a reference to a Mixture
+ *  \param log a reference to a ostream
+ *  \param operation an integer
+ */
+void updateInference(Mixture &modified, Mixture &current, ostream &log, int operation)
+{
+  long double modified_msglen = modified.getMinimumMessageLength();
+  long double current_msglen = current.getMinimumMessageLength();
+
+  if (modified_msglen < current_msglen) {   // ... improvement
+    long double improvement_rate = (current_msglen - modified_msglen) / current_msglen;
+    if (operation == JOIN || 
+        improvement_rate > IMPROVEMENT_RATE) {  // there is > 0.001 % improvement
+      current = modified;
+      log << "\t ... IMPROVEMENT ... (+ " << fixed << setprecision(3) 
+          << 100 * improvement_rate << " %) ";
+      if (operation == JOIN && improvement_rate < IMPROVEMENT_RATE) {
+        log << "\t\t[ACCEPT] with negligible improvement (while joining)!\n\n";
+      } else {
+        log << "\t\t[ACCEPT]\n\n";
+      }
+    } else {  // ... no substantial improvement
+      log << "\t ... IMPROVEMENT < " << fixed << setprecision(3) 
+          << 100 * IMPROVEMENT_RATE << " %\t\t\t[REJECT]\n\n";
+    }
+  } else {    // ... no improvement
+    log << "\t ... NO IMPROVEMENT\t\t\t[REJECT]\n\n";
+  }
 }
 
 ////////////////////// TESTING FUNCTIONS \\\\\\\\\\\\\\\\\\\\\\\\\\\\

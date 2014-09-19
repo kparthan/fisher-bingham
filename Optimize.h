@@ -269,6 +269,8 @@ class Optimize
 
     void finalize(std::vector<double> &, struct Estimates &);
 
+    void validate_scale(long double &, long double &);
+
     std::vector<double> minimize(Vector &, Matrix &, int);
 };
 

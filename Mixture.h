@@ -153,20 +153,11 @@ class Mixture
     //! Splits a component
     Mixture split(int, ostream &);
 
-    //! Splits a component
-    void split(int, Mixture &, Mixture &, Mixture &);
-
     //! Deltes a component
     Mixture kill(int, ostream &);
 
-    //! Deltes a component
-    void kill(int, Mixture &, Mixture &);
-
     //! Joins two  components
     Mixture join(int, int, ostream &);
-
-    //! Joins two  components
-    void join(int, int, Mixture &, Mixture &, Mixture &);
 
     //! Generate heat maps (for d=3)
     void generateHeatmapData(long double);

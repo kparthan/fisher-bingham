@@ -1,8 +1,7 @@
 #ifndef SUPPORT_H
 #define SUPPORT_H
 
-#include "Kent.h"
-#include "Support.h"
+#include "Mixture.h"
 
 struct Parameters
 {
@@ -17,7 +16,6 @@ struct Parameters
   int mixture_model;        // flag to model a mixture
   int fit_num_components;   // # of components in the mixture model
   int infer_num_components; // flag to infer # of components
-  int min_components;       // min components to infer
   int max_components;       // max components to infer
   string infer_log;         // log file
   int continue_inference;   // flag to continue inference from some state
@@ -105,6 +103,8 @@ Vector generateFromSimplex(int);
 std::vector<Kent> generateRandomComponents(int);
 Vector generateRandomKappas(int);
 Vector generateRandomBetas(Vector &);
+Mixture inferComponents(Mixture &, int, ostream &);
+void updateInference(Mixture &, Mixture &, ostream &, int);
 
 void TestFunctions(void);
 void RunExperiments(int);

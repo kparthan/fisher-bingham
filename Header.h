@@ -74,7 +74,7 @@ typedef boost::numeric::ublas::zero_matrix<long double> ZeroMatrix;
 #define DEFAULT_FIT_COMPONENTS 2
 #define DEFAULT_SIMULATE_COMPONENTS 2
 #define DEFAULT_SAMPLE_SIZE 2000
-#define DEFAULT_MAX_KAPPA 100
+#define DEFAULT_MAX_KAPPA 1000
 
 #define SPLIT 0
 #define KILL 1

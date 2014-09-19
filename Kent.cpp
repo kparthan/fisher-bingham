@@ -757,17 +757,28 @@ struct Estimates Kent::computeMMLEstimates(Vector &sample_mean, Matrix &S, long 
   cout << "msglen: " << msglen << endl;
   cout << "msglen (bpr): " << msglen/N << endl;
 
-  //type = "MML_2";
-  type = "MML_5";
-  Optimize opt(type);
-  opt.initialize(N,estimates.mean,estimates.major_axis,estimates.minor_axis,
-                 estimates.kappa,estimates.beta);
-  opt.computeEstimates(sample_mean,S,estimates);
+  type = "MAP";
+  Optimize opt2(type);
+  opt2.initialize(N,estimates.mean,estimates.major_axis,estimates.minor_axis,
+                  estimates.kappa,estimates.beta);
+  opt2.computeEstimates(sample_mean,S,estimates);
   print(type,estimates);
   msglen = computeMessageLength(estimates,sample_mean,S,N);
   cout << "msglen: " << msglen << endl;
   cout << "msglen (bpr): " << msglen/N << endl;
 
+  if (N > 10) {
+    //type = "MML_2";
+    type = "MML_5";
+    Optimize opt(type);
+    opt.initialize(N,estimates.mean,estimates.major_axis,estimates.minor_axis,
+                   estimates.kappa,estimates.beta);
+    opt.computeEstimates(sample_mean,S,estimates);
+    print(type,estimates);
+    msglen = computeMessageLength(estimates,sample_mean,S,N);
+    cout << "msglen: " << msglen << endl;
+    cout << "msglen (bpr): " << msglen/N << endl;
+  }
   return estimates;
 }
 
@@ -790,6 +801,9 @@ void Kent::updateParameters(struct Estimates &estimates)
   psi = estimates.psi;
   alpha = estimates.alpha;
   eta = estimates.eta;
+  assert(!boost::math::isnan(alpha));
+  assert(!boost::math::isnan(psi));
+  assert(!boost::math::isnan(eta));
   computeExpectation();
 }
 
@@ -863,8 +877,7 @@ long double Kent::computeMessageLength(Vector &sample_mean, Matrix &S, long doub
   long double part2 = computeNegativeLogLikelihood(sample_mean,S,N) + 2.5
                  - 2 * N * log(AOM);
   long double msglen = part1 + part2;
-  //return msglen/log(2);
-  return msglen;
+  return msglen/log(2);
 }
 
 long double Kent::computeMessageLength(struct Estimates &estimates, 

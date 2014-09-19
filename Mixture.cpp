@@ -723,418 +723,218 @@ Mixture::generate(int num_samples, bool save_data)
  *  \param log a reference to a ostream
  *  \return the modified Mixture
  */
-//Mixture Mixture::split(int c, ostream &log)
-//{
-//  log << "\tSPLIT component " << c + 1 << " ... " << endl;
-//
-//  int num_children = 2; 
-//  Mixture m(num_children,data,responsibility[c]);
-//  m.estimateParameters();
-//  log << "\t\tChildren:\n";
-//  m.printParameters(log,2); // print the child mixture
-//
-//  // adjust weights
-//  Vector weights_c = m.getWeights();
-//  weights_c[0] *= weights[c];
-//  weights_c[1] *= weights[c];
-//
-//  // adjust responsibility matrix
-//  std::vector<Vector > responsibility_c = m.getResponsibilityMatrix();
-//  for (int i=0; i<2; i++) {
-//    #pragma omp parallel for if(ENABLE_DATA_PARALLELISM) num_threads(NUM_THREADS) 
-//    for (int j=0; j<N; j++) {
-//      responsibility_c[i][j] *= responsibility[c][j];
-//    }
-//  }
-//
-//  // adjust effective sample size
-//  Vector sample_size_c(2,0);
-//  for (int i=0; i<2; i++) {
-//    long double sum = 0;
-//    #pragma omp parallel for if(ENABLE_DATA_PARALLELISM) num_threads(NUM_THREADS) reduction(+:sum) 
-//    for (int j=0; j<N; j++) {
-//      sum += responsibility_c[i][j];
-//    }
-//    sample_size_c[i] = sum;
-//  }
-//
-//  // child components
-//  std::vector<Kent> components_c = m.getComponents();
-//
-//  // merge with the remaining components
-//  int K_m = K + 1;
-//  std::vector<Vector > responsibility_m(K_m);
-//  Vector weights_m(K_m,0),sample_size_m(K_m,0);
-//  std::vector<Kent> components_m(K_m);
-//  int index = 0;
-//  for (int i=0; i<K; i++) {
-//    if (i != c) {
-//      weights_m[index] = weights[i];
-//      sample_size_m[index] = sample_size[i];
-//      responsibility_m[index] = responsibility[i];
-//      components_m[index] = components[i];
-//      index++;
-//    } else if (i == c) {
-//      for (int j=0; j<2; j++) {
-//        weights_m[index] = weights_c[j];
-//        sample_size_m[index] = sample_size_c[j];
-//        responsibility_m[index] = responsibility_c[j];
-//        components_m[index] = components_c[j];
-//        index++;
-//      }
-//    }
-//  }
-//
-//  Vector data_weights_m(N,1);
-//  Mixture merged(K_m,components_m,weights_m,sample_size_m,responsibility_m,data,data_weights_m);
-//  log << "\t\tBefore adjustment ...\n";
-//  merged.printParameters(log,2);
-//  merged.EM();
-//  log << "\t\tAfter adjustment ...\n";
-//  merged.printParameters(log,2);
-//  return merged;
-//}
-//
-///*!
-// *  \brief This function splits a component into two.
-// *  \return c an integer
-// *  \param children a reference to a Mixture 
-// *  \param intermediate a reference to a Mixture 
-// *  \param modified a reference to a Mixture 
-// */
-//void Mixture::split(int c, Mixture &children, Mixture &intermediate, Mixture &modified)
-//{
-//  int num_children = 2; 
-//  children = Mixture(num_children,data,responsibility[c]);
-//  children.estimateParameters();
-//
-//  // adjust weights
-//  Vector weights_c = children.getWeights();
-//  weights_c[0] *= weights[c];
-//  weights_c[1] *= weights[c];
-//
-//  // adjust responsibility matrix
-//  std::vector<Vector > responsibility_c = children.getResponsibilityMatrix();
-//  for (int i=0; i<2; i++) {
-//    for (int j=0; j<N; j++) {
-//      responsibility_c[i][j] *= responsibility[c][j];
-//    }
-//  }
-//
-//  // adjust effective sample size
-//  Vector sample_size_c(2,0);
-//  for (int i=0; i<2; i++) {
-//    for (int j=0; j<N; j++) {
-//      sample_size_c[i] += responsibility_c[i][j];
-//    }
-//  }
-//
-//  // child components
-//  std::vector<Kent> components_c = children.getComponents();
-//
-//  // merge with the remaining components
-//  int K_m = K + 1;
-//  std::vector<Vector > responsibility_m(K_m);
-//  Vector weights_m(K_m,0),sample_size_m(K_m,0);
-//  std::vector<Kent> components_m(K_m);
-//  int index = 0;
-//  for (int i=0; i<K; i++) {
-//    if (i != c) {
-//      weights_m[index] = weights[i];
-//      sample_size_m[index] = sample_size[i];
-//      responsibility_m[index] = responsibility[i];
-//      components_m[index] = components[i];
-//      index++;
-//    } else if (i == c) {
-//      for (int j=0; j<2; j++) {
-//        weights_m[index] = weights_c[j];
-//        sample_size_m[index] = sample_size_c[j];
-//        responsibility_m[index] = responsibility_c[j];
-//        components_m[index] = components_c[j];
-//        index++;
-//      }
-//    }
-//  }
-//
-//  Vector data_weights_m(N,1);
-//  // before adjustment
-//  intermediate = Mixture(K_m,components_m,weights_m,sample_size_m,responsibility_m,data,data_weights_m);
-//  // adjustment
-//  intermediate.EM();
-//  // after adjustment
-//  modified = intermediate;
-//}
-//
-///*!
-// *  \brief This function deletes a component.
-// *  \return c an integer
-// *  \param log a reference to a ostream
-// *  \return the modified Mixture
-// */
-//Mixture Mixture::kill(int c, ostream &log)
-//{
-//  log << "\tKILL component " << c + 1 << " ... " << endl;
-//
-//  int K_m = K - 1;
-//  // adjust weights
-//  Vector weights_m(K_m,0);
-//  long double residual_sum = 1 - weights[c];
-//  long double wt;
-//  int index = 0;
-//  for (int i=0; i<K; i++) {
-//    if (i != c) {
-//      weights_m[index++] = weights[i] / residual_sum;
-//    }
-//  }
-//
-//  // adjust responsibility matrix
-//  Vector resp(N,0);
-//  std::vector<Vector > responsibility_m(K_m,resp);
-//  index = 0;
-//  for (int i=0; i<K; i++) {
-//    if (i != c) {
-//      #pragma omp parallel for if(ENABLE_DATA_PARALLELISM) num_threads(NUM_THREADS) private(residual_sum) 
-//      for (int j=0; j<N; j++) {
-//        residual_sum = 1 - responsibility[c][j];
-//        responsibility_m[index][j] = responsibility[i][j] / residual_sum;
-//      }
-//      index++;
-//    }
-//  }
-//
-//  // adjust effective sample size
-//  Vector sample_size_m(K_m,0);
-//  for (int i=0; i<K-1; i++) {
-//    long double sum = 0;
-//    #pragma omp parallel for if(ENABLE_DATA_PARALLELISM) num_threads(NUM_THREADS) reduction(+:sum) 
-//    for (int j=0; j<N; j++) {
-//      sum += responsibility_m[i][j];
-//    }
-//    sample_size_m[i] = sum;
-//  }
-//
-//  // child components
-//  std::vector<Kent> components_m(K_m);
-//  index = 0;
-//  for (int i=0; i<K; i++) {
-//    if (i != c) {
-//      components_m[index++] = components[i];
-//    }
-//  }
-//
-//  log << "\t\tResidual:\n";
-//  Vector data_weights_m(N,1);
-//  Mixture modified(K_m,components_m,weights_m,sample_size_m,responsibility_m,data,data_weights_m);
-//  log << "\t\tBefore adjustment ...\n";
-//  modified.printParameters(log,2);
-//  modified.EM();
-//  log << "\t\tAfter adjustment ...\n";
-//  modified.printParameters(log,2);
-//  return modified;
-//}
-//
-///*!
-// *  \brief This function deletes a component.
-// *  \param c an integer
-// *  \param residual a reference to a Mixture
-// *  \param modified a reference to a Mixture
-// */
-//void Mixture::kill(int c, Mixture &residual, Mixture &modified)
-//{
-//  int K_m = K - 1;
-//
-//  // adjust weights
-//  Vector weights_m(K_m,0);
-//  long double residual_sum = 1 - weights[c];
-//  long double wt;
-//  int index = 0;
-//  for (int i=0; i<K; i++) {
-//    if (i != c) {
-//      weights_m[index++] = weights[i] / residual_sum;
-//    }
-//  }
-//
-//  // adjust responsibility matrix
-//  Vector resp(N,0);
-//  std::vector<Vector > responsibility_m(K_m,resp);
-//  index = 0;
-//  for (int i=0; i<K; i++) {
-//    if (i != c) {
-//      for (int j=0; j<N; j++) {
-//        residual_sum = 1 - responsibility[c][j];
-//        responsibility_m[index][j] = responsibility[i][j] / residual_sum;
-//      }
-//      index++;
-//    }
-//  }
-//
-//  // adjust effective sample size
-//  Vector sample_size_m(K_m,0);
-//  for (int i=0; i<K-1; i++) {
-//    for (int j=0; j<N; j++) {
-//      sample_size_m[i] += responsibility_m[i][j];
-//    }
-//  }
-//
-//  // child components
-//  std::vector<Kent> components_m(K_m);
-//  index = 0;
-//  for (int i=0; i<K; i++) {
-//    if (i != c) {
-//      components_m[index++] = components[i];
-//    }
-//  }
-//
-//  Vector data_weights_m(N,1);
-//  //before adjustment / residual
-//  residual = Mixture(K_m,components_m,weights_m,sample_size_m,responsibility_m,data,data_weights_m);
-//  // adjustment
-//  residual.EM();
-//  // after adjustment
-//  modified = residual;
-//}
-//
-///*!
-// *  \brief This function joins two components.
-// *  \return c1 an integer
-// *  \return c2 an integer
-// *  \param log a reference to a ostream
-// *  \return the modified Mixture
-// */
-//Mixture Mixture::join(int c1, int c2, ostream &log)
-//{
-//  log << "\tJOIN components " << c1+1 << " and " << c2+1 << " ... " << endl;
-//
-//  int K_m = K - 1;
-//  // adjust weights
-//  Vector weights_m(K_m,0);
-//  int index = 0;
-//  for (int i=0; i<K; i++) {
-//    if (i != c1 && i != c2) {
-//      weights_m[index++] = weights[i];
-//    }
-//  }
-//  weights_m[index] = weights[c1] + weights[c2];
-//
-//  // adjust responsibility matrix
-//  std::vector<Vector > responsibility_m(K_m);
-//  index = 0;
-//  for (int i=0; i<K; i++) {
-//    if (i != c1 && i != c2) {
-//      responsibility_m[index++] = responsibility[i];
-//    }
-//  }
-//  Vector resp(N,0);
-//  #pragma omp parallel for if(ENABLE_DATA_PARALLELISM) num_threads(NUM_THREADS) 
-//  for (int i=0; i<N; i++) {
-//    resp[i] = responsibility[c1][i] + responsibility[c2][i];
-//  }
-//  responsibility_m[index] = resp;
-//
-//  // adjust effective sample size 
-//  Vector sample_size_m(K_m,0);
-//  index = 0;
-//  for (int i=0; i<K; i++) {
-//    if (i != c1 && i != c2) {
-//      sample_size_m[index++] = sample_size[i];
-//    }
-//  }
-//  sample_size_m[index] = sample_size[c1] + sample_size[c2];
-//
-//  // child components
-//  std::vector<Kent> components_m(K_m);
-//  index = 0;
-//  for (int i=0; i<K; i++) {
-//    if (i != c1 && i != c2) {
-//      components_m[index++] = components[i];
-//    }
-//  }
-//  Mixture joined(1,data,resp);
-//  joined.estimateParameters();
-//  log << "\t\tResultant join:\n";
-//  joined.printParameters(log,2); // print the joined pair mixture
-//
-//  std::vector<Kent> joined_comp = joined.getComponents();
-//  components_m[index++] = joined_comp[0];
-//  Vector data_weights_m(N,1);
-//  Mixture modified(K-1,components_m,weights_m,sample_size_m,responsibility_m,data,data_weights_m);
-//  log << "\t\tBefore adjustment ...\n";
-//  modified.printParameters(log,2);
-//  modified.EM();
-//  log << "\t\tAfter adjustment ...\n";
-//  modified.printParameters(log,2);
-//  return modified;
-//}
-//
-///*!
-// *  \brief This function joins two components.
-// *  \return c1 an integer
-// *  \return c2 an integer
-// *  \param joined a reference to a Mixture
-// *  \param intermediate a reference to a Mixture
-// *  \param modified a reference to a Mixture
-// */
-//void Mixture::join(int c1, int c2, Mixture &joined, Mixture &intermediate, Mixture &modified)
-//{
-//  int K_m = K - 1;
-//
-//  // adjust weights
-//  Vector weights_m(K_m,0);
-//  int index = 0;
-//  for (int i=0; i<K; i++) {
-//    if (i != c1 && i != c2) {
-//      weights_m[index++] = weights[i];
-//    }
-//  }
-//  weights_m[index] = weights[c1] + weights[c2];
-//
-//  // adjust responsibility matrix
-//  std::vector<Vector > responsibility_m(K_m);
-//  index = 0;
-//  for (int i=0; i<K; i++) {
-//    if (i != c1 && i != c2) {
-//      responsibility_m[index++] = responsibility[i];
-//    }
-//  }
-//  Vector resp(N,0);
-//  for (int i=0; i<N; i++) {
-//    resp[i] = responsibility[c1][i] + responsibility[c2][i];
-//  }
-//  responsibility_m[index] = resp;
-//
-//  // adjust effective sample size 
-//  Vector sample_size_m(K_m,0);
-//  index = 0;
-//  for (int i=0; i<K; i++) {
-//    if (i != c1 && i != c2) {
-//      sample_size_m[index++] = sample_size[i];
-//    }
-//  }
-//  sample_size_m[index] = sample_size[c1] + sample_size[c2];
-//
-//  // child components
-//  std::vector<Kent> components_m(K_m);
-//  index = 0;
-//  for (int i=0; i<K; i++) {
-//    if (i != c1 && i != c2) {
-//      components_m[index++] = components[i];
-//    }
-//  }
-//  joined = Mixture(1,data,resp);
-//  joined.estimateParameters();
-//
-//  // joined pair
-//  std::vector<Kent> joined_comp = joined.getComponents();
-//  components_m[index++] = joined_comp[0];
-//  Vector data_weights_m(N,1);
-//  // before adjustment
-//  intermediate = Mixture(K_m,components_m,weights_m,sample_size_m,responsibility_m,data,data_weights_m);
-//  // adjustment
-//  intermediate.EM();
-//  // after adjustment
-//  modified = intermediate;
-//}
-//
+Mixture Mixture::split(int c, ostream &log)
+{
+  log << "\tSPLIT component " << c + 1 << " ... " << endl;
+
+  int num_children = 2; 
+  Mixture m(num_children,data,responsibility[c]);
+  m.estimateParameters();
+  log << "\t\tChildren:\n";
+  m.printParameters(log,2); // print the child mixture
+
+  // adjust weights
+  Vector weights_c = m.getWeights();
+  weights_c[0] *= weights[c];
+  weights_c[1] *= weights[c];
+
+  // adjust responsibility matrix
+  std::vector<Vector > responsibility_c = m.getResponsibilityMatrix();
+  for (int i=0; i<2; i++) {
+    #pragma omp parallel for if(ENABLE_DATA_PARALLELISM) num_threads(NUM_THREADS) 
+    for (int j=0; j<N; j++) {
+      responsibility_c[i][j] *= responsibility[c][j];
+    }
+  }
+
+  // adjust effective sample size
+  Vector sample_size_c(2,0);
+  for (int i=0; i<2; i++) {
+    long double sum = 0;
+    #pragma omp parallel for if(ENABLE_DATA_PARALLELISM) num_threads(NUM_THREADS) reduction(+:sum) 
+    for (int j=0; j<N; j++) {
+      sum += responsibility_c[i][j];
+    }
+    sample_size_c[i] = sum;
+  }
+
+  // child components
+  std::vector<Kent> components_c = m.getComponents();
+
+  // merge with the remaining components
+  int K_m = K + 1;
+  std::vector<Vector > responsibility_m(K_m);
+  Vector weights_m(K_m,0),sample_size_m(K_m,0);
+  std::vector<Kent> components_m(K_m);
+  int index = 0;
+  for (int i=0; i<K; i++) {
+    if (i != c) {
+      weights_m[index] = weights[i];
+      sample_size_m[index] = sample_size[i];
+      responsibility_m[index] = responsibility[i];
+      components_m[index] = components[i];
+      index++;
+    } else if (i == c) {
+      for (int j=0; j<2; j++) {
+        weights_m[index] = weights_c[j];
+        sample_size_m[index] = sample_size_c[j];
+        responsibility_m[index] = responsibility_c[j];
+        components_m[index] = components_c[j];
+        index++;
+      }
+    }
+  }
+
+  Vector data_weights_m(N,1);
+  Mixture merged(K_m,components_m,weights_m,sample_size_m,responsibility_m,data,data_weights_m);
+  log << "\t\tBefore adjustment ...\n";
+  merged.printParameters(log,2);
+  merged.EM();
+  log << "\t\tAfter adjustment ...\n";
+  merged.printParameters(log,2);
+  return merged;
+}
+
+/*!
+ *  \brief This function deletes a component.
+ *  \return c an integer
+ *  \param log a reference to a ostream
+ *  \return the modified Mixture
+ */
+Mixture Mixture::kill(int c, ostream &log)
+{
+  log << "\tKILL component " << c + 1 << " ... " << endl;
+
+  int K_m = K - 1;
+  // adjust weights
+  Vector weights_m(K_m,0);
+  long double residual_sum = 1 - weights[c];
+  long double wt;
+  int index = 0;
+  for (int i=0; i<K; i++) {
+    if (i != c) {
+      weights_m[index++] = weights[i] / residual_sum;
+    }
+  }
+
+  // adjust responsibility matrix
+  Vector resp(N,0);
+  std::vector<Vector > responsibility_m(K_m,resp);
+  index = 0;
+  for (int i=0; i<K; i++) {
+    if (i != c) {
+      #pragma omp parallel for if(ENABLE_DATA_PARALLELISM) num_threads(NUM_THREADS) private(residual_sum) 
+      for (int j=0; j<N; j++) {
+        residual_sum = 1 - responsibility[c][j];
+        responsibility_m[index][j] = responsibility[i][j] / residual_sum;
+      }
+      index++;
+    }
+  }
+
+  // adjust effective sample size
+  Vector sample_size_m(K_m,0);
+  for (int i=0; i<K-1; i++) {
+    long double sum = 0;
+    #pragma omp parallel for if(ENABLE_DATA_PARALLELISM) num_threads(NUM_THREADS) reduction(+:sum) 
+    for (int j=0; j<N; j++) {
+      sum += responsibility_m[i][j];
+    }
+    sample_size_m[i] = sum;
+  }
+
+  // child components
+  std::vector<Kent> components_m(K_m);
+  index = 0;
+  for (int i=0; i<K; i++) {
+    if (i != c) {
+      components_m[index++] = components[i];
+    }
+  }
+
+  log << "\t\tResidual:\n";
+  Vector data_weights_m(N,1);
+  Mixture modified(K_m,components_m,weights_m,sample_size_m,responsibility_m,data,data_weights_m);
+  log << "\t\tBefore adjustment ...\n";
+  modified.printParameters(log,2);
+  modified.EM();
+  log << "\t\tAfter adjustment ...\n";
+  modified.printParameters(log,2);
+  return modified;
+}
+
+/*!
+ *  \brief This function joins two components.
+ *  \return c1 an integer
+ *  \return c2 an integer
+ *  \param log a reference to a ostream
+ *  \return the modified Mixture
+ */
+Mixture Mixture::join(int c1, int c2, ostream &log)
+{
+  log << "\tJOIN components " << c1+1 << " and " << c2+1 << " ... " << endl;
+
+  int K_m = K - 1;
+  // adjust weights
+  Vector weights_m(K_m,0);
+  int index = 0;
+  for (int i=0; i<K; i++) {
+    if (i != c1 && i != c2) {
+      weights_m[index++] = weights[i];
+    }
+  }
+  weights_m[index] = weights[c1] + weights[c2];
+
+  // adjust responsibility matrix
+  std::vector<Vector > responsibility_m(K_m);
+  index = 0;
+  for (int i=0; i<K; i++) {
+    if (i != c1 && i != c2) {
+      responsibility_m[index++] = responsibility[i];
+    }
+  }
+  Vector resp(N,0);
+  #pragma omp parallel for if(ENABLE_DATA_PARALLELISM) num_threads(NUM_THREADS) 
+  for (int i=0; i<N; i++) {
+    resp[i] = responsibility[c1][i] + responsibility[c2][i];
+  }
+  responsibility_m[index] = resp;
+
+  // adjust effective sample size 
+  Vector sample_size_m(K_m,0);
+  index = 0;
+  for (int i=0; i<K; i++) {
+    if (i != c1 && i != c2) {
+      sample_size_m[index++] = sample_size[i];
+    }
+  }
+  sample_size_m[index] = sample_size[c1] + sample_size[c2];
+
+  // child components
+  std::vector<Kent> components_m(K_m);
+  index = 0;
+  for (int i=0; i<K; i++) {
+    if (i != c1 && i != c2) {
+      components_m[index++] = components[i];
+    }
+  }
+  Mixture joined(1,data,resp);
+  joined.estimateParameters();
+  log << "\t\tResultant join:\n";
+  joined.printParameters(log,2); // print the joined pair mixture
+
+  std::vector<Kent> joined_comp = joined.getComponents();
+  components_m[index++] = joined_comp[0];
+  Vector data_weights_m(N,1);
+  Mixture modified(K-1,components_m,weights_m,sample_size_m,responsibility_m,data,data_weights_m);
+  log << "\t\tBefore adjustment ...\n";
+  modified.printParameters(log,2);
+  modified.EM();
+  log << "\t\tAfter adjustment ...\n";
+  modified.printParameters(log,2);
+  return modified;
+}
+
 /*!
  *  \brief This function generates data to visualize the 2D/3D heat maps.
  *  \param res a long double
@@ -1167,47 +967,25 @@ void Mixture::generateHeatmapData(long double res)
   fbins3D.close();
 }
 
-///*!
-// *  \brief This function computes the nearest component to a given component.
-// *  \param c an integer
-// *  \return the index of the closest component
-// */
-//int Mixture::getNearestComponent(int c)
-//{
-//  int D = components[c].getDimensionality(); 
-//  long double current,dist = LARGE_NUMBER;
-//  int nearest;
-//
-//  if (D != 3) {
-//    // generate a sample from the current component 
-//    int sample_size = 100;
-//    std::vector<Vector > sample = components[c].generate(sample_size);
-//    Vector sum_x(D,0);
-//    for (int i=0; i<sample.size(); i++) {
-//      for (int j=0; j<D; j++) {
-//        sum_x[j] += sample[i][j];
-//      }
-//    }
-//    for (int i=0; i<K; i++) {
-//      if (i != c) {
-//        current = components[c].distance(components[i],sum_x,sample_size);
-//        if (current < dist) {
-//          dist = current;
-//          nearest = i;
-//        }
-//      }
-//    }
-//  } else if (D == 3) {
-//    for (int i=0; i<K; i++) {
-//      if (i != c) {
-//        current = components[c].distance_3D(components[i]);
-//        if (current < dist) {
-//          dist = current;
-//          nearest = i;
-//        }
-//      }
-//    }
-//  }
-//  return nearest;
-//}
-//
+/*!
+ *  \brief This function computes the nearest component to a given component.
+ *  \param c an integer
+ *  \return the index of the closest component
+ */
+int Mixture::getNearestComponent(int c)
+{
+  long double current,dist = LARGE_NUMBER;
+  int nearest;
+
+  for (int i=0; i<K; i++) {
+    if (i != c) {
+      current = components[c].computeKLDivergence(components[i]);
+      if (current < dist) {
+        dist = current;
+        nearest = i;
+      }
+    }
+  }
+  return nearest;
+}
+

@@ -1,5 +1,8 @@
 #include "Optimize.h"
 
+extern int CONSTRAIN_KAPPA;
+extern long double MAX_KAPPA;
+
 Optimize::Optimize(string type)
 {
   if (type.compare("MOMENT") == 0) {
@@ -23,22 +26,32 @@ void Optimize::initialize(double sample_size, Vector &m0, Vector &m1, Vector &m2
   minor = m2;
   kappa = k;
   beta = b;
+  if (CONSTRAIN_KAPPA == SET) {
+    if (kappa >= MAX_KAPPA) {
+      double e = 2 * beta / kappa;
+      kappa = MAX_KAPPA - TOLERANCE;
+      beta = kappa * e / 2;
+    }
+  }
 }
 
 void Optimize::computeEstimates(Vector &sample_mean, Matrix &S, struct Estimates &estimates)
 {
+  computeOrthogonalTransformation(mean,major,psi,alpha,eta);
   switch(estimation) {
     case MOMENT:
     {
       std::vector<double> theta = minimize(sample_mean,S,2);
       estimates.kappa = theta[0];
       estimates.beta = theta[1];
+      estimates.psi = psi;
+      estimates.alpha = alpha;
+      estimates.eta = eta;
       break;
     }
 
     case MLE:
     {
-      computeOrthogonalTransformation(mean,major,psi,alpha,eta);
       std::vector<double> theta = minimize(sample_mean,S,5);
       finalize(theta,estimates);
       break;
@@ -46,7 +59,6 @@ void Optimize::computeEstimates(Vector &sample_mean, Matrix &S, struct Estimates
 
     case MAP:
     {
-      computeOrthogonalTransformation(mean,major,psi,alpha,eta);
       std::vector<double> theta = minimize(sample_mean,S,5);
       finalize(theta,estimates);
       break;
@@ -54,7 +66,6 @@ void Optimize::computeEstimates(Vector &sample_mean, Matrix &S, struct Estimates
 
     case MML_2:
     {
-      computeOrthogonalTransformation(mean,major,psi,alpha,eta);
       std::vector<double> theta = minimize(sample_mean,S,2);
       estimates.kappa = theta[0];
       estimates.beta = theta[1];
@@ -63,12 +74,12 @@ void Optimize::computeEstimates(Vector &sample_mean, Matrix &S, struct Estimates
 
     case MML_5:
     {
-      computeOrthogonalTransformation(mean,major,psi,alpha,eta);
       std::vector<double> theta = minimize(sample_mean,S,5);
       finalize(theta,estimates);
       break;
     }
   }
+  //validate_scale(estimates.kappa,estimates.beta);
 }
 
 void Optimize::finalize(std::vector<double> &theta, struct Estimates &estimates)
@@ -84,13 +95,24 @@ void Optimize::finalize(std::vector<double> &theta, struct Estimates &estimates)
   estimates.minor_axis = kent.MinorAxis();
 }
 
+void Optimize::validate_scale(long double &k, long double &b)
+{
+  if (CONSTRAIN_KAPPA == SET) {
+    if (k > MAX_KAPPA) {
+      double e = 2 * b / k;
+      k = MAX_KAPPA - TOLERANCE;
+      b = k * e / 2;
+    }
+  }
+}
+
 std::vector<double> Optimize::minimize(Vector &sample_mean, Matrix &S, int num_params)
 {
   std::vector<double> x(num_params);
   //nlopt::opt opt(nlopt::LN_NELDERMEAD, num_params);
   nlopt::opt opt(nlopt::LN_COBYLA, num_params);
-  std::vector<double> lb(num_params,TOLERANCE);
-  std::vector<double> ub(num_params,HUGE_VAL);
+  std::vector<double> lb(num_params,1e-10);
+  std::vector<double> ub(num_params,MAX_KAPPA);
 
   // GN_ISRES and GN_ORIG_DIRECT work with finite bounds
   //nlopt::opt opt(nlopt::GN_ISRES, num_params);
