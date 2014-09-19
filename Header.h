@@ -59,13 +59,12 @@ typedef boost::numeric::ublas::zero_matrix<long double> ZeroMatrix;
 #define SET 1 
 #define UNSET 0
 
-#define NUM_METHODS 6 
+#define NUM_METHODS 5 
 #define MOMENT 0 
 #define MLE 1
 #define MAP 2
 #define MML_2 3 // MML SCALE 
-#define MML_3 4 // MML PARTIAL
-#define MML_5 5 // MML FULL
+#define MML_5 4 // MML FULL
 
 #define PRINT_NON_DETAIL 0
 #define PRINT_DETAIL 1

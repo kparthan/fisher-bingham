@@ -11,9 +11,9 @@ void Experiments::plotBias(long double kappa, long double beta)
 {
   std::vector<int> sample_sizes;
   //sample_sizes.push_back(5);
-  //sample_sizes.push_back(10);
-  //sample_sizes.push_back(20);
-  //sample_sizes.push_back(30);
+  sample_sizes.push_back(10);
+  sample_sizes.push_back(20);
+  sample_sizes.push_back(30);
   sample_sizes.push_back(50);
   sample_sizes.push_back(100);
   sample_sizes.push_back(250);

@@ -307,10 +307,8 @@ void Kent::computeExpectation()
   computeConstants();
 
   constants.E_x = Vector(3,0);
-  constants.kappa_E_x = Vector(3,0);
   for (int i=0; i<3; i++) {
     constants.E_x[i] = mu[i] * constants.ck_c;
-    constants.kappa_E_x[i] = kappa * constants.E_x[i];
   }
 
   Matrix expectation_std = ZeroMatrix(3,3);
@@ -321,19 +319,13 @@ void Kent::computeExpectation()
   expectation_std(2,2) = constants.ckk_c;  // lambda_1
   constants.lambda1 = expectation_std(2,2);
 
-  assert(expectation_std(0,0) > 0);
+  /*assert(expectation_std(0,0) > 0);
   assert(expectation_std(1,1) > 0);
-  assert(expectation_std(2,2) > 0);
+  assert(expectation_std(2,2) > 0);*/
   //cout << "E_std: " << expectation_std << endl;
 
   Matrix tmp1 = prod(constants.R,expectation_std);
   constants.E_xx = prod(tmp1,constants.Rt);
-  constants.beta_E_xx = ZeroMatrix(3,3);
-  for (int i=0; i<3; i++) {
-    for (int j=0; j<3; j++) {
-      constants.beta_E_xx(i,j) = constants.E_xx(i,j) * beta;
-    }
-  }
 
   computed = SET;
 }
@@ -552,7 +544,7 @@ void Kent::computeAllEstimators(Vector &sample_mean, Matrix &S, long double N)
   cout << "KL-divergence: " << computeKLDivergence(map_est) << endl << endl;
 
   type = "MML_2";
-  struct Estimates mml_est1 = moment_est;
+  struct Estimates mml_est1 = map_est;
   Optimize opt3(type);
   opt3.initialize(N,mml_est1.mean,mml_est1.major_axis,mml_est1.minor_axis,
                   mml_est1.kappa,mml_est1.beta);
@@ -562,7 +554,7 @@ void Kent::computeAllEstimators(Vector &sample_mean, Matrix &S, long double N)
   cout << "KL-divergence: " << computeKLDivergence(mml_est1) << endl << endl;
 
   type = "MML_5";
-  struct Estimates mml_est2 = moment_est;
+  struct Estimates mml_est2 = map_est;
   Optimize opt4(type);
   opt4.initialize(N,mml_est2.mean,mml_est2.major_axis,mml_est2.minor_axis,
                   mml_est2.kappa,mml_est2.beta);
@@ -584,6 +576,7 @@ void Kent::computeAllEstimators(
 
   string type = "MOMENT";
   struct Estimates moment_est = computeMomentEstimates(sample_mean,S,N);
+  print(type,moment_est);
   all_estimates.push_back(moment_est);
 
   type = "MLE";
@@ -592,6 +585,7 @@ void Kent::computeAllEstimators(
   opt1.initialize(N,ml_est.mean,ml_est.major_axis,ml_est.minor_axis,
                   ml_est.kappa,ml_est.beta);
   opt1.computeEstimates(sample_mean,S,ml_est);
+  print(type,ml_est);
   all_estimates.push_back(ml_est);
 
   type = "MAP";
@@ -600,15 +594,26 @@ void Kent::computeAllEstimators(
   opt2.initialize(N,map_est.mean,map_est.major_axis,map_est.minor_axis,
                   map_est.kappa,map_est.beta);
   opt2.computeEstimates(sample_mean,S,map_est);
+  print(type,map_est);
   all_estimates.push_back(map_est);
 
-  type = "MML_5";
+  type = "MML_2";
   struct Estimates mml_est = moment_est;
   Optimize opt3(type);
   opt3.initialize(N,mml_est.mean,mml_est.major_axis,mml_est.minor_axis,
                   mml_est.kappa,mml_est.beta);
   opt3.computeEstimates(sample_mean,S,mml_est);
   all_estimates.push_back(mml_est);
+  print(type,mml_est);
+
+  type = "MML_5";
+  struct Estimates mml_est2 = map_est;
+  Optimize opt4(type);
+  opt4.initialize(N,mml_est2.mean,mml_est2.major_axis,mml_est2.minor_axis,
+                  mml_est2.kappa,mml_est2.beta);
+  opt4.computeEstimates(sample_mean,S,mml_est2);
+  print(type,mml_est2);
+  all_estimates.push_back(mml_est2);
 }
 
 /*!

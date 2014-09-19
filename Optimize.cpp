@@ -107,7 +107,7 @@ std::vector<double> Optimize::minimize(Vector &sample_mean, Matrix &S, int num_p
       MomentObjectiveFunction moment(mean,major,minor,sample_mean,S,N);
       opt.set_min_objective(MomentObjectiveFunction::wrap, &moment);
       opt.add_inequality_constraint(Constraint2, NULL, TOLERANCE);
-      opt.set_xtol_rel(TOLERANCE);
+      opt.set_xtol_rel(1e-4);
 
       x[0] = kappa; x[1] = beta;
       nlopt::result result = opt.optimize(x, minf);
@@ -151,8 +151,8 @@ std::vector<double> Optimize::minimize(Vector &sample_mean, Matrix &S, int num_p
       opt.set_lower_bounds(lb);
       opt.set_upper_bounds(ub);
 
-      MMLObjectiveFunctionScale mml(psi,alpha,eta,kappa,beta,sample_mean,S,N);
-      opt.set_min_objective(MMLObjectiveFunctionScale::wrap, &mml);
+      MMLObjectiveFunctionScale mml2(psi,alpha,eta,kappa,beta,sample_mean,S,N);
+      opt.set_min_objective(MMLObjectiveFunctionScale::wrap, &mml2);
       opt.add_inequality_constraint(Constraint2, NULL, TOLERANCE);
       opt.set_xtol_rel(1e-4);
 
@@ -168,8 +168,8 @@ std::vector<double> Optimize::minimize(Vector &sample_mean, Matrix &S, int num_p
       ub[0] = PI; ub[1] = 2*PI; ub[2] = 2*PI;
       opt.set_upper_bounds(ub);
 
-      MMLObjectiveFunction mml(sample_mean,S,N);
-      opt.set_min_objective(MMLObjectiveFunction::wrap, &mml);
+      MMLObjectiveFunction mml5(sample_mean,S,N);
+      opt.set_min_objective(MMLObjectiveFunction::wrap, &mml5);
       opt.add_inequality_constraint(Constraint5, NULL, TOLERANCE);
       opt.set_xtol_rel(1e-4);
 

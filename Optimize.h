@@ -82,7 +82,6 @@ class MaximumLikelihoodObjectiveFunction
       Kent kent(psi,alpha,eta,k,b);
       double fval = kent.computeNegativeLogLikelihood(sample_mean,S,N)
                     - 2 * N * log(AOM);
-      //assert(!boost::math::isnan(fval));
       return fval;
     }
 };
@@ -127,7 +126,6 @@ class MAPObjectiveFunction
       long double log_prior = kent.computeLogPriorProbability();
       double fval = -log_prior + kent.computeNegativeLogLikelihood(sample_mean,S,N)
                     - 2 * N * log(AOM);
-      //assert(!boost::math::isnan(fval));
       return fval;
     }
 };
@@ -144,7 +142,7 @@ class MMLObjectiveFunctionScale
 
     double psi,alpha,eta,kappa_init,beta_init;
 
-    double k2;
+    double k2,const_lattk;
 
     double log_prior_axes,log_fisher_axes;
 
@@ -155,11 +153,12 @@ class MMLObjectiveFunctionScale
     ) : psi(psi), alpha(alpha), eta(eta), kappa_init(k), beta_init(b),
         sample_mean(sample_mean), S(S), N(sample_size)
     {
-      k2 = 0.08019;
+      /*k2 = 0.08019;
       Kent kent(psi,alpha,eta,kappa_init,beta_init);
       kent.computeExpectation();
       log_prior_axes = kent.computeLogPriorAxes();
-      log_fisher_axes = kent.computeLogFisherAxes();
+      log_fisher_axes = kent.computeLogFisherAxes();*/
+      const_lattk = -6.455;
     }
 
     static double wrap(
@@ -184,19 +183,10 @@ class MMLObjectiveFunctionScale
       Kent kent(psi,alpha,eta,k,b);
       long double log_prior = kent.computeLogPriorProbability();
       long double log_fisher = kent.computeLogFisherInformation(N);
-      double part1 = log(k2) - log_prior + 0.5 * log_fisher;
-      double part2 = kent.computeNegativeLogLikelihood(sample_mean,S,N) + 1
+      double part1 = const_lattk - log_prior + 0.5 * log_fisher;
+      double part2 = kent.computeNegativeLogLikelihood(sample_mean,S,N) + 2.5
                      - 2 * N * log(AOM);
       double fval = part1 + part2;
-      /*kent.computeExpectation();
-      long double log_prior_scale = kent.computeLogPriorScale();
-      long double log_fisher_scale = kent.computeLogFisherScale();
-      long double log_fisher = log_fisher_axes + log_fisher_scale + 5 * log(N);
-
-      double part1 = log(k2) - log_prior_axes - log_prior_scale + 0.5 * log_fisher;
-      double part2 = kent.computeNegativeLogLikelihood(sample_mean,S,N) + 1
-                     - 2 * N * log(AOM);
-      double fval = part1 + part2;*/
       //assert(!boost::math::isnan(fval));
       return fval;
     }

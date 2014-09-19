@@ -536,6 +536,7 @@ void Test::mml_estimation(void)
 
   Kent kent(m0,m1,m2,kappa,beta);
   random_sample = kent.generate(sample_size);
+  //writeToFile("random_sample.dat",random_sample,3);
   kent.computeAllEstimators(random_sample);
 }
 

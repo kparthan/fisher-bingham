@@ -19,8 +19,8 @@ class Kent  // FB5
       long double log_c,log_cb,log_ck,log_ckk,log_ckb,log_cbb;
       long double ck_c,ckk_c,cb_c,cbb_c,ckb_c;
       long double lambda1,lambda2,lambda3;
-      Vector E_x,kappa_E_x;
-      Matrix E_xx,beta_E_xx;
+      Vector E_x;
+      Matrix E_xx;
       Matrix R,Rt;  // R: standard -> current orientation
       Matrix fisher_axes;
     } constants;
