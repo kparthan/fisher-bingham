@@ -1,4 +1,4 @@
-CFLAGS=-std=c++0x -g 
+CFLAGS=-std=c++0x -g -c -fopenmp
 LDFLAGS=-lboost_program_options -lboost_system -lboost_filesystem -fopenmp -lnlopt -lm
 
 OBJECTS = main.o \
@@ -20,40 +20,40 @@ main: $(OBJECTS)
 	g++ $(OBJECTS) -o $@ $(LDFLAGS) 
 
 main.o: main.cpp 
-	g++ -c $(CFLAGS) $< -o $@
+	g++ $(CFLAGS) $< -o $@
 
 Support.o: Support.cpp Support.h Header.h
-	g++ -c $(CFLAGS) $< -o $@
+	g++ $(CFLAGS) $< -o $@
 
 Normal.o: Normal.cpp Normal.h 
-	g++ -c $(CFLAGS) $< -o $@
+	g++ $(CFLAGS) $< -o $@
 
 vMF.o: vMF.cpp vMF.h Header.h
-	g++ -c $(CFLAGS) $< -o $@
+	g++ $(CFLAGS) $< -o $@
 
 FB4.o: FB4.cpp FB4.h Header.h
-	g++ -c $(CFLAGS) $< -o $@
+	g++ $(CFLAGS) $< -o $@
 
 Kent.o: Kent.cpp Kent.h Header.h
-	g++ -c $(CFLAGS) $< -o $@
+	g++ $(CFLAGS) $< -o $@
 
 FB6.o: FB6.cpp FB6.h Header.h
-	g++ -c $(CFLAGS) $< -o $@
+	g++ $(CFLAGS) $< -o $@
 
 Structure.o: Structure.cpp Structure.h Header.h
-	g++ -c $(CFLAGS) $< -o $@
+	g++ $(CFLAGS) $< -o $@
 
 Mixture.o: Mixture.cpp Mixture.h Header.h
-	g++ -c $(CFLAGS) $< -o $@
+	g++ $(CFLAGS) $< -o $@
 
 Optimize.o: Optimize.cpp Optimize.h Header.h
-	g++ -c $(CFLAGS) $< -o $@
+	g++ $(CFLAGS) $< -o $@
 
 Test.o: Test.cpp Test.h Header.h
-	g++ -c $(CFLAGS) $< -o $@
+	g++ $(CFLAGS) $< -o $@
 
 Experiments.o: Experiments.cpp Experiments.h Header.h
-	g++ -c $(CFLAGS) $< -o $@
+	g++ $(CFLAGS) $< -o $@
 
 clean:
 	rm -f *.o *~ main gmon.out 

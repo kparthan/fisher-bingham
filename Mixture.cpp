@@ -699,11 +699,11 @@ Mixture::generate(int num_samples, bool save_data)
     int k = randomComponent();
     sample_size[k]++;
   }
-  /*ofstream fw("sample_size");
+  ofstream fw("sample_size");
   for (int i=0; i<sample_size.size(); i++) {
     fw << sample_size[i] << endl;
   }
-  fw.close();*/
+  fw.close();
   std::vector<Vector > sample;
   for (int i=0; i<K; i++) {
     std::vector<Vector > x = components[i].generate((int)sample_size[i]);

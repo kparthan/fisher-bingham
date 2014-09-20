@@ -1,4 +1,4 @@
-CFLAGS=-std=c++98 -c -O3 -I/home/parthan/external_libs/
+CFLAGS=-std=c++98 -c -O3 -I/home/parthan/external_libs/ -fopenmp
 LDFLAGS=-static -lboost_program_options -lboost_filesystem -fopenmp -lnlopt -lm
 
 OBJECTS = main.o \
