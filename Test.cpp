@@ -521,7 +521,7 @@ void Test::mml_estimation(void)
   Vector m0,m1,m2;
   long double kappa = 100;
   long double beta = 30;
-  int sample_size = 5;
+  int sample_size = 50;
 
   generateRandomOrthogonalVectors(m0,m1,m2);
   cartesian2spherical(m0,spherical);

@@ -393,9 +393,9 @@ long double Kent::computeLogPriorAxes()
   }
   while (angle > PI) {
     angle -= PI;
-  }
+  }*/
 
-  if (angle < TOLERANCE) angle = TOLERANCE;*/
+  if (angle < TOLERANCE) angle = TOLERANCE;
   
   long double log_prior = 0;
   log_prior += -log(4) - 3*log(PI);
@@ -557,7 +557,7 @@ void Kent::computeAllEstimators(Vector &sample_mean, Matrix &S, long double N)
   struct Estimates mml_est2 = map_est;
   Optimize opt4(type);
   opt4.initialize(N,mml_est2.mean,mml_est2.major_axis,mml_est2.minor_axis,
-                  mml_est2.kappa,mml_est2.beta);
+                  mml_est1.kappa,mml_est2.beta);
   opt4.computeEstimates(sample_mean,S,mml_est2);
   print(type,mml_est2);
   cout << "msglen: " << computeMessageLength(mml_est2,sample_mean,S,N) << endl;
