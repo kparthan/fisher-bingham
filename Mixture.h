@@ -20,13 +20,13 @@ class Mixture
     
     //! Sample (x_i) -- Cartesian coordinates
     //! (on a sphere of unit radius)
-    std::vector<Vector > data;
+    std::vector<Vector> data;
 
     //! Data weights
     Vector data_weights;
 
     //! Responsibility matrix (K X N)
-    std::vector<Vector > responsibility;
+    std::vector<Vector> responsibility;
 
     //! Effective sample size for each component (n_k)
     Vector sample_size;
@@ -51,11 +51,11 @@ class Mixture
     Mixture(int, std::vector<Kent> &, Vector &);
 
     //! Constructor
-    Mixture(int, std::vector<Vector > &, Vector &);
+    Mixture(int, std::vector<Vector> &, Vector &);
 
     //! Constructor
     Mixture(int, std::vector<Kent> &, Vector &, Vector &, 
-            std::vector<Vector > &, std::vector<Vector > &, Vector &);
+            std::vector<Vector> &, std::vector<Vector> &, Vector &);
 
     //! Overloading = operator
     Mixture operator=(const Mixture &);
@@ -76,7 +76,7 @@ class Mixture
     int getNumberOfComponents();
 
     //! Gets the responsibility matrix
-    std::vector<Vector > getResponsibilityMatrix();
+    std::vector<Vector> getResponsibilityMatrix();
 
     //! Gets the sample size
     Vector getSampleSize();
@@ -97,13 +97,13 @@ class Mixture
     void updateResponsibilityMatrix();
 
     //! Computes the responsibility matrix
-    void computeResponsibilityMatrix(std::vector<Vector > &, string &);
+    void computeResponsibilityMatrix(std::vector<Vector> &, string &);
                                           
     //! Probability of a datum
     long double log_probability(Vector &);
 
     //! Computes the negative log likelihood
-    long double negativeLogLikelihood(std::vector<Vector > &);
+    long double negativeLogLikelihood(std::vector<Vector> &);
 
     //! Computes the minimum message length
     long double computeMinimumMessageLength();
@@ -139,16 +139,16 @@ class Mixture
     void load(string &);
 
     //! Loads the mixture file with the corresponding data
-    void load(string &, std::vector<Vector > &, Vector &);
+    void load(string &, std::vector<Vector> &, Vector &);
 
     //! Randomly choose a component
     int randomComponent();
 
     //! Saves the data generated from a component
-    void saveComponentData(int, std::vector<Vector > &);
+    void saveComponentData(int, std::vector<Vector> &);
 
     //! Generate random data from the distribution using mixture proportions
-    std::vector<Vector > generate(int, bool);
+    std::vector<Vector> generate(int, bool);
 
     //! Splits a component
     Mixture split(int, ostream &);

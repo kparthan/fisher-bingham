@@ -64,13 +64,13 @@ class vMF
     long double negativeLogLikelihood(Vector &);
 
     //! Computes the negative log likelihood of a sample
-    long double negativeLogLikelihood(std::vector<Vector > &);
+    long double negativeLogLikelihood(std::vector<Vector> &);
 
     //! Prints the model parameters
     void printParameters(ostream &);
 
     //! Generate random sample
-    std::vector<Vector > generate(int);
+    std::vector<Vector> generate(int);
 
     //! Generate a random canonical sample
     void generateCanonical(std::vector<Vector> &, int);

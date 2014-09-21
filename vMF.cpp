@@ -164,7 +164,7 @@ long double vMF::negativeLogLikelihood(Vector &x)
  *  \param sample a reference to a vector<vector<long double> >
  *  \return the negative log likelihood (base e)
  */
-long double vMF::negativeLogLikelihood(std::vector<Vector > &sample)
+long double vMF::negativeLogLikelihood(std::vector<Vector> &sample)
 {
   long double value = 0;
   int N = sample.size();
@@ -210,7 +210,7 @@ void vMF::printParameters(ostream &os)
  *  \param sample_size an integer
  *  \return the random list of points
  */
-void vMF::generateCanonical(std::vector<Vector > &canonical_sample, int sample_size)
+void vMF::generateCanonical(std::vector<Vector> &canonical_sample, int sample_size)
 {
   canonical_sample.clear();
   int count = 0;
@@ -261,7 +261,7 @@ void vMF::generateCanonical(std::vector<Vector > &canonical_sample, int sample_s
  *  \param sample_size an integer
  *  \return the random list of points
  */
-std::vector<Vector > vMF::generate(int sample_size)
+std::vector<Vector> vMF::generate(int sample_size)
 {
   cout << "\nGenerating from vMF with mean: ";
   if (D == 3) {
@@ -276,7 +276,7 @@ std::vector<Vector > vMF::generate(int sample_size)
          << "] and sample size = " << sample_size;
   }
   if (sample_size != 0) {
-    std::vector<Vector > canonical_sample;
+    std::vector<Vector> canonical_sample;
     generateCanonical(canonical_sample,sample_size);
     if (fabs(mu[D-1] - 1) <= TOLERANCE) {  // check if mu is Z-axis
       return canonical_sample;

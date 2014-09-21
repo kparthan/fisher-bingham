@@ -88,7 +88,7 @@ std::vector<Vector> FB4::generate(int sample_size)
   cout << "minor: "; print(cout,minor_axis,3); cout << endl;
   cout << "Kappa: " << kappa << "; Gamma: " << gamma 
        << "; sample size: " << sample_size << endl;
-  std::vector<Vector > canonical_sample = generateCanonical(sample_size);
+  std::vector<Vector> canonical_sample = generateCanonical(sample_size);
   Matrix transformation = computeOrthogonalTransformation(mu,major_axis);
   return transform(canonical_sample,transformation);
 }
@@ -274,11 +274,11 @@ Vector FB4::generate_spherical_coordinates(Vector &u)
 /*!
  *  step 3 (of FB6_0) : transformation to (unit) Cartesian coordinates
  */
-std::vector<Vector > FB4::generate_cartesian_coordinates(
+std::vector<Vector> FB4::generate_cartesian_coordinates(
   Vector &u, 
   Vector &phi
 ) {
-  std::vector<Vector > coordinates(u.size());
+  std::vector<Vector> coordinates(u.size());
   Vector x(3,0);
   long double tmp;
   for (int i=0; i<u.size(); i++) {

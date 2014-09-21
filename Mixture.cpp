@@ -34,10 +34,10 @@ Mixture::Mixture(int K, std::vector<Kent> &components, Vector &weights):
 /*!
  *  \brief This is a constructor function.
  *  \param K an integer
- *  \param data a reference to a std::vector<Vector >
+ *  \param data a reference to a std::vector<Vector>
  *  \param data_weights a reference to a Vector
  */
-Mixture::Mixture(int K, std::vector<Vector > &data, Vector &data_weights) : 
+Mixture::Mixture(int K, std::vector<Vector> &data, Vector &data_weights) : 
                  K(K), data(data), data_weights(data_weights)
 {
   id = MIXTURE_ID++;
@@ -52,8 +52,8 @@ Mixture::Mixture(int K, std::vector<Vector > &data, Vector &data_weights) :
  *  \param components a reference to a std::vector<Kent>
  *  \param weights a reference to a Vector
  *  \param sample_size a reference to a Vector
- *  \param responsibility a reference to a std::vector<Vector >
- *  \param data a reference to a std::vector<Vector >
+ *  \param responsibility a reference to a std::vector<Vector>
+ *  \param data a reference to a std::vector<Vector>
  *  \param data_weights a reference to a Vector
  */
 Mixture::Mixture(
@@ -61,8 +61,8 @@ Mixture::Mixture(
   std::vector<Kent> &components, 
   Vector &weights,
   Vector &sample_size, 
-  std::vector<Vector > &responsibility,
-  std::vector<Vector > &data,
+  std::vector<Vector> &responsibility,
+  std::vector<Vector> &data,
   Vector &data_weights
 ) : K(K), components(components), weights(weights), sample_size(sample_size),
     responsibility(responsibility), data(data), data_weights(data_weights)
@@ -145,7 +145,7 @@ int Mixture::getNumberOfComponents()
 /*!
  *  \brief This function returns the responsibility matrix.
  */
-std::vector<Vector > Mixture::getResponsibilityMatrix()
+std::vector<Vector> Mixture::getResponsibilityMatrix()
 {
   return responsibility;
 }
@@ -170,7 +170,7 @@ void Mixture::initialize()
   // initialize responsibility matrix
   //srand(time(NULL));
   Vector tmp(N,0);
-  responsibility = std::vector<Vector >(K,tmp);
+  responsibility = std::vector<Vector>(K,tmp);
   /*for (int i=0; i<K; i++) {
     responsibility.push_back(tmp);
   }*/
@@ -264,12 +264,12 @@ void Mixture::updateResponsibilityMatrix()
 /*!
  *  \brief This function updates the terms in the responsibility matrix.
  */
-void Mixture::computeResponsibilityMatrix(std::vector<Vector > &sample,
+void Mixture::computeResponsibilityMatrix(std::vector<Vector> &sample,
                                           string &output_file)
 {
   int sample_size = sample.size();
   Vector tmp(sample_size,0);
-  std::vector<Vector > resp(K,tmp);
+  std::vector<Vector> resp(K,tmp);
   #pragma omp parallel for if(ENABLE_DATA_PARALLELISM) num_threads(NUM_THREADS) //private(j)
   for (int i=0; i<sample_size; i++) {
     Vector log_densities(K,0);
@@ -328,7 +328,7 @@ long double Mixture::log_probability(Vector &x)
  *  \param a reference to a std::vector<array<long double,2> >
  *  \return the negative log likelihood (base e)
  */
-long double Mixture::negativeLogLikelihood(std::vector<Vector > &sample)
+long double Mixture::negativeLogLikelihood(std::vector<Vector> &sample)
 {
   long double value = 0,log_density;
   #pragma omp parallel for if(ENABLE_DATA_PARALLELISM) num_threads(NUM_THREADS) private(log_density) reduction(-:value)
@@ -625,17 +625,17 @@ void Mixture::load(string &file_name)
  *  corresponding to the given data.
  *  \param file_name a reference to a string
  *  \param D an integer
- *  \param d a reference to a std::vector<Vector >
+ *  \param d a reference to a std::vector<Vector>
  *  \param dw a reference to a Vector
  */
-void Mixture::load(string &file_name, std::vector<Vector > &d, Vector &dw)
+void Mixture::load(string &file_name, std::vector<Vector> &d, Vector &dw)
 {
   load(file_name);
   data = d;
   N = data.size();
   data_weights = dw;
   Vector tmp(N,0);
-  responsibility = std::vector<Vector >(K,tmp);
+  responsibility = std::vector<Vector>(K,tmp);
   /*for (int i=0; i<K; i++) {
     responsibility.push_back(tmp);
   }*/
@@ -666,9 +666,9 @@ int Mixture::randomComponent()
 /*!
  *  \brief This function saves the data generated from a component to a file.
  *  \param index an integer
- *  \param data a reference to a std::vector<Vector >
+ *  \param data a reference to a std::vector<Vector>
  */
-void Mixture::saveComponentData(int index, std::vector<Vector > &data)
+void Mixture::saveComponentData(int index, std::vector<Vector> &data)
 {
   string data_file = "./visualize/comp";
   data_file += boost::lexical_cast<string>(index+1) + ".dat";
@@ -690,7 +690,7 @@ void Mixture::saveComponentData(int index, std::vector<Vector > &data)
  *  \param save_data a boolean variable
  *  \return the random sample
  */
-std::vector<Vector >
+std::vector<Vector>
 Mixture::generate(int num_samples, bool save_data) 
 {
   sample_size = Vector(K,0);
@@ -704,9 +704,9 @@ Mixture::generate(int num_samples, bool save_data)
     fw << sample_size[i] << endl;
   }
   fw.close();
-  std::vector<Vector > sample;
+  std::vector<Vector> sample;
   for (int i=0; i<K; i++) {
-    std::vector<Vector > x = components[i].generate((int)sample_size[i]);
+    std::vector<Vector> x = components[i].generate((int)sample_size[i]);
     if (save_data) {
       saveComponentData(i,x);
     }
@@ -739,7 +739,7 @@ Mixture Mixture::split(int c, ostream &log)
   weights_c[1] *= weights[c];
 
   // adjust responsibility matrix
-  std::vector<Vector > responsibility_c = m.getResponsibilityMatrix();
+  std::vector<Vector> responsibility_c = m.getResponsibilityMatrix();
   for (int i=0; i<2; i++) {
     #pragma omp parallel for if(ENABLE_DATA_PARALLELISM) num_threads(NUM_THREADS) 
     for (int j=0; j<N; j++) {
@@ -763,7 +763,7 @@ Mixture Mixture::split(int c, ostream &log)
 
   // merge with the remaining components
   int K_m = K + 1;
-  std::vector<Vector > responsibility_m(K_m);
+  std::vector<Vector> responsibility_m(K_m);
   Vector weights_m(K_m,0),sample_size_m(K_m,0);
   std::vector<Kent> components_m(K_m);
   int index = 0;
@@ -819,7 +819,7 @@ Mixture Mixture::kill(int c, ostream &log)
 
   // adjust responsibility matrix
   Vector resp(N,0);
-  std::vector<Vector > responsibility_m(K_m,resp);
+  std::vector<Vector> responsibility_m(K_m,resp);
   index = 0;
   for (int i=0; i<K; i++) {
     if (i != c) {
@@ -886,7 +886,7 @@ Mixture Mixture::join(int c1, int c2, ostream &log)
   weights_m[index] = weights[c1] + weights[c2];
 
   // adjust responsibility matrix
-  std::vector<Vector > responsibility_m(K_m);
+  std::vector<Vector> responsibility_m(K_m);
   index = 0;
   for (int i=0; i<K; i++) {
     if (i != c1 && i != c2) {

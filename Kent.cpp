@@ -565,7 +565,7 @@ void Kent::computeAllEstimators(Vector &sample_mean, Matrix &S, long double N)
 }
 
 void Kent::computeAllEstimators(
-  std::vector<Vector > &data, 
+  std::vector<Vector> &data, 
   std::vector<struct Estimates> &all_estimates
 ) {
   int N = data.size();
@@ -598,7 +598,7 @@ void Kent::computeAllEstimators(
   all_estimates.push_back(map_est);
 
   type = "MML_2";
-  struct Estimates mml_est = moment_est;
+  struct Estimates mml_est = map_est;
   Optimize opt3(type);
   opt3.initialize(N,mml_est.mean,mml_est.major_axis,mml_est.minor_axis,
                   mml_est.kappa,mml_est.beta);
@@ -767,7 +767,7 @@ struct Estimates Kent::computeMMLEstimates(Vector &sample_mean, Matrix &S, long 
   cout << "msglen: " << msglen << endl;
   cout << "msglen (bpr): " << msglen/N << endl;
 
-  if (N > 10) {
+  /*if (N > 10) {
     //type = "MML_2";
     type = "MML_5";
     Optimize opt(type);
@@ -778,11 +778,11 @@ struct Estimates Kent::computeMMLEstimates(Vector &sample_mean, Matrix &S, long 
     msglen = computeMessageLength(estimates,sample_mean,S,N);
     cout << "msglen: " << msglen << endl;
     cout << "msglen (bpr): " << msglen/N << endl;
-  }
+  }*/
   return estimates;
 }
 
-void Kent::estimateParameters(std::vector<Vector > &data, Vector &weights)
+void Kent::estimateParameters(std::vector<Vector> &data, Vector &weights)
 {
   long double Neff;
   Vector sample_mean = computeVectorSum(data,weights,Neff);

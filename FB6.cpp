@@ -59,7 +59,7 @@ std::vector<Vector> FB6::generate(int sample_size)
   cout << "minor: "; print(cout,minor_axis,3); cout << endl;
   cout << "Kappa: " << kappa << "; Beta: " << beta << "; Gamma: " << gamma 
        << "; sample size: " << sample_size << endl;
-  std::vector<Vector > canonical_sample = generateCanonical(sample_size);
+  std::vector<Vector> canonical_sample = generateCanonical(sample_size);
   Matrix transformation = computeOrthogonalTransformation(mu,major_axis);
   return transform(canonical_sample,transformation);
 }
@@ -107,7 +107,7 @@ std::vector<Vector> FB6::generateCanonical(int sample_size)
     Vector phi(sample_size,0);
     long double p,delta,psi,angle;
     Vector vmf2dmean(2,0); vmf2dmean[0] = 1; 
-    std::vector<Vector > random_sample;
+    std::vector<Vector> random_sample;
     Vector x;
     for (int i=0; i<sample_size; i++) {
       // generate delta from Bernoulli distribution

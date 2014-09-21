@@ -9,10 +9,10 @@ Structure::Structure()
 
 /*!
  *  \brief This is a constructor function used to instantiate the object 
- *  \param unit_coordinates a reference to a std::vector<Vector > 
+ *  \param unit_coordinates a reference to a std::vector<Vector> 
  *  \param name a reference to a string
  */
-Structure::Structure(std::vector<Vector > &unit_coordinates, string &name) :
+Structure::Structure(std::vector<Vector> &unit_coordinates, string &name) :
                      unit_coordinates(unit_coordinates), name(name)
 {}
 
@@ -67,7 +67,7 @@ void Structure::read_profile(string &file_name)
 /*!
  *  \brief This function returns the list of unit coordinates
  */
-std::vector<Vector > Structure::getUnitCoordinates()
+std::vector<Vector> Structure::getUnitCoordinates()
 {
   return unit_coordinates;
 }

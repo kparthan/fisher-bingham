@@ -131,7 +131,7 @@ void Test::productMatrixVector(void)
 void Test::dispersionMatrix(void)
 {
   string file_name = "./visualize/kent.dat";
-  std::vector<Vector > sample = load_matrix(file_name);
+  std::vector<Vector> sample = load_matrix(file_name);
   Vector unit_mean = computeVectorSum(sample);
   cout << "unit_mean: "; print(cout,unit_mean,3); cout << endl;
   Matrix m = computeDispersionMatrix(sample);
@@ -214,7 +214,7 @@ void Test::orthogonalTransformations2(void)
 
 void Test::randomSampleGeneration(void)
 {
-  std::vector<Vector > random_sample;
+  std::vector<Vector> random_sample;
   Vector m0,m1,m2;
   generateRandomOrthogonalVectors(m0,m1,m2);
 
@@ -282,7 +282,7 @@ void Test::normalization_constant(void)
   cout << "d2c_db2: " << constants.log_cbb << endl;
   cout << "d2c_dkdb: " << constants.log_ckb << endl;
 
-  /*std::vector<Vector > random_sample;
+  /*std::vector<Vector> random_sample;
   generateRandomOrthogonalVectors(m0,m1,m2);
   cout << "m0: "; print(cout,m0,0); cout << endl;
   cout << "m1: "; print(cout,m1,0); cout << endl;
@@ -520,8 +520,8 @@ void Test::mml_estimation(void)
   std::vector<Vector> random_sample;
   Vector m0,m1,m2;
   long double kappa = 100;
-  long double beta = 47.5;
-  int sample_size = 10;
+  long double beta = 30;
+  int sample_size = 5;
 
   generateRandomOrthogonalVectors(m0,m1,m2);
   cartesian2spherical(m0,spherical);
@@ -536,7 +536,7 @@ void Test::mml_estimation(void)
 
   Kent kent(m0,m1,m2,kappa,beta);
   random_sample = kent.generate(sample_size);
-  //writeToFile("random_sample.dat",random_sample,3);
+  writeToFile("random_sample.dat",random_sample,3);
   kent.computeAllEstimators(random_sample);
 }
 

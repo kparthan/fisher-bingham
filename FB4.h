@@ -21,9 +21,9 @@ class FB4
 
     long double computeNormalizationConstant(void);
 
-    std::vector<Vector > generate(int);
+    std::vector<Vector> generate(int);
 
-    std::vector<Vector > generateCanonical(int);
+    std::vector<Vector> generateCanonical(int);
 
     Vector generate_u(int);
 

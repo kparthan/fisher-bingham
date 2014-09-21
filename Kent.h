@@ -90,7 +90,7 @@ class Kent  // FB5
 
     void computeAllEstimators(Vector &, Matrix &, long double);
 
-    void computeAllEstimators(std::vector<Vector > &, std::vector<struct Estimates> &);
+    void computeAllEstimators(std::vector<Vector> &, std::vector<struct Estimates> &);
 
     struct Estimates computeMomentEstimates(std::vector<Vector> &);
 
@@ -104,7 +104,7 @@ class Kent  // FB5
 
     struct Estimates computeMMLEstimates(Vector &, Matrix &, long double);
 
-    void estimateParameters(std::vector<Vector > &, Vector &);
+    void estimateParameters(std::vector<Vector> &, Vector &);
 
     void updateParameters(struct Estimates &);
 

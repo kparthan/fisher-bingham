@@ -196,10 +196,10 @@ bool checkFile(string &file_name)
 
 /*!
  *  \brief This module prints the elements of a std::vector<Vector<> > to a file
- *  \param v a reference to std::vector<Vector >
+ *  \param v a reference to std::vector<Vector>
  *  \param file_name a pointer to a const char
  */
-void writeToFile(const char *file_name, std::vector<Vector > &v, int precision)
+void writeToFile(const char *file_name, std::vector<Vector> &v, int precision)
 {
   ofstream file(file_name);
   for (int i=0; i<v.size(); i++) {
@@ -519,9 +519,9 @@ void solveQuadratic(
 
 ////////////////////// GEOMETRY FUNCTIONS \\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
-std::vector<Vector > load_matrix(string &file_name)
+std::vector<Vector> load_matrix(string &file_name)
 {
-  std::vector<Vector > sample;
+  std::vector<Vector> sample;
   ifstream file(file_name.c_str());
   string line;
   Vector numbers(3,0),unit_vector(3,0);
@@ -633,7 +633,7 @@ long double determinant(Matrix &m)
 /*!
  *  Computes \sum x (x is a vector)
  */
-Vector computeVectorSum(std::vector<Vector > &sample) 
+Vector computeVectorSum(std::vector<Vector> &sample) 
 {
   int d = sample[0].size();
   Vector sum(d,0);
@@ -645,7 +645,7 @@ Vector computeVectorSum(std::vector<Vector > &sample)
   return sum;
 }
 
-Vector computeVectorSum(std::vector<Vector > &sample, Vector &weights, long double &Neff) 
+Vector computeVectorSum(std::vector<Vector> &sample, Vector &weights, long double &Neff) 
 {
   int d = sample[0].size();
   Vector sum(d,0);
@@ -662,7 +662,7 @@ Vector computeVectorSum(std::vector<Vector > &sample, Vector &weights, long doub
 /*!
  *  Computes \sum x / N (x is a vector)
  */
-Vector computeNormalizedVectorSum(std::vector<Vector > &sample) 
+Vector computeNormalizedVectorSum(std::vector<Vector> &sample) 
 {
   Vector sum = computeVectorSum(sample);
   for (int j=0; j<sum.size(); j++) {
@@ -674,7 +674,7 @@ Vector computeNormalizedVectorSum(std::vector<Vector > &sample)
 /*!
  *  Computes \sum x * x' (x is a vector)
  */
-Matrix computeDispersionMatrix(std::vector<Vector > &sample)
+Matrix computeDispersionMatrix(std::vector<Vector> &sample)
 {
   int d = sample[0].size();
   Matrix dispersion = ZeroMatrix(d,d);
@@ -684,7 +684,7 @@ Matrix computeDispersionMatrix(std::vector<Vector > &sample)
   return dispersion;
 }
 
-Matrix computeDispersionMatrix(std::vector<Vector > &sample, Vector &weights)
+Matrix computeDispersionMatrix(std::vector<Vector> &sample, Vector &weights)
 {
   int d = sample[0].size();
   Matrix dispersion = ZeroMatrix(d,d);
@@ -699,7 +699,7 @@ Matrix computeDispersionMatrix(std::vector<Vector > &sample, Vector &weights)
 /*!
  *  Computes \sum x * x' / N (x is a vector)
  */
-Matrix computeNormalizedDispersionMatrix(std::vector<Vector > &sample)
+Matrix computeNormalizedDispersionMatrix(std::vector<Vector> &sample)
 {
   Matrix dispersion = computeDispersionMatrix(sample);
   return dispersion/sample.size();
@@ -838,11 +838,11 @@ void generateRandomOrthogonalVectors(
  *  \param T a reference to a Matrix<long double>
  *  \return the transformed vector list
  */
-std::vector<Vector > transform(
-  std::vector<Vector > &x, 
+std::vector<Vector> transform(
+  std::vector<Vector> &x, 
   Matrix &T
 ) {
-  std::vector<Vector > y(x.size());
+  std::vector<Vector> y(x.size());
   for (int i=0; i<x.size(); i++) {
     y[i] = prod(T,x[i]);
   }
@@ -1045,7 +1045,7 @@ long double computeConstantTerm(int d)
  *  \param res a long double
  *  \param unit_coordinates a reference to a vector<vector<long double> > 
  */
-std::vector<std::vector<int> > updateBins(std::vector<Vector > &unit_coordinates, long double res)
+std::vector<std::vector<int> > updateBins(std::vector<Vector> &unit_coordinates, long double res)
 {
   std::vector<std::vector<int> > bins;
   int num_rows = 180 / res;
@@ -1127,7 +1127,7 @@ void outputBins(std::vector<std::vector<int> > &bins, long double res)
  */
 void computeEstimators(struct Parameters &parameters)
 {
-  std::vector<Vector > unit_coordinates;
+  std::vector<Vector> unit_coordinates;
   bool success = gatherData(parameters,unit_coordinates);
   if (parameters.heat_map == SET) {
     std::vector<std::vector<int> > bins = updateBins(unit_coordinates,parameters.res);
@@ -1144,9 +1144,9 @@ void computeEstimators(struct Parameters &parameters)
  *  \brief This function reads through the profiles from a given directory
  *  and collects the data to do mixture modelling.
  *  \param parameters a reference to a struct Parameters
- *  \param unit_coordinates a reference to a std::vector<Vector >
+ *  \param unit_coordinates a reference to a std::vector<Vector>
  */
-bool gatherData(struct Parameters &parameters, std::vector<Vector > &unit_coordinates)
+bool gatherData(struct Parameters &parameters, std::vector<Vector> &unit_coordinates)
 {
   if (parameters.profile_file.compare("") == 0) {
     path p(parameters.profiles_dir);
@@ -1157,7 +1157,7 @@ bool gatherData(struct Parameters &parameters, std::vector<Vector > &unit_coordi
         copy(directory_iterator(p), directory_iterator(), back_inserter(files));
         cout << "# of profiles: " << files.size() << endl;
         int tid;
-        std::vector<std::vector<Vector > > _unit_coordinates(NUM_THREADS);
+        std::vector<std::vector<Vector> > _unit_coordinates(NUM_THREADS);
         #pragma omp parallel num_threads(NUM_THREADS) private(tid)
         {
           tid = omp_get_thread_num();
@@ -1168,7 +1168,7 @@ bool gatherData(struct Parameters &parameters, std::vector<Vector > &unit_coordi
           for (int i=0; i<files.size(); i++) {
             Structure structure;
             structure.load(files[i]);
-            std::vector<Vector > coords = structure.getUnitCoordinates();
+            std::vector<Vector> coords = structure.getUnitCoordinates();
             for (int j=0; j<coords.size(); j++) {
               _unit_coordinates[tid].push_back(coords[j]);
             }
@@ -1208,7 +1208,7 @@ bool gatherData(struct Parameters &parameters, std::vector<Vector > &unit_coordi
  */
 void simulateMixtureModel(struct Parameters &parameters)
 {
-  std::vector<Vector > data;
+  std::vector<Vector> data;
   if (parameters.load_mixture == SET) {
     Mixture original;
     original.load(parameters.mixture_file);
@@ -1332,9 +1332,9 @@ Vector generateRandomBetas(Vector &kappas)
 /*!
  *  \brief This function models a single component.
  *  \param parameters a reference to a struct Parameters
- *  \param data a reference to a std::vector<Vector >
+ *  \param data a reference to a std::vector<Vector>
  */
-void modelOneComponent(struct Parameters &parameters, std::vector<Vector > &data)
+void modelOneComponent(struct Parameters &parameters, std::vector<Vector> &data)
 {
   cout << "Sample size: " << data.size() << endl;
   Kent kent;
@@ -1349,7 +1349,7 @@ void modelOneComponent(struct Parameters &parameters, std::vector<Vector > &data
  *  \param parameters a reference to a struct Parameters
  *  \param data a reference to a std::vector<std::vector<long double,3> >
  */
-void modelMixture(struct Parameters &parameters, std::vector<Vector > &data)
+void modelMixture(struct Parameters &parameters, std::vector<Vector> &data)
 {
   Vector data_weights(data.size(),1);
   // if the optimal number of components need to be determined
@@ -1500,8 +1500,9 @@ void RunExperiments(int iterations)
   Experiments experiments(iterations);
 
   //experiments.plotBias(10,4.5);
-  //experiments.plotBias(10,3);
-  experiments.plotBias(100,30);
+  experiments.plotBias(10,3);
+  //experiments.plotBias(100,30);
+  //experiments.plotBias(100,45);
 }
 
 /*!
@@ -1575,6 +1576,20 @@ int partition(Vector &list, std::vector<int> &index, int left, int right)
 	return storeIndex;
 }
 
+std::vector<Vector> flip(std::vector<Vector> &table)
+{
+  int num_rows = table.size();
+  Vector empty_vector(num_rows,0);
+  int num_cols = table[0].size();
+  std::vector<Vector> inverted_table(num_cols,empty_vector);
+  for (int i=0; i<num_cols; i++) {
+    for (int j=0; j<num_rows; j++) {
+      inverted_table[i][j] = table[j][i];
+    }
+  }
+  return inverted_table;
+}
+
 /*!
  *  \brief This module computes the median of a sorted set of samples
  *  \param list a reference to a std::vector<double>
@@ -1591,6 +1606,17 @@ long double computeMedian(Vector &list)
   }
 }
 
+Vector computeMedians(std::vector<Vector> &table)
+{
+  std::vector<Vector> inverted_table = flip(table);
+  int num_cols = table[0].size();
+  Vector medians(num_cols,0);
+  for (int i=0; i<num_cols; i++) {
+    medians[i] = computeMedian(inverted_table[i]);
+  }
+  return medians;
+}
+
 /*!
  *  \brief This module computes the mean of a set of samples
  *  \param list a reference to a std::vector<double>
@@ -1603,6 +1629,17 @@ long double computeMean(Vector &list)
     sum += list[i];
   }
   return sum / (long double)list.size();
+}
+
+Vector computeMeans(std::vector<Vector> &table)
+{
+  std::vector<Vector> inverted_table = flip(table);
+  int num_cols = table[0].size();
+  Vector means(num_cols,0);
+  for (int i=0; i<num_cols; i++) {
+    means[i] = computeMean(inverted_table[i]);
+  }
+  return means;
 }
 
 /*!

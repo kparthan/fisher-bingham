@@ -123,7 +123,7 @@ class MAPObjectiveFunction
       double b = x[4];
 
       Kent kent(psi,alpha,eta,k,b);
-      long double log_prior = kent.computeLogPriorProbability();
+      long double log_prior = kent.computeLogPriorProbability();// - log(sin(alpha));
       double fval = -log_prior + kent.computeNegativeLogLikelihood(sample_mean,S,N)
                     - 2 * N * log(AOM);
       return fval;
@@ -217,6 +217,9 @@ class MMLObjectiveFunction
       const std::vector<double> &x, 
       std::vector<double> &grad, 
       void *data) {
+        for (int i=0; i<x.size(); i++) {
+          assert(!boost::math::isnan(x[i]));
+        }
         return (*reinterpret_cast<MMLObjectiveFunction*>(data))(x, grad); 
     }
 
