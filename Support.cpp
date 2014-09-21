@@ -1245,10 +1245,12 @@ void simulateMixtureModel(struct Parameters &parameters)
     file.close();
   }
   // model a mixture using the original data
-  if (parameters.mixture_model == UNSET) {
-    modelOneComponent(parameters,data);
-  } else if (parameters.mixture_model == SET) {
-    modelMixture(parameters,data);
+  if (parameters.heat_map == UNSET) {
+    if (parameters.mixture_model == UNSET) {
+      modelOneComponent(parameters,data);
+    } else if (parameters.mixture_model == SET) {
+      modelMixture(parameters,data);
+    }
   }
 }
 
