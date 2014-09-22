@@ -841,6 +841,7 @@ long double Kent::Beta()
   return beta;
 }
 
+// 'other' is the approximate to the true distribution
 long double Kent::computeKLDivergence(Kent &other)
 {
   struct Constants constants1 = getConstants();
@@ -876,6 +877,13 @@ long double Kent::computeKLDivergence(struct Estimates &estimates)
   Kent kent_est(estimates.mean,estimates.major_axis,estimates.minor_axis,
                 estimates.kappa,estimates.beta);
   return computeKLDivergence(kent_est);
+}
+
+long double Kent::computeMessageLength(std::vector<Vector> &data)
+{
+  Vector sample_mean = computeVectorSum(data);
+  Matrix S = computeDispersionMatrix(data);
+  return computeMessageLength(sample_mean,S,data.size());
 }
 
 long double Kent::computeMessageLength(Vector &sample_mean, Matrix &S, long double N)

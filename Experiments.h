@@ -11,7 +11,21 @@ class Experiments
   public:
     Experiments(int);
 
-    void plotBias(long double, long double);
+    void simulate(long double, long double);
+
+    void computeMeasures(long double, long double, std::vector<Vector> &, std::vector<Vector> &);
+
+    void computeBias(ostream &, long double, std::vector<Vector> &);
+
+    void computeVariance(ostream &, long double, std::vector<Vector> &);
+
+    void computeMeanAbsoluteError(ostream &, long double, std::vector<Vector> &);
+
+    void computeMeanSquaredError(ostream &, long double, std::vector<Vector> &);
+
+    void computeMedians(ostream &, std::vector<Vector> &);
+
+    void computeMeans(ostream &, std::vector<Vector> &);
 };
 
 #endif

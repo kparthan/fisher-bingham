@@ -122,6 +122,8 @@ class Kent  // FB5
 
     long double computeKLDivergence(struct Estimates &);
 
+    long double computeMessageLength(std::vector<Vector> &);
+
     long double computeMessageLength(Vector &, Matrix &, long double);
 
     long double computeMessageLength(struct Estimates &, Vector &, Matrix &, long double);
