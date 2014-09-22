@@ -406,14 +406,23 @@ long double Kent::computeLogPriorAxes()
 long double Kent::computeLogPriorScale()
 {
   long double log_prior = 0;
-  log_prior += log(kappa);
+  /*log_prior += log(-log(TOLERANCE)) - log(1-TOLERANCE);
+  log_prior += 2 * log(kappa); 
   log_prior -= 2 * log(1+kappa*kappa);
-  log_prior += log(8/PI);
-  /*log_prior += 2 * log(4/PI);
+  log_prior += log(8/PI);*/
+  /*log_prior += log(4/PI);
   log_prior += 2 * log(kappa);
   log_prior -= 2 * log(1+kappa*kappa);
   log_prior += 2 * log(beta);
-  log_prior -= 2 * log(1+beta*beta);*/
+  log_prior -= 2 * log(1+beta*beta);
+  long double cinv = 0.5 * atan(kappa/2.0);
+  long double tmp = kappa + (4/kappa);
+  cinv -= 1/tmp;
+  log_prior -= log(cinv);*/
+  long double ex = (2 * beta) / kappa;
+  log_prior -= (log(PI-2) - log(8));
+  log_prior += 2 * log(ex);
+  log_prior -= 2 * log(1+ex*ex);
   return log_prior;
 }
 
@@ -557,7 +566,7 @@ void Kent::computeAllEstimators(Vector &sample_mean, Matrix &S, long double N)
   struct Estimates mml_est2 = map_est;
   Optimize opt4(type);
   opt4.initialize(N,mml_est2.mean,mml_est2.major_axis,mml_est2.minor_axis,
-                  mml_est1.kappa,mml_est2.beta);
+                  mml_est2.kappa,mml_est2.beta);
   opt4.computeEstimates(sample_mean,S,mml_est2);
   print(type,mml_est2);
   cout << "msglen: " << computeMessageLength(mml_est2,sample_mean,S,N) << endl;
