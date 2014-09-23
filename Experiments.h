@@ -13,7 +13,11 @@ class Experiments
 
     void simulate(long double, long double);
 
-    void computeMeasures(long double, long double, std::vector<Vector> &, std::vector<Vector> &);
+    void computeMeasures(long double, long double, std::vector<Vector> &, std::vector<Vector> &, int);
+
+    Vector computeEstimateMedians(ostream &, std::vector<Vector> &);
+
+    Vector computeEstimateMeans(ostream &, std::vector<Vector> &);
 
     void computeBias(ostream &, long double, std::vector<Vector> &);
 
@@ -22,10 +26,6 @@ class Experiments
     void computeMeanAbsoluteError(ostream &, long double, std::vector<Vector> &);
 
     void computeMeanSquaredError(ostream &, long double, std::vector<Vector> &);
-
-    void computeMedians(ostream &, std::vector<Vector> &);
-
-    void computeMeans(ostream &, std::vector<Vector> &);
 };
 
 #endif

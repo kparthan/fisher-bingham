@@ -27,7 +27,7 @@ void Experiments::simulate(long double kappa, long double beta)
   string kappa_str = boost::lexical_cast<string>(kappa);
   string beta_str = boost::lexical_cast<string>(beta);
   string tmp = "k_" + kappa_str + "_b_" + beta_str;
-  string folder = "./experiments/bias_tests/" + tmp + "/";
+  string folder = "./experiments/single_kent/" + tmp + "/";
 
   for (int i=0; i<sample_sizes.size(); i++) { // for each sample size ...
     string size_str = boost::lexical_cast<string>(sample_sizes[i]);
@@ -85,7 +85,7 @@ void Experiments::simulate(long double kappa, long double beta)
       } // if() ends ...
     } // iter loop ends ..
     logk.close(); logb.close(); logneg.close(); logmsg.close(); logkldiv.close();
-    computeMeasures(kappa,beta,kappa_est_all,beta_est_all);
+    computeMeasures(kappa,beta,kappa_est_all,beta_est_all,sample_sizes[i]);
   }
 }
 
@@ -94,34 +94,61 @@ Experiments::computeMeasures(
   long double kappa,
   long double beta,
   std::vector<Vector> &kappa_est_all,
-  std::vector<Vector> &beta_est_all
+  std::vector<Vector> &beta_est_all,
+  int N
 ) {
-  int num_elements = kappa_est_all.size();
-
   long double kappa_est,beta_est,diffk,diffb;
 
   string kappa_str = boost::lexical_cast<string>(kappa);
   string beta_str = boost::lexical_cast<string>(beta);
   string tmp = "k_" + kappa_str + "_b_" + beta_str;
-  string folder = "./experiments/bias_tests/" + tmp + "/";
+  string folder = "./experiments/single_kent/" + tmp + "/";
+
+  string medians_file = folder + "medians_kappa";
+  ofstream mediansk(medians_file.c_str(),ios::app);
+  mediansk << fixed << setw(10) << N << "\t";
+  Vector medians_kappa = computeEstimateMedians(mediansk,kappa_est_all);
+  mediansk.close();
+
+  medians_file = folder + "medians_beta";
+  ofstream mediansb(medians_file.c_str(),ios::app);
+  mediansb << fixed << setw(10) << N << "\t";
+  Vector medians_beta = computeEstimateMedians(mediansb,beta_est_all);
+  mediansb.close();
+
+  string means_file = folder + "means_kappa";
+  ofstream meansk(means_file.c_str(),ios::app);
+  meansk << fixed << setw(10) << N << "\t";
+  Vector means_kappa = computeEstimateMeans(meansk,kappa_est_all);
+  meansk.close();
+
+  means_file = folder + "means_beta";
+  ofstream meansb(means_file.c_str(),ios::app);
+  meansb << fixed << setw(10) << N << "\t";
+  Vector means_beta = computeEstimateMeans(meansb,beta_est_all);
+  meansb.close();
 
   string bias_file = folder + "bias_sq_kappa";
   ofstream biask(bias_file.c_str(),ios::app);
+  biask << fixed << setw(10) << N << "\t";
   computeBias(biask,kappa,kappa_est_all);
   biask.close();
 
   bias_file = folder + "bias_sq_beta";
   ofstream biasb(bias_file.c_str(),ios::app);
+  biasb << fixed << setw(10) << N << "\t";
   computeBias(biasb,beta,beta_est_all);
   biasb.close();
 
   string variance_file = folder + "variance_kappa";
   ofstream variancek(variance_file.c_str(),ios::app);
+  variancek << fixed << setw(10) << N << "\t";
   computeVariance(variancek,kappa,kappa_est_all);
   variancek.close();
 
   variance_file = folder + "variance_beta";
   ofstream varianceb(variance_file.c_str(),ios::app);
+  variancek << fixed << setw(10) << N << "\t";
   computeVariance(varianceb,beta,beta_est_all);
   varianceb.close();
 
@@ -144,49 +171,89 @@ Experiments::computeMeasures(
   ofstream sqd_error_b(error_file.c_str(),ios::app);
   computeMeanSquaredError(sqd_error_b,beta,beta_est_all);
   sqd_error_b.close();
+}
 
-  string medians_file = folder + "medians_kappa";
-  ofstream mediansk(medians_file.c_str(),ios::app);
-  computeMedians(mediansk,kappa_est_all);
-  mediansk.close();
+Vector Experiments::computeEstimateMedians(ostream &out, std::vector<Vector> &p_est_all)
+{
+  Vector medians = computeMedians(p_est_all);
+  for (int i=0; i<NUM_METHODS; i++) {
+    out << scientific << medians[i] << "\t";
+  }
+  out << endl;
+  return medians;
+}
 
-  medians_file = folder + "medians_beta";
-  ofstream mediansb(medians_file.c_str(),ios::app);
-  computeMedians(mediansb,beta_est_all);
-  mediansb.close();
-
-  string means_file = folder + "means_kappa";
-  ofstream meansk(means_file.c_str(),ios::app);
-  computeMeans(meansk,kappa_est_all);
-  meansk.close();
-
-  means_file = folder + "means_beta";
-  ofstream meansb(means_file.c_str(),ios::app);
-  computeMeans(meansb,beta_est_all);
-  meansb.close();
+Vector Experiments::computeEstimateMeans(ostream &out, std::vector<Vector> &p_est_all)
+{
+  Vector means = computeMeans(p_est_all);
+  for (int i=0; i<NUM_METHODS; i++) {
+    out << scientific << means[i] << "\t";
+  }
+  out << endl;
+  return means;
 }
 
 void Experiments::computeBias(ostream &out, long double p, std::vector<Vector> &p_est_all)
 {
+  Vector avg_p_est = computeMeans(p_est_all);
+
+  Vector bias_sq(NUM_METHODS,0);
+  for (int j=0; j<NUM_METHODS; j++) {
+    bias_sq[j] = (p - avg_p_est[j]) * (p - avg_p_est[j]);
+    out << scientific << bias_sq[j] << "\t";
+  }
+  out << endl;
 }
 
 void Experiments::computeVariance(ostream &out, long double p, std::vector<Vector> &p_est_all)
 {
+  Vector avg_p_est = computeMeans(p_est_all);
+  int num_elements = p_est_all.size();
+
+  Vector variance(NUM_METHODS,0);
+  for (int i=0; i<num_elements; i++) {
+    for (int j=0; j<NUM_METHODS; j++) {
+      variance[j] += (avg_p_est[j] - p_est_all[i][j]) * (avg_p_est[j] - p_est_all[i][j]);
+    }
+  }
+  for (int j=0; j<NUM_METHODS; j++) {
+    variance[j] /= num_elements;
+    out << scientific << variance[j] << "\t";
+  }
+  out << endl;
 }
 
 void Experiments::computeMeanAbsoluteError(ostream &out, long double p, std::vector<Vector> &p_est_all)
 {
+  int num_elements = p_est_all.size();
+
+  Vector error(NUM_METHODS,0);
+  for (int i=0; i<num_elements; i++) {
+    for (int j=0; j<NUM_METHODS; j++) {
+      error[j] += fabs(p - p_est_all[i][j]);
+    }
+  }
+  for (int j=0; j<NUM_METHODS; j++) {
+    error[j] /= num_elements;
+    out << scientific << error[j] << "\t";
+  }
+  out << endl;
 }
 
 void Experiments::computeMeanSquaredError(ostream &out, long double p, std::vector<Vector> &p_est_all)
 {
-}
+  int num_elements = p_est_all.size();
 
-void Experiments::computeMedians(ostream &out, std::vector<Vector> &p_est_all)
-{
-}
-
-void Experiments::computeMeans(ostream &out, std::vector<Vector> &p_est_all)
-{
+  Vector error(NUM_METHODS,0);
+  for (int i=0; i<num_elements; i++) {
+    for (int j=0; j<NUM_METHODS; j++) {
+      error[j] += (p - p_est_all[i][j]) * (p - p_est_all[i][j]);
+    }
+  }
+  for (int j=0; j<NUM_METHODS; j++) {
+    error[j] /= num_elements;
+    out << scientific << error[j] << "\t";
+  }
+  out << endl;
 }
 
