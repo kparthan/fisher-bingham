@@ -1668,3 +1668,32 @@ int maximumIndex(Vector &values)
   return max_index;
 }
 
+long double computeRatioBessel(int &d, long double &kappa)
+{
+  long double d2 = d/2.0;
+  long double d2_1 = d2 - 1;
+  long double num,denom;
+
+  num = cyl_bessel_i(d2,kappa);
+  denom = cyl_bessel_i(d2_1,kappa);
+  //cout << "I(" << d2 << "," << k << "): " << num << endl;
+  //cout << "I(" << d2_1 << "," << k << "): " << denom << endl;
+
+  long double ratio = num / denom;
+  //cout << scientific << "A(" << dim << "," << kappa << "): " << ratio << endl;
+
+  return ratio;
+}
+
+long double computeDerivativeOfRatioBessel(int &d, long double &kappa, long double &Ad)
+{
+  long double ans = 1 - (Ad * Ad);
+  if (Ad > 0) {
+    long double log_tmp = log(d-1) + log(Ad) - log(kappa);
+    ans -= exp(log_tmp) ;
+  } else {
+    ans -= (d-1) * Ad / kappa;
+  }
+  return ans;
+}
+

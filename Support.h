@@ -127,5 +127,7 @@ Vector computeMeans(std::vector<Vector> &);
 long double computeVariance(Vector &);
 int maximumIndex(Vector &);
 
+long double computeRatioBessel(int &, long double &);
+long double computeDerivativeOfRatioBessel(int &, long double &, long double &);
 #endif
 

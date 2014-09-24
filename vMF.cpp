@@ -288,7 +288,7 @@ std::vector<Vector> vMF::generate(int sample_size)
     return std::vector<Vector>(); 
   }
 }
-/*
+
 void vMF::computeAllEstimators(
   std::vector<Vector> &data,
   std::vector<struct Estimates_vMF> &all_estimates
@@ -350,5 +350,338 @@ void VonMises::estimateMLApproxKappa(struct Estimates_vMF &estimates)
 
 void VonMises::estimateMLKappa(struct Estimates_vMF &estimates)
 {
+  tryRootFindingMethods(estimates.kappa,
+                        &VonMises::computeFunctionValue_ML,
+                        &VonMises::computeFunctionAndDerivative_ML);
 }
-*/
+
+long double VonMises::computeFunctionValue_ML(long double x)
+{
+  long double A = computeRatioBessel(D,x);                   // A
+  long double Ader = computeDerivativeOfRatioBessel(D,x,A);  // A'
+
+  return A - estimates.Rbar;          // A - Rbar
+}
+
+void VonMises::computeFunctionAndDerivative_ML(
+  long double x, 
+  long double &Fx, 
+  long double &Fx_der
+) {
+  long double A = computeRatioBessel(D,x);                   // A
+  long double Ader = computeDerivativeOfRatioBessel(D,x,A);  // A'
+
+  Fx = A - estimates.Rbar;  // A - Rbar 
+  Fx_der = Ader;            // A'         
+}
+
+void VonMises::tryRootFindingMethods(
+  long double &kappa_est,
+  long double (VonMises::*function_value)(long double),
+  void (VonMises::*function_and_derivative)(long double, long double &, long double &)
+) {
+  array<long double,2> interval;
+  interval[0] = -1; interval[1] = -1;
+
+  long double initial = kappa_est;
+
+  // try newton raphson
+  bool status = 0;
+  status = NewtonRaphson(interval,kappa_est,function_and_derivative);
+
+  if (!status) {  // newton raphson failed ...
+    // check whether interval is valid
+    if (interval[0] > 0 && interval[1] > 0) {
+      status = IntervalBisection(interval,kappa_est,function_value); // unsuitable interval ...
+    }
+    if (!status) {
+      // determine an interval to run the root bisection method
+      status = determineInterval(interval,function_value,initial);
+      if (!status) {
+        cout << "No interval found ...\n";
+        goto stop_searching;
+      } else {
+        status = IntervalBisection(interval,kappa_est,function_value); // try to find a root ...
+      }
+    } 
+  }
+
+  stop_searching:
+  if (!status) {  // every attempt to find a root failed at this point ...
+    kappa_est = initial;
+  }
+}
+
+bool VonMises::NewtonRaphson(
+  array<long double,2> &interval, 
+  long double &kappa_est,
+  void (VonMises::*function_and_derivative)(long double, long double &, long double &)
+) {
+  long double prev = estimates.kappa_ml_approx; // initial value
+  long double current;
+  int NUM_ITERATIONS = 20;
+  long double Fx,Fx_der;
+  long double new_range,current_range;
+
+  for (int iter=1; iter<=NUM_ITERATIONS; iter++) {
+    // get the function and derivative value
+    (this->*function_and_derivative)(prev,Fx,Fx_der);
+
+    //update(iter,prev,current,Fx,Fx_der,kappa_est,interval);
+    if (fabs(Fx) <= ZERO) {
+      assert(prev > 0);
+      kappa_est = prev;
+      cout << "Iteration " << iter << " Fx(" << prev << ") ~ 0" << endl;
+      return 1;
+    } else if (fabs(Fx_der) > TOLERANCE) {
+      current = prev - (Fx/Fx_der);
+      cout << "Iteration " << iter << ": [" << prev << ", " 
+           << current <<  ", " << Fx << ", " << Fx_der << "]" << endl;
+      if (fabs(current - prev) > TOLERANCE) {
+        prev = fabs(current);
+        // check if prev is HUGE ...
+        //if (prev >= DEFAULT_MAX_KAPPA) return 0;
+      } else {
+        cout << "No significant change in Kappa ..." << endl;
+        cout << "current: " << current << endl;
+        if (current < 0) {
+          kappa_est = prev;
+        } else {
+          kappa_est = current;
+        }
+        return 1;
+      }
+    } else if (fabs(Fx_der) <= ZERO) {    // Fx_der ~ 0
+      cout << "Iteration " << iter << ": [" << prev << ", " 
+           << current <<  ", " << Fx << ", " << Fx_der << "]" << endl;
+      cout << "Derivative is zero ..." << endl;
+      //kappa_est = prev;
+      return 0;
+    }
+  } // iter loop ends ...
+
+  cout << "Newton Raphson failed to converge ...\n";
+  return 0;
+}
+
+
+/*!
+ *  \brief This function computes the MML estimate using the Interval
+ *  Bisection method.
+ *  \param interval a reference to an array<long double,2>
+ *  \param kappa_est a reference to a long double
+ *  \param function_value a pointer to a member function that computes the
+ *  function value to minimize
+ *  \return the implementation status : convergence(success) or not
+ */
+bool VonMises::IntervalBisection(
+  array<long double,2> &interval, 
+  long double &kappa_est,
+  long double (VonMises::*function_value)(long double)
+) {
+  long double a = interval[0];
+  long double fa = (this->*function_value)(a);
+  if (fabs(fa) <= ZERO) {
+    kappa_est = a;
+    return 1;
+  }
+  long double b = interval[1];
+  long double fb = (this->*function_value)(b);
+  if (fabs(fb) <= ZERO) {
+    kappa_est = b;
+    return 1;
+  }
+  // assert Fx has opposite signs
+  if ((sign(fa) * sign(fb)) != -1) {
+    cout << "a: " << a << " fa: " << fa;
+    cout << "\tb: " << b << " fb: " << fb << endl;
+    cout << "Unsuitable interval ...\n";
+    return 0;
+  }
+
+  long double mid = (a+b)/ 2;
+  int iter = 1;
+  while(1) {
+    long double fmid = (this->*function_value)(mid);
+    cout << "Iteration " << iter++ << ": [" << a << ", " << b << ", " << mid << ", "
+         << fa << ", " << fb << ", " << fmid << "]\n";
+    if (fabs(fmid) <= ZERO) {
+      kappa_est = mid;
+      return 1;
+    } else if (sign(fa) != sign(fmid)) {
+      b = mid;
+    } else {
+      a = mid;
+    }
+    long double previous = mid;
+    mid = (a + b) / 2;
+    if (fabs(mid - previous) < TOLERANCE) {
+      kappa_est = mid;
+      return 1;
+    }
+    fa = (this->*function_value)(a);
+    fb = (this->*function_value)(b);
+  }
+  return 0;   // should not happen ...
+}
+
+/*!
+ *  \brief This function determines a suitable interval in which the root exists.
+ *  \param interval a reference to an array<long double,2>
+ *  \param function_value a pointer to a member function that computes the
+ *  function value to minimize
+ */
+bool VonMises::determineInterval(
+  array<long double,2> &interval,
+  long double (VonMises::*function_value)(long double),
+  long double kappa_ml_approx
+) {
+  // try to find a value lower than Kappa ML approx ...
+  long double b = kappa_ml_approx;
+  interval[1] = b;
+  long double fb = (this->*function_value)(b);
+  int signb = sign(fb);
+  if (signb == 0) {
+    interval[0] = b;
+    cout << "Interval: (" << interval[0] << ", " << interval[1] << ")\n";
+    return 1;
+  }
+
+  // compute appropriate increment/decrement based on the value of kappa_ml_approx
+  long double CHANGE = 0.01 * kappa_ml_approx;
+
+  cout << "Determining interval ...\n";
+  long double decrement = CHANGE;
+  long double a = b - decrement;
+  long double fa;
+  int signa;
+  while (a > AOM) {
+    fa = (this->*function_value)(a);
+    signa = sign(fa);
+    if (!(signa == 0 || signa == 1 || signa == -1)) {
+      cout << "Error in calculating the function value ...\n";
+      exit(1);
+    }
+    if (signa == 0 || signa * signb == -1) {
+      interval[0] = a;
+      cout << "Interval: (" << interval[0] << ", " << interval[1] << ")\n";
+      return 1;
+    } 
+    a -= decrement;
+  }
+
+  return 0;
+}
+
+void VonMises::estimateMMLKappa(struct Estimates_vMF &estimates)
+{
+  long double prev = estimates.kappa;
+  long double kappa_est,current,num,denom;
+  long double Fx,Fx_der;
+  bool status = 0;
+
+  for (int i=0; i<20; i++) {
+    computeFunctionAndDerivative_MML(prev,Fx,Fx_der);
+    if (fabs(Fx) <= TOLERANCE) {
+      cout << "Iteration " << i+1 << " Fx(" << prev << ") ~ 0" << endl;
+      status = 1;
+      break;
+    }
+
+    current = prev - (Fx/Fx_der);
+    if (current < 0) {
+      status = 0;
+      break;
+    }
+    prev = current;
+  }
+
+  estimates.kappa = prev;
+  if (!status) {
+    array<long double,2> interval;
+    interval[0] = -1; interval[1] = -1;
+    // determine an interval to run the root bisection method
+    status = determineInterval(interval,&VonMises::computeFunctionValue_MML);
+    if (!status) {
+      cout << "No interval found ...\n";
+    } else {
+      status = IntervalBisection(interval,estimates.kappa,&VonMises::computeFunctionValue_MML); // try to find a root ...
+    }
+  } 
+
+  //validate_kappa(kappa_est,estimates.kappa_mml_complete);
+
+  cout << "Kappa (MML Complete): " << estimates.kappa << endl;
+}
+
+void 
+VonMises::computeFunctionAndDerivative_MML(
+  long double x, 
+  long double &Fx, 
+  long double &Fx_der
+) {
+  long double A = computeRatioBessel(D,x);                   // A
+  long double Ader = computeDerivativeOfRatioBessel(D,x,A);  // A'
+  long double Ader_A = Ader / A;                             // A'/A
+  long double A2der_Ader = A2der_Over_Ader(D,x,A,Ader_A);    // A''/A'
+
+  Fx = computeFirstDerivativeOfMsglen(x,A,Ader_A,A2der_Ader);  // dI/dk
+  Fx_der = computeSecondDerivativeOfMsglen(x,A,Ader,Ader_A,A2der_Ader);// d^2 I/dk^2
+  if (boost::math::isnan(Fx) || boost::math::isnan(Fx_der)) {
+    cout << "Error in computeFunctionAndDerivative_MML Fx: ";
+    cout << "x: " << x << endl;
+    cout << "A: " << A << "; Ader: " << Ader << "; Ader_A: " << Ader_A;
+    cout << "; A2der_Ader: " << A2der_Ader << endl;
+    cout << Fx << "; Fx_der: " << Fx_der << endl;
+    //exit(1);
+  }
+}
+
+/*!
+ *  \brief This function computes the first derivative (wrt kappa) of the
+ *  message length expression.
+ *  \param k a reference to a long double
+ *  \param Ad a reference to a long double
+ *  \param Ader_A a reference to a long double
+ *  \param A2der_Ader a reference to a long double
+ *  \return the first derivative value
+ */
+long double 
+VonMises::computeFirstDerivativeOfMsglen(
+  long double &k, 
+  long double &Ad, 
+  long double &Ader_A, 
+  long double &A2der_Ader
+) {
+  long double ans = -(D-1) / (2*k);
+  ans += (D+1) * k / (1 + k*k);
+  ans += ((D-1) /2.0) * Ader_A;
+  ans += A2der_Ader;
+  ans += estimates.Neff * Ad;
+  ans -= estimates.R;
+  return ans;
+}
+
+/*!
+ *  \brief This function computes the first derivative (wrt kappa) of the
+ *  message length expression.
+ *  \param k a reference to a long double
+ *  \param Ad a reference to a long double
+ *  \param Ader a reference to a long double
+ *  \param Ader_A a reference to a long double
+ *  \param A2der_Ader a reference to a long double
+ *  \return the first derivative value
+ */
+long double VonMises::computeSecondDerivativeOfMsglen(
+  long double &k, long double &Ad, long double &Ader, long double &Ader_A, long double &A2der_Ader
+) {
+  long double ksq = k * k;
+  long double ans = (D-1) / (2 * ksq);
+  ans += ((D+1) * (1-ksq)) / ((1+ksq) * (1+ksq));
+  ans += ((D-1)/2.0) * computeDerivativeOf_Ader_A(D,k,Ad,Ader);
+  ans += computeDerivativeOf_A2der_Ader(D,k,Ader,Ader_A,A2der_Ader);
+  ans += estimates.Neff * Ader;
+  return ans;
+}
+
+
