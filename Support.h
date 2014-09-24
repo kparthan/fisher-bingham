@@ -39,6 +39,13 @@ struct Estimates
   long double kappa,beta;
 };
 
+struct Estimates_vMF
+{
+  long double R,Rbar;
+  Vector mean;
+  long double kappa;
+};
+
 // general functions
 struct Parameters parseCommandLineInput (int, char **); 
 void Usage (const char *, options_description &);

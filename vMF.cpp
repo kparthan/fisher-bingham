@@ -289,3 +289,66 @@ std::vector<Vector> vMF::generate(int sample_size)
   }
 }
 
+void vMF::computeAllEstimators(
+  std::vector<Vector> &data,
+  std::vector<struct Estimates_vMF> &all_estimates
+) {
+  all_estimates.clear();
+
+  Vector weights(data.size(),1.0);
+
+  struct Estimates_vMF mlapprox_est;
+  estimateMean(mlapprox_est,data,weights);
+
+  // ML_APPROX
+  estimateMLApproxKappa(mlapprox_est);
+  all_estimates.push_back(mlapprox_est);
+
+  // MLE
+  struct Estimates_vMF ml_est = mlapprox_est;
+  estimateMLKappa(ml_est);
+  all_estimates.push_back(ml_est);
+
+  // MAP
+  struct Estimates_vMF map_est = mlapprox_est;
+  estimateMAPKappa(map_est);
+  all_estimates.push_back(map_est);
+
+  // MML
+  struct Estimates_vMF mml_est = mlapprox_est;
+  estimateMMLKappa(mml_est);
+  all_estimates.push_back(map_est);
+}
+
+void vMF::estimateMean(
+  struct Estimates_vMF &estimates, 
+  std::vector<Vector> &data, 
+  Vector &weights
+) {
+  Vector resultant(3,0);  // resultant direction
+  for (int i=0; i<data.size(); i++) {
+    for (int j=0; j<3; j++) {
+      resultant[j] += data[i][j];
+    }
+  }
+
+  Vector mean(3,0);
+  estimates.R = normalize(resultant,mean); // norm of resultant
+  estimates.Rbar = estimates.R / data.size();
+}
+
+void VonMises::estimateMLApproxKappa(struct Estimates_vMF &estimates)
+{
+  long double rbar = estimates.Rbar;
+  long double num = rbar * (3 - (rbar * rbar));
+  long double denom = 1 - (rbar * rbar);
+
+  estimates.kappa = num / denom;
+
+  cout << "Kappa (ML approx): " << estimates.kappa << endl;
+}
+
+void VonMises::estimateMLKappa(struct Estimates_vMF &estimates)
+{
+}
+

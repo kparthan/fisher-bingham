@@ -776,7 +776,7 @@ struct Estimates Kent::computeMMLEstimates(Vector &sample_mean, Matrix &S, long 
   cout << "msglen: " << msglen << endl;
   cout << "msglen (bpr): " << msglen/N << endl;
 
-  /*if (N > 10) {
+  if (N > 10) {
     //type = "MML_2";
     type = "MML_5";
     Optimize opt(type);
@@ -787,7 +787,7 @@ struct Estimates Kent::computeMMLEstimates(Vector &sample_mean, Matrix &S, long 
     msglen = computeMessageLength(estimates,sample_mean,S,N);
     cout << "msglen: " << msglen << endl;
     cout << "msglen (bpr): " << msglen/N << endl;
-  }*/
+  }
   return estimates;
 }
 
