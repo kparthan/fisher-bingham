@@ -86,6 +86,9 @@ void Experiments::simulate(long double kappa, long double beta)
     } // iter loop ends ..
     logk.close(); logb.close(); logneg.close(); logmsg.close(); logkldiv.close();
     computeMeasures(kappa,beta,kappa_est_all,beta_est_all,sample_sizes[i]);
+    computeWinsRatio(1,"negloglikhd",negloglkhd_file,sample_sizes[i],folder);
+    computeWinsRatio(1,"msglen",msglens_file,sample_sizes[i],folder);
+    computeWinsRatio(0,"kldiv",kldvg_file,sample_sizes[i],folder);
   }
 }
 
@@ -255,5 +258,68 @@ void Experiments::computeMeanSquaredError(ostream &out, long double p, std::vect
     out << scientific << error[j] << "\t";
   }
   out << endl;
+}
+
+void 
+Experiments::computeWinsRatio(
+  bool ignore_first, 
+  const char *measure, 
+  string input_file, 
+  int N,
+  string folder
+) {
+  ifstream input(input_file.c_str());
+  // read values from the file
+  string line;
+  int start;
+  if (ignore_first == 0) {
+    start = 1;
+  } else if (ignore_first == 1) {
+    start = 2;
+  }
+  Vector numbers;
+  std::vector<Vector> table;
+  while (getline(input,line)) {
+    boost::char_separator<char> sep(" \t");
+    boost::tokenizer<boost::char_separator<char> > tokens(line,sep);
+    BOOST_FOREACH (const string& t, tokens) {
+      istringstream iss(t);
+      long double x;
+      iss >> x;
+      numbers.push_back(x);
+    }
+    Vector values_to_compare;
+    for (int i=start; i<numbers.size(); i++) {
+      values_to_compare.push_back(numbers[i]);
+    }
+    table.push_back(values_to_compare);
+    numbers.clear();
+  }
+  input.close();
+
+  string wins_file = folder + "wins";
+  ofstream out(wins_file.c_str(),ios::app);
+  out << setw(10) << N << "\t";
+  out << setw(20) << measure << "\t";
+  std::vector<int> wins(NUM_METHODS,0);
+  for (int i=0; i<table.size(); i++) {
+    int winner = 0;
+    long double min = table[i][0];
+    for (int j=1; j<NUM_METHODS; j++) {
+      if (j != MML_2) {
+        if (table[i][j] < min) {
+          min = table[i][j];
+          winner = j;
+        }
+      }
+    } // j loop ends ...
+    wins[winner]++;
+  } // i loop ends ...
+  out << "[";
+  for (int i=0; i<wins.size()-1; i++) {
+    out << wins[i] << " : ";
+  }
+  out << wins[wins.size()-1] << "]\n";
+  out.close();
 }
 

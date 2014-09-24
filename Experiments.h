@@ -26,6 +26,8 @@ class Experiments
     void computeMeanAbsoluteError(ostream &, long double, std::vector<Vector> &);
 
     void computeMeanSquaredError(ostream &, long double, std::vector<Vector> &);
+
+    void computeWinsRatio(bool, const char *, string, int, string);
 };
 
 #endif
