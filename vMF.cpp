@@ -288,7 +288,7 @@ std::vector<Vector> vMF::generate(int sample_size)
     return std::vector<Vector>(); 
   }
 }
-
+/*
 void vMF::computeAllEstimators(
   std::vector<Vector> &data,
   std::vector<struct Estimates_vMF> &all_estimates
@@ -351,4 +351,4 @@ void VonMises::estimateMLApproxKappa(struct Estimates_vMF &estimates)
 void VonMises::estimateMLKappa(struct Estimates_vMF &estimates)
 {
 }
-
+*/

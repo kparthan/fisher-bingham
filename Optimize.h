@@ -177,8 +177,8 @@ class MMLObjectiveFunctionScale
      *  k,b,m0,mj,mi are parameters
      */
     double operator() (const std::vector<double> &x, std::vector<double> &grad) {
-      double k = x[0];
-      double b = x[1];
+      double k = fabs(x[0]);
+      double b = fabs(x[1]);
 
       Kent kent(psi,alpha,eta,k,b);
       long double log_prior = kent.computeLogPriorProbability();
@@ -235,8 +235,8 @@ class MMLObjectiveFunction
       double alpha = x[0];
       double eta = x[1];
       double psi = x[2];
-      double k = x[3];
-      double b = x[4];
+      double k = fabs(x[3]);
+      double b = fabs(x[4]);
 
       Kent kent(psi,alpha,eta,k,b);
       long double log_prior = kent.computeLogPriorProbability();

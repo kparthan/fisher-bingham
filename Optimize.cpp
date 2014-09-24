@@ -174,6 +174,7 @@ std::vector<double> Optimize::minimize(Vector &sample_mean, Matrix &S, int num_p
 
     case MML_2:
     {
+      //lb[0] = -HUGE_VAL; lb[1] = -HUGE_VAL;
       opt.set_lower_bounds(lb);
       opt.set_upper_bounds(ub);
 
@@ -190,6 +191,7 @@ std::vector<double> Optimize::minimize(Vector &sample_mean, Matrix &S, int num_p
 
     case MML_5:
     {
+      //lb[3] = -HUGE_VAL; lb[4] = -HUGE_VAL;
       opt.set_lower_bounds(lb);
       ub[0] = PI; ub[1] = 2*PI; ub[2] = 2*PI;
       opt.set_upper_bounds(ub);
