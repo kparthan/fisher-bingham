@@ -288,7 +288,7 @@ std::vector<Vector> vMF::generate(int sample_size)
     return std::vector<Vector>(); 
   }
 }
-
+/*
 void vMF::computeAllEstimators(
   std::vector<Vector> &data,
   std::vector<struct Estimates_vMF> &all_estimates
@@ -465,15 +465,6 @@ bool VonMises::NewtonRaphson(
 }
 
 
-/*!
- *  \brief This function computes the MML estimate using the Interval
- *  Bisection method.
- *  \param interval a reference to an array<long double,2>
- *  \param kappa_est a reference to a long double
- *  \param function_value a pointer to a member function that computes the
- *  function value to minimize
- *  \return the implementation status : convergence(success) or not
- */
 bool VonMises::IntervalBisection(
   array<long double,2> &interval, 
   long double &kappa_est,
@@ -525,12 +516,6 @@ bool VonMises::IntervalBisection(
   return 0;   // should not happen ...
 }
 
-/*!
- *  \brief This function determines a suitable interval in which the root exists.
- *  \param interval a reference to an array<long double,2>
- *  \param function_value a pointer to a member function that computes the
- *  function value to minimize
- */
 bool VonMises::determineInterval(
   array<long double,2> &interval,
   long double (VonMises::*function_value)(long double),
@@ -637,15 +622,6 @@ VonMises::computeFunctionAndDerivative_MML(
   }
 }
 
-/*!
- *  \brief This function computes the first derivative (wrt kappa) of the
- *  message length expression.
- *  \param k a reference to a long double
- *  \param Ad a reference to a long double
- *  \param Ader_A a reference to a long double
- *  \param A2der_Ader a reference to a long double
- *  \return the first derivative value
- */
 long double 
 VonMises::computeFirstDerivativeOfMsglen(
   long double &k, 
@@ -662,16 +638,6 @@ VonMises::computeFirstDerivativeOfMsglen(
   return ans;
 }
 
-/*!
- *  \brief This function computes the first derivative (wrt kappa) of the
- *  message length expression.
- *  \param k a reference to a long double
- *  \param Ad a reference to a long double
- *  \param Ader a reference to a long double
- *  \param Ader_A a reference to a long double
- *  \param A2der_Ader a reference to a long double
- *  \return the first derivative value
- */
 long double VonMises::computeSecondDerivativeOfMsglen(
   long double &k, long double &Ad, long double &Ader, long double &Ader_A, long double &A2der_Ader
 ) {
@@ -683,5 +649,4 @@ long double VonMises::computeSecondDerivativeOfMsglen(
   ans += estimates.Neff * Ader;
   return ans;
 }
-
-
+*/

@@ -112,17 +112,16 @@ std::vector<double> Optimize::minimize(Vector &sample_mean, Matrix &S, int num_p
   //nlopt::opt opt(nlopt::LN_NELDERMEAD, num_params);
   nlopt::opt opt(nlopt::LN_COBYLA, num_params);
 
-  //std::vector<double> lb(num_params,TOLERANCE);
   std::vector<double> lb(num_params,1e-10);
-
   std::vector<double> ub(num_params,HUGE_VAL);
   //std::vector<double> ub(num_params,MAX_KAPPA);
 
   // GN_ISRES and GN_ORIG_DIRECT work with finite bounds
   //nlopt::opt opt(nlopt::GN_ISRES, num_params);
   //nlopt::opt opt(nlopt::GN_ORIG_DIRECT, num_params);
-  // std::vector<double> ub(num_params,1000);
+
   double minf;
+  FAIL_STATUS = 0;
 
   switch(estimation) {
     case MOMENT:
@@ -178,14 +177,13 @@ std::vector<double> Optimize::minimize(Vector &sample_mean, Matrix &S, int num_p
       opt.set_lower_bounds(lb);
       opt.set_upper_bounds(ub);
 
-      MMLObjectiveFunctionScale mml2(psi,alpha,eta,kappa,beta,sample_mean,S,N);
+      MMLObjectiveFunctionScale mml2(psi,alpha,eta,sample_mean,S,N);
       opt.set_min_objective(MMLObjectiveFunctionScale::wrap, &mml2);
       opt.add_inequality_constraint(Constraint2, NULL, TOLERANCE);
       opt.set_xtol_rel(1e-4);
 
       x[0] = kappa; x[1] = beta;
       nlopt::result result = opt.optimize(x, minf);
-      break;
       break;
     }
 
@@ -203,6 +201,10 @@ std::vector<double> Optimize::minimize(Vector &sample_mean, Matrix &S, int num_p
 
       x[0] = alpha; x[1] = eta; x[2] = psi; x[3] = kappa; x[4] = beta;
       nlopt::result result = opt.optimize(x, minf);
+      if (result == nlopt::INVALID_ARGS) {
+        cout << "INVALID_ARGS\n";
+        exit(1);
+      }
       break;
     }
 

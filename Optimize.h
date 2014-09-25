@@ -5,6 +5,9 @@
 #include "Kent.h"
 #include "Support.h"
 
+extern int MOMENT_FAIL,MLE_FAIL,MAP_FAIL,MML2_FAIL,MML5_FAIL;
+extern bool FAIL_STATUS;
+
 // MOMENT
 class MomentObjectiveFunction
 {
@@ -25,6 +28,13 @@ class MomentObjectiveFunction
       const std::vector<double> &x, 
       std::vector<double> &grad, 
       void *data) {
+        if(boost::math::isnan(x[0]) || boost::math::isnan(x[1])) { // return this sub-optimal state
+          if (FAIL_STATUS == 0) {
+            MOMENT_FAIL++;
+            FAIL_STATUS = 1;
+          }
+          return 0;
+        } // if() ends ...
         return (*reinterpret_cast<MomentObjectiveFunction*>(data))(x, grad); 
     }
 
@@ -63,6 +73,15 @@ class MaximumLikelihoodObjectiveFunction
       const std::vector<double> &x, 
       std::vector<double> &grad, 
       void *data) {
+        for (int i=0; i<x.size(); i++) {
+          if(boost::math::isnan(x[i])) {  // return this sub-optimal state 
+            if (FAIL_STATUS == 0) {
+              MLE_FAIL++;
+              FAIL_STATUS = 1;
+            }
+            return 0;
+          } // if() ends ...
+        } // for() ends ...
         return (*reinterpret_cast<MaximumLikelihoodObjectiveFunction*>(data))(x, grad); 
     }
 
@@ -106,6 +125,15 @@ class MAPObjectiveFunction
       const std::vector<double> &x, 
       std::vector<double> &grad, 
       void *data) {
+        for (int i=0; i<x.size(); i++) {
+          if(boost::math::isnan(x[i])) {  // return this sub-optimal state 
+            if (FAIL_STATUS == 0) {
+              MAP_FAIL++;
+              FAIL_STATUS = 1;
+            }
+            return 0;
+          } // if() ends ...
+        } // for() ends ...
         return (*reinterpret_cast<MAPObjectiveFunction*>(data))(x, grad); 
     }
 
@@ -140,7 +168,7 @@ class MMLObjectiveFunctionScale
 
     double N;
 
-    double psi,alpha,eta,kappa_init,beta_init;
+    double psi,alpha,eta;
 
     double k2,const_lattk;
 
@@ -148,10 +176,8 @@ class MMLObjectiveFunctionScale
 
   public:
     MMLObjectiveFunctionScale(
-      double psi, double alpha, double eta, double k, double b,
-      Vector &sample_mean, Matrix &S, double sample_size
-    ) : psi(psi), alpha(alpha), eta(eta), kappa_init(k), beta_init(b),
-        sample_mean(sample_mean), S(S), N(sample_size)
+      double psi, double alpha, double eta, Vector &sample_mean, Matrix &S, double sample_size
+    ) : psi(psi), alpha(alpha), eta(eta), sample_mean(sample_mean), S(S), N(sample_size)
     {
       /*k2 = 0.08019;
       Kent kent(psi,alpha,eta,kappa_init,beta_init);
@@ -165,6 +191,13 @@ class MMLObjectiveFunctionScale
       const std::vector<double> &x, 
       std::vector<double> &grad, 
       void *data) {
+        if(boost::math::isnan(x[0]) || boost::math::isnan(x[1])) { // return this sub-optimal state
+          if (FAIL_STATUS == 0) {
+            MML2_FAIL++;
+            FAIL_STATUS = 1;
+          }
+          return 0;
+        } // if() ends ...
         return (*reinterpret_cast<MMLObjectiveFunctionScale*>(data))(x, grad); 
     }
 
@@ -177,8 +210,8 @@ class MMLObjectiveFunctionScale
      *  k,b,m0,mj,mi are parameters
      */
     double operator() (const std::vector<double> &x, std::vector<double> &grad) {
-      double k = fabs(x[0]);
-      double b = fabs(x[1]);
+      double k = x[0];
+      double b = x[1];
 
       Kent kent(psi,alpha,eta,k,b);
       long double log_prior = kent.computeLogPriorProbability();
@@ -218,8 +251,14 @@ class MMLObjectiveFunction
       std::vector<double> &grad, 
       void *data) {
         for (int i=0; i<x.size(); i++) {
-          assert(!boost::math::isnan(x[i]));
-        }
+          if(boost::math::isnan(x[i])) {  // return this sub-optimal state 
+            if (FAIL_STATUS == 0) {
+              MML5_FAIL++;
+              FAIL_STATUS = 1;
+            }
+            return 0;
+          } // if() ends ...
+        } // for() ends ...
         return (*reinterpret_cast<MMLObjectiveFunction*>(data))(x, grad); 
     }
 
@@ -235,8 +274,8 @@ class MMLObjectiveFunction
       double alpha = x[0];
       double eta = x[1];
       double psi = x[2];
-      double k = fabs(x[3]);
-      double b = fabs(x[4]);
+      double k = x[3];
+      double b = x[4];
 
       Kent kent(psi,alpha,eta,k,b);
       long double log_prior = kent.computeLogPriorProbability();

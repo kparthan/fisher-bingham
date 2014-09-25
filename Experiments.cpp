@@ -3,6 +3,7 @@
 #include "Kent.h"
 
 extern Vector XAXIS,YAXIS,ZAXIS;
+extern int MOMENT_FAIL,MLE_FAIL,MAP_FAIL,MML2_FAIL,MML5_FAIL;
 
 Experiments::Experiments(int iterations) : iterations(iterations)
 {}
@@ -10,8 +11,8 @@ Experiments::Experiments(int iterations) : iterations(iterations)
 void Experiments::simulate(long double kappa, long double beta)
 {
   std::vector<int> sample_sizes;
-  //sample_sizes.push_back(5);
-  sample_sizes.push_back(100);
+  sample_sizes.push_back(5);
+  //sample_sizes.push_back(10);
   /*sample_sizes.push_back(20);
   sample_sizes.push_back(30);
   sample_sizes.push_back(50);
@@ -47,6 +48,7 @@ void Experiments::simulate(long double kappa, long double beta)
     for (int iter=0; iter<iterations; iter++) {  // for each iteration ...
       repeat:
       std::vector<Vector> data = kent.generate(sample_sizes[i]);
+      writeToFile("random_sample.dat",data,3);
       Kent kent_est;
       kent_est.computeAllEstimators(data,all_estimates);
       long double beta_est_mml = all_estimates[MML_5].beta;
@@ -89,6 +91,11 @@ void Experiments::simulate(long double kappa, long double beta)
     computeWinsRatio(1,"negloglikhd",negloglkhd_file,sample_sizes[i],folder);
     computeWinsRatio(1,"msglen",msglens_file,sample_sizes[i],folder);
     computeWinsRatio(0,"kldiv",kldvg_file,sample_sizes[i],folder);
+    cout << "MOMENT_FAIL: " << MOMENT_FAIL << endl;
+    cout << "MLE_FAIL: " << MLE_FAIL << endl;
+    cout << "MAP_FAIL: " << MAP_FAIL << endl;
+    cout << "MML2_FAIL: " << MML2_FAIL << endl;
+    cout << "MML5_FAIL: " << MML5_FAIL << endl;
   }
 }
 

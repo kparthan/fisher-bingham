@@ -13,6 +13,8 @@ int NUM_THREADS;
 long double MAX_KAPPA;
 long double IMPROVEMENT_RATE;
 int CONSTRAIN_KAPPA;
+int MOMENT_FAIL=0,MLE_FAIL=0,MAP_FAIL=0,MML2_FAIL=0,MML5_FAIL=0;
+bool FAIL_STATUS;
 
 ////////////////////// GENERAL PURPOSE FUNCTIONS \\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
