@@ -407,7 +407,7 @@ long double Kent::computeLogPriorScale()
 {
   long double log_prior = 0;
   //log_prior += log(-log(TOLERANCE)) - log(1-TOLERANCE);
-  /*log_prior += log(kappa); 
+  /*log_prior += log(kappa);
   log_prior -= 2 * log(1+kappa*kappa);
   log_prior += log(8/PI);*/
   /*log_prior += 2 * log(4/PI);
@@ -587,6 +587,7 @@ void Kent::computeAllEstimators(
   struct Estimates moment_est = computeMomentEstimates(sample_mean,S,N);
   print(type,moment_est);
   all_estimates.push_back(moment_est);
+  cout << "msglen: " << computeMessageLength(moment_est,sample_mean,S,N) << endl;
 
   type = "MLE";
   struct Estimates ml_est = moment_est;
@@ -596,6 +597,7 @@ void Kent::computeAllEstimators(
   opt1.computeEstimates(sample_mean,S,ml_est);
   print(type,ml_est);
   all_estimates.push_back(ml_est);
+  cout << "msglen: " << computeMessageLength(ml_est,sample_mean,S,N) << endl;
 
   type = "MAP";
   struct Estimates map_est = moment_est;
@@ -605,24 +607,27 @@ void Kent::computeAllEstimators(
   opt2.computeEstimates(sample_mean,S,map_est);
   print(type,map_est);
   all_estimates.push_back(map_est);
+  cout << "msglen: " << computeMessageLength(map_est,sample_mean,S,N) << endl;
 
   type = "MML_2";
-  struct Estimates mml_est = map_est;
+  struct Estimates mml2_est = map_est;
   Optimize opt3(type);
-  opt3.initialize(N,mml_est.mean,mml_est.major_axis,mml_est.minor_axis,
-                  mml_est.kappa,mml_est.beta);
-  opt3.computeEstimates(sample_mean,S,mml_est);
-  all_estimates.push_back(mml_est);
-  print(type,mml_est);
+  opt3.initialize(N,mml2_est.mean,mml2_est.major_axis,mml2_est.minor_axis,
+                  mml2_est.kappa,mml2_est.beta);
+  opt3.computeEstimates(sample_mean,S,mml2_est);
+  all_estimates.push_back(mml2_est);
+  print(type,mml2_est);
+  cout << "msglen: " << computeMessageLength(mml2_est,sample_mean,S,N) << endl;
 
   type = "MML_5";
-  struct Estimates mml_est2 = map_est;
+  struct Estimates mml5_est = map_est;
   Optimize opt4(type);
-  opt4.initialize(N,mml_est2.mean,mml_est2.major_axis,mml_est2.minor_axis,
-                  mml_est2.kappa,mml_est2.beta);
-  opt4.computeEstimates(sample_mean,S,mml_est2);
-  print(type,mml_est2);
-  all_estimates.push_back(mml_est2);
+  opt4.initialize(N,mml5_est.mean,mml5_est.major_axis,mml5_est.minor_axis,
+                  mml5_est.kappa,mml5_est.beta);
+  opt4.computeEstimates(sample_mean,S,mml5_est);
+  print(type,mml5_est);
+  all_estimates.push_back(mml5_est);
+  cout << "msglen: " << computeMessageLength(mml5_est,sample_mean,S,N) << endl;
 }
 
 /*!
@@ -760,35 +765,34 @@ struct Estimates Kent::computeMMLEstimates(std::vector<Vector> &data)
 struct Estimates Kent::computeMMLEstimates(Vector &sample_mean, Matrix &S, long double N)
 {
   string type = "MOMENT";
-  struct Estimates estimates = computeMomentEstimates(sample_mean,S,N);
-  print(type,estimates);
-  long double msglen = computeMessageLength(estimates,sample_mean,S,N);
-  cout << "msglen: " << msglen << endl;
+  struct Estimates moment_estimates = computeMomentEstimates(sample_mean,S,N);
+  print(type,moment_estimates);
+  long double msglen = computeMessageLength(moment_estimates,sample_mean,S,N);
   cout << "msglen (bpr): " << msglen/N << endl;
 
   type = "MAP";
+  struct Estimates map_estimates = moment_estimates;
   Optimize opt2(type);
-  opt2.initialize(N,estimates.mean,estimates.major_axis,estimates.minor_axis,
-                  estimates.kappa,estimates.beta);
-  opt2.computeEstimates(sample_mean,S,estimates);
-  print(type,estimates);
-  msglen = computeMessageLength(estimates,sample_mean,S,N);
-  cout << "msglen: " << msglen << endl;
+  opt2.initialize(N,map_estimates.mean,map_estimates.major_axis,map_estimates.minor_axis,
+                  map_estimates.kappa,map_estimates.beta);
+  opt2.computeEstimates(sample_mean,S,map_estimates);
+  print(type,map_estimates);
+  msglen = computeMessageLength(map_estimates,sample_mean,S,N);
   cout << "msglen (bpr): " << msglen/N << endl;
 
-  if (N > 10) {
+  struct Estimates mml5_estimates = map_estimates;
+  //if (N > 10) {
     //type = "MML_2";
     type = "MML_5";
     Optimize opt(type);
-    opt.initialize(N,estimates.mean,estimates.major_axis,estimates.minor_axis,
-                   estimates.kappa,estimates.beta);
-    opt.computeEstimates(sample_mean,S,estimates);
-    print(type,estimates);
-    msglen = computeMessageLength(estimates,sample_mean,S,N);
-    cout << "msglen: " << msglen << endl;
+    opt.initialize(N,mml5_estimates.mean,mml5_estimates.major_axis,mml5_estimates.minor_axis,
+                   mml5_estimates.kappa,mml5_estimates.beta);
+    opt.computeEstimates(sample_mean,S,mml5_estimates);
+    print(type,mml5_estimates);
+    msglen = computeMessageLength(mml5_estimates,sample_mean,S,N);
     cout << "msglen (bpr): " << msglen/N << endl;
-  }
-  return estimates;
+  //}
+  return mml5_estimates;
 }
 
 void Kent::estimateParameters(std::vector<Vector> &data, Vector &weights)

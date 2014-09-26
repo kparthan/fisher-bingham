@@ -11,8 +11,8 @@ Experiments::Experiments(int iterations) : iterations(iterations)
 void Experiments::simulate(long double kappa, long double beta)
 {
   std::vector<int> sample_sizes;
-  sample_sizes.push_back(5);
-  //sample_sizes.push_back(10);
+  //sample_sizes.push_back(5);
+  sample_sizes.push_back(10);
   /*sample_sizes.push_back(20);
   sample_sizes.push_back(30);
   sample_sizes.push_back(50);
@@ -158,7 +158,7 @@ Experiments::computeMeasures(
 
   variance_file = folder + "variance_beta";
   ofstream varianceb(variance_file.c_str(),ios::app);
-  variancek << fixed << setw(10) << N << "\t";
+  varianceb << fixed << setw(10) << N << "\t";
   computeVariance(varianceb,beta,beta_est_all);
   varianceb.close();
 
@@ -314,7 +314,7 @@ Experiments::computeWinsRatio(
     long double min = table[i][0];
     for (int j=1; j<NUM_METHODS; j++) {
       if (j != MML_2) {
-        if (table[i][j] < min) {
+        if (table[i][j] <= min) {
           min = table[i][j];
           winner = j;
         }

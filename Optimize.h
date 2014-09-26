@@ -33,7 +33,7 @@ class MomentObjectiveFunction
             MOMENT_FAIL++;
             FAIL_STATUS = 1;
           }
-          return 0;
+          return -HUGE_VAL;
         } // if() ends ...
         return (*reinterpret_cast<MomentObjectiveFunction*>(data))(x, grad); 
     }
@@ -79,7 +79,7 @@ class MaximumLikelihoodObjectiveFunction
               MLE_FAIL++;
               FAIL_STATUS = 1;
             }
-            return 0;
+            return -HUGE_VAL;
           } // if() ends ...
         } // for() ends ...
         return (*reinterpret_cast<MaximumLikelihoodObjectiveFunction*>(data))(x, grad); 
@@ -131,7 +131,7 @@ class MAPObjectiveFunction
               MAP_FAIL++;
               FAIL_STATUS = 1;
             }
-            return 0;
+            return -HUGE_VAL;
           } // if() ends ...
         } // for() ends ...
         return (*reinterpret_cast<MAPObjectiveFunction*>(data))(x, grad); 
@@ -251,6 +251,7 @@ class MMLObjectiveFunction
       std::vector<double> &grad, 
       void *data) {
         for (int i=0; i<x.size(); i++) {
+          //assert(!boost::math::isnan(x[i]));
           if(boost::math::isnan(x[i])) {  // return this sub-optimal state 
             if (FAIL_STATUS == 0) {
               MML5_FAIL++;

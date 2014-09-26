@@ -608,6 +608,10 @@ void Mixture::load(string &file_name)
     }
     long double kappa = numbers[10];
     long double beta = numbers[11];
+    long double ex = 2 * beta / kappa;
+    if (fabs(ex - 1) <= TOLERANCE) {
+      beta -= TOLERANCE;
+    }
     normalize(mean,unit_mean);
     normalize(mj,unit_mj); normalize(mi,unit_mi);
     Kent kent(unit_mean,unit_mj,unit_mi,kappa,beta);

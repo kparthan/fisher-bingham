@@ -38,6 +38,9 @@ void Optimize::initialize(double sample_size, Vector &m0, Vector &m1, Vector &m2
 void Optimize::computeEstimates(Vector &sample_mean, Matrix &S, struct Estimates &estimates)
 {
   computeOrthogonalTransformation(mean,major,psi,alpha,eta);
+  if (psi < TOLERANCE) psi = TOLERANCE;
+  if (alpha < TOLERANCE) alpha = TOLERANCE;
+  if (eta < TOLERANCE) eta = TOLERANCE;
   switch(estimation) {
     case MOMENT:
     {
@@ -112,9 +115,9 @@ std::vector<double> Optimize::minimize(Vector &sample_mean, Matrix &S, int num_p
   //nlopt::opt opt(nlopt::LN_NELDERMEAD, num_params);
   nlopt::opt opt(nlopt::LN_COBYLA, num_params);
 
-  std::vector<double> lb(num_params,1e-10);
-  std::vector<double> ub(num_params,HUGE_VAL);
-  //std::vector<double> ub(num_params,MAX_KAPPA);
+  std::vector<double> lb(num_params,TOLERANCE);
+  //std::vector<double> ub(num_params,HUGE_VAL);
+  std::vector<double> ub(num_params,MAX_KAPPA);
 
   // GN_ISRES and GN_ORIG_DIRECT work with finite bounds
   //nlopt::opt opt(nlopt::GN_ISRES, num_params);
@@ -136,6 +139,7 @@ std::vector<double> Optimize::minimize(Vector &sample_mean, Matrix &S, int num_p
 
       x[0] = kappa; x[1] = beta;
       nlopt::result result = opt.optimize(x, minf);
+      assert(!boost::math::isnan(minf));
       break;
     }
 
@@ -152,6 +156,7 @@ std::vector<double> Optimize::minimize(Vector &sample_mean, Matrix &S, int num_p
 
       x[0] = alpha; x[1] = eta; x[2] = psi; x[3] = kappa; x[4] = beta;
       nlopt::result result = opt.optimize(x, minf);
+      assert(!boost::math::isnan(minf));
       break;
     }
 
@@ -168,6 +173,10 @@ std::vector<double> Optimize::minimize(Vector &sample_mean, Matrix &S, int num_p
 
       x[0] = alpha; x[1] = eta; x[2] = psi; x[3] = kappa; x[4] = beta;
       nlopt::result result = opt.optimize(x, minf);
+      //assert(!boost::math::isnan(minf));
+      if (boost::math::isnan(minf)) {
+        x[0] = alpha; x[1] = eta; x[2] = psi; x[3] = kappa; x[4] = beta;
+      }
       break;
     }
 
@@ -184,6 +193,10 @@ std::vector<double> Optimize::minimize(Vector &sample_mean, Matrix &S, int num_p
 
       x[0] = kappa; x[1] = beta;
       nlopt::result result = opt.optimize(x, minf);
+      //assert(!boost::math::isnan(minf));
+      if (boost::math::isnan(minf)) {
+        x[0] = kappa; x[1] = beta;
+      }
       break;
     }
 
@@ -201,9 +214,9 @@ std::vector<double> Optimize::minimize(Vector &sample_mean, Matrix &S, int num_p
 
       x[0] = alpha; x[1] = eta; x[2] = psi; x[3] = kappa; x[4] = beta;
       nlopt::result result = opt.optimize(x, minf);
-      if (result == nlopt::INVALID_ARGS) {
-        cout << "INVALID_ARGS\n";
-        exit(1);
+      //assert(!boost::math::isnan(minf));
+      if (boost::math::isnan(minf)) {
+        x[0] = alpha; x[1] = eta; x[2] = psi; x[3] = kappa; x[4] = beta;
       }
       break;
     }
