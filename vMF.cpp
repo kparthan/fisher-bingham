@@ -1,13 +1,13 @@
 #include "vMF.h"
 #include "Support.h"
 #include "Normal.h"
+#include "Optimize2.h"
 
 /*!
  *  \brief This is a constructor module
  */
 vMF::vMF()
 {
-  D = 3;
   mu = Vector(3,0); mu[2] = 1;
   kappa = 1;
   updateConstants();
@@ -21,7 +21,12 @@ vMF::vMF()
  */
 vMF::vMF(Vector &mu, long double kappa) : mu(mu), kappa(kappa)
 {
-  D = mu.size();
+  updateConstants();
+}
+
+vMF::vMF(long double kappa) : kappa(kappa)
+{
+  mu = Vector(3,0); mu[2] = 1;
   updateConstants();
 }
 
@@ -30,12 +35,15 @@ vMF::vMF(Vector &mu, long double kappa) : mu(mu), kappa(kappa)
  */
 void vMF::updateConstants()
 {
-  kmu = Vector(D,0);
-  for (int i=0; i<D; i++) {
+  kmu = Vector(3,0);
+  for (int i=0; i<3; i++) {
     kmu[i] = kappa * mu[i];
   }
   log_cd = computeLogNormalizationConstant();
-  cd = exp(log_cd);
+  Vector spherical(3,0);
+  cartesian2spherical(mu,spherical);
+  theta = spherical[1];
+  phi = spherical[2];
 }
 
 /*!
@@ -45,26 +53,12 @@ void vMF::updateConstants()
 long double vMF::computeLogNormalizationConstant()
 {
   if (kappa < ZERO) {
-    long double log_area = computeLogSurfaceAreaSphere(D);
+    long double log_area = computeLogSurfaceAreaSphere(3);
     return log_area;
   } else {
-    long double log_bessel = log(cyl_bessel_i(D/2.0-1,kappa));
-    /*if (log_bessel >= INFINITY) {
-      my_float d2_1 = (D / 2.0) - 1;
-      my_float bessel = cyl_bessel_i(d2_1,kappa);
-      my_float large_log_bessel = log(bessel);
-      log_bessel = large_log_bessel.convert_to<long double>();
-      cout << "Normalization constant error ...\n";
-      cout << scientific << "bessel: " << bessel;
-      cout << scientific << "; log_bessel: " << log_bessel << endl;
-      cout << "D: " << D << "; kappa: " << kappa << endl;
-    }*/
-    if (D == 2) {
-      long double log_cd = -log(2*PI) - log_bessel;
-    } else {
-      long double log_tmp = (D/2.0) * log (kappa/(2*PI));
-      long double log_cd = log_tmp - log(kappa) - log_bessel;
-    }
+    log_cd = log(kappa) - log(2*PI) - kappa;
+    long double tmp = 1 - exp(-2*kappa);
+    log_cd += log(tmp);
     return log_cd;
   }
 }
@@ -76,11 +70,11 @@ long double vMF::computeLogNormalizationConstant()
 vMF vMF::operator=(const vMF &source)
 {
   if (this != &source) {
-    D = source.D;
     mu = source.mu;
     kmu = source.kmu;
+    theta = source.theta;
+    phi = source.phi;
     kappa = source.kappa;
-    cd = source.cd;
     log_cd = source.log_cd;
   }
   return *this;
@@ -90,7 +84,7 @@ vMF vMF::operator=(const vMF &source)
  *  \brief This function returns the mean of the distribution
  *  \return the mean of the distribution
  */
-Vector vMF::mean(void)
+Vector vMF::Mean(void)
 {
 	return mu;
 }
@@ -104,26 +98,9 @@ long double vMF::Kappa(void)
 	return kappa;
 }
 
-/*!
- *  \brief This function returns the normalization constant of the distribution
- *  \return the normalization constant of the distribution
- */
-long double vMF::getNormalizationConstant()
-{
-  return cd;
-}
-
 long double vMF::getLogNormalizationConstant()
 {
   return log_cd;
-}
-
-/*!
- *  \brief This function returns the dimensionality of the data.
- */
-int vMF::getDimensionality()
-{
-  return D;
 }
 
 /*!
@@ -154,7 +131,7 @@ long double vMF::log_density(Vector &x)
  *  \param x a reference to a vector<long double>
  *  \return the negative log likelihood (base e)
  */
-long double vMF::negativeLogLikelihood(Vector &x)
+long double vMF::computeNegativeLogLikelihood(Vector &x)
 {
   return -log_density(x);
 }
@@ -164,18 +141,21 @@ long double vMF::negativeLogLikelihood(Vector &x)
  *  \param sample a reference to a vector<vector<long double> >
  *  \return the negative log likelihood (base e)
  */
-long double vMF::negativeLogLikelihood(std::vector<Vector> &sample)
+long double vMF::computeNegativeLogLikelihood(std::vector<Vector> &sample)
 {
   long double value = 0;
   int N = sample.size();
   value -= N * log_cd;
-  Vector sum(D,0);
-  for (int i=0; i<N; i++) {
-    for (int j=0; j<D; j++) {
-      sum[j] += sample[i][j];
-    }
-  }
+  Vector sum = computeVectorSum(sample);
   value -= computeDotProduct(kmu,sum);
+  return value;
+}
+
+long double vMF::computeNegativeLogLikelihood(long double R, long double N)
+{
+  long double value = 0;
+  value -= N * log_cd;
+  value -= kappa * R;
   return value;
 }
 
@@ -210,7 +190,7 @@ void vMF::printParameters(ostream &os)
  *  \param sample_size an integer
  *  \return the random list of points
  */
-void vMF::generateCanonical(std::vector<Vector> &canonical_sample, int sample_size)
+void vMF::generateCanonical(std::vector<Vector> &canonical_sample, int sample_size, int D)
 {
   canonical_sample.clear();
   int count = 0;
@@ -261,7 +241,7 @@ void vMF::generateCanonical(std::vector<Vector> &canonical_sample, int sample_si
  *  \param sample_size an integer
  *  \return the random list of points
  */
-std::vector<Vector> vMF::generate(int sample_size)
+std::vector<Vector> vMF::generate(int sample_size, int D)
 {
   cout << "\nGenerating from vMF with mean: ";
   if (D == 3) {
@@ -288,15 +268,83 @@ std::vector<Vector> vMF::generate(int sample_size)
     return std::vector<Vector>(); 
   }
 }
-/*
+
+long double vMF::computeLogPriorProbability()
+{
+  long double log_prior_mean = computeLogPriorMean();
+  long double log_prior_scale = computeLogPriorScale();
+  long double log_joint_prior = log_prior_mean + log_prior_scale;
+  assert(!boost::math::isnan(log_joint_prior));
+  return log_joint_prior;
+}
+
+long double vMF::computeLogPriorMean()
+{
+  long double angle = theta;
+  if (angle < TOLERANCE) angle = TOLERANCE;
+  
+  long double log_prior = 0;
+  log_prior = log(sin(angle));
+  log_prior -= log(4*PI);
+  return log_prior;
+}
+
+long double vMF::computeLogPriorScale()
+{
+  long double log_prior = 0;
+  log_prior = log(4/PI);
+  log_prior += 2 * log(kappa);
+  log_prior -= 2 * log(1+kappa*kappa);
+  return log_prior;
+}
+
+/*!
+ *  \brief This function computes the expected Fisher information using the
+ *  component parameters.
+ *  \return the expected Fisher value
+ */
+long double vMF::computeLogFisherInformation()
+{
+  long double log_fisher = 0;
+  if (theta < TOLERANCE) {
+    log_fisher += 2 * log(sin(TOLERANCE));
+  } else {
+    log_fisher += 2 * log(sin(theta));
+  }
+  log_fisher += log(kappa);
+  long double kappa_inv = 1 / kappa;
+  // A_3(k)
+  long double a3k = (1 / tanh(kappa)) - kappa_inv;
+  // A_3(k) -- derivative
+  long double a3k_der = (kappa_inv * kappa_inv) - (1 /(sinh(kappa)*sinh(kappa)));
+  log_fisher += 2 * log(fabs(a3k));
+  log_fisher += log(fabs(a3k_der));
+  assert(log_fisher < INFINITY);
+  return log_fisher;
+}
+
+long double vMF::computeLogFisherInformation(long double N)
+{
+  long double log_fisher = computeLogFisherInformation();
+  log_fisher += 3 * log(N);
+  return log_fisher;
+}
+
+void vMF::computeAllEstimators(std::vector<Vector> &data)
+{
+  std::vector<struct Estimates_vMF> all_estimates;
+  computeAllEstimators(data,all_estimates);
+}
+
 void vMF::computeAllEstimators(
   std::vector<Vector> &data,
   std::vector<struct Estimates_vMF> &all_estimates
 ) {
+  int N = data.size();
+
   all_estimates.clear();
 
-  Vector weights(data.size(),1.0);
-
+  Vector weights(N,1.0);
   struct Estimates_vMF mlapprox_est;
   estimateMean(mlapprox_est,data,weights);
 
@@ -305,19 +353,31 @@ void vMF::computeAllEstimators(
   all_estimates.push_back(mlapprox_est);
 
   // MLE
+  string type = "MLE";
   struct Estimates_vMF ml_est = mlapprox_est;
-  estimateMLKappa(ml_est);
+  Optimize2 opt_mle(type);
+  opt_mle.initialize(N,ml_est.R,ml_est.mean,ml_est.kappa);
+  opt_mle.computeEstimates(ml_est);
+  print(type,ml_est);
   all_estimates.push_back(ml_est);
 
   // MAP
+  type = "MAP";
   struct Estimates_vMF map_est = mlapprox_est;
-  estimateMAPKappa(map_est);
+  Optimize2 opt_map(type);
+  opt_map.initialize(N,map_est.R,map_est.mean,map_est.kappa);
+  opt_map.computeEstimates(map_est);
+  print(type,map_est);
   all_estimates.push_back(map_est);
 
   // MML
-  struct Estimates_vMF mml_est = mlapprox_est;
-  estimateMMLKappa(mml_est);
-  all_estimates.push_back(map_est);
+  type = "MML_2";
+  struct Estimates_vMF mml_est = map_est;
+  Optimize2 opt_mml(type);
+  opt_mml.initialize(N,mml_est.R,mml_est.mean,mml_est.kappa);
+  opt_mml.computeEstimates(mml_est);
+  print(type,mml_est);
+  all_estimates.push_back(mml_est);
 }
 
 void vMF::estimateMean(
@@ -325,328 +385,120 @@ void vMF::estimateMean(
   std::vector<Vector> &data, 
   Vector &weights
 ) {
-  Vector resultant(3,0);  // resultant direction
-  for (int i=0; i<data.size(); i++) {
-    for (int j=0; j<3; j++) {
-      resultant[j] += data[i][j];
-    }
-  }
-
-  Vector mean(3,0);
-  estimates.R = normalize(resultant,mean); // norm of resultant
-  estimates.Rbar = estimates.R / data.size();
+  Vector resultant = computeVectorSum(data,weights,estimates.Neff);
+  estimates.mean = Vector(3,0);
+  estimates.R = normalize(resultant,estimates.mean); // norm of resultant
+  estimates.Rbar = estimates.R / estimates.Neff;
+  Vector spherical(3,0);
+  cartesian2spherical(estimates.mean,spherical);
+  estimates.theta = spherical[1];
+  estimates.phi = spherical[2];
 }
 
-void VonMises::estimateMLApproxKappa(struct Estimates_vMF &estimates)
+void vMF::estimateMLApproxKappa(struct Estimates_vMF &estimates)
 {
   long double rbar = estimates.Rbar;
   long double num = rbar * (3 - (rbar * rbar));
   long double denom = 1 - (rbar * rbar);
 
   estimates.kappa = num / denom;
-
   cout << "Kappa (ML approx): " << estimates.kappa << endl;
 }
 
-void VonMises::estimateMLKappa(struct Estimates_vMF &estimates)
+struct Estimates_vMF vMF::computeMMLEstimates(std::vector<Vector> &data)
 {
-  tryRootFindingMethods(estimates.kappa,
-                        &VonMises::computeFunctionValue_ML,
-                        &VonMises::computeFunctionAndDerivative_ML);
+  Vector weights(data.size(),1);
+  struct Estimates_vMF mlapprox_est;
+  estimateMean(mlapprox_est,data,weights);
+  estimateMLApproxKappa(mlapprox_est);
+  return computeMMLEstimates(mlapprox_est);
 }
 
-long double VonMises::computeFunctionValue_ML(long double x)
+struct Estimates_vMF vMF::computeMMLEstimates(struct Estimates_vMF &mlapprox_est)
 {
-  long double A = computeRatioBessel(D,x);                   // A
-  long double Ader = computeDerivativeOfRatioBessel(D,x,A);  // A'
+  string type = "MAP";
+  struct Estimates_vMF map_est = mlapprox_est;
+  Optimize2 opt_map(type);
+  opt_map.initialize(map_est.Neff,map_est.R,map_est.mean,map_est.kappa);
+  opt_map.computeEstimates(map_est);
+  print(type,map_est);
+  long double msglen = computeMessageLength(map_est);
+  cout << "msglen (bpr): " << msglen/map_est.Neff << endl;
 
-  return A - estimates.Rbar;          // A - Rbar
+  type = "MML_2";
+  struct Estimates_vMF mml_est = map_est;
+  Optimize2 opt_mml(type);
+  opt_mml.initialize(mml_est.Neff,mml_est.R,mml_est.mean,mml_est.kappa);
+  opt_mml.computeEstimates(mml_est);
+  print(type,mml_est);
+  msglen = computeMessageLength(mml_est);
+  cout << "msglen (bpr): " << msglen/mml_est.Neff << endl;
+
+  return mml_est;
 }
 
-void VonMises::computeFunctionAndDerivative_ML(
-  long double x, 
-  long double &Fx, 
-  long double &Fx_der
-) {
-  long double A = computeRatioBessel(D,x);                   // A
-  long double Ader = computeDerivativeOfRatioBessel(D,x,A);  // A'
-
-  Fx = A - estimates.Rbar;  // A - Rbar 
-  Fx_der = Ader;            // A'         
-}
-
-void VonMises::tryRootFindingMethods(
-  long double &kappa_est,
-  long double (VonMises::*function_value)(long double),
-  void (VonMises::*function_and_derivative)(long double, long double &, long double &)
-) {
-  array<long double,2> interval;
-  interval[0] = -1; interval[1] = -1;
-
-  long double initial = kappa_est;
-
-  // try newton raphson
-  bool status = 0;
-  status = NewtonRaphson(interval,kappa_est,function_and_derivative);
-
-  if (!status) {  // newton raphson failed ...
-    // check whether interval is valid
-    if (interval[0] > 0 && interval[1] > 0) {
-      status = IntervalBisection(interval,kappa_est,function_value); // unsuitable interval ...
-    }
-    if (!status) {
-      // determine an interval to run the root bisection method
-      status = determineInterval(interval,function_value,initial);
-      if (!status) {
-        cout << "No interval found ...\n";
-        goto stop_searching;
-      } else {
-        status = IntervalBisection(interval,kappa_est,function_value); // try to find a root ...
-      }
-    } 
-  }
-
-  stop_searching:
-  if (!status) {  // every attempt to find a root failed at this point ...
-    kappa_est = initial;
-  }
-}
-
-bool VonMises::NewtonRaphson(
-  array<long double,2> &interval, 
-  long double &kappa_est,
-  void (VonMises::*function_and_derivative)(long double, long double &, long double &)
-) {
-  long double prev = estimates.kappa_ml_approx; // initial value
-  long double current;
-  int NUM_ITERATIONS = 20;
-  long double Fx,Fx_der;
-  long double new_range,current_range;
-
-  for (int iter=1; iter<=NUM_ITERATIONS; iter++) {
-    // get the function and derivative value
-    (this->*function_and_derivative)(prev,Fx,Fx_der);
-
-    //update(iter,prev,current,Fx,Fx_der,kappa_est,interval);
-    if (fabs(Fx) <= ZERO) {
-      assert(prev > 0);
-      kappa_est = prev;
-      cout << "Iteration " << iter << " Fx(" << prev << ") ~ 0" << endl;
-      return 1;
-    } else if (fabs(Fx_der) > TOLERANCE) {
-      current = prev - (Fx/Fx_der);
-      cout << "Iteration " << iter << ": [" << prev << ", " 
-           << current <<  ", " << Fx << ", " << Fx_der << "]" << endl;
-      if (fabs(current - prev) > TOLERANCE) {
-        prev = fabs(current);
-        // check if prev is HUGE ...
-        //if (prev >= DEFAULT_MAX_KAPPA) return 0;
-      } else {
-        cout << "No significant change in Kappa ..." << endl;
-        cout << "current: " << current << endl;
-        if (current < 0) {
-          kappa_est = prev;
-        } else {
-          kappa_est = current;
-        }
-        return 1;
-      }
-    } else if (fabs(Fx_der) <= ZERO) {    // Fx_der ~ 0
-      cout << "Iteration " << iter << ": [" << prev << ", " 
-           << current <<  ", " << Fx << ", " << Fx_der << "]" << endl;
-      cout << "Derivative is zero ..." << endl;
-      //kappa_est = prev;
-      return 0;
-    }
-  } // iter loop ends ...
-
-  cout << "Newton Raphson failed to converge ...\n";
-  return 0;
-}
-
-
-bool VonMises::IntervalBisection(
-  array<long double,2> &interval, 
-  long double &kappa_est,
-  long double (VonMises::*function_value)(long double)
-) {
-  long double a = interval[0];
-  long double fa = (this->*function_value)(a);
-  if (fabs(fa) <= ZERO) {
-    kappa_est = a;
-    return 1;
-  }
-  long double b = interval[1];
-  long double fb = (this->*function_value)(b);
-  if (fabs(fb) <= ZERO) {
-    kappa_est = b;
-    return 1;
-  }
-  // assert Fx has opposite signs
-  if ((sign(fa) * sign(fb)) != -1) {
-    cout << "a: " << a << " fa: " << fa;
-    cout << "\tb: " << b << " fb: " << fb << endl;
-    cout << "Unsuitable interval ...\n";
-    return 0;
-  }
-
-  long double mid = (a+b)/ 2;
-  int iter = 1;
-  while(1) {
-    long double fmid = (this->*function_value)(mid);
-    cout << "Iteration " << iter++ << ": [" << a << ", " << b << ", " << mid << ", "
-         << fa << ", " << fb << ", " << fmid << "]\n";
-    if (fabs(fmid) <= ZERO) {
-      kappa_est = mid;
-      return 1;
-    } else if (sign(fa) != sign(fmid)) {
-      b = mid;
-    } else {
-      a = mid;
-    }
-    long double previous = mid;
-    mid = (a + b) / 2;
-    if (fabs(mid - previous) < TOLERANCE) {
-      kappa_est = mid;
-      return 1;
-    }
-    fa = (this->*function_value)(a);
-    fb = (this->*function_value)(b);
-  }
-  return 0;   // should not happen ...
-}
-
-bool VonMises::determineInterval(
-  array<long double,2> &interval,
-  long double (VonMises::*function_value)(long double),
-  long double kappa_ml_approx
-) {
-  // try to find a value lower than Kappa ML approx ...
-  long double b = kappa_ml_approx;
-  interval[1] = b;
-  long double fb = (this->*function_value)(b);
-  int signb = sign(fb);
-  if (signb == 0) {
-    interval[0] = b;
-    cout << "Interval: (" << interval[0] << ", " << interval[1] << ")\n";
-    return 1;
-  }
-
-  // compute appropriate increment/decrement based on the value of kappa_ml_approx
-  long double CHANGE = 0.01 * kappa_ml_approx;
-
-  cout << "Determining interval ...\n";
-  long double decrement = CHANGE;
-  long double a = b - decrement;
-  long double fa;
-  int signa;
-  while (a > AOM) {
-    fa = (this->*function_value)(a);
-    signa = sign(fa);
-    if (!(signa == 0 || signa == 1 || signa == -1)) {
-      cout << "Error in calculating the function value ...\n";
-      exit(1);
-    }
-    if (signa == 0 || signa * signb == -1) {
-      interval[0] = a;
-      cout << "Interval: (" << interval[0] << ", " << interval[1] << ")\n";
-      return 1;
-    } 
-    a -= decrement;
-  }
-
-  return 0;
-}
-
-void VonMises::estimateMMLKappa(struct Estimates_vMF &estimates)
+void vMF::estimateParameters(std::vector<Vector> &data, Vector &weights)
 {
-  long double prev = estimates.kappa;
-  long double kappa_est,current,num,denom;
-  long double Fx,Fx_der;
-  bool status = 0;
+  struct Estimates_vMF mlapprox_est;
+  estimateMean(mlapprox_est,data,weights);
+  estimateMLApproxKappa(mlapprox_est);
 
-  for (int i=0; i<20; i++) {
-    computeFunctionAndDerivative_MML(prev,Fx,Fx_der);
-    if (fabs(Fx) <= TOLERANCE) {
-      cout << "Iteration " << i+1 << " Fx(" << prev << ") ~ 0" << endl;
-      status = 1;
-      break;
-    }
-
-    current = prev - (Fx/Fx_der);
-    if (current < 0) {
-      status = 0;
-      break;
-    }
-    prev = current;
-  }
-
-  estimates.kappa = prev;
-  if (!status) {
-    array<long double,2> interval;
-    interval[0] = -1; interval[1] = -1;
-    // determine an interval to run the root bisection method
-    status = determineInterval(interval,&VonMises::computeFunctionValue_MML);
-    if (!status) {
-      cout << "No interval found ...\n";
-    } else {
-      status = IntervalBisection(interval,estimates.kappa,&VonMises::computeFunctionValue_MML); // try to find a root ...
-    }
-  } 
-
-  //validate_kappa(kappa_est,estimates.kappa_mml_complete);
-
-  cout << "Kappa (MML Complete): " << estimates.kappa << endl;
+  struct Estimates_vMF mml_est = computeMMLEstimates(mlapprox_est);
+  updateParameters(mml_est);
 }
 
-void 
-VonMises::computeFunctionAndDerivative_MML(
-  long double x, 
-  long double &Fx, 
-  long double &Fx_der
-) {
-  long double A = computeRatioBessel(D,x);                   // A
-  long double Ader = computeDerivativeOfRatioBessel(D,x,A);  // A'
-  long double Ader_A = Ader / A;                             // A'/A
-  long double A2der_Ader = A2der_Over_Ader(D,x,A,Ader_A);    // A''/A'
-
-  Fx = computeFirstDerivativeOfMsglen(x,A,Ader_A,A2der_Ader);  // dI/dk
-  Fx_der = computeSecondDerivativeOfMsglen(x,A,Ader,Ader_A,A2der_Ader);// d^2 I/dk^2
-  if (boost::math::isnan(Fx) || boost::math::isnan(Fx_der)) {
-    cout << "Error in computeFunctionAndDerivative_MML Fx: ";
-    cout << "x: " << x << endl;
-    cout << "A: " << A << "; Ader: " << Ader << "; Ader_A: " << Ader_A;
-    cout << "; A2der_Ader: " << A2der_Ader << endl;
-    cout << Fx << "; Fx_der: " << Fx_der << endl;
-    //exit(1);
-  }
+void vMF::updateParameters(struct Estimates_vMF &estimates)
+{
+  mu = estimates.mean;
+  kappa = estimates.kappa;
+  updateConstants();
 }
 
-long double 
-VonMises::computeFirstDerivativeOfMsglen(
-  long double &k, 
-  long double &Ad, 
-  long double &Ader_A, 
-  long double &A2der_Ader
-) {
-  long double ans = -(D-1) / (2*k);
-  ans += (D+1) * k / (1 + k*k);
-  ans += ((D-1) /2.0) * Ader_A;
-  ans += A2der_Ader;
-  ans += estimates.Neff * Ad;
-  ans -= estimates.R;
+long double vMF::computeMessageLength(std::vector<Vector> &data)
+{
+  Vector sample_mean = computeVectorSum(data);
+  long double R = computeDotProduct(sample_mean,mu);
+  return computeMessageLength(R,data.size());
+}
+
+long double vMF::computeMessageLength(long double R, long double N)
+{
+  long double log_prior = computeLogPriorProbability();
+  long double log_fisher = computeLogFisherInformation(N);
+  long double part1 = -3.816 - log_prior + 0.5 * log_fisher;
+  long double part2 = computeNegativeLogLikelihood(R,N) + 1.5
+                      - 2 * N * log(AOM);
+  long double msglen = part1 + part2;
+  return msglen/log(2);
+}
+
+long double vMF::computeMessageLength(struct Estimates_vMF &estimates)
+{
+  vMF vmf_est(estimates.mean,estimates.kappa);
+  return vmf_est.computeMessageLength(estimates.R,estimates.Neff);
+}
+
+// 'other' is the approximate to the true distribution
+long double vMF::computeKLDivergence(vMF &other)
+{
+  long double log_cd2 = other.getLogNormalizationConstant();
+
+  long double ans = log_cd - log_cd2; 
+  
+  long double kappa2 = other.Kappa();
+  Vector mu2 = other.Mean();
+  long double dp = computeDotProduct(mu,mu2);
+  long double diff = kappa - kappa2 * dp;
+  long double ak1 = (1/tanh(kappa)) - (1/kappa);
+
+  ans += (ak1 * diff);
+
   return ans;
 }
 
-long double VonMises::computeSecondDerivativeOfMsglen(
-  long double &k, long double &Ad, long double &Ader, long double &Ader_A, long double &A2der_Ader
-) {
-  long double ksq = k * k;
-  long double ans = (D-1) / (2 * ksq);
-  ans += ((D+1) * (1-ksq)) / ((1+ksq) * (1+ksq));
-  ans += ((D-1)/2.0) * computeDerivativeOf_Ader_A(D,k,Ad,Ader);
-  ans += computeDerivativeOf_A2der_Ader(D,k,Ader,Ader_A,A2der_Ader);
-  ans += estimates.Neff * Ader;
-  return ans;
+long double vMF::computeKLDivergence(struct Estimates_vMF &estimates)
+{
+  vMF vmf_est(estimates.mean,estimates.kappa);
+  return computeKLDivergence(vmf_est);
 }
-*/
+

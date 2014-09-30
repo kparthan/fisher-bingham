@@ -407,9 +407,9 @@ long double Kent::computeLogPriorScale()
 {
   long double log_prior = 0;
   //log_prior += log(-log(TOLERANCE)) - log(1-TOLERANCE);
-  /*log_prior += log(kappa);
+  log_prior += log(kappa);
   log_prior -= 2 * log(1+kappa*kappa);
-  log_prior += log(8/PI);*/
+  log_prior += log(8/PI);
   /*log_prior += 2 * log(4/PI);
   log_prior += 2 * log(kappa);
   log_prior -= 2 * log(1+kappa*kappa);
@@ -419,10 +419,10 @@ long double Kent::computeLogPriorScale()
   long double tmp = kappa + (4/kappa);
   cinv -= 1/tmp;
   log_prior -= log(cinv);*/
-  long double ex = (2 * beta) / kappa;
+  /*long double ex = (2 * beta) / kappa;
   log_prior -= (log(PI-2) - log(8));
   log_prior += 2 * log(ex);
-  log_prior -= 2 * log(1+ex*ex);
+  log_prior -= 2 * log(1+ex*ex);*/
   return log_prior;
 }
 

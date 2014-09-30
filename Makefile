@@ -2,6 +2,7 @@
 #CFLAGS=-std=c++98 -c -I/home/parthan/external_libs/ -fopenmp
 #LDFLAGS=-static -lboost_program_options -lboost_filesystem -fopenmp -lnlopt -lm
 
+#CFLAGS=-std=c++0x -c -O3 -fopenmp
 CFLAGS=-std=c++0x -g -c -fopenmp
 LDFLAGS=-lboost_program_options -lboost_system -lboost_filesystem -fopenmp -lnlopt -lm
 
@@ -13,6 +14,7 @@ OBJECTS = main.o \
   Kent.o \
   FB6.o \
   Optimize.o \
+  Optimize2.o \
   Structure.o \
   Mixture.o \
   Test.o \
@@ -51,6 +53,9 @@ Mixture.o: Mixture.cpp Mixture.h Header.h
 	g++ $(CFLAGS) $< -o $@
 
 Optimize.o: Optimize.cpp Optimize.h Header.h
+	g++ $(CFLAGS) $< -o $@
+
+Optimize2.o: Optimize2.cpp Optimize2.h Header.h
 	g++ $(CFLAGS) $< -o $@
 
 Test.o: Test.cpp Test.h Header.h

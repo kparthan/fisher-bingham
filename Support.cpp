@@ -13,7 +13,9 @@ int NUM_THREADS;
 long double MAX_KAPPA;
 long double IMPROVEMENT_RATE;
 int CONSTRAIN_KAPPA;
-int MOMENT_FAIL=0,MLE_FAIL=0,MAP_FAIL=0,MML2_FAIL=0,MML5_FAIL=0;
+int MLE_FAIL=0,MAP_FAIL=0;
+int MOMENT_FAIL=0,MML2_FAIL=0,MML5_FAIL=0;  // Kent experiments
+int MML_FAIL = 0; // vMF experiments
 bool FAIL_STATUS;
 
 ////////////////////// GENERAL PURPOSE FUNCTIONS \\\\\\\\\\\\\\\\\\\\\\\\\\\\
@@ -281,6 +283,15 @@ void print(string &type, struct Estimates &estimates)
        << "; m0_est . m2_est = " << computeDotProduct(estimates.mean,estimates.minor_axis)
        << "; m1_est . m2_est = " << computeDotProduct(estimates.major_axis,estimates.minor_axis)
        << endl;
+}
+
+void print(string &type, struct Estimates_vMF &estimates)
+{
+  cout << "TYPE: " << type << endl;
+  Vector spherical(3,0);
+  cout << "m0_est: "; print(cout,estimates.mean,3);
+  cout << "\t(" << estimates.theta*180/PI << "," << estimates.phi*180/PI << ")\n";
+  cout << "kappa_est: " << estimates.kappa << endl;
 }
 
 ////////////////////// MATH FUNCTIONS \\\\\\\\\\\\\\\\\\\\\\\\\\\\
@@ -1492,7 +1503,9 @@ void TestFunctions(void)
 
   //test.fisher();
 
-  test.mml_estimation();
+  //test.mml_estimation();
+
+  test.vmf_all_estimation();
 }
 
 ////////////////////// EXPERIMENTS \\\\\\\\\\\\\\\\\\\\\\\\\\\\

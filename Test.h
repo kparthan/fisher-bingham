@@ -39,6 +39,8 @@ class Test
     void fisher();
 
     void mml_estimation(void);
+
+    void vmf_all_estimation();
 };
 
 #endif

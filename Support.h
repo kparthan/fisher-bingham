@@ -41,7 +41,9 @@ struct Estimates
 
 struct Estimates_vMF
 {
+  long double Neff;
   long double R,Rbar;
+  long double theta,phi;
   Vector mean;
   long double kappa;
 };
@@ -54,6 +56,7 @@ void writeToFile(const char *, std::vector<Vector> &, int);
 string extractName(string &);
 void print(ostream &, Vector &, int);
 void print(string &, struct Estimates &);
+void print(string &, struct Estimates_vMF &);
 
 int sign(long double);
 long double normalize(Vector &, Vector &);

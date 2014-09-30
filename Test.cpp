@@ -540,3 +540,20 @@ void Test::mml_estimation(void)
   kent.computeAllEstimators(random_sample);
 }
 
+void Test::vmf_all_estimation()
+{
+  Vector spherical(3,1);
+  spherical[1] = (rand()/(long double)RAND_MAX) * PI;
+  spherical[2] = (rand()/(long double)RAND_MAX) * 2 * PI;
+
+  Vector mean(3,0);
+  spherical2cartesian(spherical,mean);
+  long double kappa = 10;
+  int sample_size = 100;
+
+  vMF vmf(mean,kappa);
+  std::vector<Vector> random_sample = vmf.generate(sample_size);
+  writeToFile("random_sample.dat",random_sample,3);
+  vmf.computeAllEstimators(random_sample);
+}
+
