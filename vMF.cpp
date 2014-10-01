@@ -16,15 +16,15 @@ vMF::vMF()
 /*!
  *  \brief constructor function which sets the value of mean and 
  *  kappa of the distribution
- *  \param mu a reference to a vector<long double>
- *  \param kappa a long double
+ *  \param mu a reference to a vector<double>
+ *  \param kappa a double
  */
-vMF::vMF(Vector &mu, long double kappa) : mu(mu), kappa(kappa)
+vMF::vMF(Vector &mu, double kappa) : mu(mu), kappa(kappa)
 {
   updateConstants();
 }
 
-vMF::vMF(long double kappa) : kappa(kappa)
+vMF::vMF(double kappa) : kappa(kappa)
 {
   mu = Vector(3,0); mu[2] = 1;
   updateConstants();
@@ -50,17 +50,17 @@ void vMF::updateConstants()
  *  \brief This function computes the normalization constant of the distribution.
  *  \return the normalization constant
  */
-long double vMF::computeLogNormalizationConstant()
+double vMF::computeLogNormalizationConstant()
 {
   if (kappa < ZERO) {
-    long double log_area = computeLogSurfaceAreaSphere(3);
+    double log_area = computeLogSurfaceAreaSphere(3);
     return log_area;
   } else {
     log_cd = log(kappa) - log(2*PI) - kappa;
-    long double tmp = 1 - exp(-2*kappa);
+    double tmp = 1 - exp(-2*kappa);
     log_cd -= log(tmp);
     /*log_cd = log(kappa) - log(2*PI);
-    long double tmp = exp(kappa) - exp(-kappa);
+    double tmp = exp(kappa) - exp(-kappa);
     log_cd -= log(tmp);*/
     return log_cd;
   }
@@ -96,57 +96,57 @@ Vector vMF::Mean(void)
  *  \brief This function returns the kappa of the distribution
  *  \return the kappa of the distribution
  */
-long double vMF::Kappa(void)
+double vMF::Kappa(void)
 {
 	return kappa;
 }
 
-long double vMF::getLogNormalizationConstant()
+double vMF::getLogNormalizationConstant()
 {
   return log_cd;
 }
 
 /*!
  *  \brief This function computes the value of the distribution at a given x
- *  \param x a reference to a vector<long double>
+ *  \param x a reference to a vector<double>
  *  \return density of the function given x
  */
-long double vMF::density(Vector &x)
+double vMF::density(Vector &x)
 {
-  long double value = log_density(x);
+  double value = log_density(x);
   return exp(value);
 }
 
 /*!
  *  \brief This function computes the value of the distribution at a given x
- *  \param x a reference to a vector<long double>
+ *  \param x a reference to a vector<double>
  *  \return density of the function given x
  */
-long double vMF::log_density(Vector &x)
+double vMF::log_density(Vector &x)
 {
-  long double expnt = computeDotProduct(kmu,x);
-  long double log_density = log_cd + expnt;// + (D-1) * log(AOM);
+  double expnt = computeDotProduct(kmu,x);
+  double log_density = log_cd + expnt;// + (D-1) * log(AOM);
   return log_density;
 }
 
 /*!
  *  \brief This function computes the negative log likelihood of given datum.
- *  \param x a reference to a vector<long double>
+ *  \param x a reference to a vector<double>
  *  \return the negative log likelihood (base e)
  */
-long double vMF::computeNegativeLogLikelihood(Vector &x)
+double vMF::computeNegativeLogLikelihood(Vector &x)
 {
   return -log_density(x);
 }
 
 /*!
  *  \brief This function computes the negative log likelihood of given data.
- *  \param sample a reference to a vector<vector<long double> >
+ *  \param sample a reference to a vector<vector<double> >
  *  \return the negative log likelihood (base e)
  */
-long double vMF::computeNegativeLogLikelihood(std::vector<Vector> &sample)
+double vMF::computeNegativeLogLikelihood(std::vector<Vector> &sample)
 {
-  long double value = 0;
+  double value = 0;
   int N = sample.size();
   value -= N * log_cd;
   Vector sum = computeVectorSum(sample);
@@ -154,9 +154,9 @@ long double vMF::computeNegativeLogLikelihood(std::vector<Vector> &sample)
   return value;
 }
 
-long double vMF::computeNegativeLogLikelihood(long double R, long double N)
+double vMF::computeNegativeLogLikelihood(double R, double N)
 {
-  long double value = 0;
+  double value = 0;
   value -= N * log_cd;
   value -= kappa * R;
   return value;
@@ -189,7 +189,7 @@ void vMF::printParameters(ostream &os)
  *          Generate a uniform (D-1)-dimensional unit vector V, and
  *          return X^T = ((1-W^2)^1/2 V^T,W)
  *  Then X has the vMF distribution with mean direction (0,...,0,1)^T and Kappa = K
- *  \param canonical_sample a reference to a vector<vector<long double> >
+ *  \param canonical_sample a reference to a vector<vector<double> >
  *  \param sample_size an integer
  *  \return the random list of points
  */
@@ -203,18 +203,18 @@ void vMF::generateCanonical(std::vector<Vector> &canonical_sample, int sample_si
   Vector random_vmf(D,0);
 
   // step 0
-  long double tmp1,tmp2,p,Z,U,W,check;
+  double tmp1,tmp2,p,Z,U,W,check;
   tmp1 = (4 * kappa * kappa) + (D-1) * (D-1);
-  long double b = (-2 * kappa + sqrt(tmp1)) / (long double) (D-1);
-  long double x0 =  (1 - b) / (1 + b);
-  long double c = (kappa * x0) + ((D-1) * log(1 - x0*x0));
+  double b = (-2 * kappa + sqrt(tmp1)) / (double) (D-1);
+  double x0 =  (1 - b) / (1 + b);
+  double c = (kappa * x0) + ((D-1) * log(1 - x0*x0));
 
   while (count < sample_size) {
     // step 1
-    p = rand() / (long double) RAND_MAX;
+    p = rand() / (double) RAND_MAX;
     //cout << "p: " << p << endl;
     Z = quantile(beta,p);
-    U = rand() / (long double) RAND_MAX;
+    U = rand() / (double) RAND_MAX;
     //cout << "U: " << U << endl;
     tmp1 = 1 - ((1+b) * Z);
     tmp2 = 1 - ((1-b) * Z);
@@ -272,29 +272,29 @@ std::vector<Vector> vMF::generate(int sample_size, int D)
   }
 }
 
-long double vMF::computeLogPriorProbability()
+double vMF::computeLogPriorProbability()
 {
-  long double log_prior_mean = computeLogPriorMean();
-  long double log_prior_scale = computeLogPriorScale();
-  long double log_joint_prior = log_prior_mean + log_prior_scale;
+  double log_prior_mean = computeLogPriorMean();
+  double log_prior_scale = computeLogPriorScale();
+  double log_joint_prior = log_prior_mean + log_prior_scale;
   assert(!boost::math::isnan(log_joint_prior));
   return log_joint_prior;
 }
 
-long double vMF::computeLogPriorMean()
+double vMF::computeLogPriorMean()
 {
-  long double angle = theta;
+  double angle = theta;
   if (angle < TOLERANCE) angle = TOLERANCE;
   
-  long double log_prior = 0;
+  double log_prior = 0;
   log_prior = log(sin(angle));
   log_prior -= log(4*PI);
   return log_prior;
 }
 
-long double vMF::computeLogPriorScale()
+double vMF::computeLogPriorScale()
 {
-  long double log_prior = 0;
+  double log_prior = 0;
   log_prior = log(4/PI);
   log_prior += 2 * log(kappa);
   log_prior -= 2 * log(1+kappa*kappa);
@@ -306,29 +306,29 @@ long double vMF::computeLogPriorScale()
  *  component parameters.
  *  \return the expected Fisher value
  */
-long double vMF::computeLogFisherInformation()
+double vMF::computeLogFisherInformation()
 {
-  long double log_fisher = 0;
+  double log_fisher = 0;
   if (theta < TOLERANCE) {
     log_fisher += 2 * log(sin(TOLERANCE));
   } else {
     log_fisher += 2 * log(sin(theta));
   }
   log_fisher += log(kappa);
-  long double kappa_inv = 1 / kappa;
+  double kappa_inv = 1 / kappa;
   // A_3(k)
-  long double a3k = (1 / tanh(kappa)) - kappa_inv;
+  double a3k = (1 / tanh(kappa)) - kappa_inv;
   // A_3(k) -- derivative
-  long double a3k_der = (kappa_inv * kappa_inv) - (1 /(sinh(kappa)*sinh(kappa)));
+  double a3k_der = (kappa_inv * kappa_inv) - (1 /(sinh(kappa)*sinh(kappa)));
   log_fisher += 2 * log(fabs(a3k));
   log_fisher += log(fabs(a3k_der));
   assert(log_fisher < INFINITY);
   return log_fisher;
 }
 
-long double vMF::computeLogFisherInformation(long double N)
+double vMF::computeLogFisherInformation(double N)
 {
-  long double log_fisher = computeLogFisherInformation();
+  double log_fisher = computeLogFisherInformation();
   log_fisher += 3 * log(N);
   return log_fisher;
 }
@@ -354,7 +354,7 @@ void vMF::computeAllEstimators(
   // ML_APPROX
   estimateMLApproxKappa(mlapprox_est);
   all_estimates.push_back(mlapprox_est);
-  long double msglen = computeMessageLength(mlapprox_est);
+  double msglen = computeMessageLength(mlapprox_est);
   cout << "msglen: " << msglen << endl;
   cout << "KL-divergence: " << computeKLDivergence(mlapprox_est) << endl << endl;
 
@@ -412,9 +412,9 @@ void vMF::estimateMean(
 
 void vMF::estimateMLApproxKappa(struct Estimates_vMF &estimates)
 {
-  long double rbar = estimates.Rbar;
-  long double num = rbar * (3 - (rbar * rbar));
-  long double denom = 1 - (rbar * rbar);
+  double rbar = estimates.Rbar;
+  double num = rbar * (3 - (rbar * rbar));
+  double denom = 1 - (rbar * rbar);
 
   estimates.kappa = num / denom;
   cout << "Kappa (ML approx): " << estimates.kappa << endl;
@@ -432,7 +432,7 @@ struct Estimates_vMF vMF::computeMMLEstimates(std::vector<Vector> &data)
 struct Estimates_vMF vMF::computeMMLEstimates(struct Estimates_vMF &mlapprox_est)
 {
   string type;
-  long double msglen;
+  double msglen;
 
   /*type = "MAP";
   struct Estimates_vMF map_est = mlapprox_est;
@@ -472,49 +472,49 @@ void vMF::updateParameters(struct Estimates_vMF &estimates)
   updateConstants();
 }
 
-long double vMF::computeMessageLength(std::vector<Vector> &data)
+double vMF::computeMessageLength(std::vector<Vector> &data)
 {
   Vector sample_mean = computeVectorSum(data);
-  long double R = computeDotProduct(sample_mean,mu);
+  double R = computeDotProduct(sample_mean,mu);
   return computeMessageLength(R,data.size());
 }
 
-long double vMF::computeMessageLength(long double R, long double N)
+double vMF::computeMessageLength(double R, double N)
 {
-  long double log_prior = computeLogPriorProbability();
-  long double log_fisher = computeLogFisherInformation(N);
-  long double part1 = -3.816 - log_prior + 0.5 * log_fisher;
-  long double part2 = computeNegativeLogLikelihood(R,N) + 1.5
+  double log_prior = computeLogPriorProbability();
+  double log_fisher = computeLogFisherInformation(N);
+  double part1 = -3.816 - log_prior + 0.5 * log_fisher;
+  double part2 = computeNegativeLogLikelihood(R,N) + 1.5
                       - 2 * N * log(AOM);
-  long double msglen = part1 + part2;
+  double msglen = part1 + part2;
   return msglen/log(2);
 }
 
-long double vMF::computeMessageLength(struct Estimates_vMF &estimates)
+double vMF::computeMessageLength(struct Estimates_vMF &estimates)
 {
   vMF vmf_est(estimates.mean,estimates.kappa);
   return vmf_est.computeMessageLength(estimates.R,estimates.Neff);
 }
 
 // 'other' is the approximate to the true distribution
-long double vMF::computeKLDivergence(vMF &other)
+double vMF::computeKLDivergence(vMF &other)
 {
-  long double log_cd2 = other.getLogNormalizationConstant();
+  double log_cd2 = other.getLogNormalizationConstant();
 
-  long double ans = log_cd - log_cd2; 
+  double ans = log_cd - log_cd2; 
   
-  long double kappa2 = other.Kappa();
+  double kappa2 = other.Kappa();
   Vector mu2 = other.Mean();
-  long double dp = computeDotProduct(mu,mu2);
-  long double diff = kappa - kappa2 * dp;
-  long double ak1 = (1/tanh(kappa)) - (1/kappa);
+  double dp = computeDotProduct(mu,mu2);
+  double diff = kappa - kappa2 * dp;
+  double ak1 = (1/tanh(kappa)) - (1/kappa);
 
   ans += (ak1 * diff);
 
   return ans;
 }
 
-long double vMF::computeKLDivergence(struct Estimates_vMF &estimates)
+double vMF::computeKLDivergence(struct Estimates_vMF &estimates)
 {
   vMF vmf_est(estimates.mean,estimates.kappa);
   return computeKLDivergence(vmf_est);

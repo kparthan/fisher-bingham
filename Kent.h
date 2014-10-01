@@ -11,14 +11,14 @@ class Kent  // FB5
   private:
     Vector mu,major_axis,minor_axis;
 
-    long double psi,alpha,eta;
+    double psi,alpha,eta;
     
-    long double kappa,beta; // gamma = 0
+    double kappa,beta; // gamma = 0
 
     struct Constants {
-      long double log_c,log_cb,log_ck,log_ckk,log_ckb,log_cbb;
-      long double ck_c,ckk_c,cb_c,cbb_c,ckb_c;
-      long double lambda1,lambda2,lambda3;
+      double log_c,log_cb,log_ck,log_ckk,log_ckb,log_cbb;
+      double ck_c,ckk_c,cb_c,cbb_c,ckb_c;
+      double lambda1,lambda2,lambda3;
       Vector E_x;
       Matrix E_xx;
       Matrix R,Rt;  // R: standard -> current orientation
@@ -30,11 +30,11 @@ class Kent  // FB5
   public:
     Kent();
 
-    Kent(long double, long double);
+    Kent(double, double);
 
-    Kent(Vector &, Vector &, Vector &, long double, long double);
+    Kent(Vector &, Vector &, Vector &, double, double);
 
-    Kent(long double, long double, long double, long double, long double);
+    Kent(double, double, double, double, double);
  
     Kent operator=(const Kent &);
 
@@ -42,67 +42,67 @@ class Kent  // FB5
 
     std::vector<Vector> generateCanonical(int);
 
-    long double eccentricity();
+    double eccentricity();
 
     struct Constants getConstants();
 
-    long double computeLogNormalizationConstant();
+    double computeLogNormalizationConstant();
 
-    long double log_dc_dk();
+    double log_dc_dk();
 
-    long double log_d2c_dk2();
+    double log_d2c_dk2();
 
-    long double computeSeriesSum(long double, long double, long double);
+    double computeSeriesSum(double, double, double);
 
-    long double log_dc_db();
+    double log_dc_db();
 
-    long double log_d2c_dkdb();
+    double log_d2c_dkdb();
 
-    long double computeSeriesSum2(long double, long double, long double);
+    double computeSeriesSum2(double, double, double);
 
-    long double log_d2c_db2();
+    double log_d2c_db2();
 
     void computeConstants();
 
     void computeExpectation();
 
-    long double computeLogFisherAxes();
+    double computeLogFisherAxes();
 
-    long double computeLogFisherScale();
+    double computeLogFisherScale();
 
-    long double log_density(Vector &);
+    double log_density(Vector &);
 
-    long double computeNegativeLogLikelihood(std::vector<Vector> &);
+    double computeNegativeLogLikelihood(std::vector<Vector> &);
 
-    long double computeNegativeLogLikelihood(Vector &, Matrix &, long double);
+    double computeNegativeLogLikelihood(Vector &, Matrix &, double);
 
-    long double computeLogPriorProbability();
+    double computeLogPriorProbability();
 
-    long double computeLogPriorAxes();
+    double computeLogPriorAxes();
 
-    long double computeLogPriorScale();
+    double computeLogPriorScale();
 
-    long double computeLogFisherInformation();
+    double computeLogFisherInformation();
 
-    long double computeLogFisherInformation(long double);
+    double computeLogFisherInformation(double);
 
     void computeAllEstimators(std::vector<Vector> &);
 
-    void computeAllEstimators(Vector &, Matrix &, long double);
+    void computeAllEstimators(Vector &, Matrix &, double);
 
     void computeAllEstimators(std::vector<Vector> &, std::vector<struct Estimates> &);
 
     struct Estimates computeMomentEstimates(std::vector<Vector> &);
 
-    struct Estimates computeMomentEstimates(Vector &, Matrix &, long double);
+    struct Estimates computeMomentEstimates(Vector &, Matrix &, double);
 
     struct Estimates computeMLEstimates(std::vector<Vector> &, string);
 
-    struct Estimates computeMLEstimates(Vector &, Matrix &, long double, string);
+    struct Estimates computeMLEstimates(Vector &, Matrix &, double, string);
 
     struct Estimates computeMMLEstimates(std::vector<Vector> &);
 
-    struct Estimates computeMMLEstimates(Vector &, Matrix &, long double);
+    struct Estimates computeMMLEstimates(Vector &, Matrix &, double);
 
     void estimateParameters(std::vector<Vector> &, Vector &);
 
@@ -114,19 +114,19 @@ class Kent  // FB5
 
     Vector MinorAxis();
 
-    long double Kappa();
+    double Kappa();
 
-    long double Beta();
+    double Beta();
 
-    long double computeKLDivergence(Kent &);
+    double computeKLDivergence(Kent &);
 
-    long double computeKLDivergence(struct Estimates &);
+    double computeKLDivergence(struct Estimates &);
 
-    long double computeMessageLength(std::vector<Vector> &);
+    double computeMessageLength(std::vector<Vector> &);
 
-    long double computeMessageLength(Vector &, Matrix &, long double);
+    double computeMessageLength(Vector &, Matrix &, double);
 
-    long double computeMessageLength(struct Estimates &, Vector &, Matrix &, long double);
+    double computeMessageLength(struct Estimates &, Vector &, Matrix &, double);
 
     void printParameters(ostream &);
 };

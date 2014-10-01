@@ -1,7 +1,7 @@
 #include "Optimize.h"
 
 extern int CONSTRAIN_KAPPA;
-extern long double MAX_KAPPA;
+extern double MAX_KAPPA;
 
 Optimize::Optimize(string type)
 {
@@ -18,7 +18,7 @@ Optimize::Optimize(string type)
   }
 }
 
-void Optimize::initialize(double sample_size, Vector &m0, Vector &m1, Vector &m2, long double k, long double b)
+void Optimize::initialize(double sample_size, Vector &m0, Vector &m1, Vector &m2, double k, double b)
 {
   N = sample_size;
   mean = m0;
@@ -98,7 +98,7 @@ void Optimize::finalize(std::vector<double> &theta, struct Estimates &estimates)
   estimates.minor_axis = kent.MinorAxis();
 }
 
-void Optimize::validate_scale(long double &k, long double &b)
+void Optimize::validate_scale(double &k, double &b)
 {
   if (CONSTRAIN_KAPPA == SET) {
     if (k > MAX_KAPPA) {
@@ -116,8 +116,8 @@ std::vector<double> Optimize::minimize(Vector &sample_mean, Matrix &S, int num_p
   nlopt::opt opt(nlopt::LN_COBYLA, num_params);
 
   std::vector<double> lb(num_params,TOLERANCE);
-  //std::vector<double> ub(num_params,HUGE_VAL);
-  std::vector<double> ub(num_params,MAX_KAPPA);
+  std::vector<double> ub(num_params,HUGE_VAL);
+  //std::vector<double> ub(num_params,MAX_KAPPA);
 
   // GN_ISRES and GN_ORIG_DIRECT work with finite bounds
   //nlopt::opt opt(nlopt::GN_ISRES, num_params);

@@ -8,18 +8,18 @@ class FB4
   private:
     Vector mu,major_axis,minor_axis;
 
-    long double kappa,gamma;
+    double kappa,gamma;
 
   public:
     FB4();
 
-    FB4(long double, long double);
+    FB4(double, double);
 
-    FB4(Vector &, Vector &, Vector &, long double, long double);
+    FB4(Vector &, Vector &, Vector &, double, double);
  
     FB4 operator=(const FB4 &);
 
-    long double computeNormalizationConstant(void);
+    double computeNormalizationConstant(void);
 
     std::vector<Vector> generate(int);
 

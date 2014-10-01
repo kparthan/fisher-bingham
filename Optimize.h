@@ -12,15 +12,15 @@ extern bool FAIL_STATUS;
 class MomentObjectiveFunction
 {
   private:
-    long double C1,C2;
+    double C1,C2;
 
   public:
     MomentObjectiveFunction(Vector &m0, Vector &m1, Vector &m2,
                             Vector &sample_mean, Matrix &S, double sample_size) {
       C1 = computeDotProduct(sample_mean,m0) / sample_size;
 
-      long double mj = prod_xMy(m1,S,m1);
-      long double mi = prod_xMy(m2,S,m2);
+      double mj = prod_xMy(m1,S,m1);
+      double mi = prod_xMy(m2,S,m2);
       C2 = (mj - mi) / sample_size;
     }
 
@@ -47,7 +47,7 @@ class MomentObjectiveFunction
       double b = x[1];
 
       Kent kent(k,b);
-      long double log_norm = kent.computeLogNormalizationConstant();
+      double log_norm = kent.computeLogNormalizationConstant();
       double fval = log_norm - k * C1 - b * C2;
       return fval;
     }
@@ -151,7 +151,7 @@ class MAPObjectiveFunction
       double b = x[4];
 
       Kent kent(psi,alpha,eta,k,b);
-      long double log_prior = kent.computeLogPriorProbability();// - log(sin(alpha));
+      double log_prior = kent.computeLogPriorProbability();// - log(sin(alpha));
       double fval = -log_prior + kent.computeNegativeLogLikelihood(sample_mean,S,N)
                     - 2 * N * log(AOM);
       return fval;
@@ -214,8 +214,8 @@ class MMLObjectiveFunctionScale
       double b = x[1];
 
       Kent kent(psi,alpha,eta,k,b);
-      long double log_prior = kent.computeLogPriorProbability();
-      long double log_fisher = kent.computeLogFisherInformation(N);
+      double log_prior = kent.computeLogPriorProbability();
+      double log_fisher = kent.computeLogFisherInformation(N);
       double part1 = const_lattk - log_prior + 0.5 * log_fisher;
       double part2 = kent.computeNegativeLogLikelihood(sample_mean,S,N) + 2.5
                      - 2 * N * log(AOM);
@@ -279,8 +279,8 @@ class MMLObjectiveFunction
       double b = x[4];
 
       Kent kent(psi,alpha,eta,k,b);
-      long double log_prior = kent.computeLogPriorProbability();
-      long double log_fisher = kent.computeLogFisherInformation(N);
+      double log_prior = kent.computeLogPriorProbability();
+      double log_fisher = kent.computeLogFisherInformation(N);
       double part1 = const_lattk - log_prior + 0.5 * log_fisher;
       double part2 = kent.computeNegativeLogLikelihood(sample_mean,S,N) + 2.5
                      - 2 * N * log(AOM);
@@ -299,20 +299,20 @@ class Optimize
 
     Vector mean,major,minor; 
 
-    long double psi,alpha,eta;
+    double psi,alpha,eta;
 
     double kappa,beta;
 
   public:
     Optimize(string);
 
-    void initialize(double, Vector &, Vector &, Vector &, long double, long double);
+    void initialize(double, Vector &, Vector &, Vector &, double, double);
 
     void computeEstimates(Vector &, Matrix &, struct Estimates &);
 
     void finalize(std::vector<double> &, struct Estimates &);
 
-    void validate_scale(long double &, long double &);
+    void validate_scale(double &, double &);
 
     std::vector<double> minimize(Vector &, Matrix &, int);
 };

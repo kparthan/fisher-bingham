@@ -18,7 +18,7 @@ FB4::FB4() : kappa(1), gamma(1)
 /*!
  *  Constructor
  */
-FB4::FB4(long double kappa, long double gamma) : kappa(kappa), gamma(gamma)
+FB4::FB4(double kappa, double gamma) : kappa(kappa), gamma(gamma)
 {
   mu = ZAXIS;
   major_axis = XAXIS;
@@ -29,7 +29,7 @@ FB4::FB4(long double kappa, long double gamma) : kappa(kappa), gamma(gamma)
  *  Constructor
  */
 FB4::FB4(Vector &mu, Vector &major_axis, Vector &minor_axis,
-         long double kappa, long double gamma) : mu(mu), 
+         double kappa, double gamma) : mu(mu), 
          major_axis(major_axis), minor_axis(minor_axis), kappa(kappa), gamma(gamma)
 {}
 
@@ -51,30 +51,30 @@ FB4 FB4::operator=(const FB4 &source)
 /*!
  *  Normalization constant
  */
-long double FB4::computeNormalizationConstant(void)
+double FB4::computeNormalizationConstant(void)
 {
-  long double c;
+  double c;
   if (gamma < 0) {
     Normal normal(0,1);
-    long double x1 = (kappa - 2*gamma) / sqrt(-2*gamma);
-    long double x2 = (kappa + 2*gamma) / sqrt(-2*gamma);
-    long double cdf1 = normal.cumulativeDensity(x1);
-    long double cdf2 = normal.cumulativeDensity(x2);
-    long double a0 = cdf1 - cdf2;
-    long double c1 = sqrt(-PI/gamma);
-    long double tmp = (-kappa*kappa)/(4*gamma);
+    double x1 = (kappa - 2*gamma) / sqrt(-2*gamma);
+    double x2 = (kappa + 2*gamma) / sqrt(-2*gamma);
+    double cdf1 = normal.cumulativeDensity(x1);
+    double cdf2 = normal.cumulativeDensity(x2);
+    double a0 = cdf1 - cdf2;
+    double c1 = sqrt(-PI/gamma);
+    double tmp = (-kappa*kappa)/(4*gamma);
     c = c1 * exp(tmp) * a0;
   } else if (gamma > 0) {
-    long double tmp = 2*sqrt(gamma);
-    long double tau1 = (kappa+2*gamma)/tmp;
-    long double tau2 = (kappa-2*gamma)/tmp;
-    long double int1 = computeDawsonsIntegral(tau1);
-    long double int2 = computeDawsonsIntegral(fabs(tau2));
+    double tmp = 2*sqrt(gamma);
+    double tau1 = (kappa+2*gamma)/tmp;
+    double tau2 = (kappa-2*gamma)/tmp;
+    double int1 = computeDawsonsIntegral(tau1);
+    double int2 = computeDawsonsIntegral(fabs(tau2));
     tmp = exp(kappa);
-    long double c1 = tmp * int1 - (sign(tau2) * int2 / tmp);
+    double c1 = tmp * int1 - (sign(tau2) * int2 / tmp);
     c = c1 * exp(gamma) / sqrt(gamma);
   } else if (gamma == 0) {  // vMF
-    long double c1 = exp(kappa);
+    double c1 = exp(kappa);
     c = (c1 - (1/c1)) / kappa;
   }
   return c;
@@ -126,19 +126,19 @@ Vector FB4::generate_u(int sample_size)
 int FB4::determine_best_case()
 {
   // calculate acceptance ratios to determine the best envelope 
-  long double a0,a1,a2;
+  double a0,a1,a2;
   Normal normal(0,1);
-  long double x1 = (kappa - 2*gamma) / sqrt(-2*gamma);
-  long double x2 = (kappa + 2*gamma) / sqrt(-2*gamma);
-  long double cdf1 = normal.cumulativeDensity(x1);
-  long double cdf2 = normal.cumulativeDensity(x2);
+  double x1 = (kappa - 2*gamma) / sqrt(-2*gamma);
+  double x2 = (kappa + 2*gamma) / sqrt(-2*gamma);
+  double cdf1 = normal.cumulativeDensity(x1);
+  double cdf2 = normal.cumulativeDensity(x2);
   a0 = cdf1 - cdf2;
 
   // a1/a0
-  long double abs_gamma = fabs(gamma);
-  long double tmp = ((kappa * kappa) / (4 * abs_gamma)) + (0.5 * log(PI/gamma));
-  long double log_tmp = log(kappa) + tmp - log(2*sinhl(kappa));
-  long double ratio = exp(log_tmp);
+  double abs_gamma = fabs(gamma);
+  double tmp = ((kappa * kappa) / (4 * abs_gamma)) + (0.5 * log(PI/gamma));
+  double log_tmp = log(kappa) + tmp - log(2*sinhl(kappa));
+  double ratio = exp(log_tmp);
   a1 = ratio * a0;
 
   // a2/a0
@@ -163,13 +163,13 @@ Vector FB4::generate_FB4_minus(int best, int sample_size)
   Vector u(sample_size,0);
   if (best == 1) {
     // step 0
-    long double sigma_inv = sqrt(-2*gamma);
-    long double mu1 = (kappa+2*gamma)/sigma_inv;
-    long double mu2 = (kappa-2*gamma)/sigma_inv;
-    long double q1 = 1/sigma_inv;
-    long double q2 = -kappa/(2*gamma);
+    double sigma_inv = sqrt(-2*gamma);
+    double mu1 = (kappa+2*gamma)/sigma_inv;
+    double mu2 = (kappa-2*gamma)/sigma_inv;
+    double q1 = 1/sigma_inv;
+    double q2 = -kappa/(2*gamma);
     Normal normal(0,1);
-    long double t,u_accept;
+    double t,u_accept;
     Vector tmp;
     for (int i=0; i<sample_size; i++) {
       // step 1
@@ -184,7 +184,7 @@ Vector FB4::generate_FB4_minus(int best, int sample_size)
       }
     } // for loop ...
   } else if (best == 2 || best == 3) {
-    long double r,q1,q2,s1,s2,u1,tmp1,tmp2;
+    double r,q1,q2,s1,s2,u1,tmp1,tmp2;
     // step 0
     if (best == 2) {
       r = kappa;
@@ -195,11 +195,11 @@ Vector FB4::generate_FB4_minus(int best, int sample_size)
     q2 = 1/q1;
     for (int i=0; i<sample_size; i++) {
       // step 1
-      s1 = rand() / (long double)RAND_MAX;
+      s1 = rand() / (double)RAND_MAX;
       tmp1 = q1 * s1 + q2 * (1-s1);
       u1 = log(tmp1)/r;
       // step 2
-      s2 = rand() / (long double)RAND_MAX;
+      s2 = rand() / (double)RAND_MAX;
       tmp1 = exp(gamma*u1*u1);
       tmp2 = exp(gamma*(1-u1)*(1-u1));
       if (s2 <= tmp1 || s2 <= tmp2) {
@@ -222,7 +222,7 @@ Vector FB4::generate_FB4_plus(int sample_size)
 {
   Vector u(sample_size,0);
 
-  long double r1,r2,m1,m2,n1,n2,lambda,num,denom,p1,s1,s2,s3,r,u1,q1,q2,tmp;
+  double r1,r2,m1,m2,n1,n2,lambda,num,denom,p1,s1,s2,s3,r,u1,q1,q2,tmp;
   // step 0
   r1 = kappa+gamma; r2 = kappa-gamma;
   m1 = exp(r1); m2 = 1/m1;
@@ -233,18 +233,18 @@ Vector FB4::generate_FB4_plus(int sample_size)
   p1 = num/denom;
   for(int i=0; i<sample_size; i++) {
     // step 1
-    s1 = rand()/(long double)RAND_MAX;
+    s1 = rand()/(double)RAND_MAX;
     if (s1 <= p1) {
       r = r1; q1 = m1; q2 = m2;
     } else if (s1 > p1) {
       r = r2; q1 = n1; q2 = n2;
     }
     // step 2
-    s2 = rand()/(long double)RAND_MAX;
+    s2 = rand()/(double)RAND_MAX;
     tmp = q1 * s2 + q2 * (1-s2);
     u1 = log(tmp)/r;
     // step 3
-    s3 = rand()/(long double)RAND_MAX;
+    s3 = rand()/(double)RAND_MAX;
     num = lambda * exp(gamma*u1*u1);
     denom = 2*coshl(gamma*u1);
     tmp = num/denom;
@@ -263,9 +263,9 @@ Vector FB4::generate_FB4_plus(int sample_size)
 Vector FB4::generate_spherical_coordinates(Vector &u)
 {
   Vector phi(u.size(),0);
-  long double s;
+  double s;
   for (int i=0; i<u.size(); i++) {
-    s = rand()/(long double)RAND_MAX;
+    s = rand()/(double)RAND_MAX;
     phi[i] = 2 * PI * s;
   }
   return phi;
@@ -280,7 +280,7 @@ std::vector<Vector> FB4::generate_cartesian_coordinates(
 ) {
   std::vector<Vector> coordinates(u.size());
   Vector x(3,0);
-  long double tmp;
+  double tmp;
   for (int i=0; i<u.size(); i++) {
     tmp = sqrt(1-u[i]*u[i]);
     x[0] = tmp * cos(phi[i]);

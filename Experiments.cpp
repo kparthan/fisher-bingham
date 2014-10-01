@@ -8,11 +8,11 @@ extern int MOMENT_FAIL,MLE_FAIL,MAP_FAIL,MML2_FAIL,MML5_FAIL;
 Experiments::Experiments(int iterations) : iterations(iterations)
 {}
 
-void Experiments::simulate(long double kappa, long double beta)
+void Experiments::simulate(double kappa, double beta)
 {
   std::vector<int> sample_sizes;
   //sample_sizes.push_back(5);
-  sample_sizes.push_back(10);
+  sample_sizes.push_back(100);
   /*sample_sizes.push_back(20);
   sample_sizes.push_back(30);
   sample_sizes.push_back(50);
@@ -22,7 +22,7 @@ void Experiments::simulate(long double kappa, long double beta)
   sample_sizes.push_back(1000);*/
 
   Kent kent(XAXIS,YAXIS,ZAXIS,kappa,beta);
-  long double kappa_est,beta_est,diffk,diffb;
+  double kappa_est,beta_est,diffk,diffb;
   std::vector<struct Estimates> all_estimates;
 
   string kappa_str = boost::lexical_cast<string>(kappa);
@@ -51,7 +51,7 @@ void Experiments::simulate(long double kappa, long double beta)
       writeToFile("random_sample.dat",data,3);
       Kent kent_est;
       kent_est.computeAllEstimators(data,all_estimates);
-      long double beta_est_mml = all_estimates[MML_5].beta;
+      double beta_est_mml = all_estimates[MML_5].beta;
       if (all_estimates[MML_5].beta <= 1e-5) {
         cout << "*** IGNORING ITERATION ***\n";
         goto repeat;
@@ -61,16 +61,16 @@ void Experiments::simulate(long double kappa, long double beta)
         logneg << fixed << setw(10) << sample_sizes[i] << "\t";
         logkldiv << fixed << setw(10) << sample_sizes[i] << "\t";
         logmsg << fixed << setw(10) << sample_sizes[i] << "\t";
-        long double actual_negloglkhd = kent.computeNegativeLogLikelihood(data);
-        long double actual_msglen = kent.computeMessageLength(data);
+        double actual_negloglkhd = kent.computeNegativeLogLikelihood(data);
+        double actual_msglen = kent.computeMessageLength(data);
         logneg << scientific << actual_negloglkhd << "\t";
         logmsg << scientific << actual_msglen << "\t";
         for (int j=0; j<NUM_METHODS; j++) { // for each method ...
           Kent fit(all_estimates[j].mean,all_estimates[j].major_axis,
           all_estimates[j].minor_axis,all_estimates[j].kappa,all_estimates[j].beta);
-          long double negloglkhd = fit.computeNegativeLogLikelihood(data);
-          long double msglen = fit.computeMessageLength(data);
-          long double kldiv = kent.computeKLDivergence(fit);
+          double negloglkhd = fit.computeNegativeLogLikelihood(data);
+          double msglen = fit.computeMessageLength(data);
+          double kldiv = kent.computeKLDivergence(fit);
           logneg << scientific << negloglkhd << "\t";
           logmsg << scientific << msglen << "\t";
           logkldiv << scientific << kldiv << "\t";
@@ -101,13 +101,13 @@ void Experiments::simulate(long double kappa, long double beta)
 
 void 
 Experiments::computeMeasures(
-  long double kappa,
-  long double beta,
+  double kappa,
+  double beta,
   std::vector<Vector> &kappa_est_all,
   std::vector<Vector> &beta_est_all,
   int N
 ) {
-  long double kappa_est,beta_est,diffk,diffb;
+  double kappa_est,beta_est,diffk,diffb;
 
   string kappa_str = boost::lexical_cast<string>(kappa);
   string beta_str = boost::lexical_cast<string>(beta);
@@ -203,7 +203,7 @@ Vector Experiments::computeEstimateMeans(ostream &out, std::vector<Vector> &p_es
   return means;
 }
 
-void Experiments::computeBias(ostream &out, long double p, std::vector<Vector> &p_est_all)
+void Experiments::computeBias(ostream &out, double p, std::vector<Vector> &p_est_all)
 {
   Vector avg_p_est = computeMeans(p_est_all);
 
@@ -215,7 +215,7 @@ void Experiments::computeBias(ostream &out, long double p, std::vector<Vector> &
   out << endl;
 }
 
-void Experiments::computeVariance(ostream &out, long double p, std::vector<Vector> &p_est_all)
+void Experiments::computeVariance(ostream &out, double p, std::vector<Vector> &p_est_all)
 {
   Vector avg_p_est = computeMeans(p_est_all);
   int num_elements = p_est_all.size();
@@ -233,7 +233,7 @@ void Experiments::computeVariance(ostream &out, long double p, std::vector<Vecto
   out << endl;
 }
 
-void Experiments::computeMeanAbsoluteError(ostream &out, long double p, std::vector<Vector> &p_est_all)
+void Experiments::computeMeanAbsoluteError(ostream &out, double p, std::vector<Vector> &p_est_all)
 {
   int num_elements = p_est_all.size();
 
@@ -250,7 +250,7 @@ void Experiments::computeMeanAbsoluteError(ostream &out, long double p, std::vec
   out << endl;
 }
 
-void Experiments::computeMeanSquaredError(ostream &out, long double p, std::vector<Vector> &p_est_all)
+void Experiments::computeMeanSquaredError(ostream &out, double p, std::vector<Vector> &p_est_all)
 {
   int num_elements = p_est_all.size();
 
@@ -291,7 +291,7 @@ Experiments::computeWinsRatio(
     boost::tokenizer<boost::char_separator<char> > tokens(line,sep);
     BOOST_FOREACH (const string& t, tokens) {
       istringstream iss(t);
-      long double x;
+      double x;
       iss >> x;
       numbers.push_back(x);
     }
@@ -311,7 +311,7 @@ Experiments::computeWinsRatio(
   std::vector<int> wins(NUM_METHODS,0);
   for (int i=0; i<table.size(); i++) {
     int winner = 0;
-    long double min = table[i][0];
+    double min = table[i][0];
     for (int j=1; j<NUM_METHODS; j++) {
       if (j != MML_2) {
         if (table[i][j] <= min) {

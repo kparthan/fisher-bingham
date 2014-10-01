@@ -11,21 +11,21 @@ class Experiments
   public:
     Experiments(int);
 
-    void simulate(long double, long double);
+    void simulate(double, double);
 
-    void computeMeasures(long double, long double, std::vector<Vector> &, std::vector<Vector> &, int);
+    void computeMeasures(double, double, std::vector<Vector> &, std::vector<Vector> &, int);
 
     Vector computeEstimateMedians(ostream &, std::vector<Vector> &);
 
     Vector computeEstimateMeans(ostream &, std::vector<Vector> &);
 
-    void computeBias(ostream &, long double, std::vector<Vector> &);
+    void computeBias(ostream &, double, std::vector<Vector> &);
 
-    void computeVariance(ostream &, long double, std::vector<Vector> &);
+    void computeVariance(ostream &, double, std::vector<Vector> &);
 
-    void computeMeanAbsoluteError(ostream &, long double, std::vector<Vector> &);
+    void computeMeanAbsoluteError(ostream &, double, std::vector<Vector> &);
 
-    void computeMeanSquaredError(ostream &, long double, std::vector<Vector> &);
+    void computeMeanSquaredError(ostream &, double, std::vector<Vector> &);
 
     void computeWinsRatio(bool, const char *, string, int, string);
 };

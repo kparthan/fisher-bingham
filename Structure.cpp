@@ -55,7 +55,7 @@ void Structure::read_profile(string &file_name)
     Vector values; 
     BOOST_FOREACH (const string& t, tokens) {
       istringstream iss(t);
-      long double x;
+      double x;
       iss >> x;
       values.push_back(x);
     }
