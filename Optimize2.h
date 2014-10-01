@@ -73,8 +73,8 @@ class MAPObjectiveFunction_vMF
       double k = x[0];
 
       vMF vmf(mean,k);
-      long double log_prior = vmf.computeLogPriorProbability();// - log(sin(alpha));
-      double fval = -log_prior + vmf.computeNegativeLogLikelihood(N,R)
+      long double log_prior = vmf.computeLogPriorProbability(); 
+      double fval = -log_prior + vmf.computeNegativeLogLikelihood(R,N)
                     - 2 * N * log(AOM);
       return fval;
     }

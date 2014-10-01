@@ -49,6 +49,7 @@ void Optimize2::computeEstimates(struct Estimates_vMF &estimates)
     {
       MaximumLikelihoodObjectiveFunction_vMF mle(N,R);
       opt.set_min_objective(MaximumLikelihoodObjectiveFunction_vMF::wrap, &mle);
+      nlopt::result result = opt.optimize(x, minf);
       break;
     }
 
@@ -56,6 +57,7 @@ void Optimize2::computeEstimates(struct Estimates_vMF &estimates)
     {
       MAPObjectiveFunction_vMF map(N,R,mean);
       opt.set_min_objective(MAPObjectiveFunction_vMF::wrap, &map);
+      nlopt::result result = opt.optimize(x, minf);
       break;
     }
 
@@ -63,18 +65,17 @@ void Optimize2::computeEstimates(struct Estimates_vMF &estimates)
     {
       MMLObjectiveFunction_vMF mml2(N,R,mean);
       opt.set_min_objective(MMLObjectiveFunction_vMF::wrap, &mml2);
+      nlopt::result result = opt.optimize(x, minf);
       break;
     }
 
     default:
       break;
   }
-  nlopt::result result = opt.optimize(x, minf);
-  //assert(!boost::math::isnan(minf));
   if (boost::math::isnan(minf)) {
     x[0] = kappa;
   }
-  cout << "solution: (" << x[0] << ")\n";
+  //cout << "solution: (" << x[0] << ")\n";
   cout << "minf: " << minf << endl;
   estimates.kappa = x[0];
 }

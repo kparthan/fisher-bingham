@@ -549,7 +549,7 @@ void Test::vmf_all_estimation()
   Vector mean(3,0);
   spherical2cartesian(spherical,mean);
   long double kappa = 10;
-  int sample_size = 100;
+  int sample_size = 10;
 
   vMF vmf(mean,kappa);
   std::vector<Vector> random_sample = vmf.generate(sample_size);

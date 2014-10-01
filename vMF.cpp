@@ -58,7 +58,10 @@ long double vMF::computeLogNormalizationConstant()
   } else {
     log_cd = log(kappa) - log(2*PI) - kappa;
     long double tmp = 1 - exp(-2*kappa);
-    log_cd += log(tmp);
+    log_cd -= log(tmp);
+    /*log_cd = log(kappa) - log(2*PI);
+    long double tmp = exp(kappa) - exp(-kappa);
+    log_cd -= log(tmp);*/
     return log_cd;
   }
 }
@@ -351,6 +354,9 @@ void vMF::computeAllEstimators(
   // ML_APPROX
   estimateMLApproxKappa(mlapprox_est);
   all_estimates.push_back(mlapprox_est);
+  long double msglen = computeMessageLength(mlapprox_est);
+  cout << "msglen: " << msglen << endl;
+  cout << "KL-divergence: " << computeKLDivergence(mlapprox_est) << endl << endl;
 
   // MLE
   string type = "MLE";
@@ -359,6 +365,9 @@ void vMF::computeAllEstimators(
   opt_mle.initialize(N,ml_est.R,ml_est.mean,ml_est.kappa);
   opt_mle.computeEstimates(ml_est);
   print(type,ml_est);
+  msglen = computeMessageLength(ml_est);
+  cout << "msglen: " << msglen << endl;
+  cout << "KL-divergence: " << computeKLDivergence(ml_est) << endl << endl;
   all_estimates.push_back(ml_est);
 
   // MAP
@@ -368,15 +377,21 @@ void vMF::computeAllEstimators(
   opt_map.initialize(N,map_est.R,map_est.mean,map_est.kappa);
   opt_map.computeEstimates(map_est);
   print(type,map_est);
+  msglen = computeMessageLength(map_est);
+  cout << "msglen: " << msglen << endl;
+  cout << "KL-divergence: " << computeKLDivergence(map_est) << endl << endl;
   all_estimates.push_back(map_est);
 
   // MML
   type = "MML_2";
-  struct Estimates_vMF mml_est = map_est;
+  struct Estimates_vMF mml_est = mlapprox_est;
   Optimize2 opt_mml(type);
   opt_mml.initialize(N,mml_est.R,mml_est.mean,mml_est.kappa);
   opt_mml.computeEstimates(mml_est);
   print(type,mml_est);
+  msglen = computeMessageLength(mml_est);
+  cout << "msglen: " << msglen << endl;
+  cout << "KL-divergence: " << computeKLDivergence(mml_est) << endl << endl;
   all_estimates.push_back(mml_est);
 }
 
@@ -416,17 +431,20 @@ struct Estimates_vMF vMF::computeMMLEstimates(std::vector<Vector> &data)
 
 struct Estimates_vMF vMF::computeMMLEstimates(struct Estimates_vMF &mlapprox_est)
 {
-  string type = "MAP";
+  string type;
+  long double msglen;
+
+  /*type = "MAP";
   struct Estimates_vMF map_est = mlapprox_est;
   Optimize2 opt_map(type);
   opt_map.initialize(map_est.Neff,map_est.R,map_est.mean,map_est.kappa);
   opt_map.computeEstimates(map_est);
   print(type,map_est);
-  long double msglen = computeMessageLength(map_est);
-  cout << "msglen (bpr): " << msglen/map_est.Neff << endl;
+  msglen = computeMessageLength(map_est);
+  cout << "msglen (bpr): " << msglen/map_est.Neff << endl;*/
 
   type = "MML_2";
-  struct Estimates_vMF mml_est = map_est;
+  struct Estimates_vMF mml_est = mlapprox_est;
   Optimize2 opt_mml(type);
   opt_mml.initialize(mml_est.Neff,mml_est.R,mml_est.mean,mml_est.kappa);
   opt_mml.computeEstimates(mml_est);
