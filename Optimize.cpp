@@ -116,8 +116,8 @@ std::vector<double> Optimize::minimize(Vector &sample_mean, Matrix &S, int num_p
   nlopt::opt opt(nlopt::LN_COBYLA, num_params);
 
   std::vector<double> lb(num_params,TOLERANCE);
-  //std::vector<double> ub(num_params,HUGE_VAL);
-  std::vector<double> ub(num_params,MAX_KAPPA);
+  std::vector<double> ub(num_params,HUGE_VAL);
+  //std::vector<double> ub(num_params,MAX_KAPPA);
 
   // GN_ISRES and GN_ORIG_DIRECT work with finite bounds
   //nlopt::opt opt(nlopt::GN_ISRES, num_params);

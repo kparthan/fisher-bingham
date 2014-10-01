@@ -1503,9 +1503,9 @@ void TestFunctions(void)
 
   //test.fisher();
 
-  //test.mml_estimation();
+  test.mml_estimation();
 
-  test.vmf_all_estimation();
+  //test.vmf_all_estimation();
 }
 
 ////////////////////// EXPERIMENTS \\\\\\\\\\\\\\\\\\\\\\\\\\\\
@@ -1515,8 +1515,8 @@ void RunExperiments(int iterations)
   Experiments experiments(iterations);
 
   //experiments.simulate(10,4.5);
-  //experiments.simulate(10,3);
-  experiments.simulate(100,30);
+  experiments.simulate(10,3);
+  //experiments.simulate(100,30);
   //experiments.simulate(100,45);
 }
 
