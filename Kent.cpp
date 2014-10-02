@@ -685,6 +685,9 @@ struct Estimates Kent::computeMomentEstimates(Vector &sample_mean1, Matrix &S1, 
   estimates.kappa = f1 + f2;
   estimates.beta = 0.5 * (f1-f2);
 
+  cout << "kappa: " << estimates.kappa << endl;
+  cout << "beta: " << estimates.beta << endl;
+
   //Vector cross = crossProduct(estimates.major_axis,estimates.minor_axis);
   // submatrix 2 X 2
   /*Matrix B_sub(2,2);

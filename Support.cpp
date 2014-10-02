@@ -1379,7 +1379,7 @@ void TestFunctions(void)
 
   //test.optimization();
 
-  //test.moment_estimation();
+  test.moment_estimation();
 
   //test.ml_estimation();
 
@@ -1389,7 +1389,7 @@ void TestFunctions(void)
 
   //test.fisher();
 
-  test.mml_estimation();
+  //test.mml_estimation();
 }
 
 ////////////////////// EXPERIMENTS \\\\\\\\\\\\\\\\\\\\\\\\\\\\
