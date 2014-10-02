@@ -49,6 +49,7 @@ class MomentObjectiveFunction
       Kent kent(k,b);
       long double log_norm = kent.computeLogNormalizationConstant();
       double fval = log_norm - k * C1 - b * C2;
+      cout << "k: " << k << "\tb: " << b << "\tfval: " << fval << endl;
       return fval;
     }
 }; 

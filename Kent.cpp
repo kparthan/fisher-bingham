@@ -406,10 +406,9 @@ long double Kent::computeLogPriorAxes()
 long double Kent::computeLogPriorScale()
 {
   long double log_prior = 0;
-  //log_prior += log(-log(TOLERANCE)) - log(1-TOLERANCE);
-  /*log_prior += log(kappa);
+  log_prior += log(kappa);
   log_prior -= 2 * log(1+kappa*kappa);
-  log_prior += log(8/PI);*/
+  log_prior += log(8/PI);
   /*log_prior += 2 * log(4/PI);
   log_prior += 2 * log(kappa);
   log_prior -= 2 * log(1+kappa*kappa);
@@ -419,10 +418,10 @@ long double Kent::computeLogPriorScale()
   long double tmp = kappa + (4/kappa);
   cinv -= 1/tmp;
   log_prior -= log(cinv);*/
-  long double ex = (2 * beta) / kappa;
+  /*long double ex = (2 * beta) / kappa;
   log_prior += (-log(PI-2) + log(8));
   log_prior += 2 * log(ex);
-  log_prior -= 2 * log(1+ex*ex);
+  log_prior -= 2 * log(1+ex*ex);*/
   return log_prior;
 }
 
@@ -622,8 +621,8 @@ void Kent::computeAllEstimators(
   cout << fixed << "msglen: " << computeMessageLength(mml2_est,sample_mean,S,N) << endl;
 
   type = "MML_5";
-  struct Estimates mml5_est = map_est;
-  //struct Estimates mml5_est = moment_est;
+  //struct Estimates mml5_est = map_est;
+  struct Estimates mml5_est = moment_est;
   Optimize opt4(type);
   opt4.initialize(N,mml5_est.mean,mml5_est.major_axis,mml5_est.minor_axis,
                   mml5_est.kappa,mml5_est.beta);
@@ -708,6 +707,11 @@ struct Estimates Kent::computeMomentEstimates(Vector &sample_mean1, Matrix &S1, 
   long double f2 = 1/(2 - 2*r1 + r2);
   estimates.kappa = f1 + f2;
   estimates.beta = 0.5 * (f1-f2);
+
+  cout << "kappa: " << estimates.kappa << endl;
+  cout << "beta: " << estimates.beta << endl;
+  //estimates.kappa = 120;
+  //estimates.beta = 45;
 
   //Vector cross = crossProduct(estimates.major_axis,estimates.minor_axis);
   // submatrix 2 X 2

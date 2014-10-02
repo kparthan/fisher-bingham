@@ -135,7 +135,7 @@ std::vector<double> Optimize::minimize(Vector &sample_mean, Matrix &S, int num_p
       MomentObjectiveFunction moment(mean,major,minor,sample_mean,S,N);
       opt.set_min_objective(MomentObjectiveFunction::wrap, &moment);
       opt.add_inequality_constraint(Constraint2, NULL, TOLERANCE);
-      opt.set_xtol_rel(1e-4);
+      opt.set_xtol_rel(1e-6);
 
       x[0] = kappa; x[1] = beta;
       nlopt::result result = opt.optimize(x, minf);
@@ -175,6 +175,7 @@ std::vector<double> Optimize::minimize(Vector &sample_mean, Matrix &S, int num_p
       nlopt::result result = opt.optimize(x, minf);
       //assert(!boost::math::isnan(minf));
       if (boost::math::isnan(minf)) {
+        cout << "MAP here:\n";
         x[0] = alpha; x[1] = eta; x[2] = psi; x[3] = kappa; x[4] = beta;
       }
       break;
@@ -216,6 +217,7 @@ std::vector<double> Optimize::minimize(Vector &sample_mean, Matrix &S, int num_p
       nlopt::result result = opt.optimize(x, minf);
       //assert(!boost::math::isnan(minf));
       if (boost::math::isnan(minf)) {
+        cout << "MML5 here:\n";
         x[0] = alpha; x[1] = eta; x[2] = psi; x[3] = kappa; x[4] = beta;
       }
       break;

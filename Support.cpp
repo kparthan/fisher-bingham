@@ -1493,7 +1493,7 @@ void TestFunctions(void)
 
   //test.optimization();
 
-  //test.moment_estimation();
+  test.moment_estimation();
 
   //test.ml_estimation();
 
@@ -1503,7 +1503,7 @@ void TestFunctions(void)
 
   //test.fisher();
 
-  test.mml_estimation();
+  //test.mml_estimation();
 
   //test.vmf_all_estimation();
 }
@@ -1515,9 +1515,9 @@ void RunExperiments(int iterations)
   Experiments experiments(iterations);
 
   //experiments.simulate(10,4.5);
-  experiments.simulate(10,3);
+  //experiments.simulate(10,3);
   //experiments.simulate(100,30);
-  //experiments.simulate(100,45);
+  experiments.simulate(100,45);
 }
 
 /*!
