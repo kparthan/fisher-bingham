@@ -1487,7 +1487,7 @@ void TestFunctions(void)
 
   //test.orthogonalTransformations2();
 
-  //test.randomSampleGeneration();
+  test.randomSampleGeneration();
 
   //test.normalization_constant();
 
