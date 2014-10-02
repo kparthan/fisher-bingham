@@ -1,6 +1,7 @@
 #include "Test.h"
 #include "Support.h"
 #include "Normal.h"
+#include "vMC.h"
 #include "vMF.h"
 #include "FB4.h"
 #include "FB6.h"
@@ -235,9 +236,9 @@ void Test::randomSampleGeneration(void)
 
   // vMF (2D)
   Vector mean(2,0); mean[0] = 1;
-  vMF vmf2(mean,10);
-  vmf2.generateCanonical(random_sample,100);
-  writeToFile("./visualize/vmf2.dat",random_sample,3);
+  vMC vmc(mean,10);
+  vmc.generateCanonical(random_sample,100);
+  writeToFile("./visualize/vmc.dat",random_sample,3);
 
   // FB6 generation 
   FB6 fb6(m0,m1,m2,100,15,-10);
@@ -341,7 +342,7 @@ void Test::moment_estimation(void)
   std::vector<Vector> random_sample;
   Vector m0,m1,m2;
   long double kappa = 100;
-  long double beta = 47.5;
+  long double beta = 15;
 
   generateRandomOrthogonalVectors(m0,m1,m2);
   cartesian2spherical(m0,spherical);

@@ -193,8 +193,9 @@ void vMF::printParameters(ostream &os)
  *  \param sample_size an integer
  *  \return the random list of points
  */
-void vMF::generateCanonical(std::vector<Vector> &canonical_sample, int sample_size, int D)
+void vMF::generateCanonical(std::vector<Vector> &canonical_sample, int sample_size)
 {
+  int D = 3;
   canonical_sample.clear();
   int count = 0;
   beta_distribution<> beta((D-1)/2.0,(D-1)/2.0);
@@ -244,24 +245,20 @@ void vMF::generateCanonical(std::vector<Vector> &canonical_sample, int sample_si
  *  \param sample_size an integer
  *  \return the random list of points
  */
-std::vector<Vector> vMF::generate(int sample_size, int D)
+std::vector<Vector> vMF::generate(int sample_size)
 {
   cout << "\nGenerating from vMF with mean: ";
-  if (D == 3) {
-    Vector spherical(3,0);
-    cartesian2spherical(mu,spherical);
-    spherical[1] *= 180 / PI;
-    spherical[2] *= 180 / PI;
-    print(cout,spherical,3);
-    cout << "; Kappa: " << kappa << "; sample size = " << sample_size << endl;
-  } else {
-    cout << "[D,K] = [" << D << "," << kappa 
-         << "] and sample size = " << sample_size;
-  }
+  Vector spherical(3,0);
+  cartesian2spherical(mu,spherical);
+  spherical[1] *= 180 / PI;
+  spherical[2] *= 180 / PI;
+  print(cout,spherical,3);
+  cout << "; Kappa: " << kappa << "; sample size = " << sample_size << endl;
+
   if (sample_size != 0) {
     std::vector<Vector> canonical_sample;
     generateCanonical(canonical_sample,sample_size);
-    if (fabs(mu[D-1] - 1) <= TOLERANCE) {  // check if mu is Z-axis
+    if (fabs(mu[2] - 1) <= TOLERANCE) {  // check if mu is Z-axis
       return canonical_sample;
     } else {
       Matrix transformation = align_zaxis_with_vector(mu);

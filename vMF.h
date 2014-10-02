@@ -66,10 +66,10 @@ class vMF
     void printParameters(ostream &);
 
     //! Generate random sample
-    std::vector<Vector> generate(int, int D = 3);
+    std::vector<Vector> generate(int);
 
     //! Generate a random canonical sample
-    void generateCanonical(std::vector<Vector> &, int, int D = 3);
+    void generateCanonical(std::vector<Vector> &, int);
 
     long double computeLogPriorProbability();
 

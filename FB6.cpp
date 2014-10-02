@@ -1,6 +1,6 @@
 #include "FB6.h"
 #include "FB4.h"
-#include "vMF.h"
+#include "vMC.h"
 #include "Support.h"
 
 extern Vector XAXIS,YAXIS,ZAXIS;
@@ -119,9 +119,8 @@ std::vector<Vector> FB6::generateCanonical(int sample_size)
       }
       // generate psi from von Mises circular
       tmp = beta * (1-u[i]*u[i]);
-      //vMF vmf(vmf2dmean,tmp);
-      vMF vmf;
-      vmf.generateCanonical(random_sample,1,2);
+      vMC vmc(vmf2dmean,tmp);
+      vmc.generateCanonical(random_sample,1);
       x = random_sample[0];
       angle = atan(fabs(x[0])/fabs(x[1]));
       if (x[0] < 0 && x[1] > 0) {

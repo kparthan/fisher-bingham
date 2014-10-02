@@ -9,6 +9,7 @@ LDFLAGS=-lboost_program_options -lboost_system -lboost_filesystem -fopenmp -lnlo
 OBJECTS = main.o \
   Support.o \
   Normal.o  \
+  vMC.o \
   vMF.o \
   FB4.o \
   Kent.o \
@@ -35,6 +36,9 @@ Normal.o: Normal.cpp Normal.h
 	g++ $(CFLAGS) $< -o $@
 
 vMF.o: vMF.cpp vMF.h Header.h
+	g++ $(CFLAGS) $< -o $@
+
+vMC.o: vMC.cpp vMC.h Header.h
 	g++ $(CFLAGS) $< -o $@
 
 FB4.o: FB4.cpp FB4.h Header.h
