@@ -212,10 +212,9 @@ void vMF::generateCanonical(std::vector<Vector> &canonical_sample, int sample_si
 
   while (count < sample_size) {
     // step 1
-    p = rand() / (long double) RAND_MAX;
-    //cout << "p: " << p << endl;
+    p = uniform_random();
     Z = quantile(beta,p);
-    U = rand() / (long double) RAND_MAX;
+    U = uniform_random();
     //cout << "U: " << U << endl;
     tmp1 = 1 - ((1+b) * Z);
     tmp2 = 1 - ((1-b) * Z);
@@ -228,7 +227,6 @@ void vMF::generateCanonical(std::vector<Vector> &canonical_sample, int sample_si
       // step 3
       Vector random_normal = normal.generate(D-1);
       normalize(random_normal,V);
-      //print(cout,V);
       tmp1 = sqrt(1-W*W);
       for (int i=0; i<D-1; i++) {
         random_vmf[i] = tmp1 * V[i];

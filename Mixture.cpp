@@ -656,7 +656,7 @@ void Mixture::load(string &file_name, std::vector<Vector> &d, Vector &dw)
  */
 int Mixture::randomComponent()
 {
-  long double random = rand() / (long double) RAND_MAX;
+  long double random = uniform_random();
   //cout << random << endl;
   long double previous = 0;
   for (int i=0; i<weights.size(); i++) {

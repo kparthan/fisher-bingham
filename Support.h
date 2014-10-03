@@ -49,6 +49,7 @@ struct Estimates_vMF
 };
 
 // general functions
+//void Setup();
 struct Parameters parseCommandLineInput (int, char **); 
 void Usage (const char *, options_description &);
 bool checkFile(string &);
@@ -67,8 +68,8 @@ void spherical2cartesian(Vector &, Vector &);
 long double computeDotProduct(Vector &, Vector &);
 Vector crossProduct(Vector &, Vector &); 
 long double computeLogSurfaceAreaSphere(int);
-long double logModifiedBesselFirstKind(long double, long double);
 void solveQuadratic(Vector &, long double, long double, long double);
+long double uniform_random();
 
 std::vector<Vector> load_matrix(string &);
 Matrix outer_prod(Vector &, Vector &);
@@ -130,7 +131,5 @@ Vector computeMeans(std::vector<Vector> &);
 long double computeVariance(Vector &);
 int maximumIndex(Vector &);
 
-long double computeRatioBessel(int &, long double &);
-long double computeDerivativeOfRatioBessel(int &, long double &, long double &);
 #endif
 

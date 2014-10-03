@@ -20,6 +20,7 @@
 #include <boost/foreach.hpp>
 #include <boost/tokenizer.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/random.hpp>
 
 #include <boost/math/constants/constants.hpp>
 #include <boost/math/special_functions.hpp>

@@ -83,7 +83,7 @@ std::vector<Vector> FB6::generateCanonical(int sample_size)
     Vector u1;
     for (int i=0; i<sample_size; i++) {
       // step 1
-      s1 = rand()/(long double)RAND_MAX;
+      s1 = uniform_random();
       if (s1 <= p2) {
         eta = psi1;
       } else if (s1 > p2) {
@@ -93,7 +93,7 @@ std::vector<Vector> FB6::generateCanonical(int sample_size)
       FB4 fb4(kappa,eta);
       u1 = fb4.generate_u(1);
       // step 3
-      s2 = rand()/(long double)RAND_MAX;
+      s2 = uniform_random();
       tmp = beta * (1-u1[0]*u1[0]);
       num = cyl_bessel_i(0,tmp);
       denom = coshl(tmp);
@@ -112,7 +112,7 @@ std::vector<Vector> FB6::generateCanonical(int sample_size)
     Vector x(2,0);
     for (int i=0; i<sample_size; i++) {
       // generate delta from Bernoulli distribution
-      p = rand()/(long double)RAND_MAX;
+      p = uniform_random();
       if (p <= 0.5) {
         delta = 0;
       } else {

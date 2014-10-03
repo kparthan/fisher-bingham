@@ -1,4 +1,5 @@
 #include "Normal.h"
+#include "Support.h"
 
 /*!
  *  \brief This is a constructor module
@@ -121,8 +122,8 @@ Vector Normal::generate(int sample_size)
   long double u,v,r1,r2,sqroot,arg;
 
   for (int i=0; i<sample_size; i+=2) {
-    u = rand() / (long double)RAND_MAX;
-    v = rand() / (long double)RAND_MAX;
+    u = uniform_random();
+    v = uniform_random();
 
     sqroot = sqrt(-2 * log(u));
     arg = 2 * PI * v;

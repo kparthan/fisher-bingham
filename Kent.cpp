@@ -621,8 +621,8 @@ void Kent::computeAllEstimators(
   cout << fixed << "msglen: " << computeMessageLength(mml2_est,sample_mean,S,N) << endl;
 
   type = "MML_5";
-  //struct Estimates mml5_est = map_est;
-  struct Estimates mml5_est = moment_est;
+  struct Estimates mml5_est = map_est;
+  //struct Estimates mml5_est = moment_est;
   Optimize opt4(type);
   opt4.initialize(N,mml5_est.mean,mml5_est.major_axis,mml5_est.minor_axis,
                   mml5_est.kappa,mml5_est.beta);

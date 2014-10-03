@@ -8,6 +8,8 @@ class Test
   private:
 
   public:
+    void uniform_number_generation();
+
     void matrixFunctions(void);
 
     void productMatrixVector(void);

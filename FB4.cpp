@@ -195,11 +195,11 @@ Vector FB4::generate_FB4_minus(int best, int sample_size)
     q2 = 1/q1;
     for (int i=0; i<sample_size; i++) {
       // step 1
-      s1 = rand() / (long double)RAND_MAX;
+      s1 = uniform_random();
       tmp1 = q1 * s1 + q2 * (1-s1);
       u1 = log(tmp1)/r;
       // step 2
-      s2 = rand() / (long double)RAND_MAX;
+      s2 = uniform_random();
       tmp1 = exp(gamma*u1*u1);
       tmp2 = exp(gamma*(1-u1)*(1-u1));
       if (s2 <= tmp1 || s2 <= tmp2) {
@@ -233,18 +233,18 @@ Vector FB4::generate_FB4_plus(int sample_size)
   p1 = num/denom;
   for(int i=0; i<sample_size; i++) {
     // step 1
-    s1 = rand()/(long double)RAND_MAX;
+    s1 = uniform_random();
     if (s1 <= p1) {
       r = r1; q1 = m1; q2 = m2;
     } else if (s1 > p1) {
       r = r2; q1 = n1; q2 = n2;
     }
     // step 2
-    s2 = rand()/(long double)RAND_MAX;
+    s2 = uniform_random();
     tmp = q1 * s2 + q2 * (1-s2);
     u1 = log(tmp)/r;
     // step 3
-    s3 = rand()/(long double)RAND_MAX;
+    s3 = uniform_random();
     num = lambda * exp(gamma*u1*u1);
     denom = 2*coshl(gamma*u1);
     tmp = num/denom;
@@ -265,7 +265,7 @@ Vector FB4::generate_spherical_coordinates(Vector &u)
   Vector phi(u.size(),0);
   long double s;
   for (int i=0; i<u.size(); i++) {
-    s = rand()/(long double)RAND_MAX;
+    s = uniform_random();
     phi[i] = 2 * PI * s;
   }
   return phi;

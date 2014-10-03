@@ -9,6 +9,13 @@
 
 extern Vector XAXIS,YAXIS,ZAXIS;
 
+void Test::uniform_number_generation()
+{
+  for (int i=0; i<10; i++) {
+    cout << uniform_random() << endl;
+  }
+}
+
 void Test::matrixFunctions()
 {
   cout << "Testing matrices ...\n";
@@ -342,7 +349,8 @@ void Test::moment_estimation(void)
   std::vector<Vector> random_sample;
   Vector m0,m1,m2;
   long double kappa = 100;
-  long double beta = 2;
+  //long double beta = 45;
+  long double beta = 47.5;
 
   generateRandomOrthogonalVectors(m0,m1,m2);
   cartesian2spherical(m0,spherical);
@@ -522,10 +530,17 @@ void Test::mml_estimation(void)
   std::vector<Vector> random_sample;
   Vector m0,m1,m2;
   long double kappa = 100;
-  long double beta = 1;
+  long double beta;
   int sample_size = 10000;
 
-  generateRandomOrthogonalVectors(m0,m1,m2);
+  //beta = 1;
+  //beta = 45;
+  beta = 47.5;
+
+  //generateRandomOrthogonalVectors(m0,m1,m2);
+  m0 = ZAXIS;
+  m1 = XAXIS;
+  m2 = YAXIS;
   cartesian2spherical(m0,spherical);
   cout << "m0: "; print(cout,m0,3);
   cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";

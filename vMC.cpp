@@ -56,71 +56,46 @@ long double vMC::Kappa(void)
 	return kappa;
 }
 
-/*!
- *  \brief This function generates a random sample from a canonical vMC 
- *  based on Wood's algorithm. Steps involved are as follows:
- *  Step 0:
- *          Calculate b = [-2K + {4 K^2 + (D-1)^2}^1/2] / (D-1)
- *               put x0 = (1 - b) / (1 + b)
- *               and c  = K x0 + (D-1) log(1 - x0^2)
- *  Step 1:
- *          Generate Z ~ Beta{(D-1)/2,(D-1)/2}
- *                   U ~ Uniform(0,1)
- *     and calculate W = {1-(1+b)Z} / {1-(1-b)Z}
- *  Step 2:
- *          If KW + (D-1) log (1-x0 W) - c < log(U), then go to Step 1
- *  Step 3:
- *          Generate a uniform (D-1)-dimensional unit vector V, and
- *          return X^T = ((1-W^2)^1/2 V^T,W)
- *  Then X has the vMC distribution with mean direction (0,...,0,1)^T and Kappa = K
- *  \param canonical_sample a reference to a vector<vector<long double> >
- *  \param sample_size an integer
- *  \return the random list of points
- */
 void vMC::generateCanonical(std::vector<Vector> &canonical_sample, int sample_size)
 {
-  int D = 2;
-  canonical_sample.clear();
-  int count = 0;
-  beta_distribution<> beta((D-1)/2.0,(D-1)/2.0);
-  Normal normal(0,1);
-  Vector V(D-1,0);  // (D-1)-unit vector
-  Vector random_vmf(D,0);
+  long double tmp = 1 + (4 * kappa * kappa);
+  long double a = 1 + sqrt(tmp);
 
-  // step 0
-  long double tmp1,tmp2,p,Z,U,W,check;
-  tmp1 = (4 * kappa * kappa) + (D-1) * (D-1);
-  long double b = (-2 * kappa + sqrt(tmp1)) / (long double) (D-1);
-  long double x0 =  (1 - b) / (1 + b);
-  long double c = (kappa * x0) + ((D-1) * log(1 - x0*x0));
+  tmp = a - sqrt(2*a);
+  long double b = tmp / (2*kappa);
 
-  while (count < sample_size) {
-    // step 1
-    p = rand() / (long double) RAND_MAX;
-    //cout << "p: " << p << endl;
-    Z = quantile(beta,p);
-    U = rand() / (long double) RAND_MAX;
-    //cout << "U: " << U << endl;
-    tmp1 = 1 - ((1+b) * Z);
-    tmp2 = 1 - ((1-b) * Z);
-    W = tmp1 / tmp2;
-    //cout << "W: " << W << endl;
+  tmp = 1 + (b*b);
+  long double r = tmp / (2*b);
 
-    // step 2
-    check = kappa * W + ((D-1) * log(1 - x0*W)) - c;
-    if (check >= log(U)) {
-      // step 3
-      Vector random_normal = normal.generate(D-1);
-      normalize(random_normal,V);
-      //print(cout,V);
-      tmp1 = sqrt(1-W*W);
-      for (int i=0; i<D-1; i++) {
-        random_vmf[i] = tmp1 * V[i];
-      }
-      random_vmf[D-1] = W;
-      canonical_sample.push_back(random_vmf);
-      count++;
+  long double u1,u2,u3,z,f,c,check1,check2,angle;
+  Vector thetas;
+  for (int i=0; i<sample_size; i++) {
+    repeat:
+    u1 = uniform_random();
+    z = cos(PI*u1);
+    f = (1+r*z) / (r+z);
+    c = kappa * (r-f);
+    u2 = uniform_random();
+    check1 = (c * (2-c)) - u2;
+    if (check1 > 0) {
+      goto accept;
+    } else if (check1 <= 0) {
+      check2 = log(c) - log(u2) + 1 - c;
+      if (check2 < 0) goto repeat;
+      else if (check2 >= 0) goto accept;
     }
+    accept:
+    u3 = uniform_random();
+    angle = (PI/2) + (sign(u3-0.5)*acos(f));
+    thetas.push_back(angle);
+  }
+  //assert(thetas.size() == sample_size);
+  canonical_sample.clear();
+  Vector v(2,0);
+  for (int i=0; i<sample_size; i++) {
+    v[0] = cos(thetas[i]);
+    v[1] = sin(thetas[i]);
+    canonical_sample.push_back(v);
   }
 }
 

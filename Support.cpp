@@ -3,6 +3,7 @@
 #include "Experiments.h"
 #include "Mixture.h"
 #include "Structure.h"
+#include "UniformRandomNumberGenerator.h"
 
 Vector XAXIS,YAXIS,ZAXIS;
 int MIXTURE_ID = 1;
@@ -17,8 +18,25 @@ int MLE_FAIL=0,MAP_FAIL=0;
 int MOMENT_FAIL=0,MML2_FAIL=0,MML5_FAIL=0;  // Kent experiments
 int MML_FAIL = 0; // vMF experiments
 bool FAIL_STATUS;
+UniformRandomNumberGenerator *uniform_generator;
 
 ////////////////////// GENERAL PURPOSE FUNCTIONS \\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+/*void Setup()
+{
+  XAXIS = Vector(3,0); XAXIS[0] = 1;
+  YAXIS = Vector(3,0); YAXIS[1] = 1;
+  ZAXIS = Vector(3,0); ZAXIS[2] = 1;
+
+  //srand(time(NULL));
+
+  UniformReal uniform_distribution(0,1);
+  RandomNumberGenerator generator;
+  Generator num_gen(generator,uniform_distribution); 
+  generator.seed(std::time(0)); // seed with the current time 
+  //UniformRandomNumberGenerator *instance = new UniformRandomNumberGenerator(num_gen);
+  uniform_generator = new UniformRandomNumberGenerator(num_gen);
+}*/
 
 /*!
  *  \brief This function checks to see if valid arguments are given to the 
@@ -479,44 +497,6 @@ long double computeLogSurfaceAreaSphere(int d)
 }
 
 /*!
- *  \brief This function computes the log of modified Bessel function value
- *  (used for numerical stability reasons)
- */
-long double logModifiedBesselFirstKind(long double alpha, long double x)
-{
-  if (!(alpha >= 0 && fabs(x) >= 0)) {
-    cout << "Error logModifiedBesselFirstKind: (alpha,x) = (" << alpha << "," << x << ")\n";
-    //exit(1);
-  }
-  long double t;
-  if (alpha == 0) {
-    t = 1;
-  } else if (fabs(x) <= TOLERANCE) {
-    t = 0;
-    return 0;
-  } 
-  long double x2_4 = x * x * 0.25;
-  long double R = 1.0,             // 0-th term
-         I = 1.0,             // m=0 sum
-         m = 1.0;             // next, m=1
-  // m! = m*(m-1)!, and
-  // Gamma(m+alpha+1) = (m+alpha)*Gamma(m+alpha), 
-  // because Gamma(x+1) = x*Gamma(x), for all x > 0.
-  do { 
-    long double tmp = x2_4 / (m*(alpha+m));  // the m-th term
-    R *= tmp;  // the m-th term
-    I += R;                     // total
-    if (R >= INFINITY || I >= INFINITY) {
-      return INFINITY;
-    }
-    m += 1.0;
-    //cout << "m: " << m << "; tmp: " << tmp << "; R: " << R << "; I: " << I << endl;
-  } while( R >= I * ZERO);
-  long double log_mod_bessel = log(I) + (alpha * log(x/2.0)) - lgamma<long double>(alpha+1);
-  return log_mod_bessel;
-}
-
-/*!
  *  Find the roots of a quadratic: ax^2 + bx + c = 0
  */
 void solveQuadratic(
@@ -528,6 +508,12 @@ void solveQuadratic(
   long double D = sqrt(b*b-4*a*c);
   roots[0] = (-b + D) / (2*a);
   roots[1] = (-b - D) / (2*a);
+}
+
+long double uniform_random()
+{
+  return (*uniform_generator)();
+  //return rand()/(long double)RAND_MAX;
 }
 
 ////////////////////// GEOMETRY FUNCTIONS \\\\\\\\\\\\\\\\\\\\\\\\\\\\
@@ -1473,6 +1459,8 @@ void TestFunctions(void)
 {
   Test test;
 
+  //test.uniform_number_generation();
+
   //test.matrixFunctions();
 
   //test.productMatrixVector();
@@ -1487,13 +1475,13 @@ void TestFunctions(void)
 
   //test.orthogonalTransformations2();
 
-  test.randomSampleGeneration();
+  //test.randomSampleGeneration();
 
   //test.normalization_constant();
 
   //test.optimization();
 
-  test.moment_estimation();
+  //test.moment_estimation();
 
   //test.ml_estimation();
 
@@ -1503,7 +1491,7 @@ void TestFunctions(void)
 
   //test.fisher();
 
-  //test.mml_estimation();
+  test.mml_estimation();
 
   //test.vmf_all_estimation();
 }
@@ -1681,34 +1669,5 @@ int maximumIndex(Vector &values)
     }
   }
   return max_index;
-}
-
-long double computeRatioBessel(int &d, long double &kappa)
-{
-  long double d2 = d/2.0;
-  long double d2_1 = d2 - 1;
-  long double num,denom;
-
-  num = cyl_bessel_i(d2,kappa);
-  denom = cyl_bessel_i(d2_1,kappa);
-  //cout << "I(" << d2 << "," << k << "): " << num << endl;
-  //cout << "I(" << d2_1 << "," << k << "): " << denom << endl;
-
-  long double ratio = num / denom;
-  //cout << scientific << "A(" << dim << "," << kappa << "): " << ratio << endl;
-
-  return ratio;
-}
-
-long double computeDerivativeOfRatioBessel(int &d, long double &kappa, long double &Ad)
-{
-  long double ans = 1 - (Ad * Ad);
-  if (Ad > 0) {
-    long double log_tmp = log(d-1) + log(Ad) - log(kappa);
-    ans -= exp(log_tmp) ;
-  } else {
-    ans -= (d-1) * Ad / kappa;
-  }
-  return ans;
 }
 

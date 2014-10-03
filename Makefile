@@ -29,7 +29,7 @@ main: $(OBJECTS)
 main.o: main.cpp 
 	g++ $(CFLAGS) $< -o $@
 
-Support.o: Support.cpp Support.h Header.h
+Support.o: Support.cpp Support.h Header.h UniformRandomNumberGenerator.h
 	g++ $(CFLAGS) $< -o $@
 
 Normal.o: Normal.cpp Normal.h 
