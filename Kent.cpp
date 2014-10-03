@@ -525,7 +525,6 @@ void Kent::computeAllEstimators(std::vector<Vector> &data)
 
 void Kent::computeAllEstimators(Vector &sample_mean, Matrix &S, long double N)
 {
-  //cout.precision(6);
   string type = "MOMENT";
   struct Estimates moment_est = computeMomentEstimates(sample_mean,S,N);
   print(type,moment_est);
@@ -563,8 +562,8 @@ void Kent::computeAllEstimators(Vector &sample_mean, Matrix &S, long double N)
   cout << "KL-divergence: " << computeKLDivergence(mml_est1) << endl << endl;
 
   type = "MML_5";
-  struct Estimates mml_est2 = map_est;
-  //struct Estimates mml_est2 = moment_est;
+  //struct Estimates mml_est2 = map_est;
+  struct Estimates mml_est2 = moment_est;
   Optimize opt4(type);
   opt4.initialize(N,mml_est2.mean,mml_est2.major_axis,mml_est2.minor_axis,
                   mml_est2.kappa,mml_est2.beta);
@@ -621,8 +620,8 @@ void Kent::computeAllEstimators(
   cout << fixed << "msglen: " << computeMessageLength(mml2_est,sample_mean,S,N) << endl;
 
   type = "MML_5";
-  struct Estimates mml5_est = map_est;
-  //struct Estimates mml5_est = moment_est;
+  //struct Estimates mml5_est = map_est;
+  struct Estimates mml5_est = moment_est;
   Optimize opt4(type);
   opt4.initialize(N,mml5_est.mean,mml5_est.major_axis,mml5_est.minor_axis,
                   mml5_est.kappa,mml5_est.beta);
