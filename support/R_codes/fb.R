@@ -63,7 +63,7 @@ fb.sim=function(n,k,m,A) {
   y
 }
 
-n <- 100
+n <- 1000
 k <- 100
 m <- c(0,0,1)
 A <- matrix(c(-47.5,0,0,0,47.5,0,0,0,0),nrow=3,ncol=3)

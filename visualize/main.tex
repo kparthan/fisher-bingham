@@ -1,0 +1,127 @@
+\documentclass[a4paper,10pt]{report}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+\usepackage{epstopdf}
+\usepackage{epsfig}
+\usepackage{textcomp}
+\usepackage{inputenc}
+\usepackage{fontenc}
+\usepackage{graphicx}
+\usepackage{color}
+\usepackage{breqn}
+\usepackage{sectsty}
+\usepackage{natbib}
+\usepackage{fullpage}
+\usepackage{inputenc}
+\usepackage{etoolbox}
+\usepackage{hyperref}
+
+\numberwithin{equation}{chapter}
+
+\begin{document}
+
+%\noindent Problem setup: \\
+%
+%\begin{itemize}
+%\item $\gamma_1,\gamma_2,\gamma_3$ are orthonormal unit vectors ($3\times 1$ matrices); $\kappa > 0, \beta > 0$ are scalars.
+%
+%\item $\gamma^T$ is the transpose of $\gamma$.
+%
+%\item $v_0$ is a $3\times 1$ matrix. $A$ is a $3\times 3$ symmetric matrix. 
+%$v_0$ and $A$ are functions of data and can be precomputed.
+%\end{itemize}
+%
+%\emph{Parameters to be estimated: } $\Theta = \{\kappa,\beta,\gamma_1,\gamma_2,\gamma_3\}$
+%
+%The negative log-likelihood function that needs to be minimized is as follows:
+%
+%\begin{equation}
+%L(\Theta) = \log c(\kappa,\beta) - \kappa \gamma_1^T v_0 - \beta \gamma_2^T A \gamma_2 + \beta \gamma_3^T A \gamma_3 \label{eqn:function}
+%\end{equation}
+%where
+%\begin{equation}
+%c(\kappa,\beta) = 2\pi \sum_{j=0}^{\infty} \frac{\Gamma(j+\frac{1}{2})}{\Gamma(j+1)} \beta^{2j} \left(\frac{\kappa}{2}\right)^{-2j-\frac{1}{2}} I_{2j+\frac{1}{2}}(\kappa)
+%\end{equation}
+%$c(\kappa,\beta)$ is the normalization constant which is an infinite summation
+%and is dependent on the Gamma function ($\Gamma$) and the modified Bessel function
+%of the first kind $I_v(\kappa)$. 
+%
+%Equation~\ref{eqn:function} should be minimized subject to the following constraints:
+%\begin{align*}
+%\gamma_1^T \gamma_1 &= 1 \\
+%\gamma_2^T \gamma_2 &= 1 \\
+%\gamma_3^T \gamma_3 &= 1 \\
+%\gamma_1^T \gamma_2 &= 0 \\
+%\gamma_1^T \gamma_3 &= 0 \\
+%\end{align*}
+%
+%%As an example, I generated 1000 data points from a Kent distribution with the true
+%%values of the parameters as follows:
+%%\begin{align*}
+%%\gamma_1^T &= ( 0.580,-0.388, 0.717) \\
+%%\gamma_2^T &= (-0.753,-0.592, 0.289) \\
+%%\gamma_3^T &= ( 0.312,-0.707,-0.635) \\
+%%\kappa &= 100 \\
+%%\beta &= 20 \\
+%%\end{align*}
+%%$v_0$ and $A$ are precomputed (from the data generated) and are as follows:
+%%\begin{align*}
+%%v_0^T &= ( 0.580,-0.385,0.709) \\
+%%\end{align*}
+%%and
+%%\[ 
+%%A = \left( \begin{array}{ccc}
+%%0.341 & -0.221  & 0.408  \\
+%%-0.221 & 0.153  & -0.272 \\
+%%0.408 & -0.272  & 0.506  \end{array} \right)
+%%\] 
+%%Using these values for $v_0$ and $A$, equation~\ref{eqn:function} needs to be minimized.
+%
+%\noindent This problem can be transformed into an unconstrained optimization problem as follows:
+%\begin{itemize}
+%\item $\gamma_1$ is a vector on the unit sphere which can be defined by two angles (co-latitude and longitude parameters)
+%in the spherical coordinate system.
+%\item $\gamma_2$ is a unit vector and must be orthogonal to $\gamma_1$. Hence, $\gamma_2$
+%is uniquely defined using one parameter. 
+%\item $\gamma_3$ is then implicitly defined as $\gamma_1 \times \gamma_2$
+%\end{itemize}
+%I am solving this unconstrained problem using the \emph{dlib} library.
+%Explicit gradient vector and Hessian matrix expressions
+%are cumbersome functions. Hence, I am approximating the derivative information
+%by using the utilities provided in the library.
+
+\noindent Because $\gamma_1,\gamma_2,$ and $\gamma_3$ are unit vectors,
+one can represent $\gamma_1$ and $\gamma_2$ in spherical coordinate system:
+\[\gamma_1 = (\sin\alpha \cos\eta,\sin\alpha \sin\eta,\cos\alpha)^T\]
+\[\gamma_2 = (\sin\psi \cos\delta,\sin\psi \sin\delta,\cos\psi)^T\]
+So $\gamma_1$ is uniquely defined using co-latitude $\alpha$ and longitude $\eta$.
+$\gamma_2$ is uniquely defined using co-latitude $\psi$ and longitude $\delta$.
+However, because $\gamma_1$ is perpendicular to $\gamma_2$, their dot product is zero
+and this results in a dependent variable. If $\alpha, \eta, \psi$ are independent
+variables, then $\delta$ is given as follows:
+\[\gamma_1^T \gamma_2 = \sin\alpha \sin\psi \cos(\delta-\eta) + \cos\alpha \cos\psi = 0 \]
+\[\text{Therefore,}\quad \cos(\delta-\eta) = -\cot\alpha \cot\psi \]
+The above equation imposes a constraint on the range of values $\delta$ can take.
+More importantly, 
+\begin{equation}
+|\cot\alpha \cot\psi| \le 1 \label{eqn:constraint}
+\end{equation}
+
+$\gamma_1,\gamma_2$ require three parameters to be uniquely identified. $\gamma_3$
+is computed because it is orthogonal to both $\gamma_1$ and $\gamma_2$.
+In the event the inequality~\ref{eqn:constraint} is not satisfied, the program crashes
+because $\cos (\delta-\eta)$ will be greater than 1. \\
+
+\noindent \textbf{Problem with \emph{dlib}}: From my understanding, the library cannot support
+constraints of this kind (\ref{eqn:constraint}). So if I simply run an unconstrained optimization,
+in the course of optimizing the objective function,
+there are cases where~\ref{eqn:constraint} (using the intermediate solution) does not hold and this creates a problem.
+In certain instances, the program runs through smoothly but there are quite a number
+of cases where the program fails.
+
+So if there is a library which can facilitate the programming of such kind of constraints,
+that would potentially solve the problem.
+
+\end{document}
+

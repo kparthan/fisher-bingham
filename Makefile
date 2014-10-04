@@ -2,8 +2,8 @@
 #CFLAGS=-std=c++98 -c -I/home/parthan/external_libs/ -fopenmp
 #LDFLAGS=-static -lboost_program_options -lboost_filesystem -fopenmp -lnlopt -lm
 
-CFLAGS=-std=c++0x -c -O3 -fopenmp
-#CFLAGS=-std=c++0x -g -c -fopenmp
+#CFLAGS=-std=c++0x -c -O3 -fopenmp
+CFLAGS=-std=c++0x -g -c -fopenmp
 LDFLAGS=-lboost_program_options -lboost_system -lboost_filesystem -fopenmp -lnlopt -lm
 
 OBJECTS = main.o \
@@ -12,6 +12,9 @@ OBJECTS = main.o \
   vMC.o \
   vMF.o \
   FB4.o \
+  MultivariateNormal.o \
+  ACG.o \
+  Bingham.o \
   Kent.o \
   FB6.o \
   Optimize.o \
@@ -42,6 +45,15 @@ vMC.o: vMC.cpp vMC.h Header.h
 	g++ $(CFLAGS) $< -o $@
 
 FB4.o: FB4.cpp FB4.h Header.h
+	g++ $(CFLAGS) $< -o $@
+
+MultivariateNormal.o: MultivariateNormal.cpp MultivariateNormal.h Header.h
+	g++ $(CFLAGS) $< -o $@
+
+ACG.o: ACG.cpp ACG.h Header.h
+	g++ $(CFLAGS) $< -o $@
+
+Bingham.o: Bingham.cpp Bingham.h Header.h
 	g++ $(CFLAGS) $< -o $@
 
 Kent.o: Kent.cpp Kent.h Header.h

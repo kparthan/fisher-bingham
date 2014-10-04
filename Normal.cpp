@@ -122,16 +122,21 @@ Vector Normal::generate(int sample_size)
   long double u,v,r1,r2,sqroot,arg;
 
   for (int i=0; i<sample_size; i+=2) {
+    repeat:
     u = uniform_random();
-    v = uniform_random();
-
     sqroot = sqrt(-2 * log(u));
-    arg = 2 * PI * v;
-    r1 = sqroot * cos (arg);
-    r2 = sqroot * sin (arg);
-	  sample[i] = mu + sigma * r1;
-    if (i != sample_size-1) {
-	    sample[i+1] = mu + sigma * r2;
+
+    v = uniform_random();
+    if (fabs(u-v) > TOLERANCE) {   // u != v
+      arg = 2 * PI * v;
+      r1 = sqroot * cos (arg);
+      r2 = sqroot * sin (arg);
+      sample[i] = mu + sigma * r1;
+      if (i != sample_size-1) {
+        sample[i+1] = mu + sigma * r2;
+      }
+    } else {
+      goto repeat;
     }
   }
   return sample;

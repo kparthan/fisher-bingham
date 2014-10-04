@@ -6,6 +6,9 @@
 #include "FB4.h"
 #include "FB6.h"
 #include "Kent.h"
+#include "MultivariateNormal.h"
+#include "ACG.h"
+#include "Bingham.h"
 
 extern Vector XAXIS,YAXIS,ZAXIS;
 
@@ -88,7 +91,13 @@ void Test::matrixFunctions()
   Vector eigen_values(3,0);
   Matrix eigen_vectors = IdentityMatrix(3,3);
   eigenDecomposition(symm,eigen_values,eigen_vectors);
-
+  Matrix diag = IdentityMatrix(3,3);
+  for (int i=0; i<3; i++) diag(i,i) = eigen_values[i];
+  Matrix tmp = prod(eigen_vectors,diag);
+  Matrix trans_eigenvec = trans(eigen_vectors);
+  Matrix check = prod(tmp,trans_eigenvec);
+  cout << "check (V * diag * V'): " << check << endl << endl;
+  
   symm = IdentityMatrix(3,3);
   cout << "symmetric matrix: " << symm << endl;
   eigen_vectors = IdentityMatrix(3,3);
@@ -100,6 +109,12 @@ void Test::matrixFunctions()
   cout << "symmetric matrix: " << symm << endl;
   eigen_vectors = IdentityMatrix(3,3);
   eigenDecomposition(symm,eigen_values,eigen_vectors);
+  diag = IdentityMatrix(3,3);
+  for (int i=0; i<3; i++) diag(i,i) = eigen_values[i];
+  tmp = prod(eigen_vectors,diag);
+  trans_eigenvec = trans(eigen_vectors);
+  check = prod(tmp,trans_eigenvec);
+  cout << "check (V * diag * V'): " << check << endl << endl;
 
   symm(0,0) = 16.8974; symm(0,1) = -20.5575; symm(0,2) = 11.4795;
   symm(1,0) = -20.5575; symm(1,1) = -4.5362; symm(1,2) = -38.3720;
@@ -138,7 +153,7 @@ void Test::productMatrixVector(void)
 
 void Test::dispersionMatrix(void)
 {
-  string file_name = "./visualize/kent.dat";
+  string file_name = "./visualize/sampled_data/kent.dat";
   std::vector<Vector> sample = load_matrix(file_name);
   Vector unit_mean = computeVectorSum(sample);
   cout << "unit_mean: "; print(cout,unit_mean,3); cout << endl;
@@ -229,38 +244,114 @@ void Test::randomSampleGeneration(void)
   // FB4 generation (gamma < 0)
   FB4 fb4_1(m0,m1,m2,100,-10);
   random_sample = fb4_1.generate(1000);
-  writeToFile("./visualize/fb4_1.dat",random_sample,3);
+  writeToFile("./visualize/sampled_data/fb4_1.dat",random_sample,3);
 
   // FB4 generation (gamma < 0)
   FB4 fb4_2(m0,m1,m2,100,10);
   random_sample = fb4_2.generate(1000);
-  writeToFile("./visualize/fb4_2.dat",random_sample,3);
+  writeToFile("./visualize/sampled_data/fb4_2.dat",random_sample,3);
 
   // vMF generation
   vMF vmf(m0,100);
   random_sample = vmf.generate(1000);
-  writeToFile("./visualize/vmf.dat",random_sample,3);
+  writeToFile("./visualize/sampled_data/vmf.dat",random_sample,3);
 
   // vMF (2D)
   Vector mean(2,0); mean[0] = 1;
   vMC vmc(mean,10);
   vmc.generateCanonical(random_sample,100);
-  writeToFile("./visualize/vmc.dat",random_sample,3);
+  writeToFile("./visualize/sampled_data/vmc.dat",random_sample,3);
 
   // FB6 generation 
   FB6 fb6(m0,m1,m2,100,15,-10);
   random_sample = fb6.generate(1000);
-  writeToFile("./visualize/fb6.dat",random_sample,3);
+  writeToFile("./visualize/sampled_data/fb6.dat",random_sample,3);
 
   // FB6 generation 
   FB6 kent(m0,m1,m2,1000,475,0);
   random_sample = kent.generate(1000);
-  writeToFile("./visualize/kent.dat",random_sample,3);
+  writeToFile("./visualize/sampled_data/kent.dat",random_sample,3);
 
   // FB6 generation 
   /*FB6 kent1(m0,m1,m2,1,60,-10);
   random_sample = kent1.generate(1000);
-  writeToFile("./visualize/kent1.dat",random_sample,3);*/
+  writeToFile("./visualize/sampled_data/kent1.dat",random_sample,3);*/
+}
+
+void Test::multivariate_normal(void)
+{
+  MultivariateNormal mvnrm;
+  //mvnorm.printParameters();
+
+  Vector mean;
+  Matrix cov;
+  int D;
+  int N = 10000;
+  std::vector<Vector> random_sample;
+
+  // 2 D
+  D = 2;
+  mean = Vector(D,0);
+  //cov = generateRandomCovarianceMatrix(D);
+  cov = IdentityMatrix(2,2); cov(0,0) = 1; cov(1,1) = 10;
+  MultivariateNormal mvnorm2d(mean,cov);
+  mvnorm2d.printParameters();
+  random_sample = mvnorm2d.generate(N);
+  writeToFile("./visualize/sampled_data/mvnorm2d.dat",random_sample,3);
+
+  // 3 D
+  D = 3;
+  mean = Vector(D,0);
+  //cov = generateRandomCovarianceMatrix(D);
+  cov = IdentityMatrix(3,3); cov(0,0) = 1; cov(1,1) = 10; cov(2,2) = 100;
+  MultivariateNormal mvnorm3d(mean,cov);
+  mvnorm3d.printParameters();
+  random_sample = mvnorm3d.generate(N);
+  writeToFile("./visualize/sampled_data/mvnorm3d.dat",random_sample,3);
+}
+
+void Test::acg(void)
+{
+  Vector mean;
+  Matrix cov;
+  int D;
+  int N = 10000;
+  std::vector<Vector> random_sample;
+
+  // 3 D
+  D = 3;
+  mean = Vector(D,0);
+  //cov = generateRandomCovarianceMatrix(D);
+  cov = IdentityMatrix(3,3); cov(0,0) = 1; cov(1,1) = 10; cov(2,2) = 1000;
+  Matrix W(D,D);
+  invertMatrix(cov,W);
+  ACG acg(W);
+  acg.printParameters();
+  random_sample = acg.generate(N);
+  writeToFile("./visualize/sampled_data/acg.dat",random_sample,3);
+}
+
+void Test::bingham(void)
+{
+  int D = 3;
+  int N = 1000;
+  long double beta = 25;
+  std::vector<Vector> random_sample;
+
+  Vector mean,major,minor;
+  generateRandomOrthogonalVectors(mean,major,minor);
+  Matrix a1 = outer_prod(major,major);
+  Matrix a2 = outer_prod(minor,minor);
+  Matrix tmp = a2 - a1;
+  Matrix A = (beta * tmp);
+
+  Vector eigen_values(3,0);
+  Matrix eigen_vectors = IdentityMatrix(3,3);
+  eigenDecomposition(A,eigen_values,eigen_vectors);
+  Bingham bingham(A);
+  bingham.printParameters();
+  //random_sample = bingham.generate(N);
+  //writeToFile("./visualize/sampled_data/bingham.dat",random_sample,3);
 }
 
 void Test::normalization_constant(void)
@@ -364,7 +455,7 @@ void Test::moment_estimation(void)
   cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
 
   Kent kent(m0,m1,m2,kappa,beta);
-  random_sample = kent.generate(10000);
+  random_sample = kent.generate(1000);
   writeToFile("random_sample.dat",random_sample,3);
   estimates = kent.computeMomentEstimates(random_sample);
 

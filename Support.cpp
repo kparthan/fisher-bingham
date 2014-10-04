@@ -810,7 +810,7 @@ void generateRandomOrthogonalVectors(
   Vector &major_axis,
   Vector &minor_axis
 ) {
-  long double phi = rand()*2*PI/(long double)RAND_MAX;
+  long double phi = (2 * PI) * uniform_random();
   Vector spherical(3,1),major1(3,0);
   spherical[1] = PI/2;
   spherical[2] = phi;
@@ -818,8 +818,9 @@ void generateRandomOrthogonalVectors(
   Vector mu1 = ZAXIS;
   //Vector minor1 = crossProduct(mu1,major1);
 
-  long double theta = rand()*PI/(long double)RAND_MAX;
-  phi = rand()*2*PI/(long double)RAND_MAX;
+  long double theta = PI * uniform_random();
+  phi = (2 * PI) * uniform_random();
+  //phi = rand()*2*PI/(long double)RAND_MAX;
   spherical[1] = theta;
   spherical[2] = phi;
   mean = Vector(3,0);
@@ -829,6 +830,39 @@ void generateRandomOrthogonalVectors(
   major_axis = prod(r,major1);
   //minor_axis = prod(r,minor1);
   minor_axis = crossProduct(mean,major_axis);
+}
+
+Matrix generateRandomCovarianceMatrix(int D)
+{
+  // generate random orthogonal vectors
+  Matrix V = ZeroMatrix(D,D);
+  if (D == 2) {
+    Vector x(2,0);
+    long double phi = (2 * PI) * uniform_random();
+    x[0] = cos(phi); x[1] = sin(phi);
+    V(0,0) = x[0]; V(0,1) = -x[1];
+    V(1,0) = x[1]; V(1,1) = x[0];
+  } else if (D == 3) {
+    Vector m0,m1,m2;
+    std::vector<Vector> axis(3);
+    generateRandomOrthogonalVectors(axis[0],axis[1],axis[2]);
+    for (int i=0; i<3; i++) {
+      for (int j=0; j<3; j++) {
+        V(j,i) = axis[i][j];
+      }
+    }
+  } else {
+    cout << "D = " << D << " not supported ...\n";
+    exit(1);
+  }
+  Matrix diag = ZeroMatrix(D,D);
+  for (int i=0; i<D; i++) {
+    diag(i,i) = uniform_random() * 10;
+  }
+  Matrix tmp = prod(V,diag);
+  Matrix Vt = trans(V);
+  Matrix cov = prod(tmp,Vt);
+  return cov;
 }
 
 /*
@@ -897,7 +931,7 @@ void eigenDecomposition(
   }
   for (int i=0; i<num_rows; i++) {
     for (int j=0; j<num_cols; j++) {
-      if (fabs(m(i,j)-m(j,i)) >= ZERO) {
+      if (fabs(m(i,j)-m(j,i)) >= TOLERANCE) {
         cout << "Error: Matrix is not symmetric ...\n";
         cout << "m: " << m << endl;
         cout << "m(" << i << "," << j << ") != m(" << j << "," << i << ")\n";
@@ -935,7 +969,7 @@ void eigenDecomposition(
   }
 
   cout << "eigen_values: "; print(cout,eigen_values,0); cout << endl;
-  cout << "eigen_vectors: " << eigen_vectors << endl;
+  //cout << "eigen_vectors: " << eigen_vectors << endl;
 }
 
 void jacobiRotateMatrix(
@@ -1477,6 +1511,12 @@ void TestFunctions(void)
 
   //test.randomSampleGeneration();
 
+  //test.multivariate_normal();
+
+  //test.acg();
+
+  test.bingham();
+
   //test.normalization_constant();
 
   //test.optimization();
@@ -1491,7 +1531,7 @@ void TestFunctions(void)
 
   //test.fisher();
 
-  test.mml_estimation();
+  //test.mml_estimation();
 
   //test.vmf_all_estimation();
 }

@@ -26,6 +26,12 @@ class Test
 
     void randomSampleGeneration(void);
 
+    void multivariate_normal(void);
+
+    void acg(void);
+
+    void bingham(void);
+
     void normalization_constant(void);
 
     void optimization(void);

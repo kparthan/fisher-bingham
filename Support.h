@@ -92,6 +92,7 @@ void computeOrthogonalTransformation(Vector &, Vector &, long double &, long dou
 Matrix align_zaxis_with_vector(Vector &);
 Matrix align_vector_with_zaxis(Vector &);
 void generateRandomOrthogonalVectors(Vector &, Vector &, Vector &);
+Matrix generateRandomCovarianceMatrix(int);
 std::vector<Vector> transform(std::vector<Vector> &, Matrix &);
 bool invertMatrix(const Matrix &, Matrix &);
 void eigenDecomposition(Matrix, Vector &, Matrix &);
