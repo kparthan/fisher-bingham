@@ -2,6 +2,7 @@
 #include "FB6.h"
 #include "Optimize.h"
 #include "Support.h"
+#include "Bingham.h"
 
 extern Vector XAXIS,YAXIS,ZAXIS;
 
@@ -94,10 +95,55 @@ std::vector<Vector> Kent::generate(int sample_size)
   return transform(canonical_sample,transformation);
 }
 
-std::vector<Vector> Kent::generateCanonical(int sample_size)
+std::vector<Vector> Kent::generateCanonical(int N)
 {
-  FB6 fb6(kappa,beta,0);
-  return fb6.generateCanonical(sample_size);
+  //FB6 fb6(kappa,beta,0);
+  //return fb6.generateCanonical(sample_size);
+
+  // A = -beta * (mj mj' - mi mi')
+  Matrix A = ZeroMatrix(3,3);
+  A(0,0) = -beta;
+  A(1,1) = beta;
+
+  // B = 0.5 * kappa * (I - mu mu')
+  Matrix B = ZeroMatrix(3,3);
+  B(0,0) = kappa * 0.5;
+  B(1,1) = kappa * 0.5;
+
+  Matrix A1 = A + B;
+  Bingham bingham(A1);
+
+  std::vector<Vector> canonical_sample;
+  Vector x;
+  long double u,check,exp1,exp2,tmp1,tmp2;
+  int num_samples;
+  std::vector<Vector> many_samples; 
+  int accepted = 0;
+  Vector kmu(3,0); kmu[2] = kappa;
+  while (accepted != N) {
+    num_samples = 2 * (N-accepted);
+    many_samples = bingham.generate(num_samples);
+    for (int i=0; i<many_samples.size(); i++) {
+      u = uniform_random();
+      x = many_samples[i];
+
+      tmp1 = computeDotProduct(kmu,x);
+      tmp2 = prod_vMv(x,A);
+      exp1 = tmp1 - tmp2;
+      tmp1 = prod_vMv(x,A1);
+      exp2 = kappa - tmp1; 
+
+      check =  exp1 - exp2;
+      if (log(u) < check) {
+        canonical_sample.push_back(x);
+        if (++accepted == N) {
+          goto finish;
+        }
+      }
+    } // for() ends ...
+  } // while() ends ..
+  finish:
+  return canonical_sample;
 }
 
 /*!
@@ -562,8 +608,9 @@ void Kent::computeAllEstimators(Vector &sample_mean, Matrix &S, long double N)
   cout << "KL-divergence: " << computeKLDivergence(mml_est1) << endl << endl;
 
   type = "MML_5";
-  //struct Estimates mml_est2 = map_est;
-  struct Estimates mml_est2 = moment_est;
+  struct Estimates mml_est2 = map_est;
+  //struct Estimates mml_est2 = mml_est1;
+  //struct Estimates mml_est2 = moment_est;
   Optimize opt4(type);
   opt4.initialize(N,mml_est2.mean,mml_est2.major_axis,mml_est2.minor_axis,
                   mml_est2.kappa,mml_est2.beta);
@@ -620,8 +667,9 @@ void Kent::computeAllEstimators(
   cout << fixed << "msglen: " << computeMessageLength(mml2_est,sample_mean,S,N) << endl;
 
   type = "MML_5";
-  //struct Estimates mml5_est = map_est;
-  struct Estimates mml5_est = moment_est;
+  struct Estimates mml5_est = map_est;
+  //struct Estimates mml5_est = mml2_est;
+  //struct Estimates mml5_est = moment_est;
   Optimize opt4(type);
   opt4.initialize(N,mml5_est.mean,mml5_est.major_axis,mml5_est.minor_axis,
                   mml5_est.kappa,mml5_est.beta);

@@ -32,6 +32,8 @@ class Test
 
     void bingham(void);
 
+    void kent_bingham_generation(void);
+
     void normalization_constant(void);
 
     void optimization(void);

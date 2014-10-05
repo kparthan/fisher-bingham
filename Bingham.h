@@ -22,6 +22,8 @@ class Bingham
 
     void printParameters();
 
+    std::vector<Vector> generateCanonical(Matrix &, int);
+
     std::vector<Vector> generate(int);
 };
 

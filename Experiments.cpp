@@ -12,7 +12,7 @@ void Experiments::simulate(long double kappa, long double beta)
 {
   std::vector<int> sample_sizes;
   //sample_sizes.push_back(5);
-  sample_sizes.push_back(1000);
+  sample_sizes.push_back(100);
   /*sample_sizes.push_back(20);
   sample_sizes.push_back(30);
   sample_sizes.push_back(50);
@@ -48,7 +48,7 @@ void Experiments::simulate(long double kappa, long double beta)
     for (int iter=0; iter<iterations; iter++) {  // for each iteration ...
       repeat:
       std::vector<Vector> data = kent.generate(sample_sizes[i]);
-      writeToFile("random_sample.dat",data,3);
+      //writeToFile("random_sample.dat",data,3);
       Kent kent_est;
       kent_est.computeAllEstimators(data,all_estimates);
       long double beta_est_mml = all_estimates[MML_5].beta;

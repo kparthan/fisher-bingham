@@ -334,8 +334,8 @@ void Test::acg(void)
 void Test::bingham(void)
 {
   int D = 3;
-  int N = 1000;
-  long double beta = 25;
+  int N = 10000;
+  long double beta = 47.5;
   std::vector<Vector> random_sample;
 
   Vector mean,major,minor;
@@ -345,13 +345,32 @@ void Test::bingham(void)
   Matrix tmp = a2 - a1;
   Matrix A = (beta * tmp);
 
-  Vector eigen_values(3,0);
+  /*Vector eigen_values(3,0);
   Matrix eigen_vectors = IdentityMatrix(3,3);
   eigenDecomposition(A,eigen_values,eigen_vectors);
+  Vector sorted = sort(eigen_values);
+  cout << "eig: "; print(cout,eigen_values,3); cout << endl;
+  cout << "sorted: "; print(cout,sorted,3); cout << endl;*/
   Bingham bingham(A);
   bingham.printParameters();
-  //random_sample = bingham.generate(N);
-  //writeToFile("./visualize/sampled_data/bingham.dat",random_sample,3);
+  random_sample = bingham.generate(N);
+  writeToFile("./visualize/sampled_data/bingham.dat",random_sample,3);
+}
+
+void Test::kent_bingham_generation(void)
+{
+  long double kappa,beta;
+  std::vector<Vector> random_sample;
+  Vector m0,m1,m2;
+  generateRandomOrthogonalVectors(m0,m1,m2);
+
+  int N = 10000;
+  kappa = 100;
+  //beta = 47.5;
+  beta = 35;
+  Kent kent(m0,m1,m2,kappa,beta);
+  random_sample = kent.generate(N);
+  writeToFile("./visualize/sampled_data/kent.dat",random_sample,3);
 }
 
 void Test::normalization_constant(void)
@@ -625,13 +644,13 @@ void Test::mml_estimation(void)
   int sample_size = 10000;
 
   //beta = 1;
-  //beta = 45;
+  //beta = 30;
   beta = 47.5;
 
-  //generateRandomOrthogonalVectors(m0,m1,m2);
-  m0 = ZAXIS;
+  generateRandomOrthogonalVectors(m0,m1,m2);
+  /*m0 = ZAXIS;
   m1 = XAXIS;
-  m2 = YAXIS;
+  m2 = YAXIS;*/
   cartesian2spherical(m0,spherical);
   cout << "m0: "; print(cout,m0,3);
   cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";

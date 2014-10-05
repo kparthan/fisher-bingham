@@ -968,7 +968,7 @@ void eigenDecomposition(
     eigen_values[i] = m(i,i);
   }
 
-  cout << "eigen_values: "; print(cout,eigen_values,0); cout << endl;
+  //cout << "eigen_values: "; print(cout,eigen_values,0); cout << endl;
   //cout << "eigen_vectors: " << eigen_vectors << endl;
 }
 
@@ -1515,7 +1515,9 @@ void TestFunctions(void)
 
   //test.acg();
 
-  test.bingham();
+  //test.bingham();
+
+  //test.kent_bingham_generation();
 
   //test.normalization_constant();
 
@@ -1533,7 +1535,7 @@ void TestFunctions(void)
 
   //test.mml_estimation();
 
-  //test.vmf_all_estimation();
+  test.vmf_all_estimation();
 }
 
 ////////////////////// EXPERIMENTS \\\\\\\\\\\\\\\\\\\\\\\\\\\\
@@ -1551,7 +1553,7 @@ void RunExperiments(int iterations)
 /*!
  *  \brief This function sorts the elements in the list
  *  \param list a reference to a vector<double>
- *  \return the sorted list
+ *  \return the sorted list (in increasing order)
  */
 Vector sort(Vector &list)
 {
