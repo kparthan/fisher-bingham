@@ -399,6 +399,12 @@ void vMF::estimateMean(
   estimates.mean = Vector(3,0);
   estimates.R = normalize(resultant,estimates.mean); // norm of resultant
   estimates.Rbar = estimates.R / estimates.Neff;
+  if (estimates.Rbar >= 1) {
+    assert((estimates.Rbar - 1) <= 0.0001);
+    estimates.Rbar = 1 - TOLERANCE;
+    estimates.R = estimates.Neff * estimates.Rbar;
+  } 
+
   Vector spherical(3,0);
   cartesian2spherical(estimates.mean,spherical);
   estimates.theta = spherical[1];

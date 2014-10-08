@@ -33,8 +33,8 @@ void Optimize2::computeEstimates(struct Estimates_vMF &estimates)
   nlopt::opt opt(nlopt::LN_COBYLA, 1);
 
   std::vector<double> lb(1,TOLERANCE);
-  std::vector<double> ub(1,HUGE_VAL);
-  //std::vector<double> ub(1,MAX_KAPPA);
+  //std::vector<double> ub(1,HUGE_VAL);
+  std::vector<double> ub(1,MAX_KAPPA);
 
   opt.set_lower_bounds(lb);
   opt.set_upper_bounds(ub);
