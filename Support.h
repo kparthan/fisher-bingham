@@ -2,6 +2,7 @@
 #define SUPPORT_H
 
 #include "Mixture.h"
+#include "Mixture_vMF.h"
 
 struct Parameters
 {
@@ -113,10 +114,13 @@ void modelMixture(struct Parameters &, std::vector<Vector> &);
 void simulateMixtureModel(struct Parameters &);
 Vector generateFromSimplex(int);
 std::vector<Kent> generateRandomComponents(int);
+std::vector<vMF> generateRandomComponents_vMF(int);
 Vector generateRandomKappas(int);
 Vector generateRandomBetas(Vector &);
 Mixture inferComponents(Mixture &, int, ostream &);
 void updateInference(Mixture &, Mixture &, ostream &, int);
+Mixture_vMF inferComponents_vMF(Mixture_vMF &, int, ostream &);
+void updateInference_vMF(Mixture_vMF &, Mixture_vMF &, ostream &, int);
 
 void TestFunctions(void);
 void RunExperiments(int);

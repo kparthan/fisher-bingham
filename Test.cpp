@@ -11,6 +11,41 @@
 #include "Bingham.h"
 
 extern Vector XAXIS,YAXIS,ZAXIS;
+extern int ENABLE_DATA_PARALLELISM;
+extern int NUM_THREADS;
+
+void Test::parallel_sum_computation(void)
+{
+  int N = 100;
+  Vector ans;
+  std::vector<Vector> sample;
+  Vector weights(N,0);
+  Vector spherical(3,1),x(3,0);
+  long double Neff;
+
+  for (int i=0; i<N; i++) {
+    spherical[1] = PI * uniform_random();
+    spherical[2] = (2 * PI) * uniform_random();
+    spherical2cartesian(spherical,x);
+    sample.push_back(x);
+    weights[i] = uniform_random();
+  }
+  // without parallelization ...
+  ans = computeVectorSum(sample);
+  cout << "sum: "; print(cout,ans,3); cout << endl;
+  ans = computeVectorSum(sample,weights,Neff);
+  cout << "sum: "; print(cout,ans,3); cout << endl;
+  cout << "Neff: " << Neff << endl;
+
+  // with parallelization ...
+  ENABLE_DATA_PARALLELISM = SET;
+  NUM_THREADS = 42;
+  ans = computeVectorSum(sample);
+  cout << "sum(parallel): "; print(cout,ans,3); cout << endl;
+  ans = computeVectorSum(sample,weights,Neff);
+  cout << "sum: "; print(cout,ans,3); cout << endl;
+  cout << "Neff: " << Neff << endl;
+}
 
 void Test::uniform_number_generation()
 {

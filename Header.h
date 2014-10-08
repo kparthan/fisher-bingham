@@ -81,5 +81,8 @@ typedef boost::numeric::ublas::zero_matrix<long double> ZeroMatrix;
 #define KILL 1
 #define JOIN 2
 
+#define VMF 0
+#define KENT 1
+
 #endif
 

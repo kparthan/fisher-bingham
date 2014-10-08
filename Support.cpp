@@ -1,7 +1,6 @@
 #include "Support.h"
 #include "Test.h"
 #include "Experiments.h"
-#include "Mixture.h"
 #include "Structure.h"
 #include "UniformRandomNumberGenerator.h"
 
@@ -19,6 +18,7 @@ int MOMENT_FAIL=0,MML2_FAIL=0,MML5_FAIL=0;  // Kent experiments
 int MML_FAIL = 0; // vMF experiments
 bool FAIL_STATUS;
 UniformRandomNumberGenerator *uniform_generator;
+int DISTRIBUTION;
 
 ////////////////////// GENERAL PURPOSE FUNCTIONS \\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
@@ -48,7 +48,7 @@ UniformRandomNumberGenerator *uniform_generator;
 struct Parameters parseCommandLineInput(int argc, char **argv)
 {
   struct Parameters parameters;
-  string constrain;
+  string constrain,pdf;
   long double improvement_rate;
 
   bool noargs = 1;
@@ -65,6 +65,7 @@ struct Parameters parseCommandLineInput(int argc, char **argv)
        ("constrain",value<string>(&constrain),"to constrain kappa")
        ("max_kappa",value<long double>(&parameters.max_kappa),"maximum value of kappa allowed")
        ("mixture","flag to do mixture modelling")
+       ("pdf",value<string>(&pdf),"type of distribution")
        ("k",value<int>(&parameters.fit_num_components),"number of components")
        ("infer_components","flag to infer the number of components")
        ("begin",value<int>(&parameters.start_from),"# of components to begin inference from")
@@ -127,7 +128,20 @@ struct Parameters parseCommandLineInput(int argc, char **argv)
     }
   } else {
     CONSTRAIN_KAPPA = UNSET;
-    MAX_KAPPA = HUGE_VAL;
+    MAX_KAPPA = DEFAULT_MAX_KAPPA;
+  }
+
+  if (vm.count("pdf")) {
+    if (pdf.compare("vmf") == 0) {
+      DISTRIBUTION = VMF;
+    } else if (pdf.compare("kent") == 0) {
+      DISTRIBUTION = KENT;
+    } else {
+      cout << "Unsupported distribution ...\n";
+      Usage(argv[0],desc);
+    }
+  } else {
+    DISTRIBUTION = KENT;  // default distribution
   }
 
   if (vm.count("mixture")) {
@@ -632,7 +646,7 @@ long double determinant(Matrix &m)
 /*!
  *  Computes \sum x (x is a vector)
  */
-Vector computeVectorSum(std::vector<Vector> &sample) 
+/*Vector computeVectorSum(std::vector<Vector> &sample) 
 {
   int d = sample[0].size();
   Vector sum(d,0);
@@ -642,9 +656,38 @@ Vector computeVectorSum(std::vector<Vector> &sample)
     }
   }
   return sum;
+}*/
+
+Vector computeVectorSum(std::vector<Vector> &sample) 
+{
+  int d = sample[0].size();
+  Vector resultant(d,0);  // resultant direction
+
+  std::vector<Vector> _resultants;
+  for (int i=0; i<NUM_THREADS; i++) {
+    _resultants.push_back(resultant);
+  }
+  int tid;
+  #pragma omp parallel if(ENABLE_DATA_PARALLELISM) num_threads(NUM_THREADS) private(tid) 
+  {
+    tid = omp_get_thread_num();
+    #pragma omp for
+    for (int i=0; i<sample.size(); i++) {
+      for (int j=0; j<d; j++) {
+        _resultants[tid][j] += sample[i][j];
+      }
+    } // i loop ends ...
+  }
+
+  for (int i=0; i<NUM_THREADS; i++) {
+    for (int j=0; j<d; j++) {
+      resultant[j] += _resultants[i][j];
+    }
+  }
+  return resultant;
 }
 
-Vector computeVectorSum(std::vector<Vector> &sample, Vector &weights, long double &Neff) 
+/*Vector computeVectorSum(std::vector<Vector> &sample, Vector &weights, long double &Neff) 
 {
   int d = sample[0].size();
   Vector sum(d,0);
@@ -656,6 +699,38 @@ Vector computeVectorSum(std::vector<Vector> &sample, Vector &weights, long doubl
     Neff += weights[i];
   }
   return sum;
+}*/
+
+Vector computeVectorSum(std::vector<Vector> &sample, Vector &weights, long double &Neff) 
+{
+  int d = sample[0].size();
+  Vector resultant(d,0);  // resultant direction
+
+  std::vector<Vector> _resultants;
+  for (int i=0; i<NUM_THREADS; i++) {
+    _resultants.push_back(resultant);
+  }
+  int tid;
+  long double sum_neff = 0;
+  #pragma omp parallel if(ENABLE_DATA_PARALLELISM) num_threads(NUM_THREADS) private(tid) reduction(+:sum_neff) 
+  {
+    tid = omp_get_thread_num();
+    #pragma omp for
+    for (int i=0; i<sample.size(); i++) {
+      for (int j=0; j<d; j++) {
+        _resultants[tid][j] += sample[i][j] * weights[i];
+      }
+      sum_neff += weights[i];
+    } // i loop ends ...
+  }
+  Neff = sum_neff;
+
+  for (int i=0; i<NUM_THREADS; i++) {
+    for (int j=0; j<d; j++) {
+      resultant[j] += _resultants[i][j];
+    }
+  }
+  return resultant;
 }
 
 /*!
@@ -1242,40 +1317,78 @@ bool gatherData(struct Parameters &parameters, std::vector<Vector> &unit_coordin
 void simulateMixtureModel(struct Parameters &parameters)
 {
   std::vector<Vector> data;
-  if (parameters.load_mixture == SET) {
-    Mixture original;
-    original.load(parameters.mixture_file);
-    bool save = 1;
-    if (parameters.read_profiles == SET) {
-      bool success = gatherData(parameters,data);
-      if (!success) {
-        cout << "Error in reading data...\n";
-        exit(1);
+  if (DISTRIBUTION == KENT) {
+    if (parameters.load_mixture == SET) {
+      Mixture original;
+      original.load(parameters.mixture_file);
+      bool save = 1;
+      if (parameters.read_profiles == SET) {
+        bool success = gatherData(parameters,data);
+        if (!success) {
+          cout << "Error in reading data...\n";
+          exit(1);
+        }
+      } else if (parameters.read_profiles == UNSET) {
+        data = original.generate(parameters.sample_size,save);
       }
-    } else if (parameters.read_profiles == UNSET) {
+      if (parameters.heat_map == SET) {
+        original.generateHeatmapData(parameters.res);
+        std::vector<std::vector<int> > bins = updateBins(data,parameters.res);
+        outputBins(bins,parameters.res);
+      }
+    } else if (parameters.load_mixture == UNSET) {
+      int k = parameters.simulated_components;
+      //srand(time(NULL));
+      Vector weights = generateFromSimplex(k);
+      std::vector<Kent> components = generateRandomComponents(k);
+      Mixture original(k,components,weights);
+      bool save = 1;
       data = original.generate(parameters.sample_size,save);
+      // save the simulated mixture
+      ofstream file("./simulation/simulated_mixture");
+      for (int i=0; i<k; i++) {
+        file << fixed << setw(10) << setprecision(5) << weights[i];
+        file << "\t";
+        components[i].printParameters(file);
+      }
+      file.close();
     }
-    if (parameters.heat_map == SET) {
-      original.generateHeatmapData(parameters.res);
-      std::vector<std::vector<int> > bins = updateBins(data,parameters.res);
-      outputBins(bins,parameters.res);
+  } else if (DISTRIBUTION == VMF) {
+    if (parameters.load_mixture == SET) {
+      Mixture_vMF original;
+      original.load(parameters.mixture_file);
+      bool save = 1;
+      if (parameters.read_profiles == SET) {
+        bool success = gatherData(parameters,data);
+        if (!success) {
+          cout << "Error in reading data...\n";
+          exit(1);
+        }
+      } else if (parameters.read_profiles == UNSET) {
+        data = original.generate(parameters.sample_size,save);
+      }
+      if (parameters.heat_map == SET) {
+        original.generateHeatmapData(parameters.res);
+        std::vector<std::vector<int> > bins = updateBins(data,parameters.res);
+        outputBins(bins,parameters.res);
+      }
+    } else if (parameters.load_mixture == UNSET) {
+      int k = parameters.simulated_components;
+      //srand(time(NULL));
+      Vector weights = generateFromSimplex(k);
+      std::vector<vMF> components = generateRandomComponents_vMF(k);
+      Mixture_vMF original(k,components,weights);
+      bool save = 1;
+      data = original.generate(parameters.sample_size,save);
+      // save the simulated mixture
+      ofstream file("./simulation/simulated_mixture");
+      for (int i=0; i<k; i++) {
+        file << fixed << setw(10) << setprecision(5) << weights[i];
+        file << "\t";
+        components[i].printParameters(file);
+      }
+      file.close();
     }
-  } else if (parameters.load_mixture == UNSET) {
-    int k = parameters.simulated_components;
-    //srand(time(NULL));
-    Vector weights = generateFromSimplex(k);
-    std::vector<Kent> components = generateRandomComponents(k);
-    Mixture original(k,components,weights);
-    bool save = 1;
-    data = original.generate(parameters.sample_size,save);
-    // save the simulated mixture
-    ofstream file("./simulation/simulated_mixture");
-    for (int i=0; i<k; i++) {
-      file << fixed << setw(10) << setprecision(5) << weights[i];
-      file << "\t";
-      components[i].printParameters(file);
-    }
-    file.close();
   }
   // model a mixture using the original data
   if (parameters.heat_map == UNSET) {
@@ -1337,6 +1450,25 @@ std::vector<Kent> generateRandomComponents(int num_components)
   return components;
 }
 
+std::vector<vMF> generateRandomComponents_vMF(int num_components)
+{
+  // generate random kappas
+  Vector kappas = generateRandomKappas(num_components);
+
+  Vector mean(3,0),spherical(3,1);
+  long double theta,phi;
+
+  std::vector<vMF> components;
+  for (int i=0; i<num_components; i++) {
+    spherical[1] = PI * uniform_random();
+    spherical[2] = (2 * PI) * uniform_random();
+    spherical2cartesian(spherical,mean); 
+    vMF vmf(mean,kappas[i]);
+    components.push_back(vmf);
+  }
+  return components;
+}
+
 /*!
  *  \brief This function generates random kappas 
  *  \param num_components an integer
@@ -1370,11 +1502,16 @@ Vector generateRandomBetas(Vector &kappas)
 void modelOneComponent(struct Parameters &parameters, std::vector<Vector> &data)
 {
   cout << "Sample size: " << data.size() << endl;
-  Kent kent;
   Vector weights(data.size(),1);
-  //kent.estimateParameters(data,weights);
-  std::vector<struct Estimates> all_estimates;
-  kent.computeAllEstimators(data,all_estimates);
+  if (DISTRIBUTION == KENT) {
+    Kent kent;
+    //kent.estimateParameters(data,weights);
+    std::vector<struct Estimates> all_estimates;
+    kent.computeAllEstimators(data,all_estimates);
+  } else if (DISTRIBUTION == VMF) {
+    vMF vmf;
+    vmf.estimateParameters(data,weights);
+  }
 }
 
 /*!
@@ -1386,23 +1523,44 @@ void modelMixture(struct Parameters &parameters, std::vector<Vector> &data)
 {
   Vector data_weights(data.size(),1);
   // if the optimal number of components need to be determined
-  if (parameters.infer_num_components == SET) {
-    Mixture mixture;
-    if (parameters.continue_inference == UNSET) {
-      Mixture m(parameters.start_from,data,data_weights);
-      mixture = m;
+  if (DISTRIBUTION == KENT) {
+    if (parameters.infer_num_components == SET) {
+      Mixture mixture;
+      if (parameters.continue_inference == UNSET) {
+        Mixture m(parameters.start_from,data,data_weights);
+        mixture = m;
+        mixture.estimateParameters();
+      } else if (parameters.continue_inference == SET) {
+        mixture.load(parameters.mixture_file,data,data_weights);
+      } // continue_inference
+      ofstream log(parameters.infer_log.c_str());
+      Mixture stable = inferComponents(mixture,data.size(),log);
+      log.close();
+    } else if (parameters.infer_num_components == UNSET) {
+      // for a given value of number of components
+      // do the mixture modelling
+      Mixture mixture(parameters.fit_num_components,data,data_weights);
       mixture.estimateParameters();
-    } else if (parameters.continue_inference == SET) {
-      mixture.load(parameters.mixture_file,data,data_weights);
-    } // continue_inference
-    ofstream log(parameters.infer_log.c_str());
-    Mixture stable = inferComponents(mixture,data.size(),log);
-    log.close();
-  } else if (parameters.infer_num_components == UNSET) {
-    // for a given value of number of components
-    // do the mixture modelling
-    Mixture mixture(parameters.fit_num_components,data,data_weights);
-    mixture.estimateParameters();
+    }
+  } else if (DISTRIBUTION == VMF) {
+    if (parameters.infer_num_components == SET) {
+      Mixture_vMF mixture;
+      if (parameters.continue_inference == UNSET) {
+        Mixture_vMF m(parameters.start_from,data,data_weights);
+        mixture = m;
+        mixture.estimateParameters();
+      } else if (parameters.continue_inference == SET) {
+        mixture.load(parameters.mixture_file,data,data_weights);
+      } // continue_inference
+      ofstream log(parameters.infer_log.c_str());
+      Mixture_vMF stable = inferComponents_vMF(mixture,data.size(),log);
+      log.close();
+    } else if (parameters.infer_num_components == UNSET) {
+      // for a given value of number of components
+      // do the mixture modelling
+      Mixture_vMF mixture(parameters.fit_num_components,data,data_weights);
+      mixture.estimateParameters();
+    }
   }
 }
 
@@ -1487,11 +1645,94 @@ void updateInference(Mixture &modified, Mixture &current, ostream &log, int oper
   }
 }
 
+Mixture_vMF inferComponents_vMF(Mixture_vMF &mixture, int N, ostream &log)
+{
+  int K,iter = 0;
+  std::vector<vMF> components;
+  Mixture_vMF modified,improved,parent;
+  Vector sample_size;
+  //long double min_n = 0.01 * N;
+  long double min_n = 1;
+  long double null_msglen = mixture.computeNullModelMessageLength();
+  log << "Null model encoding: " << null_msglen << " bits."
+      << "\t(" << null_msglen/N << " bits/point)\n\n";
+
+  improved = mixture;
+
+  while (1) {
+    parent = improved;
+    iter++;
+    log << "Iteration #" << iter << endl;
+    log << "Parent:\n";
+    parent.printParameters(log,1);
+    components = parent.getComponents();
+    sample_size = parent.getSampleSize();
+    K = components.size();
+    for (int i=0; i<K; i++) { // split() ...
+      if (sample_size[i] > min_n) {
+        modified = parent.split(i,log);
+        updateInference_vMF(modified,improved,log,SPLIT);
+      }
+    }
+    if (K >= 2) {  // kill() ...
+      for (int i=0; i<K; i++) {
+        modified = parent.kill(i,log);
+        updateInference_vMF(modified,improved,log,KILL);
+      } // killing each component
+    } // if (K > 2) loop
+    if (K > 1) {  // join() ...
+      for (int i=0; i<K; i++) {
+        int j = parent.getNearestComponent(i); // closest component
+        modified = parent.join(i,j,log);
+        updateInference_vMF(modified,improved,log,JOIN);
+      } // join() ing nearest components
+    } // if (K > 1) loop
+    if (improved == parent) goto finish;
+  } // if (improved == parent || iter%2 == 0) loop
+  finish:
+  return parent;
+}
+
+/*!
+ *  \brief Updates the inference
+ *  \param modified a reference to a Mixture_vMF
+ *  \param current a reference to a Mixture_vMF
+ *  \param log a reference to a ostream
+ *  \param operation an integer
+ */
+void updateInference_vMF(Mixture_vMF &modified, Mixture_vMF &current, ostream &log, int operation)
+{
+  long double modified_msglen = modified.getMinimumMessageLength();
+  long double current_msglen = current.getMinimumMessageLength();
+
+  if (modified_msglen < current_msglen) {   // ... improvement
+    long double improvement_rate = (current_msglen - modified_msglen) / current_msglen;
+    if (operation == JOIN || 
+        improvement_rate > IMPROVEMENT_RATE) {  // there is > 0.001 % improvement
+      current = modified;
+      log << "\t ... IMPROVEMENT ... (+ " << fixed << setprecision(3) 
+          << 100 * improvement_rate << " %) ";
+      if (operation == JOIN && improvement_rate < IMPROVEMENT_RATE) {
+        log << "\t\t[ACCEPT] with negligible improvement (while joining)!\n\n";
+      } else {
+        log << "\t\t[ACCEPT]\n\n";
+      }
+    } else {  // ... no substantial improvement
+      log << "\t ... IMPROVEMENT < " << fixed << setprecision(3) 
+          << 100 * IMPROVEMENT_RATE << " %\t\t\t[REJECT]\n\n";
+    }
+  } else {    // ... no improvement
+    log << "\t ... NO IMPROVEMENT\t\t\t[REJECT]\n\n";
+  }
+}
+
 ////////////////////// TESTING FUNCTIONS \\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
 void TestFunctions(void)
 {
   Test test;
+
+  test.parallel_sum_computation();
 
   //test.uniform_number_generation();
 
@@ -1535,7 +1776,7 @@ void TestFunctions(void)
 
   //test.mml_estimation();
 
-  test.vmf_all_estimation();
+  //test.vmf_all_estimation();
 }
 
 ////////////////////// EXPERIMENTS \\\\\\\\\\\\\\\\\\\\\\\\\\\\
