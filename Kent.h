@@ -131,8 +131,6 @@ class Kent  // FB5
     void printParameters(ostream &);
 
     long double computeTestStatistic_vMF(std::vector<Vector> &);
-
-    long double computeTestStatistic_vMF(Vector &, Matrix &, int);
 };
 
 #endif

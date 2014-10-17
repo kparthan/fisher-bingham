@@ -733,7 +733,7 @@ struct Estimates Kent::computeMomentEstimates(Vector &sample_mean1, Matrix &S1, 
   long double t1 = (B(1,1)-B(2,2)) * (B(1,1)-B(2,2));
   long double t2 = 4 * B(1,2) * B(1,2);
   long double r2 = sqrt(t1+t2);
-  cout << scientific << "r2^2: " << r2*r2 << endl;
+  //cout << scientific << "r2^2: " << r2*r2 << endl;
 
   estimates.mean = Vector(3,0);
   Vector axis1(3,0),axis2(3,0);
@@ -981,17 +981,13 @@ void Kent::printParameters(ostream &os)
 
 long double Kent::computeTestStatistic_vMF(std::vector<Vector> &x)
 {
-  Vector sample_mean = computeVectorSum(x);
-  Matrix S = computeNormalizedDispersionMatrix(x);
-  return computeTestStatistic_vMF(sample_mean,S,x.size());
-
-  /*int N = x.size();
+  int N = x.size();
   computeMomentEstimates(x);
   Vector sum = computeVectorSum(x);
   Vector sample_mean(3,0);
   long double R = normalize(sum,sample_mean);
   long double rbar = R / N;
-  cout << "sample mean: "; print(cout,sample_mean,3); cout << endl;
+  //cout << "sample mean: "; print(cout,sample_mean,3); cout << endl;
   
   Matrix H = align_vector_with_zaxis(sample_mean);
   cout << "H: " << H << endl;
@@ -1012,46 +1008,6 @@ long double Kent::computeTestStatistic_vMF(std::vector<Vector> &x)
   long double w = eig_diff * eig_diff;
   // check: w = r2 * r2 in moment estimation
   //cout << scientific << "w: " << w << endl;
-
-  // Assumption: x comes from vMF
-  // Estimate vMF kappa
-  vMF vmf;
-  std::vector<struct Estimates_vMF> all_estimates;
-  vmf.computeAllEstimators(x,all_estimates);
-  long double k,t;
-  chi_squared chisq(2);
-  long double alpha = 0.05,pvalue;
-  for (int i=0; i<all_estimates.size(); i++) {
-    k = all_estimates[i].kappa;
-    t = computeTestStatistic(k,w,rbar,N);
-    pvalue = compute_pvalue(t,chisq);
-    cout << scientific << "t: " << t << "; pvalue: " << pvalue << endl;
-  }
-  return t;*/
-}
-
-long double Kent::computeTestStatistic_vMF(Vector &sample_mean1, Matrix &S1, int N)
-{
-  computeMomentEstimates(sample_mean1,S1,N);
-  Vector sample_mean(3,0);
-  long double R = normalize(sample_mean1,sample_mean);
-  long double rbar = R / N;
-  cout << "sample mean: "; print(cout,sample_mean,3); cout << endl;
-  
-  Matrix H = align_vector_with_zaxis(sample_mean);
-  cout << "H: " << H << endl;
-  Matrix HS = prod(H,S1);
-  Matrix tmp = trans(H);
-  Matrix HSH = prod(HS,tmp);
-
-  Vector eigen_values(3,0);
-  Matrix eigen_vectors = IdentityMatrix(3,3);
-  eigenDecomposition(S1,eigen_values,eigen_vectors);
-  cout << "eigen values: "; print(cout,eigen_values,3); cout << endl;
-  long double eig_diff = eigen_values[0] - eigen_values[1];
-  long double w = eig_diff * eig_diff;
-  // check: w = r2 * r2 in moment estimation
-  cout << scientific << "w: " << w << endl;
 
   // Assumption: x comes from vMF
   // Estimate vMF kappa

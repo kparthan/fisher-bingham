@@ -380,6 +380,7 @@ void vMF::computeAllEstimators(
   // MML
   type = "MML_2";
   struct Estimates_vMF mml_est = mlapprox_est;
+  //struct Estimates_vMF mml_est = map_est;
   Optimize2 opt_mml(type);
   opt_mml.initialize(N,mml_est.R,mml_est.mean,mml_est.kappa);
   opt_mml.computeEstimates(mml_est);
@@ -396,10 +397,9 @@ void vMF::estimateMean(
   Vector &weights
 ) {
   Vector resultant = computeVectorSum(data,weights,estimates.Neff);
-  estimateMean(estimates,resultant);
   estimates.mean = Vector(3,0);
   estimates.R = normalize(resultant,estimates.mean); // norm of resultant
-  estimates.Rbar = estimates.R / Neff;
+  estimates.Rbar = estimates.R / estimates.Neff;
   if (estimates.Rbar >= 1) {
     assert((estimates.Rbar - 1) <= 0.0001);
     estimates.Rbar = 1 - TOLERANCE;

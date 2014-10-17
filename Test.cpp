@@ -558,6 +558,24 @@ void Test::moment_estimation(void)
   cout << "m2_est: "; print(cout,estimates.minor_axis,3);
   cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
   cout << "kappa_est: " << estimates.kappa << "; beta_est: " << estimates.beta << endl;
+
+  // Kent example from paper
+  cout << "\nReading Whin Sill data ...\n";
+  string file_name = "./support/R_codes/whin_sill.txt";
+  std::vector<Vector> whin_sill = load_matrix(file_name);
+  estimates = kent.computeMomentEstimates(whin_sill);
+
+  cartesian2spherical(estimates.mean,spherical);
+  cout << "m0_est: "; print(cout,estimates.mean,3);
+  cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
+  cartesian2spherical(estimates.major_axis,spherical);
+  cout << "m1_est: "; print(cout,estimates.major_axis,3);
+  cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
+  cartesian2spherical(estimates.minor_axis,spherical);
+  cout << "m2_est: "; print(cout,estimates.minor_axis,3);
+  cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
+  cout << "kappa_est: " << estimates.kappa << "; beta_est: " << estimates.beta << endl;
+
 }
 
 void Test::ml_estimation(void)
@@ -739,14 +757,27 @@ void Test::hypothesis_testing()
   Vector m0,m1,m2;
   generateRandomOrthogonalVectors(m0,m1,m2);
 
-  N = 100;
+  N = 1000;
+
+  // Generating data from Kent
   kappa = 10;
   beta = 4.75;
-  //beta = 47.5;
   Kent kent(m0,m1,m2,kappa,beta);
   random_sample = kent.generate(N);
   writeToFile("./visualize/sampled_data/kent.dat",random_sample,3);
 
+  //string file_name = "./support/R_codes/whin_sill.txt";
+  //random_sample = load_matrix(file_name);
+  kent.computeTestStatistic_vMF(random_sample);
+
+  // Generating data from vMF
+  Vector spherical(3,1);
+  spherical[1] = PI * uniform_random();
+  spherical[2] = 2 * PI * uniform_random();
+  spherical2cartesian(spherical,m0);
+  vMF vmf(m0,kappa);
+  random_sample = vmf.generate(N);
+  writeToFile("random_sample.dat",random_sample,3);
   kent.computeTestStatistic_vMF(random_sample);
 }
 
