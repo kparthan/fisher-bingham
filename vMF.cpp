@@ -396,9 +396,10 @@ void vMF::estimateMean(
   Vector &weights
 ) {
   Vector resultant = computeVectorSum(data,weights,estimates.Neff);
+  estimateMean(estimates,resultant);
   estimates.mean = Vector(3,0);
   estimates.R = normalize(resultant,estimates.mean); // norm of resultant
-  estimates.Rbar = estimates.R / estimates.Neff;
+  estimates.Rbar = estimates.R / Neff;
   if (estimates.Rbar >= 1) {
     assert((estimates.Rbar - 1) <= 0.0001);
     estimates.Rbar = 1 - TOLERANCE;

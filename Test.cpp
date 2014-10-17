@@ -719,3 +719,34 @@ void Test::vmf_all_estimation()
   vmf.computeAllEstimators(random_sample);
 }
 
+void Test::chi_square()
+{
+  int df = 3;
+  chi_squared chisq(df);
+  long double alpha = 0.05;
+  long double x = quantile(chisq,1-alpha);
+  cout << "quantile: " << x << endl;
+
+  long double p = 1 - cdf(chisq,x);
+  cout << "pvalue: " << p << endl;
+}
+
+void Test::hypothesis_testing()
+{
+  int N;
+  long double kappa,beta;
+  std::vector<Vector> random_sample;
+  Vector m0,m1,m2;
+  generateRandomOrthogonalVectors(m0,m1,m2);
+
+  N = 100;
+  kappa = 10;
+  beta = 4.75;
+  //beta = 47.5;
+  Kent kent(m0,m1,m2,kappa,beta);
+  random_sample = kent.generate(N);
+  writeToFile("./visualize/sampled_data/kent.dat",random_sample,3);
+
+  kent.computeTestStatistic_vMF(random_sample);
+}
+

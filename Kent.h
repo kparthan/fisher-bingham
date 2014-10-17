@@ -129,6 +129,10 @@ class Kent  // FB5
     long double computeMessageLength(struct Estimates &, Vector &, Matrix &, long double);
 
     void printParameters(ostream &);
+
+    long double computeTestStatistic_vMF(std::vector<Vector> &);
+
+    long double computeTestStatistic_vMF(Vector &, Matrix &, int);
 };
 
 #endif

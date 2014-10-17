@@ -103,6 +103,8 @@ void track(const std::vector<double> &, const double);
 void rhs(const std::vector<double> &, std::vector<double> &, const double);
 double Constraint2(const std::vector<double> &, std::vector<double> &, void *);
 double Constraint5(const std::vector<double> &, std::vector<double> &, void *);
+long double computeTestStatistic(long double, long double, long double, int);
+long double compute_pvalue(long double, chi_squared &);
 
 long double computeConstantTerm(int);
 std::vector<std::vector<int> > updateBins(std::vector<Vector> &, long double);

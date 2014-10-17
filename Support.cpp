@@ -1132,6 +1132,25 @@ double Constraint5(const std::vector<double> &x, std::vector<double> &grad, void
     return (2 * x[4] - x[3]);
 }
 
+long double computeTestStatistic(
+  long double kappa, 
+  long double eig_val_sq, 
+  long double rbar, 
+  int N)  // vMF (null) against Kent (alternative)
+{
+  long double num = N * kappa * kappa * kappa * eig_val_sq;
+  long double denom = 4 * (kappa - 3* rbar);
+  return num/denom;
+}
+
+// return the p-value of the test
+long double compute_pvalue(long double t, chi_squared &chisq)
+{
+  //long double critical_value = quantile(chisq,1-alpha);
+  long double pvalue = 1 - cdf(chisq,t);
+  return pvalue;
+}
+
 ////////////////////// MIXTURE FUNCTIONS \\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
 /*!
@@ -1732,7 +1751,7 @@ void TestFunctions(void)
 {
   Test test;
 
-  test.parallel_sum_computation();
+  //test.parallel_sum_computation();
 
   //test.uniform_number_generation();
 
@@ -1777,6 +1796,10 @@ void TestFunctions(void)
   //test.mml_estimation();
 
   //test.vmf_all_estimation();
+
+  //test.chi_square();
+
+  test.hypothesis_testing();
 }
 
 ////////////////////// EXPERIMENTS \\\\\\\\\\\\\\\\\\\\\\\\\\\\

@@ -53,6 +53,10 @@ class Test
     void mml_estimation(void);
 
     void vmf_all_estimation();
+
+    void chi_square();
+
+    void hypothesis_testing();
 };
 
 #endif
