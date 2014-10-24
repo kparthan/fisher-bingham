@@ -694,8 +694,7 @@ void Mixture::saveComponentData(int index, std::vector<Vector> &data)
  *  \param save_data a boolean variable
  *  \return the random sample
  */
-std::vector<Vector>
-Mixture::generate(int num_samples, bool save_data) 
+std::vector<Vector> Mixture::generate(int num_samples, bool save_data) 
 {
   sample_size = Vector(K,0);
   for (int i=0; i<num_samples; i++) {

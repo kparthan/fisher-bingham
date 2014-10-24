@@ -96,11 +96,10 @@ void Experiments::simulate(long double kappa, long double beta)
     cout << "MAP_FAIL: " << MAP_FAIL << endl;
     cout << "MML2_FAIL: " << MML2_FAIL << endl;
     cout << "MML5_FAIL: " << MML5_FAIL << endl;
-  }
+  } // for() sample size ends ...
 }
 
-void 
-Experiments::computeMeasures(
+void Experiments::computeMeasures(
   long double kappa,
   long double beta,
   std::vector<Vector> &kappa_est_all,
@@ -233,8 +232,9 @@ void Experiments::computeVariance(ostream &out, long double p, std::vector<Vecto
   out << endl;
 }
 
-void Experiments::computeMeanAbsoluteError(ostream &out, long double p, std::vector<Vector> &p_est_all)
-{
+void Experiments::computeMeanAbsoluteError(
+  ostream &out, long double p, std::vector<Vector> &p_est_all
+) {
   int num_elements = p_est_all.size();
 
   Vector error(NUM_METHODS,0);
@@ -250,8 +250,9 @@ void Experiments::computeMeanAbsoluteError(ostream &out, long double p, std::vec
   out << endl;
 }
 
-void Experiments::computeMeanSquaredError(ostream &out, long double p, std::vector<Vector> &p_est_all)
-{
+void Experiments::computeMeanSquaredError(
+  ostream &out, long double p, std::vector<Vector> &p_est_all
+) {
   int num_elements = p_est_all.size();
 
   Vector error(NUM_METHODS,0);
@@ -267,8 +268,7 @@ void Experiments::computeMeanSquaredError(ostream &out, long double p, std::vect
   out << endl;
 }
 
-void 
-Experiments::computeWinsRatio(
+void Experiments::computeWinsRatio(
   bool ignore_first, 
   const char *measure, 
   string input_file, 
