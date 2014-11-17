@@ -990,7 +990,7 @@ long double Kent::computeTestStatistic_vMF(std::vector<Vector> &x)
   //cout << "sample mean: "; print(cout,sample_mean,3); cout << endl;
   
   Matrix H = align_vector_with_zaxis(sample_mean);
-  cout << "H: " << H << endl;
+  //cout << "H: " << H << endl;
 
   std::vector<Vector> y1 = transform(x,H);
   Vector tmp(2,0);

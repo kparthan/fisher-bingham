@@ -1793,13 +1793,13 @@ void TestFunctions(void)
 
   //test.fisher();
 
-  test.mml_estimation();
+  //test.mml_estimation();
 
   //test.vmf_all_estimation();
 
   //test.chi_square();
 
-  //test.hypothesis_testing();
+  test.hypothesis_testing();
 }
 
 ////////////////////// EXPERIMENTS \\\\\\\\\\\\\\\\\\\\\\\\\\\\

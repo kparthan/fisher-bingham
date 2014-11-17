@@ -766,18 +766,21 @@ void Test::hypothesis_testing()
   random_sample = kent.generate(N);
   writeToFile("./visualize/sampled_data/kent.dat",random_sample,3);
 
-  //string file_name = "./support/R_codes/whin_sill.txt";
-  //random_sample = load_matrix(file_name);
+  string file_name = "./support/R_codes/whin_sill.txt";
+  random_sample = load_matrix(file_name);
   kent.computeTestStatistic_vMF(random_sample);
 
+  vMF vmf(m0,kappa);
+  vmf.computeAllEstimators(random_sample);
+
   // Generating data from vMF
-  Vector spherical(3,1);
+  /*Vector spherical(3,1);
   spherical[1] = PI * uniform_random();
   spherical[2] = 2 * PI * uniform_random();
   spherical2cartesian(spherical,m0);
   vMF vmf(m0,kappa);
   random_sample = vmf.generate(N);
   writeToFile("random_sample.dat",random_sample,3);
-  kent.computeTestStatistic_vMF(random_sample);
+  kent.computeTestStatistic_vMF(random_sample);*/
 }
 
