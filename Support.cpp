@@ -1043,8 +1043,8 @@ void eigenDecomposition(
     eigen_values[i] = m(i,i);
   }
 
-  //cout << "eigen_values: "; print(cout,eigen_values,0); cout << endl;
-  //cout << "eigen_vectors: " << eigen_vectors << endl;
+  cout << "eigen_values: "; print(cout,eigen_values,0); cout << endl;
+  cout << "eigen_vectors: " << eigen_vectors << endl;
 }
 
 void jacobiRotateMatrix(
@@ -1755,7 +1755,7 @@ void TestFunctions(void)
 
   //test.uniform_number_generation();
 
-  //test.matrixFunctions();
+  test.matrixFunctions();
 
   //test.productMatrixVector();
 
@@ -1799,7 +1799,7 @@ void TestFunctions(void)
 
   //test.chi_square();
 
-  test.hypothesis_testing();
+  //test.hypothesis_testing();
 }
 
 ////////////////////// EXPERIMENTS \\\\\\\\\\\\\\\\\\\\\\\\\\\\
