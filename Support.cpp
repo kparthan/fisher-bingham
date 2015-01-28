@@ -826,14 +826,14 @@ Matrix computeOrthogonalTransformation(
   Vector &mean,
   Vector &major_axis
 ) {
-  Matrix r1 = align_zaxis_with_vector(mean);
-  Matrix r_inv = trans(r1);
-  Vector mj_xy = prod(r_inv,major_axis);
+  Matrix r1 = align_vector_with_xaxis(mean);
+  Matrix r1_inv = trans(r1);
+  Vector mj_xy = prod(major_axis,r1);
   Vector spherical(3,0);
-  cartesian2spherical2(mj_xy,spherical);
+  cartesian2spherical(mj_xy,spherical);
   long double psi = spherical[2];
-  Matrix r2 = rotate_about_zaxis(psi);
-  Matrix r = prod(r1,r2);
+  Matrix r2 = rotate_about_xaxis(psi);
+  Matrix r = prod(r1_inv,r2);
   return r;
 }
 
@@ -890,6 +890,12 @@ Matrix align_zaxis_with_vector(Vector &y)
 
   Matrix r = prod(r2,r1);
   return r;
+}
+
+Matrix align_xaxis_with_vector(Vector &y)
+{
+  Matrix r = align_vector_with_xaxis(y);
+  return trans(r);
 }
 
 Matrix align_vector_with_xaxis(Vector &y)

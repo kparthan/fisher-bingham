@@ -92,6 +92,7 @@ Matrix rotate_about_zaxis(long double);
 Matrix computeOrthogonalTransformation(Vector &, Vector &);
 Matrix computeOrthogonalTransformation(long double, long double, long double);
 void computeOrthogonalTransformation(Vector &, Vector &, long double &, long double &, long double &);
+Matrix align_xaxis_with_vector(Vector &);
 Matrix align_vector_with_xaxis(Vector &);
 Matrix align_vector_with_xaxis(long double, long double);
 Matrix align_zaxis_with_vector(Vector &);
