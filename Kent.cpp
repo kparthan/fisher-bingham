@@ -12,9 +12,9 @@ extern Vector XAXIS,YAXIS,ZAXIS;
  */
 Kent::Kent() : kappa(1), beta(0)
 {
-  mu = ZAXIS;
-  major_axis = XAXIS;
-  minor_axis = YAXIS;
+  mu = XAXIS;
+  major_axis = YAXIS;
+  minor_axis = ZAXIS;
   computed = UNSET;
 }
 
@@ -23,9 +23,9 @@ Kent::Kent() : kappa(1), beta(0)
  */
 Kent::Kent(long double kappa, long double beta) : kappa(kappa), beta(beta)
 {
-  mu = ZAXIS;
-  major_axis = XAXIS;
-  minor_axis = YAXIS;
+  mu = XAXIS;
+  major_axis = YAXIS;
+  minor_axis = ZAXIS;
   //assert(eccentricity() < 1);
   computed = UNSET;
 }
@@ -34,15 +34,16 @@ Kent::Kent(long double kappa, long double beta) : kappa(kappa), beta(beta)
  *  Constructor
  */
 Kent::Kent(Vector &mu, Vector &major_axis, Vector &minor_axis,
-          long double kappa, long double beta): mu(mu), 
-          major_axis(major_axis), minor_axis(minor_axis), kappa(kappa), beta(beta)
+          long double kappa, long double beta): 
+          mu(mu), major_axis(major_axis), minor_axis(minor_axis), 
+          kappa(kappa), beta(beta)
 {
   //assert(eccentricity() < 1);
   Vector spherical(3,0);
   cartesian2spherical(mu,spherical);
   alpha = spherical[1];
   eta = spherical[2];
-  Matrix r = align_vector_with_zaxis(mu);
+  Matrix r = align_vector_with_xaxis(alpha,eta);
   Vector mj = prod(r,major_axis);
   cartesian2spherical(mj,spherical);
   psi = spherical[2];
@@ -50,15 +51,17 @@ Kent::Kent(Vector &mu, Vector &major_axis, Vector &minor_axis,
 }
 
 Kent::Kent(long double psi, long double alpha, long double eta, 
-           long double kappa, long double beta) : psi(psi), alpha(alpha), eta(eta), 
-           kappa(kappa), beta(beta)
+           long double kappa, long double beta) : 
+           psi(psi), alpha(alpha), eta(eta), kappa(kappa), beta(beta)
 {
   Matrix r = computeOrthogonalTransformation(psi,alpha,eta);
-  mu = Vector(3,0); major_axis = mu; minor_axis = mu;
+  mu = Vector(3,0); 
+  major_axis = Vector(3,0); 
+  minor_axis = Vector(3,0); 
   for (int i=0; i<3; i++) {
-    major_axis[i] = r(i,0);
-    minor_axis[i] = r(i,1);
-    mu[i] = r(i,2);
+    mu[i] = r(i,0);
+    major_axis[i] = r(i,1);
+    minor_axis[i] = r(i,2);
   }
   computed = UNSET;
 }
@@ -710,7 +713,7 @@ struct Estimates Kent::computeMomentEstimates(Vector &sample_mean1, Matrix &S1, 
 
   struct Estimates estimates;
   Vector spherical(3,0);
-  cartesian2sphericalPoleXAxis(sample_mean,spherical);
+  cartesian2spherical(sample_mean,spherical);
   long double theta = spherical[1];
   long double phi = spherical[2];
 
@@ -973,7 +976,7 @@ void Kent::printParameters(ostream &os)
   os << "\t[kappa]:" << setw(10) << setprecision(3) << kappa;
   os << "\t[beta]:" << setw(10) << setprecision(3) << beta << endl;
   /*vector<long double> spherical(3,0);
-  cartesian2spherical(estimates.mu,spherical);
+  cartesian2spherical2(estimates.mu,spherical);
   spherical[1] *= 180/PI; 
   spherical[2] *= 180/PI; 
   print(os,spherical);*/

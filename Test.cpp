@@ -14,6 +14,32 @@ extern Vector XAXIS,YAXIS,ZAXIS;
 extern int ENABLE_DATA_PARALLELISM;
 extern int NUM_THREADS;
 
+void Test::testing_cartesian2sphericalPoleXAxis()
+{
+  long double theta,phi;
+  Vector x(3,0),spherical(3,0);
+
+  // in degrees
+  theta = 90;
+  phi = 100;
+
+  // in radians
+  theta *= PI/180;
+  phi *= PI/180;
+
+  x[0] = cos(theta);
+  x[1] = sin(theta) * cos(phi);
+  x[2] = sin(theta) * sin(phi);
+
+  cartesian2spherical(x,spherical);
+  //cartesian2spherical2(x,spherical);
+
+  cout << "Spherical coordinates: ";
+  cout << "r: " << spherical[0] << "\n";
+  cout << "theta: " << spherical[1] * 180/PI << "\n";
+  cout << "phi: " << spherical[2] * 180/PI << "\n";
+}
+
 void Test::parallel_sum_computation(void)
 {
   int N = 100;
@@ -26,7 +52,7 @@ void Test::parallel_sum_computation(void)
   for (int i=0; i<N; i++) {
     spherical[1] = PI * uniform_random();
     spherical[2] = (2 * PI) * uniform_random();
-    spherical2cartesian(spherical,x);
+    spherical2cartesian2(spherical,x);
     sample.push_back(x);
     weights[i] = uniform_random();
   }
@@ -231,7 +257,7 @@ void Test::orthogonalTransformations(void)
   spherical[0] = 1;
   spherical[1] = PI/3;  // 60 degrees
   spherical[2] = 250 * PI/180;  // 250 degrees
-  spherical2cartesian(spherical,cartesian);
+  spherical2cartesian2(spherical,cartesian);
   cout << "cartesian: "; print(cout,cartesian,3); cout << endl;
 
   boost::numeric::ublas::vector<long double> vec(3);
@@ -471,7 +497,7 @@ void Test::optimization(void)
   sample_mean[0] = 0.083; 
   sample_mean[1] = -0.959; 
   sample_mean[2] = 0.131;
-  cartesian2spherical(sample_mean,spherical);
+  cartesian2spherical2(sample_mean,spherical);
   cout << "m0: "; print(cout,sample_mean,3);
   cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
   Matrix S(3,3);
@@ -498,13 +524,13 @@ void Test::moment_estimation(void)
   long double beta = 47.5;
 
   generateRandomOrthogonalVectors(m0,m1,m2);
-  cartesian2spherical(m0,spherical);
+  cartesian2spherical2(m0,spherical);
   cout << "m0: "; print(cout,m0,3);
   cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
-  cartesian2spherical(m1,spherical);
+  cartesian2spherical2(m1,spherical);
   cout << "m1: "; print(cout,m1,3);
   cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
-  cartesian2spherical(m2,spherical);
+  cartesian2spherical2(m2,spherical);
   cout << "m2: "; print(cout,m2,3);
   cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
 
@@ -513,13 +539,13 @@ void Test::moment_estimation(void)
   writeToFile("random_sample.dat",random_sample,3);
   estimates = kent.computeMomentEstimates(random_sample);
 
-  cartesian2spherical(estimates.mean,spherical);
+  cartesian2spherical2(estimates.mean,spherical);
   cout << "m0_est: "; print(cout,estimates.mean,3);
   cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
-  cartesian2spherical(estimates.major_axis,spherical);
+  cartesian2spherical2(estimates.major_axis,spherical);
   cout << "m1_est: "; print(cout,estimates.major_axis,3);
   cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
-  cartesian2spherical(estimates.minor_axis,spherical);
+  cartesian2spherical2(estimates.minor_axis,spherical);
   cout << "m2_est: "; print(cout,estimates.minor_axis,3);
   cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
   cout << "kappa_est: " << estimates.kappa << "; beta_est: " << estimates.beta << endl;
@@ -530,7 +556,7 @@ void Test::moment_estimation(void)
   Vector sample_mean(3,0);
   sample_mean[0] = 0.083; sample_mean[1] = -0.959; sample_mean[2] = 0.131;
   //sample_mean[0] = -0.959; sample_mean[1] = 0.131; sample_mean[2] = 0.083;
-  cartesian2spherical(sample_mean,spherical);
+  cartesian2spherical2(sample_mean,spherical);
   cout << "m0: "; print(cout,sample_mean,3);
   cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
   Matrix S(3,3);
@@ -548,13 +574,13 @@ void Test::moment_estimation(void)
     }
   }
   estimates = kent.computeMomentEstimates(sample_mean,S,N);
-  cartesian2spherical(estimates.mean,spherical);
+  cartesian2spherical2(estimates.mean,spherical);
   cout << "m0_est: "; print(cout,estimates.mean,3);
   cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
-  cartesian2spherical(estimates.major_axis,spherical);
+  cartesian2spherical2(estimates.major_axis,spherical);
   cout << "m1_est: "; print(cout,estimates.major_axis,3);
   cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
-  cartesian2spherical(estimates.minor_axis,spherical);
+  cartesian2spherical2(estimates.minor_axis,spherical);
   cout << "m2_est: "; print(cout,estimates.minor_axis,3);
   cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
   cout << "kappa_est: " << estimates.kappa << "; beta_est: " << estimates.beta << endl;
@@ -565,13 +591,13 @@ void Test::moment_estimation(void)
   std::vector<Vector> whin_sill = load_matrix(file_name);
   estimates = kent.computeMomentEstimates(whin_sill);
 
-  cartesian2spherical(estimates.mean,spherical);
+  cartesian2spherical2(estimates.mean,spherical);
   cout << "m0_est: "; print(cout,estimates.mean,3);
   cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
-  cartesian2spherical(estimates.major_axis,spherical);
+  cartesian2spherical2(estimates.major_axis,spherical);
   cout << "m1_est: "; print(cout,estimates.major_axis,3);
   cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
-  cartesian2spherical(estimates.minor_axis,spherical);
+  cartesian2spherical2(estimates.minor_axis,spherical);
   cout << "m2_est: "; print(cout,estimates.minor_axis,3);
   cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
   cout << "kappa_est: " << estimates.kappa << "; beta_est: " << estimates.beta << endl;
@@ -588,13 +614,13 @@ void Test::ml_estimation(void)
   long double beta = 40;
 
   generateRandomOrthogonalVectors(m0,m1,m2);
-  cartesian2spherical(m0,spherical);
+  cartesian2spherical2(m0,spherical);
   cout << "m0: "; print(cout,m0,3);
   cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
-  cartesian2spherical(m1,spherical);
+  cartesian2spherical2(m1,spherical);
   cout << "m1: "; print(cout,m1,3);
   cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
-  cartesian2spherical(m2,spherical);
+  cartesian2spherical2(m2,spherical);
   cout << "m2: "; print(cout,m2,3);
   cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
 
@@ -607,7 +633,7 @@ void Test::ml_estimation(void)
   kent = Kent(100,20);
   Vector sample_mean(3,0);
   sample_mean[0] = 0.083; sample_mean[1] = -0.959; sample_mean[2] = 0.131;
-  cartesian2spherical(sample_mean,spherical);
+  cartesian2spherical2(sample_mean,spherical);
   cout << "m0: "; print(cout,sample_mean,3);
   cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
   Matrix S(3,3);
@@ -667,10 +693,10 @@ void Test::fisher()
   Vector spherical(3,0);
 
   computeOrthogonalTransformation(m0,m1,psi,alpha,eta);
-  cartesian2spherical(m0,spherical);
+  cartesian2spherical2(m0,spherical);
   cout << "m0: "; print(cout,spherical,0); cout << endl;
 
-  cartesian2spherical(m1,spherical);
+  cartesian2spherical2(m1,spherical);
   cout << "m1: "; print(cout,spherical,0); cout << endl;
 
   Kent kent(psi,alpha,eta,kappa,beta);
@@ -704,13 +730,13 @@ void Test::mml_estimation(void)
   /*m0 = ZAXIS;
   m1 = XAXIS;
   m2 = YAXIS;*/
-  cartesian2spherical(m0,spherical);
+  cartesian2spherical2(m0,spherical);
   cout << "m0: "; print(cout,m0,3);
   cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
-  cartesian2spherical(m1,spherical);
+  cartesian2spherical2(m1,spherical);
   cout << "m1: "; print(cout,m1,3);
   cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
-  cartesian2spherical(m2,spherical);
+  cartesian2spherical2(m2,spherical);
   cout << "m2: "; print(cout,m2,3);
   cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
 
@@ -727,7 +753,7 @@ void Test::vmf_all_estimation()
   spherical[2] = (rand()/(long double)RAND_MAX) * 2 * PI;
 
   Vector mean(3,0);
-  spherical2cartesian(spherical,mean);
+  spherical2cartesian2(spherical,mean);
   long double kappa = 100;
   int sample_size = 10;
 
@@ -774,7 +800,7 @@ void Test::hypothesis_testing()
   /*Vector spherical(3,1);
   spherical[1] = PI * uniform_random();
   spherical[2] = 2 * PI * uniform_random();
-  spherical2cartesian(spherical,m0);
+  spherical2cartesian2(spherical,m0);
   vMF vmf(m0,kappa);
   random_sample = vmf.generate(N);
   writeToFile("random_sample.dat",random_sample,3);

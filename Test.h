@@ -8,6 +8,8 @@ class Test
   private:
 
   public:
+    void testing_cartesian2sphericalPoleXAxis();
+
     void parallel_sum_computation(void);
 
     void uniform_number_generation();

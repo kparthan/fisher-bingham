@@ -954,7 +954,7 @@ void Mixture::generateHeatmapData(long double res)
     x[1] = theta * PI/180;
     for (long double phi=0; phi<360; phi+=res) {
       x[2] = phi * PI/180;
-      spherical2cartesian(x,point);
+      spherical2cartesian2(x,point);
       long double pr = exp(log_probability(point));
       // 2D bins
       fbins2D << fixed << setw(10) << setprecision(4) << floor(pr * 100);
