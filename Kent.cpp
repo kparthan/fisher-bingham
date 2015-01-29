@@ -95,7 +95,9 @@ std::vector<Vector> Kent::generate(int sample_size)
   cout << "Kappa: " << kappa << "; Beta: " << beta 
        << "; sample size: " << sample_size << endl;
   std::vector<Vector> canonical_sample = generateCanonical(sample_size);
-  Matrix transformation = computeOrthogonalTransformation(mu,major_axis);
+  Matrix r1 = rotate_about_yaxis(PI/2);
+  Matrix r2 = computeOrthogonalTransformation(mu,major_axis);
+  Matrix transformation = prod(r2,r1);
   return transform(canonical_sample,transformation);
 }
 
@@ -362,12 +364,12 @@ void Kent::computeExpectation()
   }
 
   Matrix expectation_std = ZeroMatrix(3,3);
-  expectation_std(0,0) = 0.5 * (1 - constants.ckk_c + constants.cb_c);  // lambda_2
-  constants.lambda2 = expectation_std(0,0);
-  expectation_std(1,1) = 0.5 * (1 - constants.ckk_c - constants.cb_c);  // lambda_3
-  constants.lambda3 = expectation_std(1,1);
-  expectation_std(2,2) = constants.ckk_c;  // lambda_1
-  constants.lambda1 = expectation_std(2,2);
+  expectation_std(0,0) = constants.ckk_c;  // lambda_1
+  constants.lambda1 = expectation_std(0,0);
+  expectation_std(1,1) = 0.5 * (1 - constants.ckk_c + constants.cb_c);  // lambda_2
+  constants.lambda2 = expectation_std(1,1);
+  expectation_std(2,2) = 0.5 * (1 - constants.ckk_c - constants.cb_c);  // lambda_3
+  constants.lambda3 = expectation_std(2,2);
 
   /*assert(expectation_std(0,0) > 0);
   assert(expectation_std(1,1) > 0);
@@ -424,6 +426,17 @@ long double Kent::computeNegativeLogLikelihood(Vector &sample_mean, Matrix &S, l
 
   long double ans = N * log_norm - kappa * c1 - beta * c2;
   return ans;
+}
+
+long double Kent::computeNegativeLogLikelihood(
+  struct Estimates &estimates, 
+  Vector &sample_mean, 
+  Matrix &S, 
+  long double N
+) {
+  Kent kent_est(estimates.mean,estimates.major_axis,estimates.minor_axis,
+                estimates.kappa,estimates.beta);
+  return kent_est.computeNegativeLogLikelihood(sample_mean,S,N);
 }
 
 long double Kent::computeLogPriorProbability()
@@ -509,7 +522,7 @@ long double Kent::computeLogFisherAxes()
   ans = kappa * constants.ck_c;
   tmp1 = (constants.lambda1 - constants.lambda3) * sinsq_psi;
   tmp2 = (constants.lambda1 - constants.lambda2) * cossq_psi;
-  ans += 2 * beta * (tmp1 - tmp2);
+  ans += (2 * beta * (tmp1 - tmp2));
   constants.fisher_axes(0,0) = ans;
 
   // E [d^2 L / d n^2]
@@ -522,7 +535,7 @@ long double Kent::computeLogFisherAxes()
   tmp1 = constants.cb_c * cossq_alpha;
   tmp2 = constants.lambda1 * sinsq_alpha * (cossq_psi - sinsq_psi);
   tmp3 += (tmp1 + tmp2);
-  ans += 2 * beta * tmp3;
+  ans += (2 * beta * tmp3);
   constants.fisher_axes(1,1) = ans;
   
   // E [d^2 L / d s^2]
@@ -566,7 +579,7 @@ long double Kent::computeLogFisherScale()
   return log(det);
 }
 
-void Kent::computeAllEstimators(std::vector<Vector> &data)
+void Kent::computeAllEstimators(std::vector<Vector> &data, int verbose)
 {
   Vector sample_mean = computeVectorSum(data);
   Matrix S = computeDispersionMatrix(data);
@@ -579,6 +592,7 @@ void Kent::computeAllEstimators(Vector &sample_mean, Matrix &S, long double N)
   struct Estimates moment_est = computeMomentEstimates(sample_mean,S,N);
   print(type,moment_est);
   cout << fixed << "msglen: " << computeMessageLength(moment_est,sample_mean,S,N) << endl;
+  cout << "negloglike: " << computeNegativeLogLikelihood(moment_est,sample_mean,S,N) << endl;
   cout << "KL-divergence: " << computeKLDivergence(moment_est) << endl << endl;
 
   type = "MLE";
@@ -589,6 +603,7 @@ void Kent::computeAllEstimators(Vector &sample_mean, Matrix &S, long double N)
   opt1.computeEstimates(sample_mean,S,ml_est);
   print(type,ml_est);
   cout << fixed << "msglen: " << computeMessageLength(ml_est,sample_mean,S,N) << endl;
+  cout << "negloglike: " << computeNegativeLogLikelihood(ml_est,sample_mean,S,N) << endl;
   cout << "KL-divergence: " << computeKLDivergence(ml_est) << endl << endl;
 
   type = "MAP";
@@ -599,6 +614,7 @@ void Kent::computeAllEstimators(Vector &sample_mean, Matrix &S, long double N)
   opt2.computeEstimates(sample_mean,S,map_est);
   print(type,map_est);
   cout << fixed << "msglen: " << computeMessageLength(map_est,sample_mean,S,N) << endl;
+  cout << "negloglike: " << computeNegativeLogLikelihood(map_est,sample_mean,S,N) << endl;
   cout << "KL-divergence: " << computeKLDivergence(map_est) << endl << endl;
 
   type = "MML_2";
@@ -609,6 +625,7 @@ void Kent::computeAllEstimators(Vector &sample_mean, Matrix &S, long double N)
   opt3.computeEstimates(sample_mean,S,mml_est1);
   print(type,mml_est1);
   cout << fixed << "msglen: " << computeMessageLength(mml_est1,sample_mean,S,N) << endl;
+  cout << "negloglike: " << computeNegativeLogLikelihood(mml_est1,sample_mean,S,N) << endl;
   cout << "KL-divergence: " << computeKLDivergence(mml_est1) << endl << endl;
 
   type = "MML_5";
@@ -621,6 +638,7 @@ void Kent::computeAllEstimators(Vector &sample_mean, Matrix &S, long double N)
   opt4.computeEstimates(sample_mean,S,mml_est2);
   print(type,mml_est2);
   cout << fixed << "msglen: " << computeMessageLength(mml_est2,sample_mean,S,N) << endl;
+  cout << "negloglike: " << computeNegativeLogLikelihood(mml_est2,sample_mean,S,N) << endl;
   cout << "KL-divergence: " << computeKLDivergence(mml_est2) << endl << endl;
 }
 
@@ -684,7 +702,7 @@ void Kent::computeAllEstimators(
 }
 
 /*!
- *  Moment estimation (with +Z as the north pole)
+ *  Moment estimation (with +X as the north pole)
  */
 struct Estimates Kent::computeMomentEstimates(std::vector<Vector> &data)
 {
@@ -718,11 +736,13 @@ struct Estimates Kent::computeMomentEstimates(Vector &sample_mean1, Matrix &S1, 
   long double phi = spherical[2];
 
   // rotation matrix to align north pole
-  Matrix H(3,3);
+  Matrix Ht = align_vector_with_xaxis(theta,phi);
+  Matrix H = trans(Ht);
+  /*Matrix H(3,3);
   H(0,0) = cos(theta); H(0,1) = -sin(theta); H(0,2) = 0;
   H(1,0) = sin(theta)*cos(phi); H(1,1) = cos(theta)*cos(phi); H(1,2) = -sin(phi);
   H(2,0) = sin(theta)*sin(phi); H(2,1) = cos(theta)*sin(phi); H(2,2) = cos(phi);
-  Matrix Ht = trans(H);
+  Matrix Ht = trans(H);*/
   Matrix tmp = prod(Ht,S);
   Matrix B = prod(tmp,H);
   long double ratio = 2 * B(1,2) / (B(1,1) - B(2,2));
@@ -760,8 +780,8 @@ struct Estimates Kent::computeMomentEstimates(Vector &sample_mean1, Matrix &S1, 
   estimates.kappa = f1 + f2;
   estimates.beta = 0.5 * (f1-f2);
 
-  cout << "kappa: " << estimates.kappa << endl;
-  cout << "beta: " << estimates.beta << endl;
+  cout << "(asymptotic) kappa: " << estimates.kappa << endl;
+  cout << "(asymptotic) beta: " << estimates.beta << endl;
   //estimates.kappa = 120;
   //estimates.beta = 45;
 
@@ -976,7 +996,7 @@ void Kent::printParameters(ostream &os)
   os << "\t[kappa]:" << setw(10) << setprecision(3) << kappa;
   os << "\t[beta]:" << setw(10) << setprecision(3) << beta << endl;
   /*vector<long double> spherical(3,0);
-  cartesian2spherical2(estimates.mu,spherical);
+  cartesian2spherical(estimates.mu,spherical);
   spherical[1] *= 180/PI; 
   spherical[2] *= 180/PI; 
   print(os,spherical);*/
@@ -985,32 +1005,22 @@ void Kent::printParameters(ostream &os)
 long double Kent::computeTestStatistic_vMF(std::vector<Vector> &x)
 {
   int N = x.size();
-  computeMomentEstimates(x);
-  Vector sum = computeVectorSum(x);
-  Vector sample_mean(3,0);
-  long double R = normalize(sum,sample_mean);
-  long double rbar = R / N;
-  //cout << "sample mean: "; print(cout,sample_mean,3); cout << endl;
-  
-  Matrix H = align_vector_with_zaxis(sample_mean);
-  //cout << "H: " << H << endl;
 
-  std::vector<Vector> y1 = transform(x,H);
-  Vector tmp(2,0);
-  std::vector<Vector> y(N,tmp);
-  for (int i=0; i<N; i++) {
-    y[i][0] = y1[i][0];
-    y[i][1] = y1[i][1];
-  }
-  Matrix S = computeNormalizedDispersionMatrix(y);
-  Vector eigen_values(2,0);
-  Matrix eigen_vectors = IdentityMatrix(2,2);
-  eigenDecomposition(S,eigen_values,eigen_vectors);
-  //cout << "eigen values: "; print(cout,eigen_values,3); cout << endl;
-  long double eig_diff = eigen_values[0] - eigen_values[1];
-  long double w = eig_diff * eig_diff;
-  // check: w = r2 * r2 in moment estimation
-  //cout << scientific << "w: " << w << endl;
+  Vector sample_mean = computeNormalizedVectorSum(x);
+  long double rbar = norm(sample_mean);
+  //cout << "sample mean: "; print(cout,sample_mean,3); cout << endl;
+
+  Matrix S = computeNormalizedDispersionMatrix(x);
+  
+  Matrix Ht = align_vector_with_xaxis(sample_mean);
+  Matrix H = trans(Ht);
+  //cout << "H: " << H << endl;
+  Matrix tmp = prod(Ht,S);
+  Matrix B = prod(tmp,H);
+
+  long double t1 = (B(1,1)-B(2,2)) * (B(1,1)-B(2,2));
+  long double t2 = 4 * B(1,2) * B(1,2);
+  long double w = t1+t2;  // r2^2
 
   // Assumption: x comes from vMF
   // Estimate vMF kappa
@@ -1027,5 +1037,26 @@ long double Kent::computeTestStatistic_vMF(std::vector<Vector> &x)
     cout << scientific << "t: " << t << "; pvalue: " << pvalue << endl;
   }
   return t;
+}
+
+long double Kent::computeConfidenceRegion(std::vector<Vector> &x)
+{
+  std::vector<struct Estimates> all_estimates;
+  computeAllEstimators(x,all_estimates);
+
+  long double m,l2,l3,s2,s3,area;
+  for (int i=0; i<all_estimates.size(); i++) {
+    Kent kent(all_estimates[i].mean,all_estimates[i].major_axis,all_estimates[i].minor_axis,
+              all_estimates[i].kappa,all_estimates[i].beta);
+    struct Constants consts = kent.getConstants();
+    m = consts.ck_c;
+    l2 = consts.lambda2;
+    l3 = consts.lambda3;
+    s2 = sqrt(l2);
+    s3 = sqrt(l3);
+    area = s2 * s3 / (m * m);
+    area *= (PI / x.size());
+    cout << "area: " << scientific << area << endl;
+  }
 }
 

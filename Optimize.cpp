@@ -18,7 +18,8 @@ Optimize::Optimize(string type)
   }
 }
 
-void Optimize::initialize(double sample_size, Vector &m0, Vector &m1, Vector &m2, long double k, long double b)
+void Optimize::initialize(double sample_size, Vector &m0, Vector &m1, Vector &m2, 
+                          long double k, long double b)
 {
   N = sample_size;
   mean = m0;
@@ -87,9 +88,9 @@ void Optimize::computeEstimates(Vector &sample_mean, Matrix &S, struct Estimates
 
 void Optimize::finalize(std::vector<double> &theta, struct Estimates &estimates)
 {
-  estimates.alpha = theta[0];
-  estimates.eta = theta[1];
-  estimates.psi = theta[2];
+  estimates.psi = theta[0];
+  estimates.alpha = theta[1];
+  estimates.eta = theta[2];
   estimates.kappa = theta[3];
   estimates.beta = theta[4];
   Kent kent(estimates.psi,estimates.alpha,estimates.eta,estimates.kappa,estimates.beta);
@@ -146,7 +147,7 @@ std::vector<double> Optimize::minimize(Vector &sample_mean, Matrix &S, int num_p
     case MLE:
     {
       opt.set_lower_bounds(lb);
-      ub[0] = PI; ub[1] = 2*PI; ub[2] = 2*PI;
+      ub[0] = 2*PI; ub[1] = PI; ub[2] = 2*PI;
       opt.set_upper_bounds(ub);
 
       MaximumLikelihoodObjectiveFunction mle(sample_mean,S,N);
@@ -154,7 +155,7 @@ std::vector<double> Optimize::minimize(Vector &sample_mean, Matrix &S, int num_p
       opt.add_inequality_constraint(Constraint5, NULL, TOLERANCE);
       opt.set_xtol_rel(1e-4);
 
-      x[0] = alpha; x[1] = eta; x[2] = psi; x[3] = kappa; x[4] = beta;
+      x[0] = psi; x[1] = alpha; x[2] = eta; x[3] = kappa; x[4] = beta;
       nlopt::result result = opt.optimize(x, minf);
       assert(!boost::math::isnan(minf));
       break;
@@ -163,7 +164,7 @@ std::vector<double> Optimize::minimize(Vector &sample_mean, Matrix &S, int num_p
     case MAP:
     {
       opt.set_lower_bounds(lb);
-      ub[0] = PI; ub[1] = 2*PI; ub[2] = 2*PI;
+      ub[0] = 2*PI; ub[1] = PI; ub[2] = 2*PI;
       opt.set_upper_bounds(ub);
 
       MAPObjectiveFunction map(sample_mean,S,N);
@@ -171,12 +172,12 @@ std::vector<double> Optimize::minimize(Vector &sample_mean, Matrix &S, int num_p
       opt.add_inequality_constraint(Constraint5, NULL, TOLERANCE);
       opt.set_xtol_rel(1e-4);
 
-      x[0] = alpha; x[1] = eta; x[2] = psi; x[3] = kappa; x[4] = beta;
+      x[0] = psi; x[1] = alpha; x[2] = eta; x[3] = kappa; x[4] = beta;
       nlopt::result result = opt.optimize(x, minf);
       //assert(!boost::math::isnan(minf));
       if (boost::math::isnan(minf)) {
         cout << "MAP here:\n";
-        x[0] = alpha; x[1] = eta; x[2] = psi; x[3] = kappa; x[4] = beta;
+        x[0] = psi; x[1] = alpha; x[2] = eta; x[3] = kappa; x[4] = beta;
       }
       break;
     }
@@ -205,7 +206,7 @@ std::vector<double> Optimize::minimize(Vector &sample_mean, Matrix &S, int num_p
     {
       //lb[3] = -HUGE_VAL; lb[4] = -HUGE_VAL;
       opt.set_lower_bounds(lb);
-      ub[0] = PI; ub[1] = 2*PI; ub[2] = 2*PI;
+      ub[0] = 2*PI; ub[1] = PI; ub[2] = 2*PI;
       opt.set_upper_bounds(ub);
 
       MMLObjectiveFunction mml5(sample_mean,S,N);
@@ -213,12 +214,12 @@ std::vector<double> Optimize::minimize(Vector &sample_mean, Matrix &S, int num_p
       opt.add_inequality_constraint(Constraint5, NULL, TOLERANCE);
       opt.set_xtol_rel(1e-4);
 
-      x[0] = alpha; x[1] = eta; x[2] = psi; x[3] = kappa; x[4] = beta;
+      x[0] = psi; x[1] = alpha; x[2] = eta; x[3] = kappa; x[4] = beta;
       nlopt::result result = opt.optimize(x, minf);
       //assert(!boost::math::isnan(minf));
       if (boost::math::isnan(minf)) {
         cout << "MML5 here:\n";
-        x[0] = alpha; x[1] = eta; x[2] = psi; x[3] = kappa; x[4] = beta;
+        x[0] = psi; x[1] = alpha; x[2] = eta; x[3] = kappa; x[4] = beta;
       }
       break;
     }

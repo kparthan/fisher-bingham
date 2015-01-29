@@ -76,6 +76,8 @@ class Kent  // FB5
 
     long double computeNegativeLogLikelihood(Vector &, Matrix &, long double);
 
+    long double computeNegativeLogLikelihood(struct Estimates &, Vector &, Matrix &, long double);
+
     long double computeLogPriorProbability();
 
     long double computeLogPriorAxes();
@@ -86,11 +88,11 @@ class Kent  // FB5
 
     long double computeLogFisherInformation(long double);
 
-    void computeAllEstimators(std::vector<Vector> &);
+    void computeAllEstimators(std::vector<Vector> &, int verbose = 0);
 
-    void computeAllEstimators(Vector &, Matrix &, long double);
+    void computeAllEstimators(Vector &, Matrix &, long double, int verbose = 0);
 
-    void computeAllEstimators(std::vector<Vector> &, std::vector<struct Estimates> &);
+    void computeAllEstimators(std::vector<Vector> &, std::vector<struct Estimates> &, int verbose = 0);
 
     struct Estimates computeMomentEstimates(std::vector<Vector> &);
 
@@ -131,6 +133,8 @@ class Kent  // FB5
     void printParameters(ostream &);
 
     long double computeTestStatistic_vMF(std::vector<Vector> &);
+
+    long double computeConfidenceRegion(std::vector<Vector> &);
 };
 
 #endif

@@ -59,6 +59,8 @@ class Test
     void chi_square();
 
     void hypothesis_testing();
+
+    void confidence_region();
 };
 
 #endif

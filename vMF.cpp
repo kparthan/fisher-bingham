@@ -259,7 +259,9 @@ std::vector<Vector> vMF::generate(int sample_size)
     if (fabs(mu[2] - 1) <= TOLERANCE) {  // check if mu is Z-axis
       return canonical_sample;
     } else {
-      Matrix transformation = align_zaxis_with_vector(mu);
+      Matrix r1 = rotate_about_yaxis(PI/2);
+      Matrix r2 = align_xaxis_with_vector(mu);
+      Matrix transformation = prod(r2,r1);
       return transform(canonical_sample,transformation);
     }
   } else if (sample_size == 0) {

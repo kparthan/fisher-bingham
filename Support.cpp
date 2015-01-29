@@ -22,22 +22,6 @@ int DISTRIBUTION;
 
 ////////////////////// GENERAL PURPOSE FUNCTIONS \\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
-/*void Setup()
-{
-  XAXIS = Vector(3,0); XAXIS[0] = 1;
-  YAXIS = Vector(3,0); YAXIS[1] = 1;
-  ZAXIS = Vector(3,0); ZAXIS[2] = 1;
-
-  //srand(time(NULL));
-
-  UniformReal uniform_distribution(0,1);
-  RandomNumberGenerator generator;
-  Generator num_gen(generator,uniform_distribution); 
-  generator.seed(std::time(0)); // seed with the current time 
-  //UniformRandomNumberGenerator *instance = new UniformRandomNumberGenerator(num_gen);
-  uniform_generator = new UniformRandomNumberGenerator(num_gen);
-}*/
-
 /*!
  *  \brief This function checks to see if valid arguments are given to the 
  *  command line output.
@@ -299,13 +283,13 @@ void print(string &type, struct Estimates &estimates)
 {
   cout << "TYPE: " << type << endl;
   Vector spherical(3,0);
-  cartesian2spherical2(estimates.mean,spherical);
+  cartesian2spherical(estimates.mean,spherical);
   cout << "m0_est: "; print(cout,estimates.mean,3);
   cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
-  cartesian2spherical2(estimates.major_axis,spherical);
+  cartesian2spherical(estimates.major_axis,spherical);
   cout << "m1_est: "; print(cout,estimates.major_axis,3);
   cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
-  cartesian2spherical2(estimates.minor_axis,spherical);
+  cartesian2spherical(estimates.minor_axis,spherical);
   cout << "m2_est: "; print(cout,estimates.minor_axis,3);
   cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
   cout << "kappa_est: " << estimates.kappa << "; beta_est: " << estimates.beta << endl;
@@ -374,7 +358,7 @@ long double norm(Vector &v)
  *  \param cartesian a reference to a Vector 
  *  \param spherical a reference to a Vector 
  */
-void cartesian2spherical2(Vector &cartesian, Vector &spherical)
+/*void cartesian2spherical2(Vector &cartesian, Vector &spherical)
 {
   Vector unit(3,0);
   long double r = normalize(cartesian,unit);
@@ -412,7 +396,7 @@ void cartesian2spherical2(Vector &cartesian, Vector &spherical)
   spherical[0] = r;
   spherical[1] = theta;
   spherical[2] = phi;
-}
+}*/
 
 /*!
  *  \brief This function converts the cartesian coordinates into spherical.
@@ -465,12 +449,12 @@ void cartesian2spherical(Vector &cartesian, Vector &spherical)
  *  \param spherical a reference to a Vector 
  *  \param cartesian a reference to a Vector 
  */
-void spherical2cartesian2(Vector &spherical, Vector &cartesian)
+/*void spherical2cartesian2(Vector &spherical, Vector &cartesian)
 {
   cartesian[0] = spherical[0] * sin(spherical[1]) * cos(spherical[2]);
   cartesian[1] = spherical[0] * sin(spherical[1]) * sin(spherical[2]);
   cartesian[2] = spherical[0] * cos(spherical[1]);
-}
+}*/
 
 void spherical2cartesian(Vector &spherical, Vector &cartesian)
 {
@@ -480,7 +464,7 @@ void spherical2cartesian(Vector &spherical, Vector &cartesian)
 }
 
 /*!
- *  \brief This funciton computes the dot product between two Vectors.
+ *  \brief This function computes the dot product between two Vectors.
  *  \param v1 a reference to a Vector
  *  \param v2 a reference to a Vector
  *  \return the dot product
@@ -828,7 +812,7 @@ Matrix computeOrthogonalTransformation(
 ) {
   Matrix r1 = align_vector_with_xaxis(mean);
   Matrix r1_inv = trans(r1);
-  Vector mj_xy = prod(major_axis,r1);
+  Vector mj_xy = prod(r1,major_axis);
   Vector spherical(3,0);
   cartesian2spherical(mj_xy,spherical);
   long double psi = spherical[2];
@@ -858,38 +842,14 @@ void computeOrthogonalTransformation(
   long double &eta
 ) {
   Vector spherical(3,0);
-  cartesian2spherical2(mean,spherical);
+  cartesian2spherical(mean,spherical);
   alpha = spherical[1];
   eta = spherical[2];
 
-  Matrix r1 = align_zaxis_with_vector(mean);
-  Matrix r_inv = trans(r1);
-  Vector mj_xy = prod(r_inv,major_axis);
-  cartesian2spherical2(mj_xy,spherical);
+  Matrix r1 = align_vector_with_xaxis(mean);
+  Vector mj_xy = prod(r1,major_axis);
+  cartesian2spherical(mj_xy,spherical);
   psi = spherical[2];
-}
-
-Matrix align_zaxis_with_vector(Vector &y)
-{
-  Vector spherical(3,0);
-  cartesian2spherical2(y,spherical);
-  long double theta = spherical[1];
-  long double phi = spherical[2];
-
-  Matrix r1 = IdentityMatrix(3,3);
-  r1(0,0) = cos(theta);
-  r1(0,2) = sin(theta);
-  r1(2,0) = -r1(0,2); //-sin(theta)
-  r1(2,2) = r1(0,0); //cos(theta)
-
-  Matrix r2 = IdentityMatrix(3,3);
-  r2(0,0) = cos(phi);
-  r2(0,1) = -sin(phi);
-  r2(1,0) = -r2(0,1); //sin(phi)
-  r2(1,1) = r2(0,0);  // cos(phi)
-
-  Matrix r = prod(r2,r1);
-  return r;
 }
 
 Matrix align_xaxis_with_vector(Vector &y)
@@ -928,37 +888,20 @@ Matrix align_vector_with_xaxis(long double alpha, long double eta)
   return r;
 }
 
-Matrix align_vector_with_zaxis(Vector &y)
-{
-  Matrix r = align_zaxis_with_vector(y);
-  return trans(r);
-}
-
 void generateRandomOrthogonalVectors(
   Vector &mean,
   Vector &major_axis,
   Vector &minor_axis
 ) {
-  long double phi = (2 * PI) * uniform_random();
-  Vector spherical(3,1),major1(3,0);
-  spherical[1] = PI/2;
-  spherical[2] = phi;
-  spherical2cartesian2(spherical,major1); // major axis
-  Vector mu1 = ZAXIS;
-  //Vector minor1 = crossProduct(mu1,major1);
+  long double psi = (2 * PI) * uniform_random();
+  long double alpha = PI * uniform_random();
+  long double eta = (2 * PI) * uniform_random();
 
-  long double theta = PI * uniform_random();
-  phi = (2 * PI) * uniform_random();
-  //phi = rand()*2*PI/(long double)RAND_MAX;
-  spherical[1] = theta;
-  spherical[2] = phi;
-  mean = Vector(3,0);
-  spherical2cartesian2(spherical,mean); 
+  Matrix r = computeOrthogonalTransformation(psi,alpha,eta);
 
-  Matrix r = align_zaxis_with_vector(mean);
-  major_axis = prod(r,major1);
-  //minor_axis = prod(r,minor1);
-  minor_axis = crossProduct(mean,major_axis);
+  mean = prod(r,XAXIS);
+  major_axis = prod(r,YAXIS);
+  minor_axis = prod(r,ZAXIS);
 }
 
 Matrix generateRandomCovarianceMatrix(int D)
@@ -1097,8 +1040,8 @@ void eigenDecomposition(
     eigen_values[i] = m(i,i);
   }
 
-  cout << "eigen_values: "; print(cout,eigen_values,0); cout << endl;
-  cout << "eigen_vectors: " << eigen_vectors << endl;
+  //cout << "eigen_values: "; print(cout,eigen_values,0); cout << endl;
+  //cout << "eigen_vectors: " << eigen_vectors << endl;
 }
 
 void jacobiRotateMatrix(
@@ -1241,7 +1184,7 @@ std::vector<std::vector<int> > updateBins(std::vector<Vector> &unit_coordinates,
   Vector spherical(3,0);
   for (int i=0; i<unit_coordinates.size(); i++) {
     //cout << "i: " << i << endl; 
-    cartesian2spherical2(unit_coordinates[i],spherical);
+    cartesian2spherical(unit_coordinates[i],spherical);
     theta = spherical[1] * 180 / PI;
     if (fabs(theta) <= ZERO) {
       row = 0;
@@ -1288,7 +1231,7 @@ void outputBins(std::vector<std::vector<int> > &bins, long double res)
       fbins2D << fixed << setw(10) << bins[i][j];
       phi += res;
       spherical[2] = phi * PI / 180;
-      spherical2cartesian2(spherical,cartesian);
+      spherical2cartesian(spherical,cartesian);
       for (int k=0; k<3; k++) {
         fbins3D << fixed << setw(10) << setprecision(4) << cartesian[k];
       }
@@ -1535,7 +1478,7 @@ std::vector<vMF> generateRandomComponents_vMF(int num_components)
   for (int i=0; i<num_components; i++) {
     spherical[1] = PI * uniform_random();
     spherical[2] = (2 * PI) * uniform_random();
-    spherical2cartesian2(spherical,mean); 
+    spherical2cartesian(spherical,mean); 
     vMF vmf(mean,kappas[i]);
     components.push_back(vmf);
   }
@@ -1805,7 +1748,7 @@ void TestFunctions(void)
 {
   Test test;
 
-  test.testing_cartesian2sphericalPoleXAxis();
+  //test.testing_cartesian2sphericalPoleXAxis();
 
   //test.parallel_sum_computation();
 
@@ -1856,6 +1799,8 @@ void TestFunctions(void)
   //test.chi_square();
 
   //test.hypothesis_testing();
+
+  test.confidence_region();
 }
 
 ////////////////////// EXPERIMENTS \\\\\\\\\\\\\\\\\\\\\\\\\\\\

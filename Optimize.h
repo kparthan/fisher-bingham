@@ -93,9 +93,9 @@ class MaximumLikelihoodObjectiveFunction
      *  k,b,m0,mj,mi are parameters
      */
     double operator() (const std::vector<double> &x, std::vector<double> &grad) {
-      double alpha = x[0];
-      double eta = x[1];
-      double psi = x[2];
+      double psi = x[0];
+      double alpha = x[1];
+      double eta = x[2];
       double k = x[3];
       double b = x[4];
 
@@ -145,9 +145,9 @@ class MAPObjectiveFunction
      *  k,b,m0,mj,mi are parameters
      */
     double operator() (const std::vector<double> &x, std::vector<double> &grad) {
-      double alpha = x[0];
-      double eta = x[1];
-      double psi = x[2];
+      double psi = x[0];
+      double alpha = x[1];
+      double eta = x[2];
       double k = x[3];
       double b = x[4];
 
@@ -273,9 +273,9 @@ class MMLObjectiveFunction
      *  k,b,m0,mj,mi are parameters
      */
     double operator() (const std::vector<double> &x, std::vector<double> &grad) {
-      double alpha = x[0];
-      double eta = x[1];
-      double psi = x[2];
+      double psi = x[0];
+      double alpha = x[1];
+      double eta = x[2];
       double k = x[3];
       double b = x[4];
 
