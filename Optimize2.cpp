@@ -9,8 +9,8 @@ Optimize2::Optimize2(string type)
     estimation = MLE;
   } else if (type.compare("MAP") == 0) {
     estimation = MAP;
-  } else if (type.compare("MML_2") == 0) {
-    estimation = MML_2;
+  } else if (type.compare("MML") == 0) {
+    estimation = MML;
   }
 }
 
@@ -61,10 +61,10 @@ void Optimize2::computeEstimates(struct Estimates_vMF &estimates)
       break;
     }
 
-    case MML_2:
+    case MML:
     {
-      MMLObjectiveFunction_vMF mml2(N,R,mean);
-      opt.set_min_objective(MMLObjectiveFunction_vMF::wrap, &mml2);
+      MMLObjectiveFunction_vMF mml(N,R,mean);
+      opt.set_min_objective(MMLObjectiveFunction_vMF::wrap, &mml);
       nlopt::result result = opt.optimize(x, minf);
       break;
     }

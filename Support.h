@@ -38,6 +38,7 @@ struct Estimates
   long double psi,alpha,eta;
   Vector mean,major_axis,minor_axis;
   long double kappa,beta;
+  long double msglen,negloglike,kldiv;
 };
 
 struct Estimates_vMF
@@ -106,6 +107,7 @@ void track(const std::vector<double> &, const double);
 void rhs(const std::vector<double> &, std::vector<double> &, const double);
 double Constraint2(const std::vector<double> &, std::vector<double> &, void *);
 double Constraint5(const std::vector<double> &, std::vector<double> &, void *);
+double Constraint5_2(const std::vector<double> &, std::vector<double> &, void *);
 long double computeTestStatistic(long double, long double, long double, int);
 long double compute_pvalue(long double, chi_squared &);
 

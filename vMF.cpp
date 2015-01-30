@@ -380,7 +380,7 @@ void vMF::computeAllEstimators(
   all_estimates.push_back(map_est);
 
   // MML
-  type = "MML_2";
+  type = "MML";
   struct Estimates_vMF mml_est = mlapprox_est;
   //struct Estimates_vMF mml_est = map_est;
   Optimize2 opt_mml(type);
@@ -447,7 +447,7 @@ struct Estimates_vMF vMF::computeMMLEstimates(struct Estimates_vMF &mlapprox_est
   msglen = computeMessageLength(map_est);
   cout << "msglen (bpr): " << msglen/map_est.Neff << endl;*/
 
-  type = "MML_2";
+  type = "MML";
   struct Estimates_vMF mml_est = mlapprox_est;
   Optimize2 opt_mml(type);
   opt_mml.initialize(mml_est.Neff,mml_est.R,mml_est.mean,mml_est.kappa);

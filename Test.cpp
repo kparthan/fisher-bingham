@@ -606,7 +606,7 @@ void Test::moment_estimation(void)
 void Test::ml_estimation(void)
 {
   Vector spherical(3,0);
-  struct Estimates estimates;
+  std::vector<struct Estimates> all_estimates;
   std::vector<Vector> random_sample;
   Vector m0,m1,m2;
   long double kappa = 100;
@@ -625,7 +625,7 @@ void Test::ml_estimation(void)
 
   Kent kent(m0,m1,m2,kappa,beta);
   random_sample = kent.generate(100);
-  kent.computeAllEstimators(random_sample);
+  kent.computeAllEstimators(random_sample,all_estimates,1,1);
 
   // Kent example from paper
   cout << "\nExample from paper:\n";
@@ -646,7 +646,7 @@ void Test::ml_estimation(void)
       S(i,j) *= N;
     }
   }
-  kent.computeAllEstimators(sample_mean,S,N);
+  kent.computeAllEstimators(sample_mean,S,N,all_estimates,1,0);
 }
 
 void Test::expectation()
@@ -714,16 +714,16 @@ void Test::fisher()
 void Test::mml_estimation(void)
 {
   Vector spherical(3,0);
-  struct Estimates estimates;
+  std::vector<struct Estimates> all_estimates;
   std::vector<Vector> random_sample;
   Vector m0,m1,m2;
-  long double kappa = 100;
+  long double kappa = 10;
   long double beta;
-  int sample_size = 1000;
+  int sample_size = 10;
 
   //beta = 1;
   //beta = 30;
-  beta = 47.5;
+  beta = 2;
 
   generateRandomOrthogonalVectors(m0,m1,m2);
   /*m0 = XAXIS;
@@ -742,7 +742,7 @@ void Test::mml_estimation(void)
   Kent kent(m0,m1,m2,kappa,beta);
   random_sample = kent.generate(sample_size);
   writeToFile("random_sample.dat",random_sample,3);
-  kent.computeAllEstimators(random_sample);
+  kent.computeAllEstimators(random_sample,all_estimates,1,1);
 }
 
 void Test::vmf_all_estimation()
@@ -814,7 +814,7 @@ void Test::confidence_region()
   Vector m0,m1,m2;
   generateRandomOrthogonalVectors(m0,m1,m2);
 
-  N = 10000;
+  N = 100;
 
   // Generating data from Kent
   kappa = 100;

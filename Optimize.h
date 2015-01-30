@@ -5,7 +5,7 @@
 #include "Kent.h"
 #include "Support.h"
 
-extern int MOMENT_FAIL,MLE_FAIL,MAP_FAIL,MML2_FAIL,MML5_FAIL;
+extern int MOMENT_FAIL,MLE_FAIL,MAP_FAIL,MML_FAIL;
 extern bool FAIL_STATUS;
 
 // MOMENT
@@ -159,73 +159,6 @@ class MAPObjectiveFunction
     }
 };
 
-// MML Scale
-class MMLObjectiveFunctionScale
-{
-  private:
-    Vector sample_mean;
-
-    Matrix S;
-
-    double N;
-
-    double psi,alpha,eta;
-
-    double k2,const_lattk;
-
-    double log_prior_axes,log_fisher_axes;
-
-  public:
-    MMLObjectiveFunctionScale(
-      double psi, double alpha, double eta, Vector &sample_mean, Matrix &S, double sample_size
-    ) : psi(psi), alpha(alpha), eta(eta), sample_mean(sample_mean), S(S), N(sample_size)
-    {
-      /*k2 = 0.08019;
-      Kent kent(psi,alpha,eta,kappa_init,beta_init);
-      kent.computeExpectation();
-      log_prior_axes = kent.computeLogPriorAxes();
-      log_fisher_axes = kent.computeLogFisherAxes();*/
-      const_lattk = -6.455;
-    }
-
-    static double wrap(
-      const std::vector<double> &x, 
-      std::vector<double> &grad, 
-      void *data) {
-        if(boost::math::isnan(x[0]) || boost::math::isnan(x[1])) { // return this sub-optimal state
-          if (FAIL_STATUS == 0) {
-            MML2_FAIL++;
-            FAIL_STATUS = 1;
-          }
-          return 0;
-        } // if() ends ...
-        return (*reinterpret_cast<MMLObjectiveFunctionScale*>(data))(x, grad); 
-    }
-
-    /*!
-     *  minimize function: (d/2) log(kd) - log h + 0.5 log (det(fisher)) +
-     *          N * log c(k,b) - k  (m0' x) - b (mj' xx' mj -  mi xx' mi) + (d/2)
-     *  d: 2
-     *  x: sample mean
-     *  xx' : dispersion matrix (S)
-     *  k,b,m0,mj,mi are parameters
-     */
-    double operator() (const std::vector<double> &x, std::vector<double> &grad) {
-      double k = x[0];
-      double b = x[1];
-
-      Kent kent(psi,alpha,eta,k,b);
-      long double log_prior = kent.computeLogPriorProbability();
-      long double log_fisher = kent.computeLogFisherInformation(N);
-      double part1 = const_lattk - log_prior + 0.5 * log_fisher;
-      double part2 = kent.computeNegativeLogLikelihood(sample_mean,S,N) + 2.5
-                     - 2 * N * log(AOM);
-      double fval = part1 + part2;
-      //assert(!boost::math::isnan(fval));
-      return fval;
-    }
-};
-
 // MML
 class MMLObjectiveFunction
 {
@@ -255,7 +188,6 @@ class MMLObjectiveFunction
           //assert(!boost::math::isnan(x[i]));
           if(boost::math::isnan(x[i])) {  // return this sub-optimal state 
             if (FAIL_STATUS == 0) {
-              MML5_FAIL++;
               FAIL_STATUS = 1;
             }
             return 0;

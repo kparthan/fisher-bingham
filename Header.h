@@ -8,12 +8,16 @@
 #include <cstring>
 #include <fstream>
 #include <sstream>
+#include <iomanip>
 #include <cmath>
 #include <limits>
 #include <stdexcept>
 #include <ctime>
 #include <cassert>
 #include <omp.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #include <boost/program_options.hpp>
 #include <boost/lexical_cast.hpp>
@@ -60,12 +64,11 @@ typedef boost::numeric::ublas::zero_matrix<long double> ZeroMatrix;
 #define SET 1 
 #define UNSET 0
 
-#define NUM_METHODS 5 
+#define NUM_METHODS 4 
 #define MOMENT 0 
 #define MLE 1
 #define MAP 2
-#define MML_2 3 // MML SCALE 
-#define MML_5 4 // MML FULL
+#define MML 3 
 
 #define PRINT_NON_DETAIL 0
 #define PRINT_DETAIL 1

@@ -11,7 +11,7 @@ class Experiments
   public:
     Experiments(int);
 
-    void simulate(long double, long double);
+    void simulate();
 
     void computeMeasures(long double, long double, std::vector<Vector> &, std::vector<Vector> &, int);
 

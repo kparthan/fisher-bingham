@@ -6,6 +6,7 @@
 #include "vMF.h"
 
 extern Vector XAXIS,YAXIS,ZAXIS;
+extern int VERBOSE,COMPUTE_KLDIV;
 
 /*!
  *  Null constructor
@@ -451,17 +452,10 @@ long double Kent::computeLogPriorProbability()
 long double Kent::computeLogPriorAxes()
 {
   long double angle = alpha;
-  /*while (angle < 0) {
-    angle += PI;
-  }
-  while (angle > PI) {
-    angle -= PI;
-  }*/
-
   if (angle < TOLERANCE) angle = TOLERANCE;
   
   long double log_prior = 0;
-  log_prior += log(sin(angle));
+  log_prior += (log(sin(angle)));
   log_prior -= (log(8) + 2*log(PI));
   return log_prior;
 }
@@ -469,22 +463,12 @@ long double Kent::computeLogPriorAxes()
 long double Kent::computeLogPriorScale()
 {
   long double log_prior = 0;
+  //log_prior -= 2*log(kappa);
   log_prior += log(kappa);
   log_prior -= 2 * log(1+kappa*kappa);
-  log_prior += log(8/PI);
-  /*log_prior += 2 * log(4/PI);
-  log_prior += 2 * log(kappa);
-  log_prior -= 2 * log(1+kappa*kappa);
-  log_prior += 2 * log(beta);
-  log_prior -= 2 * log(1+beta*beta);*/
-  /*long double cinv = 0.5 * atan(kappa/2.0);
-  long double tmp = kappa + (4/kappa);
-  cinv -= 1/tmp;
-  log_prior -= log(cinv);*/
-  /*long double ex = (2 * beta) / kappa;
-  log_prior += (-log(PI-2) + log(8));
-  log_prior += 2 * log(ex);
-  log_prior -= 2 * log(1+ex*ex);*/
+  //log_prior += log(8/PI);
+  log_prior += log(beta);
+  log_prior -= 2 * log(1+beta*beta);
   return log_prior;
 }
 
@@ -579,136 +563,119 @@ long double Kent::computeLogFisherScale()
   return log(det);
 }
 
-void Kent::computeAllEstimators(std::vector<Vector> &data, int verbose)
-{
+void Kent::computeAllEstimators(
+  std::vector<Vector> &data, 
+  std::vector<struct Estimates> &all_estimates,
+  int verbose,
+  int compute_kldiv
+) {
   Vector sample_mean = computeVectorSum(data);
   Matrix S = computeDispersionMatrix(data);
-  computeAllEstimators(sample_mean,S,data.size());
-}
-
-void Kent::computeAllEstimators(Vector &sample_mean, Matrix &S, long double N)
-{
-  string type = "MOMENT";
-  struct Estimates moment_est = computeMomentEstimates(sample_mean,S,N);
-  print(type,moment_est);
-  cout << fixed << "msglen: " << computeMessageLength(moment_est,sample_mean,S,N) << endl;
-  cout << "negloglike: " << computeNegativeLogLikelihood(moment_est,sample_mean,S,N) << endl;
-  cout << "KL-divergence: " << computeKLDivergence(moment_est) << endl << endl;
-
-  type = "MLE";
-  struct Estimates ml_est = moment_est;
-  Optimize opt1(type);
-  opt1.initialize(N,ml_est.mean,ml_est.major_axis,ml_est.minor_axis,
-                  ml_est.kappa,ml_est.beta);
-  opt1.computeEstimates(sample_mean,S,ml_est);
-  print(type,ml_est);
-  cout << fixed << "msglen: " << computeMessageLength(ml_est,sample_mean,S,N) << endl;
-  cout << "negloglike: " << computeNegativeLogLikelihood(ml_est,sample_mean,S,N) << endl;
-  cout << "KL-divergence: " << computeKLDivergence(ml_est) << endl << endl;
-
-  type = "MAP";
-  struct Estimates map_est = moment_est;
-  Optimize opt2(type);
-  opt2.initialize(N,map_est.mean,map_est.major_axis,map_est.minor_axis,
-                  map_est.kappa,map_est.beta);
-  opt2.computeEstimates(sample_mean,S,map_est);
-  print(type,map_est);
-  cout << fixed << "msglen: " << computeMessageLength(map_est,sample_mean,S,N) << endl;
-  cout << "negloglike: " << computeNegativeLogLikelihood(map_est,sample_mean,S,N) << endl;
-  cout << "KL-divergence: " << computeKLDivergence(map_est) << endl << endl;
-
-  type = "MML_2";
-  struct Estimates mml_est1 = map_est;
-  Optimize opt3(type);
-  opt3.initialize(N,mml_est1.mean,mml_est1.major_axis,mml_est1.minor_axis,
-                  mml_est1.kappa,mml_est1.beta);
-  opt3.computeEstimates(sample_mean,S,mml_est1);
-  print(type,mml_est1);
-  cout << fixed << "msglen: " << computeMessageLength(mml_est1,sample_mean,S,N) << endl;
-  cout << "negloglike: " << computeNegativeLogLikelihood(mml_est1,sample_mean,S,N) << endl;
-  cout << "KL-divergence: " << computeKLDivergence(mml_est1) << endl << endl;
-
-  type = "MML_5";
-  struct Estimates mml_est2 = map_est;
-  //struct Estimates mml_est2 = mml_est1;
-  //struct Estimates mml_est2 = moment_est;
-  Optimize opt4(type);
-  opt4.initialize(N,mml_est2.mean,mml_est2.major_axis,mml_est2.minor_axis,
-                  mml_est2.kappa,mml_est2.beta);
-  opt4.computeEstimates(sample_mean,S,mml_est2);
-  print(type,mml_est2);
-  cout << fixed << "msglen: " << computeMessageLength(mml_est2,sample_mean,S,N) << endl;
-  cout << "negloglike: " << computeNegativeLogLikelihood(mml_est2,sample_mean,S,N) << endl;
-  cout << "KL-divergence: " << computeKLDivergence(mml_est2) << endl << endl;
+  computeAllEstimators(sample_mean,S,data.size(),all_estimates,verbose,compute_kldiv);
 }
 
 void Kent::computeAllEstimators(
-  std::vector<Vector> &data, 
-  std::vector<struct Estimates> &all_estimates
+  Vector &sample_mean, 
+  Matrix &S, 
+  long double N,
+  std::vector<struct Estimates> &all_estimates,
+  int verbose,
+  int compute_kldiv
 ) {
-  int N = data.size();
-  Vector sample_mean = computeVectorSum(data);
-  Matrix S = computeDispersionMatrix(data);
+  long double msglen,negloglike,kldiv;
 
   all_estimates.clear();
 
+  struct Estimates asymptotic_est = computeAsymptoticMomentEstimates(sample_mean,S,N);
+
   string type = "MOMENT";
-  struct Estimates moment_est = computeMomentEstimates(sample_mean,S,N);
-  print(type,moment_est);
+  struct Estimates moment_est = asymptotic_est;
+  Optimize opt(type);
+  opt.initialize(N,moment_est.mean,moment_est.major_axis,moment_est.minor_axis,
+                 moment_est.kappa,moment_est.beta);
+  opt.computeEstimates(sample_mean,S,moment_est);
+  moment_est.msglen = computeMessageLength(moment_est,sample_mean,S,N);
+  moment_est.negloglike = computeNegativeLogLikelihood(moment_est,sample_mean,S,N);
+  if (compute_kldiv) {
+    moment_est.kldiv = computeKLDivergence(moment_est);
+  }
+  if (verbose) {
+    print(type,moment_est);
+    cout << fixed << "msglen: " << moment_est.msglen << endl;
+    cout << "negloglike: " << moment_est.negloglike << endl;
+    cout << "KL-divergence: " << moment_est.kldiv << endl << endl;
+  }
   all_estimates.push_back(moment_est);
-  cout << fixed << "msglen: " << computeMessageLength(moment_est,sample_mean,S,N) << endl;
 
   type = "MLE";
-  struct Estimates ml_est = moment_est;
+  //struct Estimates ml_est = moment_est;
+  struct Estimates ml_est = asymptotic_est;
   Optimize opt1(type);
   opt1.initialize(N,ml_est.mean,ml_est.major_axis,ml_est.minor_axis,
                   ml_est.kappa,ml_est.beta);
   opt1.computeEstimates(sample_mean,S,ml_est);
-  print(type,ml_est);
+  ml_est.msglen = computeMessageLength(ml_est,sample_mean,S,N);
+  ml_est.negloglike = computeNegativeLogLikelihood(ml_est,sample_mean,S,N);
+  if (compute_kldiv) {
+    ml_est.kldiv = computeKLDivergence(ml_est);
+  }
+  if (verbose) {
+    print(type,ml_est);
+    cout << fixed << "msglen: " << ml_est.msglen << endl;
+    cout << "negloglike: " << ml_est.negloglike << endl;
+    cout << "KL-divergence: " << ml_est.kldiv << endl << endl;
+  }
   all_estimates.push_back(ml_est);
-  cout << fixed << "msglen: " << computeMessageLength(ml_est,sample_mean,S,N) << endl;
 
   type = "MAP";
-  struct Estimates map_est = moment_est;
+  //struct Estimates map_est = moment_est;
+  struct Estimates map_est = asymptotic_est;
   Optimize opt2(type);
   opt2.initialize(N,map_est.mean,map_est.major_axis,map_est.minor_axis,
                   map_est.kappa,map_est.beta);
   opt2.computeEstimates(sample_mean,S,map_est);
-  print(type,map_est);
+  map_est.msglen = computeMessageLength(map_est,sample_mean,S,N);
+  map_est.negloglike = computeNegativeLogLikelihood(map_est,sample_mean,S,N);
+  if (compute_kldiv) {
+    map_est.kldiv = computeKLDivergence(map_est);
+  }
+  if (verbose) {
+    print(type,map_est);
+    cout << fixed << "msglen: " << map_est.msglen << endl;
+    cout << "negloglike: " << map_est.negloglike << endl;
+    cout << "KL-divergence: " << map_est.kldiv << endl << endl;
+  }
   all_estimates.push_back(map_est);
-  cout << fixed << "msglen: " << computeMessageLength(map_est,sample_mean,S,N) << endl;
 
-  type = "MML_2";
-  struct Estimates mml2_est = map_est;
+  type = "MML";
+  //struct Estimates mml_est = map_est;
+  struct Estimates mml_est = asymptotic_est;
   Optimize opt3(type);
-  opt3.initialize(N,mml2_est.mean,mml2_est.major_axis,mml2_est.minor_axis,
-                  mml2_est.kappa,mml2_est.beta);
-  opt3.computeEstimates(sample_mean,S,mml2_est);
-  all_estimates.push_back(mml2_est);
-  print(type,mml2_est);
-  cout << fixed << "msglen: " << computeMessageLength(mml2_est,sample_mean,S,N) << endl;
-
-  type = "MML_5";
-  struct Estimates mml5_est = map_est;
-  //struct Estimates mml5_est = mml2_est;
-  //struct Estimates mml5_est = moment_est;
-  Optimize opt4(type);
-  opt4.initialize(N,mml5_est.mean,mml5_est.major_axis,mml5_est.minor_axis,
-                  mml5_est.kappa,mml5_est.beta);
-  opt4.computeEstimates(sample_mean,S,mml5_est);
-  print(type,mml5_est);
-  all_estimates.push_back(mml5_est);
-  cout << fixed << "msglen: " << computeMessageLength(mml5_est,sample_mean,S,N) << endl;
+  opt3.initialize(N,mml_est.mean,mml_est.major_axis,mml_est.minor_axis,
+                  mml_est.kappa,mml_est.beta);
+  opt3.computeEstimates(sample_mean,S,mml_est);
+  mml_est.msglen = computeMessageLength(mml_est,sample_mean,S,N);
+  mml_est.negloglike = computeNegativeLogLikelihood(mml_est,sample_mean,S,N);
+  if (compute_kldiv) {
+    mml_est.kldiv = computeKLDivergence(mml_est);
+  }
+  if (verbose) {
+    print(type,mml_est);
+    cout << fixed << "msglen: " << mml_est.msglen << endl;
+    cout << "negloglike: " << mml_est.negloglike << endl;
+    cout << "KL-divergence: " << mml_est.kldiv << endl << endl;
+  }
+  all_estimates.push_back(mml_est);
 }
 
 /*!
  *  Moment estimation (with +X as the north pole)
  */
-struct Estimates Kent::computeMomentEstimates(std::vector<Vector> &data)
+struct Estimates Kent::computeAsymptoticMomentEstimates(std::vector<Vector> &data)
 {
   Vector sample_mean = computeVectorSum(data);
   Matrix S = computeDispersionMatrix(data);
-  return computeMomentEstimates(sample_mean,S,data.size());
+  return computeAsymptoticMomentEstimates(sample_mean,S,data.size());
 }
 
 /*!
@@ -716,7 +683,7 @@ struct Estimates Kent::computeMomentEstimates(std::vector<Vector> &data)
  *  (similar to used in Kent (1982) paper)
  *  (sample_mean1 and S1 are \sum_x and \sum_ x x')
  */
-struct Estimates Kent::computeMomentEstimates(Vector &sample_mean1, Matrix &S1, long double N)
+struct Estimates Kent::computeAsymptoticMomentEstimates(Vector &sample_mean1, Matrix &S1, long double N)
 {
   Vector sample_mean = sample_mean1;
   Matrix S = S1; 
@@ -738,11 +705,6 @@ struct Estimates Kent::computeMomentEstimates(Vector &sample_mean1, Matrix &S1, 
   // rotation matrix to align north pole
   Matrix Ht = align_vector_with_xaxis(theta,phi);
   Matrix H = trans(Ht);
-  /*Matrix H(3,3);
-  H(0,0) = cos(theta); H(0,1) = -sin(theta); H(0,2) = 0;
-  H(1,0) = sin(theta)*cos(phi); H(1,1) = cos(theta)*cos(phi); H(1,2) = -sin(phi);
-  H(2,0) = sin(theta)*sin(phi); H(2,1) = cos(theta)*sin(phi); H(2,2) = cos(phi);
-  Matrix Ht = trans(H);*/
   Matrix tmp = prod(Ht,S);
   Matrix B = prod(tmp,H);
   long double ratio = 2 * B(1,2) / (B(1,1) - B(2,2));
@@ -782,48 +744,46 @@ struct Estimates Kent::computeMomentEstimates(Vector &sample_mean1, Matrix &S1, 
 
   cout << "(asymptotic) kappa: " << estimates.kappa << endl;
   cout << "(asymptotic) beta: " << estimates.beta << endl;
-  //estimates.kappa = 120;
-  //estimates.beta = 45;
 
-  //Vector cross = crossProduct(estimates.major_axis,estimates.minor_axis);
-  // submatrix 2 X 2
-  /*Matrix B_sub(2,2);
-  B_sub(0,0) = B(1,1); B_sub(0,1) = B(1,2);
-  B_sub(1,0) = B(2,1); B_sub(1,1) = B(2,2);
-  // ... find eigen values of submatrix by solving a simple quadratic equation
-  Vector eigen_vals(2,0);
-  Matrix eigen_vecs = IdentityMatrix(2,2);
-  eigenDecomposition(B_sub,eigen_vals,eigen_vecs);*/
-  //cout << "theta: " << theta*180/PI << "; phi: " << phi*180/PI << endl;
-  //cout << "B: " << B << endl;
-  //cout << "psi (degrees): " << psi * 180/PI << endl;
-  //cout << "H: " << H << endl;
-  //cout << "K: " << K << endl;
-  //cout << "HK: " << HK << endl;
-  //cout << "cross: "; print(cout,cross,0); cout << endl;
-  //cout << "r1: " << r1 << endl;
-  //cout << "r2: " << r2 << endl;
-
-  Optimize opt("MOMENT");
+  /*Optimize opt("MOMENT");
   opt.initialize(N,estimates.mean,estimates.major_axis,estimates.minor_axis,
                  estimates.kappa,estimates.beta);
-  opt.computeEstimates(sample_mean1,S1,estimates);
+  opt.computeEstimates(sample_mean1,S1,estimates);*/
+  return estimates;
+}
+
+struct Estimates Kent::computeMomentEstimates(std::vector<Vector> &data)
+{
+  Vector sample_mean = computeVectorSum(data);
+  Matrix S = computeDispersionMatrix(data);
+  return computeMomentEstimates(sample_mean,S,data.size());
+}
+
+struct Estimates Kent::computeMomentEstimates(Vector &sample_mean, Matrix &S, long double N)
+{
+  struct Estimates estimates = computeAsymptoticMomentEstimates(sample_mean,S,N);
+  string type = "MOMENT";
+  Optimize opt(type);
+  opt.initialize(N,estimates.mean,estimates.major_axis,estimates.minor_axis,
+                 estimates.kappa,estimates.beta);
+  opt.computeEstimates(sample_mean,S,estimates);
   return estimates;
 }
 
 /*!
  *  Max LH estimation
  */
-struct Estimates Kent::computeMLEstimates(std::vector<Vector> &data, string type)
+struct Estimates Kent::computeMLEstimates(std::vector<Vector> &data)
 {
   Vector sample_mean = computeVectorSum(data);
   Matrix S = computeDispersionMatrix(data);
-  return computeMLEstimates(sample_mean,S,data.size(),type);
+  return computeMLEstimates(sample_mean,S,data.size());
 }
 
-struct Estimates Kent::computeMLEstimates(Vector &sample_mean, Matrix &S, long double N, string type)
+struct Estimates Kent::computeMLEstimates(Vector &sample_mean, Matrix &S, long double N)
 {
-  struct Estimates estimates = computeMomentEstimates(sample_mean,S,N);
+  struct Estimates estimates = computeAsymptoticMomentEstimates(sample_mean,S,N);
+  string type = "MLE";
   Optimize opt(type);
   opt.initialize(N,estimates.mean,estimates.major_axis,estimates.minor_axis,
                  estimates.kappa,estimates.beta);
@@ -843,8 +803,8 @@ struct Estimates Kent::computeMMLEstimates(std::vector<Vector> &data)
 
 struct Estimates Kent::computeMMLEstimates(Vector &sample_mean, Matrix &S, long double N)
 {
+  struct Estimates moment_estimates = computeAsymptoticMomentEstimates(sample_mean,S,N);
   string type = "MOMENT";
-  struct Estimates moment_estimates = computeMomentEstimates(sample_mean,S,N);
   print(type,moment_estimates);
   long double msglen = computeMessageLength(moment_estimates,sample_mean,S,N);
   cout << "msglen (bpr): " << msglen/N << endl;
@@ -859,19 +819,18 @@ struct Estimates Kent::computeMMLEstimates(Vector &sample_mean, Matrix &S, long 
   msglen = computeMessageLength(map_estimates,sample_mean,S,N);
   cout << "msglen (bpr): " << msglen/N << endl;
 
-  struct Estimates mml5_estimates = map_estimates;
+  struct Estimates mml_estimates = map_estimates;
   //if (N > 10) {
-    //type = "MML_2";
-    type = "MML_5";
+    type = "MML";
     Optimize opt(type);
-    opt.initialize(N,mml5_estimates.mean,mml5_estimates.major_axis,mml5_estimates.minor_axis,
-                   mml5_estimates.kappa,mml5_estimates.beta);
-    opt.computeEstimates(sample_mean,S,mml5_estimates);
-    print(type,mml5_estimates);
-    msglen = computeMessageLength(mml5_estimates,sample_mean,S,N);
+    opt.initialize(N,mml_estimates.mean,mml_estimates.major_axis,mml_estimates.minor_axis,
+                   mml_estimates.kappa,mml_estimates.beta);
+    opt.computeEstimates(sample_mean,S,mml_estimates);
+    print(type,mml_estimates);
+    msglen = computeMessageLength(mml_estimates,sample_mean,S,N);
     cout << "msglen (bpr): " << msglen/N << endl;
   //}
-  return mml5_estimates;
+  return mml_estimates;
 }
 
 void Kent::estimateParameters(std::vector<Vector> &data, Vector &weights)
@@ -1042,7 +1001,7 @@ long double Kent::computeTestStatistic_vMF(std::vector<Vector> &x)
 long double Kent::computeConfidenceRegion(std::vector<Vector> &x)
 {
   std::vector<struct Estimates> all_estimates;
-  computeAllEstimators(x,all_estimates);
+  computeAllEstimators(x,all_estimates,1,1);
 
   long double m,l2,l3,s2,s3,area;
   for (int i=0; i<all_estimates.size(); i++) {

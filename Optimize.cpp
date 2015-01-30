@@ -11,10 +11,8 @@ Optimize::Optimize(string type)
     estimation = MLE;
   } else if (type.compare("MAP") == 0) {
     estimation = MAP;
-  } else if (type.compare("MML_2") == 0) {
-    estimation = MML_2;
-  } else if (type.compare("MML_5") == 0) {
-    estimation = MML_5;
+  } else if (type.compare("MML") == 0) {
+    estimation = MML;
   }
 }
 
@@ -39,9 +37,9 @@ void Optimize::initialize(double sample_size, Vector &m0, Vector &m1, Vector &m2
 void Optimize::computeEstimates(Vector &sample_mean, Matrix &S, struct Estimates &estimates)
 {
   computeOrthogonalTransformation(mean,major,psi,alpha,eta);
-  if (psi < TOLERANCE) psi = TOLERANCE;
+  /*if (psi < TOLERANCE) psi = TOLERANCE;
   if (alpha < TOLERANCE) alpha = TOLERANCE;
-  if (eta < TOLERANCE) eta = TOLERANCE;
+  if (eta < TOLERANCE) eta = TOLERANCE;*/
   switch(estimation) {
     case MOMENT:
     {
@@ -68,22 +66,14 @@ void Optimize::computeEstimates(Vector &sample_mean, Matrix &S, struct Estimates
       break;
     }
 
-    case MML_2:
-    {
-      std::vector<double> theta = minimize(sample_mean,S,2);
-      estimates.kappa = theta[0];
-      estimates.beta = theta[1];
-      break;
-    }
-
-    case MML_5:
+    case MML:
     {
       std::vector<double> theta = minimize(sample_mean,S,5);
       finalize(theta,estimates);
       break;
     }
   }
-  //validate_scale(estimates.kappa,estimates.beta);
+  validate_scale(estimates.kappa,estimates.beta);
 }
 
 void Optimize::finalize(std::vector<double> &theta, struct Estimates &estimates)
@@ -101,6 +91,11 @@ void Optimize::finalize(std::vector<double> &theta, struct Estimates &estimates)
 
 void Optimize::validate_scale(long double &k, long double &b)
 {
+  long double ex = 2 * b / k;
+  if (ex > 1) {
+    ex = 1 - TOLERANCE;
+    b = 0.5 * k * ex;
+  }
   if (CONSTRAIN_KAPPA == SET) {
     if (k > MAX_KAPPA) {
       double e = 2 * b / k;
@@ -182,36 +177,17 @@ std::vector<double> Optimize::minimize(Vector &sample_mean, Matrix &S, int num_p
       break;
     }
 
-    case MML_2:
+    case MML:
     {
-      //lb[0] = -HUGE_VAL; lb[1] = -HUGE_VAL;
-      opt.set_lower_bounds(lb);
-      opt.set_upper_bounds(ub);
-
-      MMLObjectiveFunctionScale mml2(psi,alpha,eta,sample_mean,S,N);
-      opt.set_min_objective(MMLObjectiveFunctionScale::wrap, &mml2);
-      opt.add_inequality_constraint(Constraint2, NULL, TOLERANCE);
-      opt.set_xtol_rel(1e-4);
-
-      x[0] = kappa; x[1] = beta;
-      nlopt::result result = opt.optimize(x, minf);
-      //assert(!boost::math::isnan(minf));
-      if (boost::math::isnan(minf)) {
-        x[0] = kappa; x[1] = beta;
-      }
-      break;
-    }
-
-    case MML_5:
-    {
-      //lb[3] = -HUGE_VAL; lb[4] = -HUGE_VAL;
+      //lb[4] = AOM;
       opt.set_lower_bounds(lb);
       ub[0] = 2*PI; ub[1] = PI; ub[2] = 2*PI;
       opt.set_upper_bounds(ub);
 
-      MMLObjectiveFunction mml5(sample_mean,S,N);
-      opt.set_min_objective(MMLObjectiveFunction::wrap, &mml5);
+      MMLObjectiveFunction mml(sample_mean,S,N);
+      opt.set_min_objective(MMLObjectiveFunction::wrap, &mml);
       opt.add_inequality_constraint(Constraint5, NULL, TOLERANCE);
+      opt.add_inequality_constraint(Constraint5_2, NULL, TOLERANCE);
       opt.set_xtol_rel(1e-4);
 
       x[0] = psi; x[1] = alpha; x[2] = eta; x[3] = kappa; x[4] = beta;
@@ -228,7 +204,7 @@ std::vector<double> Optimize::minimize(Vector &sample_mean, Matrix &S, int num_p
       break;
   }
   //cout << "solution: (" << x[0] << ", " << x[1] << ")\n";
-  cout << "minf: " << minf << endl;
+  //cout << "minf: " << minf << endl;
   return x;
 }
 

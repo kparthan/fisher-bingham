@@ -88,19 +88,24 @@ class Kent  // FB5
 
     long double computeLogFisherInformation(long double);
 
-    void computeAllEstimators(std::vector<Vector> &, int verbose = 0);
+    void computeAllEstimators(std::vector<Vector> &, std::vector<struct Estimates> &, int, int);
 
-    void computeAllEstimators(Vector &, Matrix &, long double, int verbose = 0);
+    void computeAllEstimators(
+      Vector &, Matrix &, long double,
+      std::vector<struct Estimates> &, int, int
+    );
 
-    void computeAllEstimators(std::vector<Vector> &, std::vector<struct Estimates> &, int verbose = 0);
+    struct Estimates computeAsymptoticMomentEstimates(std::vector<Vector> &);
+
+    struct Estimates computeAsymptoticMomentEstimates(Vector &, Matrix &, long double);
 
     struct Estimates computeMomentEstimates(std::vector<Vector> &);
 
     struct Estimates computeMomentEstimates(Vector &, Matrix &, long double);
 
-    struct Estimates computeMLEstimates(std::vector<Vector> &, string);
+    struct Estimates computeMLEstimates(std::vector<Vector> &);
 
-    struct Estimates computeMLEstimates(Vector &, Matrix &, long double, string);
+    struct Estimates computeMLEstimates(Vector &, Matrix &, long double);
 
     struct Estimates computeMMLEstimates(std::vector<Vector> &);
 

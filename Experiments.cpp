@@ -3,100 +3,83 @@
 #include "Kent.h"
 
 extern Vector XAXIS,YAXIS,ZAXIS;
-extern int MOMENT_FAIL,MLE_FAIL,MAP_FAIL,MML2_FAIL,MML5_FAIL;
+extern int MOMENT_FAIL,MLE_FAIL,MAP_FAIL,MML_FAIL;
+extern struct stat st;
 
 Experiments::Experiments(int iterations) : iterations(iterations)
 {}
 
-void Experiments::simulate(long double kappa, long double beta)
+void Experiments::simulate()
 {
-  std::vector<int> sample_sizes;
-  //sample_sizes.push_back(5);
-  sample_sizes.push_back(100);
-  /*sample_sizes.push_back(20);
-  sample_sizes.push_back(30);
-  sample_sizes.push_back(50);
-  sample_sizes.push_back(100);
-  sample_sizes.push_back(250);
-  sample_sizes.push_back(500);
-  sample_sizes.push_back(1000);*/
+  int N = 10;
+  long double kappa,beta,eccentricity;
 
-  Kent kent(XAXIS,YAXIS,ZAXIS,kappa,beta);
-  long double kappa_est,beta_est,diffk,diffb;
+  string n_str = "N_" + boost::lexical_cast<string>(N);
+  string parent_dir = "./experiments/single_kent/" + n_str + "/";
+  string current_dir,kappa_str,eccentricity_str;
+  string kappas,betas,negloglike,kldivs,msglens;
+  std::vector<Vector> random_sample;
   std::vector<struct Estimates> all_estimates;
 
-  string kappa_str = boost::lexical_cast<string>(kappa);
-  string beta_str = boost::lexical_cast<string>(beta);
-  string tmp = "k_" + kappa_str + "_b_" + beta_str;
-  string folder = "./experiments/single_kent/" + tmp + "/";
+  kappa = 10;
+  while (kappa < 100) {
+    ostringstream ssk;
+    ssk << fixed << setprecision(0);
+    ssk << kappa;
+    kappa_str = ssk.str();
+    eccentricity = 0.1;
+    while (eccentricity < 1) {
+      beta = 0.5 * kappa * eccentricity;
+      ostringstream sse;
+      sse << fixed << setprecision(1);
+      sse << eccentricity;
+      eccentricity_str = sse.str();
+      current_dir = parent_dir + "k_" + kappa_str + "_e_" + eccentricity_str + "/";
+      if (stat(current_dir.c_str(), &st) == -1) {
+          mkdir(current_dir.c_str(), 0700);
+      }
+      kappas = current_dir + "kappas";
+      betas = current_dir + "betas";
+      negloglike = current_dir + "negloglike";
+      kldivs = current_dir + "kldivs";
+      msglens = current_dir + "msglens";
 
-  for (int i=0; i<sample_sizes.size(); i++) { // for each sample size ...
-    string size_str = boost::lexical_cast<string>(sample_sizes[i]);
-    string kappas_file = folder + "n_" + size_str + "_kappas";
-    string betas_file = folder + "n_" + size_str + "_betas";
-    string negloglkhd_file = folder + "n_" + size_str + "_negloglikelihood";
-    string kldvg_file = folder + "n_" + size_str + "_kldiv";
-    string msglens_file = folder + "n_" + size_str + "_msglens";
-    ofstream logk(kappas_file.c_str());
-    ofstream logb(betas_file.c_str());
-    ofstream logneg(negloglkhd_file.c_str());
-    ofstream logkldiv(kldvg_file.c_str());
-    ofstream logmsg(msglens_file.c_str());
+      ofstream fk(kappas.c_str());
+      ofstream fb(betas.c_str());
+      ofstream fnlh(negloglike.c_str());
+      ofstream fkl(kldivs.c_str());
+      ofstream fmsg(msglens.c_str());
+      
+      cout << "kappa: " << kappa << "; beta: " << beta << "; e: " << eccentricity << endl;
+      Kent kent(ZAXIS,XAXIS,YAXIS,kappa,beta);
 
-    Vector emptyvec(NUM_METHODS,0);
-    std::vector<Vector> kappa_est_all(iterations,emptyvec),beta_est_all(iterations,emptyvec);
-    for (int iter=0; iter<iterations; iter++) {  // for each iteration ...
-      repeat:
-      std::vector<Vector> data = kent.generate(sample_sizes[i]);
-      //writeToFile("random_sample.dat",data,3);
-      Kent kent_est;
-      kent_est.computeAllEstimators(data,all_estimates);
-      long double beta_est_mml = all_estimates[MML_5].beta;
-      if (all_estimates[MML_5].beta <= 1e-5) {
-        cout << "*** IGNORING ITERATION ***\n";
-        goto repeat;
-      } else {  // all good with optimization ...
-        logk << fixed << setw(10) << sample_sizes[i] << "\t";
-        logb << fixed << setw(10) << sample_sizes[i] << "\t";
-        logneg << fixed << setw(10) << sample_sizes[i] << "\t";
-        logkldiv << fixed << setw(10) << sample_sizes[i] << "\t";
-        logmsg << fixed << setw(10) << sample_sizes[i] << "\t";
-        long double actual_negloglkhd = kent.computeNegativeLogLikelihood(data);
-        long double actual_msglen = kent.computeMessageLength(data);
-        logneg << scientific << actual_negloglkhd << "\t";
-        logmsg << scientific << actual_msglen << "\t";
-        for (int j=0; j<NUM_METHODS; j++) { // for each method ...
-          Kent fit(all_estimates[j].mean,all_estimates[j].major_axis,
-          all_estimates[j].minor_axis,all_estimates[j].kappa,all_estimates[j].beta);
-          long double negloglkhd = fit.computeNegativeLogLikelihood(data);
-          long double msglen = fit.computeMessageLength(data);
-          long double kldiv = kent.computeKLDivergence(fit);
-          logneg << scientific << negloglkhd << "\t";
-          logmsg << scientific << msglen << "\t";
-          logkldiv << scientific << kldiv << "\t";
-          // beta_est
-          beta_est = all_estimates[j].beta;
-          beta_est_all[iter][j] = beta_est;
-          logb << scientific << beta_est << "\t";
-          // kappa_est
-          kappa_est = all_estimates[j].kappa;
-          kappa_est_all[iter][j] = kappa_est;
-          logk << scientific << kappa_est << "\t";
-        } // j loop ends ...
-        logk << endl; logb << endl; logneg << endl; logmsg << endl; logkldiv << endl;
-      } // if() ends ...
-    } // iter loop ends ..
-    logk.close(); logb.close(); logneg.close(); logmsg.close(); logkldiv.close();
-    computeMeasures(kappa,beta,kappa_est_all,beta_est_all,sample_sizes[i]);
-    computeWinsRatio(1,"negloglikhd",negloglkhd_file,sample_sizes[i],folder);
-    computeWinsRatio(1,"msglen",msglens_file,sample_sizes[i],folder);
-    computeWinsRatio(0,"kldiv",kldvg_file,sample_sizes[i],folder);
-    cout << "MOMENT_FAIL: " << MOMENT_FAIL << endl;
-    cout << "MLE_FAIL: " << MLE_FAIL << endl;
-    cout << "MAP_FAIL: " << MAP_FAIL << endl;
-    cout << "MML2_FAIL: " << MML2_FAIL << endl;
-    cout << "MML5_FAIL: " << MML5_FAIL << endl;
-  } // for() sample size ends ...
+      for (int i=0; i<iterations; i++) {
+        cout << "Iteration: " << i+1 << endl;
+        random_sample = kent.generate(N);
+        kent.computeAllEstimators(random_sample,all_estimates,0,1);
+        for (int j=0; j<all_estimates.size(); j++) {
+          fk << scientific << all_estimates[j].kappa << "\t";
+          fb << scientific << all_estimates[j].beta << "\t";
+          fnlh << scientific << all_estimates[j].negloglike << "\t";
+          fkl << scientific << all_estimates[j].kldiv << "\t";
+          fmsg << scientific << all_estimates[j].msglen << "\t";
+        } // for j ()
+        fk << endl;
+        fb << endl;
+        fnlh << endl;
+        fkl << endl;
+        fmsg << endl;
+      } // for i ()
+
+      eccentricity += 0.1;
+      fk.close();
+      fb.close();
+      fnlh.close();
+      fkl.close();
+      fmsg.close();
+    } // eccentricity
+    kappa += 10;
+  } // kappa
 }
 
 void Experiments::computeMeasures(
@@ -313,11 +296,9 @@ void Experiments::computeWinsRatio(
     int winner = 0;
     long double min = table[i][0];
     for (int j=1; j<NUM_METHODS; j++) {
-      if (j != MML_2) {
-        if (table[i][j] <= min) {
-          min = table[i][j];
-          winner = j;
-        }
+      if (table[i][j] <= min) {
+        min = table[i][j];
+        winner = j;
       }
     } // j loop ends ...
     wins[winner]++;

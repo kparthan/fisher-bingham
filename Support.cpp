@@ -19,6 +19,9 @@ int MML_FAIL = 0; // vMF experiments
 bool FAIL_STATUS;
 UniformRandomNumberGenerator *uniform_generator;
 int DISTRIBUTION;
+int VERBOSE,COMPUTE_KLDIV;
+
+struct stat st = {0};
 
 ////////////////////// GENERAL PURPOSE FUNCTIONS \\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
@@ -1129,6 +1132,13 @@ double Constraint5(const std::vector<double> &x, std::vector<double> &grad, void
     return (2 * x[4] - x[3]);
 }
 
+double Constraint5_2(const std::vector<double> &x, std::vector<double> &grad, void *data)
+{
+    //double k = x[3];
+    //double b = x[4];
+    return (TOLERANCE * x[3] - 2 * x[4]);
+}
+
 long double computeTestStatistic(
   long double kappa, 
   long double eig_val_sq, 
@@ -1523,7 +1533,7 @@ void modelOneComponent(struct Parameters &parameters, std::vector<Vector> &data)
     Kent kent;
     //kent.estimateParameters(data,weights);
     std::vector<struct Estimates> all_estimates;
-    kent.computeAllEstimators(data,all_estimates);
+    kent.computeAllEstimators(data,all_estimates,1,0);
   } else if (DISTRIBUTION == VMF) {
     vMF vmf;
     vmf.estimateParameters(data,weights);
@@ -1792,7 +1802,7 @@ void TestFunctions(void)
 
   //test.fisher();
 
-  //test.mml_estimation();
+  test.mml_estimation();
 
   //test.vmf_all_estimation();
 
@@ -1800,7 +1810,7 @@ void TestFunctions(void)
 
   //test.hypothesis_testing();
 
-  test.confidence_region();
+  //test.confidence_region();
 }
 
 ////////////////////// EXPERIMENTS \\\\\\\\\\\\\\\\\\\\\\\\\\\\
@@ -1812,7 +1822,7 @@ void RunExperiments(int iterations)
   //experiments.simulate(10,4.5);
   //experiments.simulate(10,3);
   //experiments.simulate(100,30);
-  experiments.simulate(100,45);
+  experiments.simulate();
 }
 
 /*!
