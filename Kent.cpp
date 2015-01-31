@@ -612,8 +612,8 @@ void Kent::computeAllEstimators(
   all_estimates.push_back(moment_est);
 
   type = "MLE";
-  //struct Estimates ml_est = moment_est;
-  struct Estimates ml_est = asymptotic_est;
+  struct Estimates ml_est = moment_est;
+  //struct Estimates ml_est = asymptotic_est;
   Optimize opt1(type);
   opt1.initialize(N,ml_est.mean,ml_est.major_axis,ml_est.minor_axis,
                   ml_est.kappa,ml_est.beta);
@@ -632,8 +632,8 @@ void Kent::computeAllEstimators(
   all_estimates.push_back(ml_est);
 
   type = "MAP";
-  //struct Estimates map_est = moment_est;
-  struct Estimates map_est = asymptotic_est;
+  struct Estimates map_est = moment_est;
+  //struct Estimates map_est = asymptotic_est;
   Optimize opt2(type);
   opt2.initialize(N,map_est.mean,map_est.major_axis,map_est.minor_axis,
                   map_est.kappa,map_est.beta);
@@ -653,8 +653,8 @@ void Kent::computeAllEstimators(
 
   type = "MML";
   //struct Estimates mml_est = moment_est;
-  //struct Estimates mml_est = map_est;
-  struct Estimates mml_est = asymptotic_est;
+  struct Estimates mml_est = map_est;
+  //struct Estimates mml_est = asymptotic_est;
   Optimize opt3(type);
   opt3.initialize(N,mml_est.mean,mml_est.major_axis,mml_est.minor_axis,
                   mml_est.kappa,mml_est.beta);
