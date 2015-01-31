@@ -73,7 +73,7 @@ class MAPObjectiveFunction_vMF
       double k = x[0];
 
       vMF vmf(mean,k);
-      long double log_prior = vmf.computeLogPriorProbability(); 
+      double log_prior = vmf.computeLogPriorProbability(); 
       double fval = -log_prior + vmf.computeNegativeLogLikelihood(R,N)
                     - 2 * N * log(AOM);
       return fval;
@@ -114,8 +114,8 @@ class MMLObjectiveFunction_vMF
       double k = x[0];
 
       vMF vmf(mean,k);
-      long double log_prior = vmf.computeLogPriorProbability();
-      long double log_fisher = vmf.computeLogFisherInformation(N);
+      double log_prior = vmf.computeLogPriorProbability();
+      double log_fisher = vmf.computeLogFisherInformation(N);
       double part1 = const_lattk - log_prior + 0.5 * log_fisher;
       double part2 = vmf.computeNegativeLogLikelihood(R,N) + 1.5
                      - 2 * N * log(AOM);

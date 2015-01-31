@@ -12,7 +12,7 @@ Experiments::Experiments(int iterations) : iterations(iterations)
 void Experiments::simulate()
 {
   int N = 100;
-  long double kappa,beta,eccentricity;
+  double kappa,beta,eccentricity;
 
   string n_str = "N_" + boost::lexical_cast<string>(N);
   string parent_dir = "./experiments/single_kent/" + n_str + "/";
@@ -83,13 +83,13 @@ void Experiments::simulate()
 }
 
 void Experiments::computeMeasures(
-  long double kappa,
-  long double beta,
+  double kappa,
+  double beta,
   std::vector<Vector> &kappa_est_all,
   std::vector<Vector> &beta_est_all,
   int N
 ) {
-  long double kappa_est,beta_est,diffk,diffb;
+  double kappa_est,beta_est,diffk,diffb;
 
   string kappa_str = boost::lexical_cast<string>(kappa);
   string beta_str = boost::lexical_cast<string>(beta);
@@ -185,7 +185,7 @@ Vector Experiments::computeEstimateMeans(ostream &out, std::vector<Vector> &p_es
   return means;
 }
 
-void Experiments::computeBias(ostream &out, long double p, std::vector<Vector> &p_est_all)
+void Experiments::computeBias(ostream &out, double p, std::vector<Vector> &p_est_all)
 {
   Vector avg_p_est = computeMeans(p_est_all);
 
@@ -197,7 +197,7 @@ void Experiments::computeBias(ostream &out, long double p, std::vector<Vector> &
   out << endl;
 }
 
-void Experiments::computeVariance(ostream &out, long double p, std::vector<Vector> &p_est_all)
+void Experiments::computeVariance(ostream &out, double p, std::vector<Vector> &p_est_all)
 {
   Vector avg_p_est = computeMeans(p_est_all);
   int num_elements = p_est_all.size();
@@ -216,7 +216,7 @@ void Experiments::computeVariance(ostream &out, long double p, std::vector<Vecto
 }
 
 void Experiments::computeMeanAbsoluteError(
-  ostream &out, long double p, std::vector<Vector> &p_est_all
+  ostream &out, double p, std::vector<Vector> &p_est_all
 ) {
   int num_elements = p_est_all.size();
 
@@ -234,7 +234,7 @@ void Experiments::computeMeanAbsoluteError(
 }
 
 void Experiments::computeMeanSquaredError(
-  ostream &out, long double p, std::vector<Vector> &p_est_all
+  ostream &out, double p, std::vector<Vector> &p_est_all
 ) {
   int num_elements = p_est_all.size();
 
@@ -274,7 +274,7 @@ void Experiments::computeWinsRatio(
     boost::tokenizer<boost::char_separator<char> > tokens(line,sep);
     BOOST_FOREACH (const string& t, tokens) {
       istringstream iss(t);
-      long double x;
+      double x;
       iss >> x;
       numbers.push_back(x);
     }
@@ -294,7 +294,7 @@ void Experiments::computeWinsRatio(
   std::vector<int> wins(NUM_METHODS,0);
   for (int i=0; i<table.size(); i++) {
     int winner = 0;
-    long double min = table[i][0];
+    double min = table[i][0];
     for (int j=1; j<NUM_METHODS; j++) {
       if (table[i][j] <= min) {
         min = table[i][j];

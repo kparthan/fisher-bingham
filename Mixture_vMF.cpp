@@ -6,7 +6,7 @@ extern int MIXTURE_SIMULATION;
 extern int INFER_COMPONENTS;
 extern int ENABLE_DATA_PARALLELISM;
 extern int NUM_THREADS;
-extern long double IMPROVEMENT_RATE;
+extern double IMPROVEMENT_RATE;
 
 /*!
  *  \brief Null constructor module
@@ -196,7 +196,7 @@ void Mixture_vMF::initialize()
 void Mixture_vMF::updateEffectiveSampleSize()
 {
   for (int i=0; i<K; i++) {
-    long double count = 0;
+    double count = 0;
     #pragma omp parallel for if(ENABLE_DATA_PARALLELISM) num_threads(NUM_THREADS) reduction(+:count)
     for (int j=0; j<N; j++) {
       count += responsibility[i][j];
@@ -210,7 +210,7 @@ void Mixture_vMF::updateEffectiveSampleSize()
  */
 void Mixture_vMF::updateWeights()
 {
-  long double normalization_constant = N + (K/2.0);
+  double normalization_constant = N + (K/2.0);
   for (int i=0; i<K; i++) {
     weights[i] = (sample_size[i] + 0.5) / normalization_constant;
   }
@@ -244,11 +244,11 @@ void Mixture_vMF::updateResponsibilityMatrix()
       log_densities[j] = components[j].log_density(data[i]);
     }
     int max_index = maximumIndex(log_densities);
-    long double max_log_density = log_densities[max_index];
+    double max_log_density = log_densities[max_index];
     for (int j=0; j<K; j++) {
       log_densities[j] -= max_log_density; 
     }
-    long double px = 0;
+    double px = 0;
     Vector probabilities(K,0);
     for (int j=0; j<K; j++) {
       probabilities[j] = weights[j] * exp(log_densities[j]);
@@ -277,11 +277,11 @@ void Mixture_vMF::computeResponsibilityMatrix(std::vector<Vector> &sample,
       log_densities[j] = components[j].log_density(sample[i]);
     }
     int max_index = maximumIndex(log_densities);
-    long double max_log_density = log_densities[max_index];
+    double max_log_density = log_densities[max_index];
     for (int j=0; j<K; j++) {
       log_densities[j] -= max_log_density; 
     }
-    long double px = 0;
+    double px = 0;
     Vector probabilities(K,0);
     for (int j=0; j<K; j++) {
       probabilities[j] = weights[j] * exp(log_densities[j]);
@@ -304,18 +304,18 @@ void Mixture_vMF::computeResponsibilityMatrix(std::vector<Vector> &sample,
 /*!
  *
  */
-long double Mixture_vMF::log_probability(Vector &x)
+double Mixture_vMF::log_probability(Vector &x)
 {
   Vector log_densities(K,0);
   for (int j=0; j<K; j++) {
       log_densities[j] = components[j].log_density(x);
   }
   int max_index = maximumIndex(log_densities);
-  long double max_log_density = log_densities[max_index];
+  double max_log_density = log_densities[max_index];
   for (int j=0; j<K; j++) {
     log_densities[j] -= max_log_density;
   }
-  long double density = 0;
+  double density = 0;
   for (int j=0; j<K; j++) {
     density += weights[j] * exp(log_densities[j]);
   }
@@ -325,12 +325,12 @@ long double Mixture_vMF::log_probability(Vector &x)
 /*!
  *  \brief This function computes the negative log likelihood of a data
  *  sample.
- *  \param a reference to a std::vector<array<long double,2> >
+ *  \param a reference to a std::vector<array<double,2> >
  *  \return the negative log likelihood (base e)
  */
-long double Mixture_vMF::negativeLogLikelihood(std::vector<Vector> &sample)
+double Mixture_vMF::negativeLogLikelihood(std::vector<Vector> &sample)
 {
-  long double value = 0,log_density;
+  double value = 0,log_density;
   #pragma omp parallel for if(ENABLE_DATA_PARALLELISM) num_threads(NUM_THREADS) private(log_density) reduction(-:value)
   for (int i=0; i<sample.size(); i++) {
     log_density = log_probability(sample[i]);
@@ -344,17 +344,17 @@ long double Mixture_vMF::negativeLogLikelihood(std::vector<Vector> &sample)
  *  model parameters.
  *  \return the minimum message length
  */
-long double Mixture_vMF::computeMinimumMessageLength()
+double Mixture_vMF::computeMinimumMessageLength()
 {
   // encode the number of components
   // assume uniform priors
-  long double Ik = log(MAX_COMPONENTS);
+  double Ik = log(MAX_COMPONENTS);
   cout << "Ik: " << Ik << endl;
   assert(Ik > 0);
 
   // enocde the weights
-  long double Iw = ((K-1)/2.0) * log(N);
-  Iw -= boost::math::lgamma<long double>(K); // log(K-1)!
+  double Iw = ((K-1)/2.0) * log(N);
+  Iw -= boost::math::lgamma<double>(K); // log(K-1)!
   for (int i=0; i<K; i++) {
     Iw -= 0.5 * log(weights[i]);
   }
@@ -362,13 +362,13 @@ long double Mixture_vMF::computeMinimumMessageLength()
   assert(Iw >= 0);
 
   // encode the likelihood of the sample
-  long double Il = negativeLogLikelihood(data);
+  double Il = negativeLogLikelihood(data);
   Il -= 2 * N * log(AOM);
   cout << "Il: " << Il << endl;
   assert(Il > 0);
 
   // encode the parameters of the components
-  long double It = 0,logp;
+  double It = 0,logp;
   for (int i=0; i<K; i++) {
     logp = components[i].computeLogPriorProbability();
     It += logp;
@@ -381,7 +381,7 @@ long double Mixture_vMF::computeMinimumMessageLength()
   // the constant term
   // # of continuous parameters d = 4K-1 (for D = 3)
   int num_free_params = 4*K - 1;
-  long double cd = computeConstantTerm(num_free_params);
+  double cd = computeConstantTerm(num_free_params);
   cout << "cd: " << cd << endl;
 
   minimum_msglen = (Ik + Iw + Il + It + cd)/(log(2));
@@ -418,7 +418,7 @@ string Mixture_vMF::getLogFile()
  *  an EM algorithm.
  *  \return the stable message length
  */
-long double Mixture_vMF::estimateParameters()
+double Mixture_vMF::estimateParameters()
 {
   initialize();
 
@@ -439,7 +439,7 @@ void Mixture_vMF::EM()
   computeNullModelMessageLength();
   //cout << "null_msglen: " << null_msglen << endl;
 
-  long double prev=0,current;
+  double prev=0,current;
   int iter = 1;
   printParameters(log,0,0);
 
@@ -482,10 +482,10 @@ void Mixture_vMF::EM()
  *  \brief This function computes the null model message length.
  *  \return the null model message length
  */
-long double Mixture_vMF::computeNullModelMessageLength()
+double Mixture_vMF::computeNullModelMessageLength()
 {
   // compute logarithm of surface area of nd-sphere
-  long double log_area = log(4*PI);
+  double log_area = log(4*PI);
   null_msglen = N * (log_area - (2*log(AOM)));
   null_msglen /= log(2);
   return null_msglen;
@@ -495,7 +495,7 @@ long double Mixture_vMF::computeNullModelMessageLength()
  *  \brief This function returns the minimum message length of this mixture
  *  model.
  */
-long double Mixture_vMF::getMinimumMessageLength()
+double Mixture_vMF::getMinimumMessageLength()
 {
   return minimum_msglen;
 }
@@ -503,7 +503,7 @@ long double Mixture_vMF::getMinimumMessageLength()
 /*!
  *  \brief Returns the first part of the msg.
  */
-long double Mixture_vMF::first_part()
+double Mixture_vMF::first_part()
 {
   return part1;
 }
@@ -511,7 +511,7 @@ long double Mixture_vMF::first_part()
 /*!
  *  \brief Returns the second part of the msg.
  */
-long double Mixture_vMF::second_part()
+double Mixture_vMF::second_part()
 {
   return part2;
 }
@@ -520,9 +520,9 @@ long double Mixture_vMF::second_part()
  *  \brief This function prints the parameters to a log file.
  *  \param os a reference to a ostream
  *  \param iter an integer
- *  \param msglen a long double
+ *  \param msglen a double
  */
-void Mixture_vMF::printParameters(ostream &os, int iter, long double msglen)
+void Mixture_vMF::printParameters(ostream &os, int iter, double msglen)
 {
   os << "Iteration #: " << iter << endl;
   for (int k=0; k<K; k++) {
@@ -587,14 +587,14 @@ void Mixture_vMF::load(string &file_name)
   string line;
   Vector numbers;
   Vector unit_mean(3,0),mean(3,0);
-  long double sum_weights = 0;
+  double sum_weights = 0;
   while (getline(file,line)) {
     K++;
     boost::char_separator<char> sep("mujikapbet,:()[] \t");
     boost::tokenizer<boost::char_separator<char> > tokens(line,sep);
     BOOST_FOREACH (const string& t, tokens) {
       istringstream iss(t);
-      long double x;
+      double x;
       iss >> x;
       numbers.push_back(x);
     }
@@ -603,7 +603,7 @@ void Mixture_vMF::load(string &file_name)
     for (int i=1; i<=3; i++) {
       mean[i-1] = numbers[i];
     }
-    long double kappa = numbers[4];
+    double kappa = numbers[4];
     normalize(mean,unit_mean);
     vMF vmf(unit_mean,kappa);
     components.push_back(vmf);
@@ -647,9 +647,9 @@ void Mixture_vMF::load(string &file_name, std::vector<Vector> &d, Vector &dw)
  */
 int Mixture_vMF::randomComponent()
 {
-  long double random = uniform_random();
+  double random = uniform_random();
   //cout << random << endl;
-  long double previous = 0;
+  double previous = 0;
   for (int i=0; i<weights.size(); i++) {
     if (random <= weights[i] + previous) {
       return i;
@@ -745,7 +745,7 @@ Mixture_vMF Mixture_vMF::split(int c, ostream &log)
   // adjust effective sample size
   Vector sample_size_c(2,0);
   for (int i=0; i<2; i++) {
-    long double sum = 0;
+    double sum = 0;
     #pragma omp parallel for if(ENABLE_DATA_PARALLELISM) num_threads(NUM_THREADS) reduction(+:sum) 
     for (int j=0; j<N; j++) {
       sum += responsibility_c[i][j];
@@ -803,8 +803,8 @@ Mixture_vMF Mixture_vMF::kill(int c, ostream &log)
   int K_m = K - 1;
   // adjust weights
   Vector weights_m(K_m,0);
-  long double residual_sum = 1 - weights[c];
-  long double wt;
+  double residual_sum = 1 - weights[c];
+  double wt;
   int index = 0;
   for (int i=0; i<K; i++) {
     if (i != c) {
@@ -830,7 +830,7 @@ Mixture_vMF Mixture_vMF::kill(int c, ostream &log)
   // adjust effective sample size
   Vector sample_size_m(K_m,0);
   for (int i=0; i<K-1; i++) {
-    long double sum = 0;
+    double sum = 0;
     #pragma omp parallel for if(ENABLE_DATA_PARALLELISM) num_threads(NUM_THREADS) reduction(+:sum) 
     for (int j=0; j<N; j++) {
       sum += responsibility_m[i][j];
@@ -932,9 +932,9 @@ Mixture_vMF Mixture_vMF::join(int c1, int c2, ostream &log)
 
 /*!
  *  \brief This function generates data to visualize the 2D/3D heat maps.
- *  \param res a long double
+ *  \param res a double
  */
-void Mixture_vMF::generateHeatmapData(long double res)
+void Mixture_vMF::generateHeatmapData(double res)
 {
   string data_fbins2D = "./visualize/prob_bins2D.dat";
   string data_fbins3D = "./visualize/prob_bins3D.dat";
@@ -942,12 +942,12 @@ void Mixture_vMF::generateHeatmapData(long double res)
   ofstream fbins3D(data_fbins3D.c_str());
   Vector x(3,1);
   Vector point(3,0);
-  for (long double theta=0; theta<180; theta+=res) {
+  for (double theta=0; theta<180; theta+=res) {
     x[1] = theta * PI/180;
-    for (long double phi=0; phi<360; phi+=res) {
+    for (double phi=0; phi<360; phi+=res) {
       x[2] = phi * PI/180;
       spherical2cartesian(x,point);
-      long double pr = exp(log_probability(point));
+      double pr = exp(log_probability(point));
       // 2D bins
       fbins2D << fixed << setw(10) << setprecision(4) << floor(pr * 100);
       // 3D bins
@@ -969,7 +969,7 @@ void Mixture_vMF::generateHeatmapData(long double res)
  */
 int Mixture_vMF::getNearestComponent(int c)
 {
-  long double current,dist = LARGE_NUMBER;
+  double current,dist = LARGE_NUMBER;
   int nearest;
 
   for (int i=0; i<K; i++) {

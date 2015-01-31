@@ -12,7 +12,7 @@ struct Parameters
   string profile_file;      // path to a single profile
   string profiles_dir;      // path to the directory containing the profiles
   int heat_map;             // flag to generate heat map images
-  long double res;          // resolution used in heat map images
+  double res;          // resolution used in heat map images
   int read_profiles;        // flag to read profile(s)
   int mixture_model;        // flag to model a mixture
   int fit_num_components;   // # of components in the mixture model
@@ -26,7 +26,7 @@ struct Parameters
   string mixture_file;      // file containing the mixture information
   int sample_size;          // sample size to be generated from the simulated mixture
   int num_threads;          // flag to enable multithreading
-  long double max_kappa;    // max value of kappa allowed
+  double max_kappa;    // max value of kappa allowed
   int start_from;           // starting value of number of components
                             // during inference
   int estimate_all;         // estimate using all methods
@@ -35,19 +35,19 @@ struct Parameters
 
 struct Estimates
 {
-  long double psi,alpha,eta;
+  double psi,alpha,eta;
   Vector mean,major_axis,minor_axis;
-  long double kappa,beta;
-  long double msglen,negloglike,kldiv;
+  double kappa,beta;
+  double msglen,negloglike,kldiv;
 };
 
 struct Estimates_vMF
 {
-  long double Neff;
-  long double R,Rbar;
-  long double theta,phi;
+  double Neff;
+  double R,Rbar;
+  double theta,phi;
   Vector mean;
-  long double kappa;
+  double kappa;
 };
 
 // general functions
@@ -61,59 +61,59 @@ void print(ostream &, Vector &, int);
 void print(string &, struct Estimates &);
 void print(string &, struct Estimates_vMF &);
 
-int sign(long double);
-long double normalize(Vector &, Vector &);
-long double norm(Vector &);
+int sign(double);
+double normalize(Vector &, Vector &);
+double norm(Vector &);
 //void cartesian2spherical2(Vector &, Vector &);
 void cartesian2spherical(Vector &, Vector &);
 //void spherical2cartesian2(Vector &, Vector &);
 void spherical2cartesian(Vector &, Vector &);
-long double computeDotProduct(Vector &, Vector &);
+double computeDotProduct(Vector &, Vector &);
 Vector crossProduct(Vector &, Vector &); 
-long double computeLogSurfaceAreaSphere(int);
-void solveQuadratic(Vector &, long double, long double, long double);
-long double uniform_random();
+double computeLogSurfaceAreaSphere(int);
+void solveQuadratic(Vector &, double, double, double);
+double uniform_random();
 
 std::vector<Vector> load_matrix(string &);
 Matrix outer_prod(Vector &, Vector &);
 Vector prod(Matrix &, Vector &);
 Vector prod(Vector &, Matrix &);
-long double prod_vMv(Vector &, Matrix &);
-long double prod_xMy(Vector &, Matrix &, Vector &);
-long double determinant(Matrix &);
+double prod_vMv(Vector &, Matrix &);
+double prod_xMy(Vector &, Matrix &, Vector &);
+double determinant(Matrix &);
 Vector computeVectorSum(std::vector<Vector> &);
-Vector computeVectorSum(std::vector<Vector> &, Vector &, long double &);
+Vector computeVectorSum(std::vector<Vector> &, Vector &, double &);
 Vector computeNormalizedVectorSum(std::vector<Vector> &);
 Matrix computeDispersionMatrix(std::vector<Vector> &);
 Matrix computeDispersionMatrix(std::vector<Vector> &, Vector &);
 Matrix computeNormalizedDispersionMatrix(std::vector<Vector> &);
-Matrix rotate_about_xaxis(long double);
-Matrix rotate_about_yaxis(long double);
-Matrix rotate_about_zaxis(long double);
+Matrix rotate_about_xaxis(double);
+Matrix rotate_about_yaxis(double);
+Matrix rotate_about_zaxis(double);
 Matrix computeOrthogonalTransformation(Vector &, Vector &);
-Matrix computeOrthogonalTransformation(long double, long double, long double);
-void computeOrthogonalTransformation(Vector &, Vector &, long double &, long double &, long double &);
+Matrix computeOrthogonalTransformation(double, double, double);
+void computeOrthogonalTransformation(Vector &, Vector &, double &, double &, double &);
 Matrix align_xaxis_with_vector(Vector &);
 Matrix align_vector_with_xaxis(Vector &);
-Matrix align_vector_with_xaxis(long double, long double);
+Matrix align_vector_with_xaxis(double, double);
 void generateRandomOrthogonalVectors(Vector &, Vector &, Vector &);
 Matrix generateRandomCovarianceMatrix(int);
 std::vector<Vector> transform(std::vector<Vector> &, Matrix &);
 bool invertMatrix(const Matrix &, Matrix &);
 void eigenDecomposition(Matrix, Vector &, Matrix &);
 void jacobiRotateMatrix(Matrix &, Matrix &, int, int);
-long double computeDawsonsIntegral(double);
+double computeDawsonsIntegral(double);
 void track(const std::vector<double> &, const double);
 void rhs(const std::vector<double> &, std::vector<double> &, const double);
 double Constraint2(const std::vector<double> &, std::vector<double> &, void *);
 double Constraint5(const std::vector<double> &, std::vector<double> &, void *);
 double Constraint5_2(const std::vector<double> &, std::vector<double> &, void *);
-long double computeTestStatistic(long double, long double, long double, int);
-long double compute_pvalue(long double, chi_squared &);
+double computeTestStatistic(double, double, double, int);
+double compute_pvalue(double, chi_squared &);
 
-long double computeConstantTerm(int);
-std::vector<std::vector<int> > updateBins(std::vector<Vector> &, long double);
-void outputBins(std::vector<std::vector<int> > &, long double);
+double computeConstantTerm(int);
+std::vector<std::vector<int> > updateBins(std::vector<Vector> &, double);
+void outputBins(std::vector<std::vector<int> > &, double);
 void computeEstimators(struct Parameters &);
 bool gatherData(struct Parameters &, std::vector<Vector> &);
 void modelOneComponent(struct Parameters &, std::vector<Vector> &);
@@ -136,11 +136,11 @@ Vector sort(Vector &);
 void quicksort(Vector &, std::vector<int> &, int, int);
 int partition(Vector &, std::vector<int> &, int, int);
 std::vector<Vector> flip(std::vector<Vector> &);
-long double computeMedian(Vector &);
+double computeMedian(Vector &);
 Vector computeMedians(std::vector<Vector> &);
-long double computeMean(Vector &);
+double computeMean(Vector &);
 Vector computeMeans(std::vector<Vector> &);
-long double computeVariance(Vector &);
+double computeVariance(Vector &);
 int maximumIndex(Vector &);
 
 #endif

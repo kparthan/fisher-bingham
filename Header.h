@@ -48,17 +48,17 @@ using namespace boost::math;
 using namespace boost::numeric::ublas;
 using namespace boost::numeric::odeint;
 
-typedef std::vector<long double> Vector;
-typedef boost::numeric::ublas::matrix<long double> Matrix;
-typedef boost::numeric::ublas::identity_matrix<long double> IdentityMatrix;
-typedef boost::numeric::ublas::zero_matrix<long double> ZeroMatrix;
+typedef std::vector<double> Vector;
+typedef boost::numeric::ublas::matrix<double> Matrix;
+typedef boost::numeric::ublas::identity_matrix<double> IdentityMatrix;
+typedef boost::numeric::ublas::zero_matrix<double> ZeroMatrix;
 
 // numeric constants
 #define AOM 0.001
 #define LARGE_NUMBER 1000000000
 #define PI boost::math::constants::pi<double>()
 #define LOG_PI log(PI)
-#define ZERO std::numeric_limits<long double>::epsilon()
+#define ZERO std::numeric_limits<double>::epsilon()
 #define TOLERANCE 1e-6
 
 #define SET 1 

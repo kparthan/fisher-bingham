@@ -1,7 +1,7 @@
 #include "Optimize.h"
 
 extern int CONSTRAIN_KAPPA;
-extern long double MAX_KAPPA;
+extern double MAX_KAPPA;
 
 Optimize::Optimize(string type)
 {
@@ -17,7 +17,7 @@ Optimize::Optimize(string type)
 }
 
 void Optimize::initialize(double sample_size, Vector &m0, Vector &m1, Vector &m2, 
-                          long double k, long double b)
+                          double k, double b)
 {
   N = sample_size;
   mean = m0;
@@ -89,9 +89,9 @@ void Optimize::finalize(std::vector<double> &theta, struct Estimates &estimates)
   estimates.minor_axis = kent.MinorAxis();
 }
 
-void Optimize::validate_scale(long double &k, long double &b)
+void Optimize::validate_scale(double &k, double &b)
 {
-  long double ex = 2 * b / k;
+  double ex = 2 * b / k;
   if (ex >= 1) {
     ex = 1 - TOLERANCE;
     b = 0.5 * k * ex;

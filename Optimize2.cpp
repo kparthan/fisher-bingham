@@ -1,7 +1,7 @@
 #include "Optimize2.h"
 
 extern int CONSTRAIN_KAPPA;
-extern long double MAX_KAPPA;
+extern double MAX_KAPPA;
 
 Optimize2::Optimize2(string type)
 {

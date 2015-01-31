@@ -38,10 +38,10 @@ class Mixture_vMF
     Vector msglens;
 
     //! Null model message length
-    long double null_msglen;
+    double null_msglen;
 
     //! Optimal encoding length
-    long double part1,part2,minimum_msglen;
+    double part1,part2,minimum_msglen;
 
   public:
     //! Null constructor
@@ -100,34 +100,34 @@ class Mixture_vMF
     void computeResponsibilityMatrix(std::vector<Vector> &, string &);
                                           
     //! Probability of a datum
-    long double log_probability(Vector &);
+    double log_probability(Vector &);
 
     //! Computes the negative log likelihood
-    long double negativeLogLikelihood(std::vector<Vector> &);
+    double negativeLogLikelihood(std::vector<Vector> &);
 
     //! Computes the minimum message length
-    long double computeMinimumMessageLength();
+    double computeMinimumMessageLength();
 
     //! Gets the minimum message length
-    long double getMinimumMessageLength();
+    double getMinimumMessageLength();
 
     //! Gets the first part
-    long double first_part();
+    double first_part();
 
     //! Gets the second part
-    long double second_part();
+    double second_part();
 
     //! Estimate mixture parameters
-    long double estimateParameters();
+    double estimateParameters();
 
     //! EM loop
     void EM();
 
     //! Computes the null model message length
-    long double computeNullModelMessageLength();
+    double computeNullModelMessageLength();
 
     //! Prints the model parameters
-    void printParameters(ostream &, int, long double);
+    void printParameters(ostream &, int, double);
 
     //! Prints the model parameters
     void printParameters(ostream &, int);
@@ -160,13 +160,13 @@ class Mixture_vMF
     Mixture_vMF join(int, int, ostream &);
 
     //! Generate heat maps (for d=3)
-    void generateHeatmapData(long double);
+    void generateHeatmapData(double);
 
     //! Get the nearest component
     int getNearestComponent(int);
 
     //! Computes the approx KL divergence between two mixtures
-    long double computeKLDivergence(Mixture_vMF &);
+    double computeKLDivergence(Mixture_vMF &);
 };
 
 #endif

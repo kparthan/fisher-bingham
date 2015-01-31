@@ -7,37 +7,37 @@ class Normal
 {
   private:
     //! Mean of the distribution
-		long double mu;
+		double mu;
 
     //! Standard deviation of the distribution
-		long double sigma;
+		double sigma;
 
   public:
 		//! Constructor
 		Normal() ;
 
 		//! Constructor that sets value of parameters
-		Normal(long double, long double);
+		Normal(double, double);
 
     //! Assignment of an existing Normal distribution
     Normal operator=(const Normal &);
 
 		//! Gets the mean 
-		const long double mean();
+		const double mean();
 
     //! Gets the standard deviation
-    const long double standardDeviation(); 
+    const double standardDeviation(); 
 
 		//! Function value
-		long double density(long double);
+		double density(double);
 
-    long double cumulativeDensity(long double);
-
-    //! Computes the negative log likelihood of a sample
-    long double negativeLogLikelihood(long double);
+    double cumulativeDensity(double);
 
     //! Computes the negative log likelihood of a sample
-    long double negativeLogLikelihood(Vector &);
+    double negativeLogLikelihood(double);
+
+    //! Computes the negative log likelihood of a sample
+    double negativeLogLikelihood(Vector &);
 
     //! Prints the model parameters
     void printParameters(ostream &);

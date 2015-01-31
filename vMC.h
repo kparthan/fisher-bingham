@@ -10,16 +10,16 @@ class vMC
 		Vector mu;
 
     //! Concentration parameter 
-		long double kappa;
+		double kappa;
 
   public:
 		//! Constructor
 		vMC();
 
 		//! Constructor that sets value of parameters
-		vMC(Vector &, long double);
+		vMC(Vector &, double);
 
-		vMC(long double);
+		vMC(double);
 
     //! Assignment of an existing vMC distribution
     vMC operator=(const vMC &);
@@ -28,7 +28,7 @@ class vMC
 		Vector Mean();
 
     //! Gets the Kappa 
-    long double Kappa(); 
+    double Kappa(); 
 
     //! Generate a random canonical sample
     void generateCanonical(std::vector<Vector> &, int);

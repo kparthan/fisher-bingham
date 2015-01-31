@@ -16,7 +16,7 @@ extern int NUM_THREADS;
 
 void Test::testing_cartesian2sphericalPoleXAxis()
 {
-  long double theta,phi;
+  double theta,phi;
   Vector x(3,0),spherical(3,0);
 
   // in degrees
@@ -46,7 +46,7 @@ void Test::parallel_sum_computation(void)
   std::vector<Vector> sample;
   Vector weights(N,0);
   Vector spherical(3,1),x(3,0);
-  long double Neff;
+  double Neff;
 
   for (int i=0; i<N; i++) {
     spherical[1] = PI * uniform_random();
@@ -117,7 +117,7 @@ void Test::matrixFunctions()
   cout << "mr: " << mr << endl;
 
   // boost vector
-  boost::numeric::ublas::vector<long double> v(3);
+  boost::numeric::ublas::vector<double> v(3);
   for (int i=0; i<3; i++) {
     v[i] = i + 3;
   }
@@ -126,7 +126,7 @@ void Test::matrixFunctions()
   cout << "v/2: " << v/2 << endl;
 
   // adding matrix row and vector
-  boost::numeric::ublas::vector<long double> v1 = mr + v;
+  boost::numeric::ublas::vector<double> v1 = mr + v;
   cout << "v1: " << v1 << endl;
 
   // multiplication
@@ -134,12 +134,12 @@ void Test::matrixFunctions()
   cout << "m1 * m2 = m3: " << m3 << endl;
 
   // multiplying matrices and vectors
-  boost::numeric::ublas::vector<long double> mv = prod(v1,m1);
+  boost::numeric::ublas::vector<double> mv = prod(v1,m1);
   cout << "v1 * m1 = mv: " << mv << endl;
   mv = prod(m1,v1);
   cout << "m1 * v1 = mv: " << mv << endl;
 
-  long double v1_T_v1 = inner_prod(v1,v1);
+  double v1_T_v1 = inner_prod(v1,v1);
   cout << "v1' * v1 = : " << v1_T_v1 << endl;
 
   Matrix m4 = outer_prod(v1,v1);
@@ -234,17 +234,17 @@ void Test::dispersionMatrix(void)
 void Test::numericalIntegration(void)
 {
   // integration
-  long double val = computeDawsonsIntegral(10);
+  double val = computeDawsonsIntegral(10);
 }
 
 void Test::normalDistributionFunctions(void)
 {
   // Normal cdf
   Normal normal(0,1);
-  long double cdf = normal.cumulativeDensity(2);
+  double cdf = normal.cumulativeDensity(2);
   cout << "cdf: " << cdf << endl;
 
-  long double x = sqrt(PI/2);
+  double x = sqrt(PI/2);
   cdf = normal.cumulativeDensity(x);
   cout << "cdf: " << cdf << endl;
   cout << "2*cdf-1: " << 2*cdf-1 << endl;
@@ -259,7 +259,7 @@ void Test::orthogonalTransformations(void)
   spherical2cartesian(spherical,cartesian);
   cout << "cartesian: "; print(cout,cartesian,3); cout << endl;
 
-  boost::numeric::ublas::vector<long double> vec(3);
+  boost::numeric::ublas::vector<double> vec(3);
   for (int i=0; i<3; i++) vec(i) = cartesian[i];
   Matrix r1 = align_xaxis_with_vector(cartesian);
   cout << "r1: " << r1 << endl;
@@ -269,11 +269,11 @@ void Test::orthogonalTransformations(void)
   Matrix check = prod(r1,inverse);
   cout << "check: " << check << endl;
 
-  boost::numeric::ublas::vector<long double> xaxis(3);
+  boost::numeric::ublas::vector<double> xaxis(3);
   for (int i=0; i<3; i++) xaxis(i) = XAXIS[i];
-  boost::numeric::ublas::vector<long double> ans1 = prod(r1,xaxis);
+  boost::numeric::ublas::vector<double> ans1 = prod(r1,xaxis);
   cout << "ans1: " << ans1 << endl;
-  boost::numeric::ublas::vector<long double> ans2 = prod(inverse,vec);
+  boost::numeric::ublas::vector<double> ans2 = prod(inverse,vec);
   cout << "ans2: " << ans2 << endl;
 }
 
@@ -395,7 +395,7 @@ void Test::bingham(void)
 {
   int D = 3;
   int N = 10000;
-  long double beta = 47.5;
+  double beta = 47.5;
   std::vector<Vector> random_sample;
 
   Vector mean,major,minor;
@@ -419,7 +419,7 @@ void Test::bingham(void)
 
 void Test::kent_bingham_generation(void)
 {
-  long double kappa,beta;
+  double kappa,beta;
   std::vector<Vector> random_sample;
   Vector m0,m1,m2;
   generateRandomOrthogonalVectors(m0,m1,m2);
@@ -436,8 +436,8 @@ void Test::kent_bingham_generation(void)
 void Test::normalization_constant(void)
 {
   cout << "ZERO: " << ZERO << endl;
-  long double kappa = 100;
-  long double beta = 14.5;
+  double kappa = 100;
+  double beta = 14.5;
   Vector m0 = XAXIS;
   Vector m1 = YAXIS;
   Vector m2 = ZAXIS;
@@ -518,9 +518,9 @@ void Test::moment_estimation(void)
   struct Estimates estimates;
   std::vector<Vector> random_sample;
   Vector m0,m1,m2;
-  long double kappa = 100;
-  //long double beta = 45;
-  long double beta = 47.5;
+  double kappa = 100;
+  //double beta = 45;
+  double beta = 47.5;
 
   generateRandomOrthogonalVectors(m0,m1,m2);
   cartesian2spherical(m0,spherical);
@@ -609,8 +609,8 @@ void Test::ml_estimation(void)
   std::vector<struct Estimates> all_estimates;
   std::vector<Vector> random_sample;
   Vector m0,m1,m2;
-  long double kappa = 100;
-  long double beta = 40;
+  double kappa = 100;
+  double beta = 40;
 
   generateRandomOrthogonalVectors(m0,m1,m2);
   cartesian2spherical(m0,spherical);
@@ -652,8 +652,8 @@ void Test::ml_estimation(void)
 void Test::expectation()
 {
   Vector m0,m1,m2;
-  long double kappa = 100;
-  long double beta = 47.5;
+  double kappa = 100;
+  double beta = 47.5;
 
   generateRandomOrthogonalVectors(m0,m1,m2);
   Kent kent(m0,m1,m2,kappa,beta);
@@ -666,8 +666,8 @@ void Test::expectation()
 void Test::kl_divergence()
 {
   Vector m0,m1,m2;
-  long double kappa = 100;
-  long double beta = 47.5;
+  double kappa = 100;
+  double beta = 47.5;
   generateRandomOrthogonalVectors(m0,m1,m2);
   Kent kent1(m0,m1,m2,kappa,beta);
 
@@ -684,9 +684,9 @@ void Test::kl_divergence()
 void Test::fisher()
 {
   Vector m0,m1,m2;
-  long double kappa = 100;
-  long double beta = 30;
-  long double psi,alpha,eta;
+  double kappa = 100;
+  double beta = 30;
+  double psi,alpha,eta;
 
   generateRandomOrthogonalVectors(m0,m1,m2);
   Vector spherical(3,0);
@@ -701,10 +701,10 @@ void Test::fisher()
   Kent kent(psi,alpha,eta,kappa,beta);
   kent.computeExpectation();
   Kent::Constants constants = kent.getConstants();
-  long double log_det_fkb = kent.computeLogFisherScale();
+  double log_det_fkb = kent.computeLogFisherScale();
   cout << "log(det(f_kb)): " << log_det_fkb << endl;
   cout << "det(f_kb): " << exp(log_det_fkb) << endl;
-  long double log_det_faxes = kent.computeLogFisherAxes();
+  double log_det_faxes = kent.computeLogFisherAxes();
   cout << "log(det(f_axes)): " << log_det_faxes << endl;
   cout << "det(f_axes): " << exp(log_det_faxes) << endl;
   cout << "log(det(fisher)): " << log_det_fkb+log_det_faxes << endl;
@@ -717,8 +717,8 @@ void Test::mml_estimation(void)
   std::vector<struct Estimates> all_estimates;
   std::vector<Vector> random_sample;
   Vector m0,m1,m2;
-  long double kappa = 100;
-  long double beta;
+  double kappa = 100;
+  double beta;
   int sample_size = 100;
 
   beta = 45;
@@ -746,10 +746,10 @@ void Test::mml_estimation(void)
 
 void Test::mml_estimation2(void)
 {
-  long double psi,alpha,eta;
+  double psi,alpha,eta;
   std::vector<struct Estimates> all_estimates;
   std::vector<Vector> random_sample;
-  long double kappa,beta;
+  double kappa,beta;
   int sample_size = 100;
 
   kappa = 100;
@@ -777,7 +777,7 @@ void Test::vmf_all_estimation()
 
   Vector mean(3,0);
   spherical2cartesian(spherical,mean);
-  long double kappa = 100;
+  double kappa = 100;
   int sample_size = 10;
 
   vMF vmf(mean,kappa);
@@ -790,18 +790,18 @@ void Test::chi_square()
 {
   int df = 500499;
   chi_squared chisq(df);
-  long double alpha = 0.05;
-  long double x = quantile(chisq,1-alpha);
+  double alpha = 0.05;
+  double x = quantile(chisq,1-alpha);
   cout << "quantile: " << x << endl;
 
-  long double p = 1 - cdf(chisq,x);
+  double p = 1 - cdf(chisq,x);
   cout << "pvalue: " << p << endl;
 }
 
 void Test::hypothesis_testing()
 {
   int N;
-  long double kappa,beta;
+  double kappa,beta;
   std::vector<Vector> random_sample;
   Vector m0,m1,m2;
   generateRandomOrthogonalVectors(m0,m1,m2);
@@ -833,7 +833,7 @@ void Test::hypothesis_testing()
 void Test::confidence_region()
 {
   int N;
-  long double kappa,beta;
+  double kappa,beta;
   std::vector<Vector> random_sample;
   Vector m0,m1,m2;
   generateRandomOrthogonalVectors(m0,m1,m2);

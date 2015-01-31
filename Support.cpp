@@ -10,8 +10,8 @@ int MIXTURE_SIMULATION;
 int INFER_COMPONENTS;
 int ENABLE_DATA_PARALLELISM;
 int NUM_THREADS;
-long double MAX_KAPPA;
-long double IMPROVEMENT_RATE;
+double MAX_KAPPA;
+double IMPROVEMENT_RATE;
 int CONSTRAIN_KAPPA;
 int MLE_FAIL=0,MAP_FAIL=0;
 int MOMENT_FAIL=0,MML2_FAIL=0,MML5_FAIL=0;  // Kent experiments
@@ -36,7 +36,7 @@ struct Parameters parseCommandLineInput(int argc, char **argv)
 {
   struct Parameters parameters;
   string constrain,pdf;
-  long double improvement_rate;
+  double improvement_rate;
 
   bool noargs = 1;
 
@@ -50,7 +50,7 @@ struct Parameters parseCommandLineInput(int argc, char **argv)
        ("profile",value<string>(&parameters.profile_file),"path to the profile")
        ("profiles",value<string>(&parameters.profiles_dir),"path to all profiles")
        ("constrain",value<string>(&constrain),"to constrain kappa")
-       ("max_kappa",value<long double>(&parameters.max_kappa),"maximum value of kappa allowed")
+       ("max_kappa",value<double>(&parameters.max_kappa),"maximum value of kappa allowed")
        ("mixture","flag to do mixture modelling")
        ("pdf",value<string>(&pdf),"type of distribution")
        ("k",value<int>(&parameters.fit_num_components),"number of components")
@@ -64,9 +64,9 @@ struct Parameters parseCommandLineInput(int argc, char **argv)
        ("components",value<int>(&parameters.simulated_components),"# of simulated components")
        ("samples",value<int>(&parameters.sample_size),"sample size generated")
        ("bins","parameter to generate heat maps")
-       ("res",value<long double>(&parameters.res),"resolution used in heat map images")
+       ("res",value<double>(&parameters.res),"resolution used in heat map images")
        ("mt",value<int>(&parameters.num_threads),"flag to enable multithreading")
-       ("improvement",value<long double>(&improvement_rate),"improvement rate")
+       ("improvement",value<double>(&improvement_rate),"improvement rate")
   ;
   variables_map vm;
   store(command_line_parser(argc,argv).options(desc).run(),vm);
@@ -317,10 +317,10 @@ void print(string &type, struct Estimates_vMF &estimates)
 
 /*!
  *  \brief This module returns the sign of a number.
- *  \param number a long double
+ *  \param number a double
  *  \return the sign
  */
-int sign(long double number)
+int sign(double number)
 {
   if (fabs(number) <= ZERO) {
     return 0;
@@ -337,18 +337,18 @@ int sign(long double number)
  *  \param unit a reference to a Vector
  *  \return the norm of the Vector
  */
-long double normalize(Vector &x, Vector &unit)
+double normalize(Vector &x, Vector &unit)
 {
-  long double l2norm = norm(x);
+  double l2norm = norm(x);
   for (int i=0; i<x.size(); i++) {
     unit[i] = x[i] / l2norm;
   }
   return l2norm;
 }
 
-long double norm(Vector &v)
+double norm(Vector &v)
 {
-  long double normsq = 0;
+  double normsq = 0;
   for (int i=0; i<v.size(); i++) {
     normsq += v[i] * v[i];
   }
@@ -364,24 +364,24 @@ long double norm(Vector &v)
 /*void cartesian2spherical2(Vector &cartesian, Vector &spherical)
 {
   Vector unit(3,0);
-  long double r = normalize(cartesian,unit);
+  double r = normalize(cartesian,unit);
 
-  long double x = unit[0];
-  long double y = unit[1];
-  long double z = unit[2];
+  double x = unit[0];
+  double y = unit[1];
+  double z = unit[2];
 
   // theta \in [0,PI]: angle with Z-axis
-  long double theta = acos(z);
+  double theta = acos(z);
 
   // phi \in[0,2 PI]: angle with positive X-axis
-  long double ratio = x/sin(theta);
+  double ratio = x/sin(theta);
   if (ratio > 1) {
     ratio = 1;
   } else if (ratio < -1) {
     ratio = -1;
   }
-  long double angle = acos(ratio);
-  long double phi = 0;
+  double angle = acos(ratio);
+  double phi = 0;
   if (x == 0 && y == 0) {
     phi = 0;
   } else if (x == 0) {
@@ -410,24 +410,24 @@ long double norm(Vector &v)
 void cartesian2spherical(Vector &cartesian, Vector &spherical)
 {
   Vector unit(3,0);
-  long double r = normalize(cartesian,unit);
+  double r = normalize(cartesian,unit);
 
-  long double x = unit[0];
-  long double y = unit[1];
-  long double z = unit[2];
+  double x = unit[0];
+  double y = unit[1];
+  double z = unit[2];
 
   // theta \in [0,PI]: angle with X-axis
-  long double theta = acos(x);
+  double theta = acos(x);
 
   // phi \in[0,2 PI]: angle with positive Y-axis
-  long double ratio = y/sin(theta);
+  double ratio = y/sin(theta);
   if (ratio > 1) {
     ratio = 1;
   } else if (ratio < -1) {
     ratio = -1;
   }
-  long double angle = acos(ratio);
-  long double phi = 0;
+  double angle = acos(ratio);
+  double phi = 0;
   if (y == 0 && z == 0) {
     phi = 0;
   } else if (y == 0) {
@@ -472,10 +472,10 @@ void spherical2cartesian(Vector &spherical, Vector &cartesian)
  *  \param v2 a reference to a Vector
  *  \return the dot product
  */
-long double computeDotProduct(Vector &v1, Vector &v2) 
+double computeDotProduct(Vector &v1, Vector &v2) 
 {
   assert(v1.size() == v2.size());
-  long double dot_product = 0;
+  double dot_product = 0;
   for (int i=0; i<v1.size(); i++) {
     dot_product += v1[i] * v2[i];
   }
@@ -497,10 +497,10 @@ Vector crossProduct(Vector &v1, Vector &v2)
  *  \param d an integer
  *  \return the surface area
  */
-long double computeLogSurfaceAreaSphere(int d)
+double computeLogSurfaceAreaSphere(int d)
 {
-  long double log_num = log(d) + ((d/2.0) * log(PI));
-  long double log_denom = boost::math::lgamma<long double>(d/2.0+1);
+  double log_num = log(d) + ((d/2.0) * log(PI));
+  double log_denom = boost::math::lgamma<double>(d/2.0+1);
   return (log_num - log_denom);
 }
 
@@ -509,19 +509,19 @@ long double computeLogSurfaceAreaSphere(int d)
  */
 void solveQuadratic(
   Vector &roots, 
-  long double a,
-  long double b, 
-  long double c
+  double a,
+  double b, 
+  double c
 ) {
-  long double D = sqrt(b*b-4*a*c);
+  double D = sqrt(b*b-4*a*c);
   roots[0] = (-b + D) / (2*a);
   roots[1] = (-b - D) / (2*a);
 }
 
-long double uniform_random()
+double uniform_random()
 {
   return (*uniform_generator)();
-  //return rand()/(long double)RAND_MAX;
+  //return rand()/(double)RAND_MAX;
 }
 
 ////////////////////// GEOMETRY FUNCTIONS \\\\\\\\\\\\\\\\\\\\\\\\\\\\
@@ -539,7 +539,7 @@ std::vector<Vector> load_matrix(string &file_name)
     i = 0;
     BOOST_FOREACH(const string &t, tokens) {
       istringstream iss(t);
-      long double x;
+      double x;
       iss >> x;
       numbers[i++] = x;
     }
@@ -603,7 +603,7 @@ Vector prod(Vector &v, Matrix &m)
  *  v is considered to be a column std::vector
  *  output: v' M v
  */
-long double prod_vMv(Vector &v, Matrix &M)
+double prod_vMv(Vector &v, Matrix &M)
 {
   Vector vM = prod(v,M);
   return computeDotProduct(vM,v);
@@ -613,7 +613,7 @@ long double prod_vMv(Vector &v, Matrix &M)
  *  x,y are considered to be a column std::vectors
  *  output: x' M y
  */
-long double prod_xMy(Vector &x, Matrix &M, Vector &y)
+double prod_xMy(Vector &x, Matrix &M, Vector &y)
 {
   Vector xM = prod(x,M);
   return computeDotProduct(xM,y);
@@ -622,9 +622,9 @@ long double prod_xMy(Vector &x, Matrix &M, Vector &y)
 /*!
  *  determinant of 3 X 3 matrix
  */
-long double determinant(Matrix &m)
+double determinant(Matrix &m)
 {
-  long double det = 0,subdet;
+  double det = 0,subdet;
   subdet = m(1,1) * m(2,2) - m(1,2) * m(2,1);
   det += m(0,0) * subdet;
 
@@ -681,7 +681,7 @@ Vector computeVectorSum(std::vector<Vector> &sample)
   return resultant;
 }
 
-/*Vector computeVectorSum(std::vector<Vector> &sample, Vector &weights, long double &Neff) 
+/*Vector computeVectorSum(std::vector<Vector> &sample, Vector &weights, double &Neff) 
 {
   int d = sample[0].size();
   Vector sum(d,0);
@@ -695,7 +695,7 @@ Vector computeVectorSum(std::vector<Vector> &sample)
   return sum;
 }*/
 
-Vector computeVectorSum(std::vector<Vector> &sample, Vector &weights, long double &Neff) 
+Vector computeVectorSum(std::vector<Vector> &sample, Vector &weights, double &Neff) 
 {
   int d = sample[0].size();
   Vector resultant(d,0);  // resultant direction
@@ -705,7 +705,7 @@ Vector computeVectorSum(std::vector<Vector> &sample, Vector &weights, long doubl
     _resultants.push_back(resultant);
   }
   int tid;
-  long double sum_neff = 0;
+  double sum_neff = 0;
   #pragma omp parallel if(ENABLE_DATA_PARALLELISM) num_threads(NUM_THREADS) private(tid) reduction(+:sum_neff) 
   {
     tid = omp_get_thread_num();
@@ -774,7 +774,7 @@ Matrix computeNormalizedDispersionMatrix(std::vector<Vector> &sample)
 }
 
 // anti-clockwise rotation about +X
-Matrix rotate_about_xaxis(long double theta)
+Matrix rotate_about_xaxis(double theta)
 {
   Matrix r = IdentityMatrix(3,3);
   r(1,1) = cos(theta);
@@ -785,7 +785,7 @@ Matrix rotate_about_xaxis(long double theta)
 }
 
 // anti-clockwise rotation about +Y
-Matrix rotate_about_yaxis(long double theta)
+Matrix rotate_about_yaxis(double theta)
 {
   Matrix r = IdentityMatrix(3,3);
   r(0,0) = cos(theta);
@@ -796,7 +796,7 @@ Matrix rotate_about_yaxis(long double theta)
 }
 
 // anti-clockwise rotation about +Z
-Matrix rotate_about_zaxis(long double theta)
+Matrix rotate_about_zaxis(double theta)
 {
   Matrix r = IdentityMatrix(3,3);
   r(0,0) = cos(theta);
@@ -818,7 +818,7 @@ Matrix computeOrthogonalTransformation(
   Vector mj_xy = prod(r1,major_axis);
   Vector spherical(3,0);
   cartesian2spherical(mj_xy,spherical);
-  long double psi = spherical[2];
+  double psi = spherical[2];
   Matrix r2 = rotate_about_xaxis(psi);
   Matrix r = prod(r1_inv,r2);
   return r;
@@ -827,7 +827,7 @@ Matrix computeOrthogonalTransformation(
 /*!
  *  Matrix to rotate FROM the standard frame of reference.
  */
-Matrix computeOrthogonalTransformation(long double psi, long double alpha, long double eta)
+Matrix computeOrthogonalTransformation(double psi, double alpha, double eta)
 {
   Matrix r1 = rotate_about_xaxis(psi);
   Matrix r2 = rotate_about_zaxis(alpha);
@@ -840,9 +840,9 @@ Matrix computeOrthogonalTransformation(long double psi, long double alpha, long 
 void computeOrthogonalTransformation(
   Vector &mean, 
   Vector &major_axis,
-  long double &psi,
-  long double &alpha,
-  long double &eta
+  double &psi,
+  double &alpha,
+  double &eta
 ) {
   Vector spherical(3,0);
   cartesian2spherical(mean,spherical);
@@ -865,14 +865,14 @@ Matrix align_vector_with_xaxis(Vector &y)
 {
   Vector spherical(3,0);
   cartesian2spherical(y,spherical);
-  long double alpha = spherical[1];
-  long double eta = spherical[2];
+  double alpha = spherical[1];
+  double eta = spherical[2];
   return align_vector_with_xaxis(alpha,eta);
 }
 
 // alpha = co-latitude
 // eta = longitude
-Matrix align_vector_with_xaxis(long double alpha, long double eta)
+Matrix align_vector_with_xaxis(double alpha, double eta)
 {
   Matrix r = ZeroMatrix(3,3);
 
@@ -896,9 +896,9 @@ void generateRandomOrthogonalVectors(
   Vector &major_axis,
   Vector &minor_axis
 ) {
-  long double psi = (2 * PI) * uniform_random();
-  long double alpha = PI * uniform_random();
-  long double eta = (2 * PI) * uniform_random();
+  double psi = (2 * PI) * uniform_random();
+  double alpha = PI * uniform_random();
+  double eta = (2 * PI) * uniform_random();
 
   Matrix r = computeOrthogonalTransformation(psi,alpha,eta);
 
@@ -913,7 +913,7 @@ Matrix generateRandomCovarianceMatrix(int D)
   Matrix V = ZeroMatrix(D,D);
   if (D == 2) {
     Vector x(2,0);
-    long double phi = (2 * PI) * uniform_random();
+    double phi = (2 * PI) * uniform_random();
     x[0] = cos(phi); x[1] = sin(phi);
     V(0,0) = x[0]; V(0,1) = -x[1];
     V(1,0) = x[1]; V(1,1) = x[0];
@@ -942,8 +942,8 @@ Matrix generateRandomCovarianceMatrix(int D)
 
 /*
  *  \brief Transformation of x using T
- *  \param x a reference to a vector<vector<long double> >
- *  \param T a reference to a Matrix<long double>
+ *  \param x a reference to a vector<vector<double> >
+ *  \param T a reference to a Matrix<double>
  *  \return the transformed vector list
  */
 std::vector<Vector> transform(
@@ -1021,7 +1021,7 @@ void eigenDecomposition(
     //find the largest off-diagonal 
     int max_row = 0, max_col = 1;
     int cur_row, cur_col;
-    long double max_val = m(max_row,max_col);
+    double max_val = m(max_row,max_col);
     for (cur_row = 0; cur_row < num_rows-1; ++cur_row) {
       for (cur_col = cur_row + 1; cur_col < num_cols; ++cur_col) {
         if (fabs(m(cur_row,cur_col)) > max_val) {
@@ -1053,8 +1053,8 @@ void jacobiRotateMatrix(
   int max_row, 
   int max_col
 ) {
-  long double diff = m(max_col,max_col) - m(max_row,max_row);
-  long double phi, t, c, s, tau, temp;
+  double diff = m(max_col,max_col) - m(max_row,max_row);
+  double phi, t, c, s, tau, temp;
   int i;
   
   phi = diff / (2.0 * m(max_row,max_col));
@@ -1098,7 +1098,7 @@ void jacobiRotateMatrix(
 /*
  *  Dawson's integral required to compute FB4 normalization constant
  */
-long double computeDawsonsIntegral(double limit)
+double computeDawsonsIntegral(double limit)
 {
   //state_type x (1,0.0);
   std::vector<double> x (1,0.0);
@@ -1139,22 +1139,22 @@ double Constraint5_2(const std::vector<double> &x, std::vector<double> &grad, vo
     return (TOLERANCE * x[3] - 2 * x[4]);
 }
 
-long double computeTestStatistic(
-  long double kappa, 
-  long double eig_val_sq, 
-  long double rbar, 
+double computeTestStatistic(
+  double kappa, 
+  double eig_val_sq, 
+  double rbar, 
   int N)  // vMF (null) against Kent (alternative)
 {
-  long double num = N * kappa * kappa * kappa * eig_val_sq;
-  long double denom = 4 * (kappa - 3* rbar);
+  double num = N * kappa * kappa * kappa * eig_val_sq;
+  double denom = 4 * (kappa - 3* rbar);
   return num/denom;
 }
 
 // return the p-value of the test
-long double compute_pvalue(long double t, chi_squared &chisq)
+double compute_pvalue(double t, chi_squared &chisq)
 {
-  //long double critical_value = quantile(chisq,1-alpha);
-  long double pvalue = 1 - cdf(chisq,t);
+  //double critical_value = quantile(chisq,1-alpha);
+  double pvalue = 1 - cdf(chisq,t);
   return pvalue;
 }
 
@@ -1166,9 +1166,9 @@ long double compute_pvalue(long double t, chi_squared &chisq)
  *  \param d an integer
  *  \return the constant term
  */
-long double computeConstantTerm(int d)
+double computeConstantTerm(int d)
 {
-  long double ad = 0;
+  double ad = 0;
   ad -= 0.5 * d * log(2 * PI);
   ad += 0.5 * log(d * PI);
   return ad;
@@ -1176,10 +1176,10 @@ long double computeConstantTerm(int d)
 
 /*!
  *  \brief This function bins the sample data 
- *  \param res a long double
- *  \param unit_coordinates a reference to a vector<vector<long double> > 
+ *  \param res a double
+ *  \param unit_coordinates a reference to a vector<vector<double> > 
  */
-std::vector<std::vector<int> > updateBins(std::vector<Vector> &unit_coordinates, long double res)
+std::vector<std::vector<int> > updateBins(std::vector<Vector> &unit_coordinates, double res)
 {
   std::vector<std::vector<int> > bins;
   int num_rows = 180 / res;
@@ -1189,7 +1189,7 @@ std::vector<std::vector<int> > updateBins(std::vector<Vector> &unit_coordinates,
     bins.push_back(tmp);
   }
 
-  long double theta,phi;
+  double theta,phi;
   int row,col;
   Vector spherical(3,0);
   for (int i=0; i<unit_coordinates.size(); i++) {
@@ -1224,9 +1224,9 @@ std::vector<std::vector<int> > updateBins(std::vector<Vector> &unit_coordinates,
  *  \brief This function outputs the bin data.
  *  \param bins a reference to a std::vector<std::vector<int> >
  */
-void outputBins(std::vector<std::vector<int> > &bins, long double res)
+void outputBins(std::vector<std::vector<int> > &bins, double res)
 {
-  long double theta=0,phi;
+  double theta=0,phi;
   string fbins2D_file,fbins3D_file;
   fbins2D_file = "./visualize/bins2D.dat";
   fbins3D_file = "./visualize/bins3D.dat";
@@ -1435,10 +1435,10 @@ void simulateMixtureModel(struct Parameters &parameters)
 Vector generateFromSimplex(int K)
 {
   Vector values(K,0);
-  long double random,sum = 0;
+  double random,sum = 0;
   for (int i=0; i<K; i++) {
     // generate a random value in (0,1)
-    random = rand() / (long double)RAND_MAX;
+    random = rand() / (double)RAND_MAX;
     assert(random > 0 && random < 1);
     // sampling from an exponential distribution with \lambda = 1
     values[i] = -log(1-random);
@@ -1482,7 +1482,7 @@ std::vector<vMF> generateRandomComponents_vMF(int num_components)
   Vector kappas = generateRandomKappas(num_components);
 
   Vector mean(3,0),spherical(3,1);
-  long double theta,phi;
+  double theta,phi;
 
   std::vector<vMF> components;
   for (int i=0; i<num_components; i++) {
@@ -1504,7 +1504,7 @@ Vector generateRandomKappas(int K)
 {
   Vector random_kappas;
   for (int i=0; i<K; i++) {
-    long double kappa = (rand() / (long double) RAND_MAX) * MAX_KAPPA;
+    double kappa = (rand() / (double) RAND_MAX) * MAX_KAPPA;
     random_kappas.push_back(kappa);
   }
   return random_kappas;
@@ -1514,7 +1514,7 @@ Vector generateRandomBetas(Vector &kappas)
 {
   Vector random_betas;
   for (int i=0; i<kappas.size(); i++) {
-    long double beta = (rand() / (long double) RAND_MAX) * (kappas[i]/2);
+    double beta = (rand() / (double) RAND_MAX) * (kappas[i]/2);
     random_betas.push_back(beta);
   }
   return random_betas;
@@ -1544,7 +1544,7 @@ void modelOneComponent(struct Parameters &parameters, std::vector<Vector> &data)
 /*!
  *  \brief This function models a mixture of several components.
  *  \param parameters a reference to a struct Parameters
- *  \param data a reference to a std::vector<std::vector<long double,3> >
+ *  \param data a reference to a std::vector<std::vector<double,3> >
  */
 void modelMixture(struct Parameters &parameters, std::vector<Vector> &data)
 {
@@ -1597,9 +1597,9 @@ Mixture inferComponents(Mixture &mixture, int N, ostream &log)
   std::vector<Kent> components;
   Mixture modified,improved,parent;
   Vector sample_size;
-  //long double min_n = 0.01 * N;
-  long double min_n = 1;
-  long double null_msglen = mixture.computeNullModelMessageLength();
+  //double min_n = 0.01 * N;
+  double min_n = 1;
+  double null_msglen = mixture.computeNullModelMessageLength();
   log << "Null model encoding: " << null_msglen << " bits."
       << "\t(" << null_msglen/N << " bits/point)\n\n";
 
@@ -1648,11 +1648,11 @@ Mixture inferComponents(Mixture &mixture, int N, ostream &log)
  */
 void updateInference(Mixture &modified, Mixture &current, ostream &log, int operation)
 {
-  long double modified_msglen = modified.getMinimumMessageLength();
-  long double current_msglen = current.getMinimumMessageLength();
+  double modified_msglen = modified.getMinimumMessageLength();
+  double current_msglen = current.getMinimumMessageLength();
 
   if (modified_msglen < current_msglen) {   // ... improvement
-    long double improvement_rate = (current_msglen - modified_msglen) / current_msglen;
+    double improvement_rate = (current_msglen - modified_msglen) / current_msglen;
     if (operation == JOIN || 
         improvement_rate > IMPROVEMENT_RATE) {  // there is > 0.001 % improvement
       current = modified;
@@ -1678,9 +1678,9 @@ Mixture_vMF inferComponents_vMF(Mixture_vMF &mixture, int N, ostream &log)
   std::vector<vMF> components;
   Mixture_vMF modified,improved,parent;
   Vector sample_size;
-  //long double min_n = 0.01 * N;
-  long double min_n = 1;
-  long double null_msglen = mixture.computeNullModelMessageLength();
+  //double min_n = 0.01 * N;
+  double min_n = 1;
+  double null_msglen = mixture.computeNullModelMessageLength();
   log << "Null model encoding: " << null_msglen << " bits."
       << "\t(" << null_msglen/N << " bits/point)\n\n";
 
@@ -1729,11 +1729,11 @@ Mixture_vMF inferComponents_vMF(Mixture_vMF &mixture, int N, ostream &log)
  */
 void updateInference_vMF(Mixture_vMF &modified, Mixture_vMF &current, ostream &log, int operation)
 {
-  long double modified_msglen = modified.getMinimumMessageLength();
-  long double current_msglen = current.getMinimumMessageLength();
+  double modified_msglen = modified.getMinimumMessageLength();
+  double current_msglen = current.getMinimumMessageLength();
 
   if (modified_msglen < current_msglen) {   // ... improvement
-    long double improvement_rate = (current_msglen - modified_msglen) / current_msglen;
+    double improvement_rate = (current_msglen - modified_msglen) / current_msglen;
     if (operation == JOIN || 
         improvement_rate > IMPROVEMENT_RATE) {  // there is > 0.001 % improvement
       current = modified;
@@ -1877,7 +1877,7 @@ void quicksort(Vector &list, std::vector<int> &index, int left, int right)
  */
 int partition(Vector &list, std::vector<int> &index, int left, int right)
 {
-	long double temp,pivotPoint = list[right];
+	double temp,pivotPoint = list[right];
 	int storeIndex = left,temp_i;
 	for(int i=left; i<right; i++) {
 		if(list[i] < pivotPoint) {
@@ -1918,7 +1918,7 @@ std::vector<Vector> flip(std::vector<Vector> &table)
  *  \param list a reference to a std::vector<double>
  *  \return the median value
  */
-long double computeMedian(Vector &list)
+double computeMedian(Vector &list)
 {
   Vector sorted_list = sort(list);
   int n = sorted_list.size();
@@ -1945,13 +1945,13 @@ Vector computeMedians(std::vector<Vector> &table)
  *  \param list a reference to a std::vector<double>
  *  \return the mean value
  */
-long double computeMean(Vector &list)
+double computeMean(Vector &list)
 {
-  long double sum = 0;
+  double sum = 0;
   for (int i=0; i<list.size(); i++) {
     sum += list[i];
   }
-  return sum / (long double)list.size();
+  return sum / (double)list.size();
 }
 
 Vector computeMeans(std::vector<Vector> &table)
@@ -1968,20 +1968,20 @@ Vector computeMeans(std::vector<Vector> &table)
 /*!
  *  \brief Computes the variance
  */
-long double computeVariance(Vector &list)
+double computeVariance(Vector &list)
 {
-  long double mean = computeMean(list);
-  long double sum = 0;
+  double mean = computeMean(list);
+  double sum = 0;
   for (int i=0; i<list.size(); i++) {
     sum += (list[i]-mean) * (list[i]-mean);
   }
-  return sum / (long double) (list.size()-1);
+  return sum / (double) (list.size()-1);
 }
 
 int maximumIndex(Vector &values)
 {
   int max_index = 0;
-  long double max_val = values[0];
+  double max_val = values[0];
   for (int i=1; i<values.size(); i++) { 
     if (values[i] > max_val) {
       max_index = i;

@@ -29,18 +29,18 @@ void Bingham::printParameters()
 
 std::vector<Vector> Bingham::generateCanonical(Matrix &L, int N)
 {
-  long double b = 1;
+  double b = 1;
   Matrix id = IdentityMatrix(D,D);
   Matrix scaled = (2.0/b) * L;
   Matrix W = id + scaled;
   ACG acg(W);
 
-  long double logm = -0.5 * (D - b);
+  double logm = -0.5 * (D - b);
   logm += 0.5 * D * log(D/b);
 
   std::vector<Vector> canonical_sample;
   Vector x;
-  long double u,check,prod1,prod2;
+  double u,check,prod1,prod2;
   int num_samples;
   std::vector<Vector> many_samples; 
   int accepted = 0;

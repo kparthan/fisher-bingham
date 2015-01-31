@@ -14,13 +14,13 @@ vMC::vMC()
 /*!
  *  \brief constructor function which sets the value of mean and 
  *  kappa of the distribution
- *  \param mu a reference to a vector<long double>
- *  \param kappa a long double
+ *  \param mu a reference to a vector<double>
+ *  \param kappa a double
  */
-vMC::vMC(Vector &mu, long double kappa) : mu(mu), kappa(kappa)
+vMC::vMC(Vector &mu, double kappa) : mu(mu), kappa(kappa)
 {}
 
-vMC::vMC(long double kappa) : kappa(kappa)
+vMC::vMC(double kappa) : kappa(kappa)
 {
   mu = Vector(2,0); mu[0] = 1;
 }
@@ -51,23 +51,23 @@ Vector vMC::Mean(void)
  *  \brief This function returns the kappa of the distribution
  *  \return the kappa of the distribution
  */
-long double vMC::Kappa(void)
+double vMC::Kappa(void)
 {
 	return kappa;
 }
 
 void vMC::generateCanonical(std::vector<Vector> &canonical_sample, int sample_size)
 {
-  long double tmp = 1 + (4 * kappa * kappa);
-  long double a = 1 + sqrt(tmp);
+  double tmp = 1 + (4 * kappa * kappa);
+  double a = 1 + sqrt(tmp);
 
   tmp = a - sqrt(2*a);
-  long double b = tmp / (2*kappa);
+  double b = tmp / (2*kappa);
 
   tmp = 1 + (b*b);
-  long double r = tmp / (2*b);
+  double r = tmp / (2*b);
 
-  long double u1,u2,u3,z,f,c,check1,check2,angle;
+  double u1,u2,u3,z,f,c,check1,check2,angle;
   Vector thetas;
   for (int i=0; i<sample_size; i++) {
     repeat:

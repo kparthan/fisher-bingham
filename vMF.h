@@ -9,29 +9,29 @@ class vMF
     //! (unit) mean of the distribution
 		Vector mu,kmu;
 
-    long double theta,phi;
+    double theta,phi;
 
     //! Concentration parameter 
-		long double kappa;
+		double kappa;
 
     //! Normalization constant
-    long double log_cd;
+    double log_cd;
 
   protected:
     //! Computes the vMF constants
     void updateConstants();
 
     //! Computes the normalization constant
-    long double computeLogNormalizationConstant();
+    double computeLogNormalizationConstant();
 
   public:
 		//! Constructor
 		vMF();
 
 		//! Constructor that sets value of parameters
-		vMF(Vector &, long double);
+		vMF(Vector &, double);
 
-		vMF(long double);
+		vMF(double);
 
     //! Updates the model parameters
     void updateParameters();
@@ -43,24 +43,24 @@ class vMF
 		Vector Mean();
 
     //! Gets the Kappa 
-    long double Kappa(); 
+    double Kappa(); 
 
     //! Gets the normalization constant
-    long double getLogNormalizationConstant();
+    double getLogNormalizationConstant();
 
 		//! Function value
-		long double density(Vector &);
+		double density(Vector &);
 
     //! Computes the log of probability density
-		long double log_density(Vector &);
+		double log_density(Vector &);
 
     //! Computes the negative log likelihood of a sample
-    long double computeNegativeLogLikelihood(Vector &);
+    double computeNegativeLogLikelihood(Vector &);
 
     //! Computes the negative log likelihood of a sample
-    long double computeNegativeLogLikelihood(std::vector<Vector> &);
+    double computeNegativeLogLikelihood(std::vector<Vector> &);
 
-    long double computeNegativeLogLikelihood(long double, long double);
+    double computeNegativeLogLikelihood(double, double);
 
     //! Prints the model parameters
     void printParameters(ostream &);
@@ -71,15 +71,15 @@ class vMF
     //! Generate a random canonical sample
     void generateCanonical(std::vector<Vector> &, int);
 
-    long double computeLogPriorProbability();
+    double computeLogPriorProbability();
 
-    long double computeLogPriorMean();
+    double computeLogPriorMean();
 
-    long double computeLogPriorScale();
+    double computeLogPriorScale();
 
-    long double computeLogFisherInformation();
+    double computeLogFisherInformation();
 
-    long double computeLogFisherInformation(long double);
+    double computeLogFisherInformation(double);
 
     void computeAllEstimators(std::vector<Vector> &);
 
@@ -97,15 +97,15 @@ class vMF
 
     void updateParameters(struct Estimates_vMF &);
 
-    long double computeMessageLength(std::vector<Vector> &);
+    double computeMessageLength(std::vector<Vector> &);
 
-    long double computeMessageLength(long double, long double);
+    double computeMessageLength(double, double);
 
-    long double computeMessageLength(struct Estimates_vMF &);
+    double computeMessageLength(struct Estimates_vMF &);
 
-    long double computeKLDivergence(vMF &);
+    double computeKLDivergence(vMF &);
 
-    long double computeKLDivergence(struct Estimates_vMF &);
+    double computeKLDivergence(struct Estimates_vMF &);
 };
 
 #endif
