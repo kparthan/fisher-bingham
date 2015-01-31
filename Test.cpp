@@ -717,18 +717,17 @@ void Test::mml_estimation(void)
   std::vector<struct Estimates> all_estimates;
   std::vector<Vector> random_sample;
   Vector m0,m1,m2;
-  long double kappa = 10;
+  long double kappa = 100;
   long double beta;
-  int sample_size = 10;
+  int sample_size = 100;
 
-  //beta = 1;
-  //beta = 30;
-  beta = 2;
+  beta = 45;
+  //beta = 2;
 
-  generateRandomOrthogonalVectors(m0,m1,m2);
-  /*m0 = XAXIS;
-  m1 = YAXIS;
-  m2 = ZAXIS;*/
+  //generateRandomOrthogonalVectors(m0,m1,m2);
+  m0 = ZAXIS;
+  m1 = XAXIS;
+  m2 = YAXIS;
   cartesian2spherical(m0,spherical);
   cout << "m0: "; print(cout,m0,3);
   cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
@@ -740,6 +739,31 @@ void Test::mml_estimation(void)
   cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
 
   Kent kent(m0,m1,m2,kappa,beta);
+  random_sample = kent.generate(sample_size);
+  writeToFile("random_sample.dat",random_sample,3);
+  kent.computeAllEstimators(random_sample,all_estimates,1,1);
+}
+
+void Test::mml_estimation2(void)
+{
+  long double psi,alpha,eta;
+  std::vector<struct Estimates> all_estimates;
+  std::vector<Vector> random_sample;
+  long double kappa,beta;
+  int sample_size = 100;
+
+  kappa = 100;
+  beta = 45;
+
+  // in degrees
+  psi = 60;
+  alpha = 60;
+  eta = 50;
+
+  psi *= PI/180;
+  alpha *= PI/180;
+  eta *= PI/180;
+  Kent kent(psi,alpha,eta,kappa,beta);
   random_sample = kent.generate(sample_size);
   writeToFile("random_sample.dat",random_sample,3);
   kent.computeAllEstimators(random_sample,all_estimates,1,1);

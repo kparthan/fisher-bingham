@@ -92,7 +92,7 @@ void Optimize::finalize(std::vector<double> &theta, struct Estimates &estimates)
 void Optimize::validate_scale(long double &k, long double &b)
 {
   long double ex = 2 * b / k;
-  if (ex > 1) {
+  if (ex >= 1) {
     ex = 1 - TOLERANCE;
     b = 0.5 * k * ex;
   }
@@ -187,7 +187,7 @@ std::vector<double> Optimize::minimize(Vector &sample_mean, Matrix &S, int num_p
       MMLObjectiveFunction mml(sample_mean,S,N);
       opt.set_min_objective(MMLObjectiveFunction::wrap, &mml);
       opt.add_inequality_constraint(Constraint5, NULL, TOLERANCE);
-      opt.add_inequality_constraint(Constraint5_2, NULL, TOLERANCE);
+      //opt.add_inequality_constraint(Constraint5_2, NULL, TOLERANCE);
       opt.set_xtol_rel(1e-4);
 
       x[0] = psi; x[1] = alpha; x[2] = eta; x[3] = kappa; x[4] = beta;

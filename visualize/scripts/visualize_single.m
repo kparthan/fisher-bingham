@@ -13,7 +13,8 @@ M = load(data_file);
 x = M(:,1);
 y = M(:,2);
 z = M(:,3);
-colors = rand(1,3);
+%colors = rand(1,3);
+colors = [0 0 1];
 plot3(x,y,z,'.','Color',colors);
 
 xlabel('X');

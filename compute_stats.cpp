@@ -163,9 +163,11 @@ int minimumIndex(Vector &values)
   int min_index = 0;
   long double min_val = values[0];
   for (int i=1; i<values.size(); i++) { 
-    if (values[i] <= min_val) {
-      min_index = i;
-      min_val = values[i];
+    if (i != MAP) {
+      if (values[i] <= min_val) {
+        min_index = i;
+        min_val = values[i];
+      }
     }
   }
   return min_index;
@@ -269,7 +271,7 @@ int main(int argc, char **argv)
   ofstream avg_msglens(avg_msglens_file.c_str());
 
   kappa = 10;
-  while (kappa < 100) {
+  while (kappa <= 100) {
     ostringstream ssk;
     ssk << fixed << setprecision(0);
     ssk << kappa;

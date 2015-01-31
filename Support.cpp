@@ -1530,10 +1530,11 @@ void modelOneComponent(struct Parameters &parameters, std::vector<Vector> &data)
   cout << "Sample size: " << data.size() << endl;
   Vector weights(data.size(),1);
   if (DISTRIBUTION == KENT) {
-    Kent kent;
+    //Kent kent;
+    Kent kent(ZAXIS,XAXIS,YAXIS,100,45);
     //kent.estimateParameters(data,weights);
     std::vector<struct Estimates> all_estimates;
-    kent.computeAllEstimators(data,all_estimates,1,0);
+    kent.computeAllEstimators(data,all_estimates,1,1);
   } else if (DISTRIBUTION == VMF) {
     vMF vmf;
     vmf.estimateParameters(data,weights);
@@ -1802,7 +1803,9 @@ void TestFunctions(void)
 
   //test.fisher();
 
-  test.mml_estimation();
+  //test.mml_estimation();
+
+  test.mml_estimation2();
 
   //test.vmf_all_estimation();
 

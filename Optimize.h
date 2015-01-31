@@ -100,8 +100,8 @@ class MaximumLikelihoodObjectiveFunction
       double b = x[4];
 
       Kent kent(psi,alpha,eta,k,b);
-      double fval = kent.computeNegativeLogLikelihood(sample_mean,S,N)
-                    - 2 * N * log(AOM);
+      double fval = kent.computeNegativeLogLikelihood(sample_mean,S,N);
+                    //- 2 * N * log(AOM);
       return fval;
     }
 };
@@ -153,8 +153,8 @@ class MAPObjectiveFunction
 
       Kent kent(psi,alpha,eta,k,b);
       long double log_prior = kent.computeLogPriorProbability();// - log(sin(alpha));
-      double fval = -log_prior + kent.computeNegativeLogLikelihood(sample_mean,S,N)
-                    - 2 * N * log(AOM);
+      double fval = -log_prior + kent.computeNegativeLogLikelihood(sample_mean,S,N);
+                    //- 2 * N * log(AOM);
       return fval;
     }
 };

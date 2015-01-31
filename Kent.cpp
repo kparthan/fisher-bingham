@@ -463,12 +463,16 @@ long double Kent::computeLogPriorAxes()
 long double Kent::computeLogPriorScale()
 {
   long double log_prior = 0;
-  //log_prior -= 2*log(kappa);
+  log_prior += log(8/PI);
   log_prior += log(kappa);
   log_prior -= 2 * log(1+kappa*kappa);
-  //log_prior += log(8/PI);
-  log_prior += log(beta);
-  log_prior -= 2 * log(1+beta*beta);
+  /*log_prior -= log(kappa);
+  long double ex = 2 * beta/kappa;
+  if (ex >= 1) ex = 1 - TOLERANCE;
+  log_prior += 0.5 * (log(1+ex*ex) - log(1-ex*ex));
+  log_prior += log(0.5);*/
+  /*long double K1 = 1,K2=100000;
+  log_prior = log(2) - 2*log(kappa) - log(log(K2/K1));*/
   return log_prior;
 }
 
@@ -648,6 +652,7 @@ void Kent::computeAllEstimators(
   all_estimates.push_back(map_est);
 
   type = "MML";
+  //struct Estimates mml_est = moment_est;
   //struct Estimates mml_est = map_est;
   struct Estimates mml_est = asymptotic_est;
   Optimize opt3(type);

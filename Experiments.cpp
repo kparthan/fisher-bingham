@@ -11,7 +11,7 @@ Experiments::Experiments(int iterations) : iterations(iterations)
 
 void Experiments::simulate()
 {
-  int N = 10;
+  int N = 100;
   long double kappa,beta,eccentricity;
 
   string n_str = "N_" + boost::lexical_cast<string>(N);
@@ -22,7 +22,7 @@ void Experiments::simulate()
   std::vector<struct Estimates> all_estimates;
 
   kappa = 10;
-  while (kappa < 100) {
+  while (kappa <= 100) {
     ostringstream ssk;
     ssk << fixed << setprecision(0);
     ssk << kappa;

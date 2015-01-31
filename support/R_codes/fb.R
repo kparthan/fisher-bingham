@@ -63,10 +63,10 @@ fb.sim=function(n,k,m,A) {
   y
 }
 
-n <- 1000
+n <- 100
 k <- 100
 m <- c(0,0,1)
-A <- matrix(c(-47.5,0,0,0,47.5,0,0,0,0),nrow=3,ncol=3)
+A <- matrix(c(-45,0,0,0,45,0,0,0,0),nrow=3,ncol=3)
 y <- fb.sim(n,k,m,A)
-write(t(y),"rdata",sep="\t",ncolumns=3)
+write(t(y),"../../random_sample.dat",sep="\t",ncolumns=3)
 
