@@ -247,7 +247,7 @@ void computeWins(
   double percent_wins;
   for (int j=0; j<wins.size(); j++) {
     percent_wins = wins[j] * 100.0 / num_elements;
-    out << fixed << setw(10) << setprecision(2) << wins[j];
+    out << fixed << setw(10) << setprecision(2) << percent_wins;
   }
   out << endl;
 }
@@ -286,8 +286,10 @@ int main(int argc, char **argv)
 
   double kappa,beta,eccentricity;
 
-  string n_str = "N_" + boost::lexical_cast<string>(parameters.N);
-  string parent_dir = "./experiments/single_kent/" + n_str + "/";
+  //string n_str = "N_" + boost::lexical_cast<string>(parameters.N) + "_uniform_prior/";
+  //string n_str = "N_" + boost::lexical_cast<string>(parameters.N) + "_vmf_prior/";
+  string n_str = "N_" + boost::lexical_cast<string>(parameters.N) + "_beta_prior/";
+  string parent_dir = "experiments/single_kent/" + n_str + "/";
   string current_dir,kappa_str,eccentricity_str;
   string kappas_file,betas_file,negloglike_file,kldivs_file,msglens_file;
   std::vector<Vector> kappas_table,betas_table,negloglike_table,kldivs_table,msglens_table;
