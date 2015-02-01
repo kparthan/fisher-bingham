@@ -286,9 +286,9 @@ int main(int argc, char **argv)
 
   double kappa,beta,eccentricity;
 
-  //string n_str = "N_" + boost::lexical_cast<string>(parameters.N) + "_uniform_prior/";
+  string n_str = "N_" + boost::lexical_cast<string>(parameters.N) + "_uniform_prior/";
   //string n_str = "N_" + boost::lexical_cast<string>(parameters.N) + "_vmf_prior/";
-  string n_str = "N_" + boost::lexical_cast<string>(parameters.N) + "_beta_prior/";
+  //string n_str = "N_" + boost::lexical_cast<string>(parameters.N) + "_beta_prior/";
   string parent_dir = "experiments/single_kent/" + n_str + "/";
   string current_dir,kappa_str,eccentricity_str;
   string kappas_file,betas_file,negloglike_file,kldivs_file,msglens_file;
@@ -312,8 +312,8 @@ int main(int argc, char **argv)
   ofstream avg_negloglike(avg_negloglike_file.c_str());
   ofstream avg_msglens(avg_msglens_file.c_str());
 
-  kappa = 10;
-  while (kappa <= 100) {
+  kappa = 5;
+  while (kappa <= 50) {
     ostringstream ssk;
     ssk << fixed << setprecision(0);
     ssk << kappa;
@@ -376,7 +376,7 @@ int main(int argc, char **argv)
       
       eccentricity += 0.1;
     } // eccentricity
-    kappa += 10;
+    kappa += 5;
   } // kappa
   wins_kldivs.close();
   wins_negloglike.close();

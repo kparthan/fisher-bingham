@@ -11,13 +11,13 @@ Experiments::Experiments(int iterations) : iterations(iterations)
 
 void Experiments::simulate()
 {
-  int N = 10;
+  int N = 100;
   double kappa,beta,eccentricity;
 
-  string n_str = "N_" + boost::lexical_cast<string>(N) + "_uniform_prior";
-  //string n_str = "N_" + boost::lexical_cast<string>(N) + "_vmf_prior";
-  //string n_str = "N_" + boost::lexical_cast<string>(N) + "_beta_prior";
-  string parent_dir = "./experiments/single_kent/" + n_str + "/";
+  string n_str = "N_" + boost::lexical_cast<string>(N) + "_uniform_prior/";
+  //string n_str = "N_" + boost::lexical_cast<string>(N) + "_vmf_prior/";
+  //string n_str = "N_" + boost::lexical_cast<string>(N) + "_beta_prior/";
+  string parent_dir = "experiments/single_kent/" + n_str + "/";
   string current_dir,kappa_str,eccentricity_str;
   string kappas,betas,negloglike,kldivs,msglens;
   std::vector<Vector> random_sample;
@@ -27,8 +27,8 @@ void Experiments::simulate()
   //string data_file = "random_sample_beta.dat";
   string data_file = "random_sample.dat";
 
-  kappa = 50;
-  while (kappa <= 100) {
+  kappa = 5;
+  while (kappa <= 50) {
     ostringstream ssk;
     ssk << fixed << setprecision(0);
     ssk << kappa;
@@ -90,7 +90,7 @@ void Experiments::simulate()
       fkl.close();
       fmsg.close();
     } // eccentricity
-    kappa += 10;
+    kappa += 5;
   } // kappa
 }
 
