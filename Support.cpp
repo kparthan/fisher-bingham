@@ -315,6 +315,32 @@ void print(string &type, struct Estimates_vMF &estimates)
 
 ////////////////////// MATH FUNCTIONS \\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
+double scale_to_aom(double &x)
+{
+  int aom_inv = 1.0/AOM;
+
+  int tmp = x * aom_inv;
+
+  double y = tmp * AOM;
+
+  return y;
+}
+
+std::vector<Vector> scale_to_aom(std::vector<Vector> &sample)
+{
+  int N = sample.size();
+  int D = sample[0].size();
+
+  Vector emptyvec(D,0);
+  std::vector<Vector> scaled_sample(N,emptyvec);
+  for (int i=0; i<N; i++) {
+    for (int j=0; j<D; j++) {
+      scaled_sample[i][j] = scale_to_aom(sample[i][j]);
+    }
+  }
+  return scaled_sample;
+}
+
 /*!
  *  \brief This module returns the sign of a number.
  *  \param number a double
@@ -1531,8 +1557,11 @@ void modelOneComponent(struct Parameters &parameters, std::vector<Vector> &data)
   Vector weights(data.size(),1);
   if (DISTRIBUTION == KENT) {
     //Kent kent;
-    Kent kent(ZAXIS,XAXIS,YAXIS,100,45);
-    //kent.estimateParameters(data,weights);
+    //Kent kent(ZAXIS,XAXIS,YAXIS,100,45);
+    double psi = 60; psi *= PI/180;
+    double alpha = 60; alpha *= PI/180;
+    double eta = 70; eta *= PI/180;
+    Kent kent(psi,alpha,eta,100,45);
     std::vector<struct Estimates> all_estimates;
     kent.computeAllEstimators(data,all_estimates,1,1);
   } else if (DISTRIBUTION == VMF) {
@@ -1803,9 +1832,9 @@ void TestFunctions(void)
 
   //test.fisher();
 
-  test.mml_estimation();
+  //test.mml_estimation();
 
-  //test.mml_estimation2();
+  test.mml_estimation2();
 
   //test.vmf_all_estimation();
 

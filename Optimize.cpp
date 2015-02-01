@@ -58,15 +58,15 @@ void Optimize::computeEstimates(Vector &sample_mean, Matrix &S, struct Estimates
 
     case MAP:
     {
-      //std::vector<double> theta = minimize(sample_mean,S,5);
-      //finalize(theta,estimates);
-      std::vector<double> theta = minimize(sample_mean,S,2);
+      std::vector<double> theta = minimize(sample_mean,S,5);
+      finalize(theta,estimates);
+      /*std::vector<double> theta = minimize(sample_mean,S,2);
       estimates.kappa = theta[0];
       estimates.beta = theta[1];
       estimates.psi = psi;
       estimates.alpha = alpha;
       estimates.eta = eta;
-      validate_scale(estimates.kappa,estimates.beta);
+      validate_scale(estimates.kappa,estimates.beta);*/
       break;
     }
 
@@ -123,6 +123,8 @@ std::vector<double> Optimize::minimize(Vector &sample_mean, Matrix &S, int num_p
   //nlopt::opt opt(nlopt::GN_ISRES, num_params);
   //nlopt::opt opt(nlopt::GN_ORIG_DIRECT, num_params);
 
+  double LIMIT = 1e-4;
+
   double minf;
   FAIL_STATUS = 0;
 
@@ -135,7 +137,7 @@ std::vector<double> Optimize::minimize(Vector &sample_mean, Matrix &S, int num_p
       MomentObjectiveFunction moment(mean,major,minor,sample_mean,S,N);
       opt.set_min_objective(MomentObjectiveFunction::wrap, &moment);
       opt.add_inequality_constraint(Constraint2, NULL, TOLERANCE);
-      opt.set_xtol_rel(1e-4);
+      opt.set_xtol_rel(LIMIT);
 
       x[0] = kappa; x[1] = beta;
       nlopt::result result = opt.optimize(x, minf);
@@ -152,7 +154,7 @@ std::vector<double> Optimize::minimize(Vector &sample_mean, Matrix &S, int num_p
       MaximumLikelihoodObjectiveFunction mle(sample_mean,S,N);
       opt.set_min_objective(MaximumLikelihoodObjectiveFunction::wrap, &mle);
       opt.add_inequality_constraint(Constraint5, NULL, TOLERANCE);
-      opt.set_xtol_rel(1e-4);
+      opt.set_xtol_rel(LIMIT);
 
       x[0] = psi; x[1] = alpha; x[2] = eta; x[3] = kappa; x[4] = beta;
       nlopt::result result = opt.optimize(x, minf);
@@ -160,7 +162,7 @@ std::vector<double> Optimize::minimize(Vector &sample_mean, Matrix &S, int num_p
       break;
     }
 
-    /*case MAP:
+    case MAP:
     {
       opt.set_lower_bounds(lb);
       ub[0] = 2*PI; ub[1] = PI; ub[2] = 2*PI;
@@ -169,7 +171,7 @@ std::vector<double> Optimize::minimize(Vector &sample_mean, Matrix &S, int num_p
       MAPObjectiveFunction map(sample_mean,S,N);
       opt.set_min_objective(MAPObjectiveFunction::wrap, &map);
       opt.add_inequality_constraint(Constraint5, NULL, TOLERANCE);
-      opt.set_xtol_rel(1e-4);
+      opt.set_xtol_rel(LIMIT);
 
       x[0] = psi; x[1] = alpha; x[2] = eta; x[3] = kappa; x[4] = beta;
       nlopt::result result = opt.optimize(x, minf);
@@ -179,9 +181,9 @@ std::vector<double> Optimize::minimize(Vector &sample_mean, Matrix &S, int num_p
         x[0] = psi; x[1] = alpha; x[2] = eta; x[3] = kappa; x[4] = beta;
       }
       break;
-    }*/
+    }
 
-    case MAP:
+    /*case MAP:
     {
       opt.set_lower_bounds(lb);
       opt.set_upper_bounds(ub);
@@ -199,7 +201,7 @@ std::vector<double> Optimize::minimize(Vector &sample_mean, Matrix &S, int num_p
         x[0] = kappa; x[1] = beta;
       }
       break;
-    }
+    }*/
 
     case MML:
     {
@@ -212,7 +214,7 @@ std::vector<double> Optimize::minimize(Vector &sample_mean, Matrix &S, int num_p
       opt.set_min_objective(MMLObjectiveFunction::wrap, &mml);
       opt.add_inequality_constraint(Constraint5, NULL, TOLERANCE);
       //opt.add_inequality_constraint(Constraint5_2, NULL, TOLERANCE);
-      opt.set_xtol_rel(1e-6);
+      opt.set_xtol_rel(LIMIT);
 
       x[0] = psi; x[1] = alpha; x[2] = eta; x[3] = kappa; x[4] = beta;
       nlopt::result result = opt.optimize(x, minf);

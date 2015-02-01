@@ -92,7 +92,7 @@ class Kent  // FB5
 
     void computeAllEstimators(
       Vector &, Matrix &, double,
-      std::vector<struct Estimates> &, int, int
+      std::vector<struct Estimates> &, Vector &, Matrix &, int, int
     );
 
     struct Estimates computeAsymptoticMomentEstimates(std::vector<Vector> &);

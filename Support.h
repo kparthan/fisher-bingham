@@ -61,6 +61,8 @@ void print(ostream &, Vector &, int);
 void print(string &, struct Estimates &);
 void print(string &, struct Estimates_vMF &);
 
+double scale_to_aom(double &);
+std::vector<Vector> scale_to_aom(std::vector<Vector> &);
 int sign(double);
 double normalize(Vector &, Vector &);
 double norm(Vector &);

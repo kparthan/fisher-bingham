@@ -99,7 +99,13 @@ std::vector<Vector> Kent::generate(int sample_size)
   Matrix r1 = rotate_about_yaxis(PI/2);
   Matrix r2 = computeOrthogonalTransformation(mu,major_axis);
   Matrix transformation = prod(r2,r1);
-  return transform(canonical_sample,transformation);
+  std::vector<Vector> sample = transform(canonical_sample,transformation);
+  //writeToFile("random_sample_uniform.dat",sample,3);
+  //writeToFile("random_sample_vmf.dat",sample,3);
+  //writeToFile("random_sample_beta.dat",sample,3);
+  writeToFile("random_sample.dat",sample,3);
+  //std::vector<Vector> scaled_sample = scale_to_aom(sample);
+  return sample;
 }
 
 std::vector<Vector> Kent::generateCanonical(int N)
@@ -463,16 +469,24 @@ double Kent::computeLogPriorAxes()
 double Kent::computeLogPriorScale()
 {
   double log_prior = 0;
-  log_prior += log(8/PI);
+
+  // vmf kappa prior
+  /*log_prior += log(8/PI);
   log_prior += log(kappa);
-  log_prior -= 2 * log(1+kappa*kappa);
-  /*log_prior -= log(kappa);
-  double ex = 2 * beta/kappa;
+  log_prior -= (2 * log(1+kappa*kappa));*/
+
+  // beta distribution priors
+  /*double ex = 2 * beta/kappa;
   if (ex >= 1) ex = 1 - TOLERANCE;
-  log_prior += 0.5 * (log(1+ex*ex) - log(1-ex*ex));
-  log_prior += log(0.5);*/
-  /*double K1 = 1,K2=100000;
-  log_prior = log(2) - 2*log(kappa) - log(log(K2/K1));*/
+  beta_distribution<> beta_dist(2,2);
+  double f = pdf(beta_dist,ex);
+  log_prior += log(f);*/
+
+  // uniform priors
+  double K1 = 1,K2=100;
+  log_prior -= log(K2-K1);
+  log_prior += (log(2) - log(kappa));
+
   return log_prior;
 }
 
@@ -575,7 +589,18 @@ void Kent::computeAllEstimators(
 ) {
   Vector sample_mean = computeVectorSum(data);
   Matrix S = computeDispersionMatrix(data);
-  computeAllEstimators(sample_mean,S,data.size(),all_estimates,verbose,compute_kldiv);
+
+  std::vector<Vector> scaled_data = scale_to_aom(data);
+  Vector scaled_sample_mean = computeVectorSum(scaled_data);
+  Matrix scaled_S = computeDispersionMatrix(scaled_data);
+  
+  /*computeAllEstimators(sample_mean,S,data.size(),all_estimates,
+                       scaled_sample_mean,scaled_S,
+                       verbose,compute_kldiv);*/
+
+  computeAllEstimators(sample_mean,S,data.size(),all_estimates,
+                       sample_mean,S,
+                       verbose,compute_kldiv);
 }
 
 void Kent::computeAllEstimators(
@@ -583,10 +608,13 @@ void Kent::computeAllEstimators(
   Matrix &S, 
   double N,
   std::vector<struct Estimates> &all_estimates,
+  Vector &scaled_sample_mean, 
+  Matrix &scaled_S, 
   int verbose,
   int compute_kldiv
 ) {
-  double msglen,negloglike,kldiv;
+  double msglen,negloglike,kldiv,min_msg;
+  int min_index;
 
   all_estimates.clear();
 
@@ -610,6 +638,8 @@ void Kent::computeAllEstimators(
     cout << "KL-divergence: " << moment_est.kldiv << endl << endl;
   }
   all_estimates.push_back(moment_est);
+  min_msg = moment_est.msglen;
+  min_index = MOMENT;
 
   type = "MLE";
   struct Estimates ml_est = moment_est;
@@ -630,9 +660,13 @@ void Kent::computeAllEstimators(
     cout << "KL-divergence: " << ml_est.kldiv << endl << endl;
   }
   all_estimates.push_back(ml_est);
+  if (ml_est.msglen < min_msg) {
+    min_index = MLE;
+    min_msg = ml_est.msglen;
+  }
 
   type = "MAP";
-  struct Estimates map_est = ml_est;
+  struct Estimates map_est = moment_est;
   //struct Estimates map_est = asymptotic_est;
   Optimize opt2(type);
   opt2.initialize(N,map_est.mean,map_est.major_axis,map_est.minor_axis,
@@ -650,15 +684,20 @@ void Kent::computeAllEstimators(
     cout << "KL-divergence: " << map_est.kldiv << endl << endl;
   }
   all_estimates.push_back(map_est);
+  if (map_est.msglen < min_msg) {
+    min_index = MAP;
+    min_msg = map_est.msglen;
+  }
 
   type = "MML";
   //struct Estimates mml_est = moment_est;
-  struct Estimates mml_est = map_est;
+  //struct Estimates mml_est = map_est;
   //struct Estimates mml_est = asymptotic_est;
+  struct Estimates mml_est = all_estimates[min_index];
   Optimize opt3(type);
   opt3.initialize(N,mml_est.mean,mml_est.major_axis,mml_est.minor_axis,
                   mml_est.kappa,mml_est.beta);
-  opt3.computeEstimates(sample_mean,S,mml_est);
+  opt3.computeEstimates(scaled_sample_mean,scaled_S,mml_est);
   mml_est.msglen = computeMessageLength(mml_est,sample_mean,S,N);
   mml_est.negloglike = computeNegativeLogLikelihood(mml_est,sample_mean,S,N);
   if (compute_kldiv) {

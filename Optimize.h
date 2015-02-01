@@ -12,11 +12,14 @@ extern bool FAIL_STATUS;
 class MomentObjectiveFunction
 {
   private:
+    double N;
+
     double C1,C2;
 
   public:
     MomentObjectiveFunction(Vector &m0, Vector &m1, Vector &m2,
                             Vector &sample_mean, Matrix &S, double sample_size) {
+      N = sample_size;
       C1 = computeDotProduct(sample_mean,m0) / sample_size;
 
       double mj = prod_xMy(m1,S,m1);
@@ -48,7 +51,8 @@ class MomentObjectiveFunction
 
       Kent kent(k,b);
       double log_norm = kent.computeLogNormalizationConstant();
-      double fval = log_norm - k * C1 - b * C2;
+      double fval = log_norm - k * C1 - b * C2
+                    - 2 * N * log(AOM);
       //cout << "k: " << k << "\tb: " << b << "\tfval: " << fval << endl;
       return fval;
     }
@@ -101,7 +105,7 @@ class MaximumLikelihoodObjectiveFunction
 
       Kent kent(psi,alpha,eta,k,b);
       double fval = kent.computeNegativeLogLikelihood(sample_mean,S,N);
-                    //- 2 * N * log(AOM);
+                    - 2 * N * log(AOM);
       return fval;
     }
 };
@@ -154,7 +158,7 @@ class MAPObjectiveFunction
       Kent kent(psi,alpha,eta,k,b);
       double log_prior = kent.computeLogPriorProbability();// - log(sin(alpha));
       double fval = -log_prior + kent.computeNegativeLogLikelihood(sample_mean,S,N);
-                    //- 2 * N * log(AOM);
+                    - 2 * N * log(AOM);
       return fval;
     }
 };
@@ -191,7 +195,7 @@ class MAP2ObjectiveFunction
             return -HUGE_VAL;
           } // if() ends ...
         } // for() ends ...
-        return (*reinterpret_cast<MAPObjectiveFunction*>(data))(x, grad); 
+        return (*reinterpret_cast<MAP2ObjectiveFunction*>(data))(x, grad); 
     }
 
     /*!
@@ -207,7 +211,7 @@ class MAP2ObjectiveFunction
       Kent kent(psi,alpha,eta,k,b);
       double log_prior = kent.computeLogPriorProbability();// - log(sin(alpha));
       double fval = -log_prior + kent.computeNegativeLogLikelihood(sample_mean,S,N);
-                    //- 2 * N * log(AOM);
+                    - 2 * N * log(AOM);
       return fval;
     }
 };

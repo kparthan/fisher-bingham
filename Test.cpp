@@ -646,7 +646,7 @@ void Test::ml_estimation(void)
       S(i,j) *= N;
     }
   }
-  kent.computeAllEstimators(sample_mean,S,N,all_estimates,1,0);
+  kent.computeAllEstimators(sample_mean,S,N,all_estimates,sample_mean,S,1,0);
 }
 
 void Test::expectation()
@@ -720,6 +720,7 @@ void Test::mml_estimation(void)
   double kappa = 100;
   double beta;
   int sample_size = 100;
+  string data_file = "random_sample.dat";
 
   beta = 45;
   //beta = 2;
@@ -741,6 +742,7 @@ void Test::mml_estimation(void)
   Kent kent(m0,m1,m2,kappa,beta);
   random_sample = kent.generate(sample_size);
   writeToFile("random_sample.dat",random_sample,3);
+  random_sample = load_matrix(data_file);
   kent.computeAllEstimators(random_sample,all_estimates,1,1);
 }
 
@@ -751,6 +753,7 @@ void Test::mml_estimation2(void)
   std::vector<Vector> random_sample;
   double kappa,beta;
   int sample_size = 100;
+  string data_file = "random_sample.dat";
 
   kappa = 100;
   beta = 45;
@@ -758,7 +761,7 @@ void Test::mml_estimation2(void)
   // in degrees
   psi = 60;
   alpha = 60;
-  eta = 50;
+  eta = 70;
 
   psi *= PI/180;
   alpha *= PI/180;
@@ -766,6 +769,7 @@ void Test::mml_estimation2(void)
   Kent kent(psi,alpha,eta,kappa,beta);
   random_sample = kent.generate(sample_size);
   writeToFile("random_sample.dat",random_sample,3);
+  random_sample = load_matrix(data_file);
   kent.computeAllEstimators(random_sample,all_estimates,1,1);
 }
 

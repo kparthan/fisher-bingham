@@ -15,7 +15,7 @@ using namespace std;
 using namespace boost::program_options;
 using namespace boost::filesystem;
 
-typedef std::vector<long double> Vector;
+typedef std::vector<double> Vector;
 
 #define NUM_METHODS 4 
 #define MOMENT 0 
@@ -36,7 +36,7 @@ std::vector<Vector> load_matrix(string &file_name, int D)
     i = 0;
     BOOST_FOREACH(const string &t, tokens) {
       istringstream iss(t);
-      long double x;
+      double x;
       iss >> x;
       numbers[i++] = x;
     }
@@ -48,7 +48,7 @@ std::vector<Vector> load_matrix(string &file_name, int D)
 
 int partition(Vector &list, std::vector<int> &index, int left, int right)
 {
-	long double temp,pivotPoint = list[right];
+	double temp,pivotPoint = list[right];
 	int storeIndex = left,temp_i;
 	for(int i=left; i<right; i++) {
 		if(list[i] < pivotPoint) {
@@ -106,7 +106,7 @@ std::vector<Vector> flip(std::vector<Vector> &table)
   return inverted_table;
 }
 
-long double computeMedian(Vector &list)
+double computeMedian(Vector &list)
 {
   Vector sorted_list = sort(list);
   int n = sorted_list.size();
@@ -128,13 +128,13 @@ Vector computeMedians(std::vector<Vector> &table)
   return medians;
 }
 
-long double computeMean(Vector &list)
+double computeMean(Vector &list)
 {
-  long double sum = 0;
+  double sum = 0;
   for (int i=0; i<list.size(); i++) {
     sum += list[i];
   }
-  return sum / (long double)list.size();
+  return sum / (double)list.size();
 }
 
 Vector computeMeans(std::vector<Vector> &table)
@@ -148,35 +148,44 @@ Vector computeMeans(std::vector<Vector> &table)
   return means;
 }
 
-long double computeVariance(Vector &list)
+double computeVariance(Vector &list)
 {
-  long double mean = computeMean(list);
-  long double sum = 0;
+  double mean = computeMean(list);
+  double sum = 0;
   for (int i=0; i<list.size(); i++) {
     sum += (list[i]-mean) * (list[i]-mean);
   }
-  return sum / (long double) (list.size()-1);
+  return sum / (double) (list.size()-1);
 }
 
-int minimumIndex(Vector &values)
+int minimumIndex(int ignore_map, Vector &values)
 {
   int min_index = 0;
-  long double min_val = values[0];
-  for (int i=1; i<values.size(); i++) { 
-    //if (i != MAP) {
+  double min_val = values[0];
+  if (ignore_map) {
+    for (int i=1; i<values.size(); i++) { 
+      if (i != MAP) {
+        if (values[i] <= min_val) {
+          min_index = i;
+          min_val = values[i];
+        } // if()
+      } 
+    } // for()
+  } else { // don't ignore_map
+    for (int i=1; i<values.size(); i++) { 
       if (values[i] <= min_val) {
         min_index = i;
         min_val = values[i];
-      }
-    //}
-  }
+      } // if()
+    } // for()
+  } // if(ignore_map)
   return min_index;
 }
 
 int maximumIndex(Vector &values)
 {
   int max_index = 0;
-  long double max_val = values[0];
+  double max_val = values[0];
   for (int i=1; i<values.size(); i++) { 
     if (values[i] > max_val) {
       max_index = i;
@@ -207,7 +216,7 @@ Vector computeMeans(ostream &out, std::vector<Vector> &p_est_all)
 }
 
 void computeMeanSquaredError(
-  ostream &out, long double p, std::vector<Vector> &p_est_all
+  ostream &out, double p, std::vector<Vector> &p_est_all
 ) {
   int num_elements = p_est_all.size();
 
@@ -225,28 +234,59 @@ void computeMeanSquaredError(
 }
 
 void computeWins(
-  ostream &out, std::vector<Vector> &values
+  int ignore_map, ostream &out, std::vector<Vector> &values
 ) {
   int num_elements = values.size();
   std::vector<int> wins(values[0].size(),0);
 
   int min_index;
   for (int i=0; i<num_elements; i++) {
-    min_index = minimumIndex(values[i]);
+    min_index = minimumIndex(ignore_map,values[i]);
     wins[min_index]++;
   }
+  double percent_wins;
   for (int j=0; j<wins.size(); j++) {
-    out << fixed << setw(10) << wins[j];
+    percent_wins = wins[j] * 100.0 / num_elements;
+    out << fixed << setw(10) << setprecision(2) << wins[j];
   }
   out << endl;
 }
 
+struct Parameters
+{
+  int N;
+  int ignore_map;
+};
+
+struct Parameters parseCommandLineInput(int argc, char **argv)
+{
+  struct Parameters parameters;
+
+  options_description desc("Allowed options");
+  desc.add_options()
+       ("n",value<int>(&parameters.N),"value to be scaled")
+       ("ignore_map","to ignore map estimate or not ?")
+  ;
+  variables_map vm;
+  store(command_line_parser(argc,argv).options(desc).run(),vm);
+  notify(vm);
+
+  if (vm.count("ignore_map")) {
+    parameters.ignore_map = 1;
+  } else {
+    parameters.ignore_map = 0;
+  }
+
+  return parameters;
+}
+
 int main(int argc, char **argv)
 {
-  int N = 100;
-  long double kappa,beta,eccentricity;
+  struct Parameters parameters = parseCommandLineInput(argc,argv);
 
-  string n_str = "N_" + boost::lexical_cast<string>(N);
+  double kappa,beta,eccentricity;
+
+  string n_str = "N_" + boost::lexical_cast<string>(parameters.N);
   string parent_dir = "./experiments/single_kent/" + n_str + "/";
   string current_dir,kappa_str,eccentricity_str;
   string kappas_file,betas_file,negloglike_file,kldivs_file,msglens_file;
@@ -277,7 +317,7 @@ int main(int argc, char **argv)
     ssk << kappa;
     kappa_str = ssk.str();
     eccentricity = 0.1;
-    while (eccentricity < 1) {
+    while (eccentricity < 0.95) {
       beta = 0.5 * kappa * eccentricity;
       ostringstream sse;
       sse << fixed << setprecision(1);
@@ -308,7 +348,7 @@ int main(int argc, char **argv)
       wins_negloglike << fixed << setw(10) << kappa;
       wins_negloglike << fixed << setw(10) << beta;
       wins_negloglike << fixed << setw(10) << setprecision(1) << eccentricity << "\t";
-      computeWins(wins_negloglike,negloglike_table);
+      computeWins(parameters.ignore_map,wins_negloglike,negloglike_table);
 
       kldivs_file = current_dir + "kldivs";
       kldivs_table = load_matrix(kldivs_file,NUM_METHODS);
@@ -319,7 +359,7 @@ int main(int argc, char **argv)
       wins_kldivs << fixed << setw(10) << kappa;
       wins_kldivs << fixed << setw(10) << beta;
       wins_kldivs << fixed << setw(10) << setprecision(1) << eccentricity << "\t";
-      computeWins(wins_kldivs,kldivs_table);
+      computeWins(parameters.ignore_map,wins_kldivs,kldivs_table);
 
       msglens_file = current_dir + "msglens";
       msglens_table = load_matrix(msglens_file,NUM_METHODS);
@@ -330,7 +370,7 @@ int main(int argc, char **argv)
       wins_msglens << fixed << setw(10) << kappa;
       wins_msglens << fixed << setw(10) << beta;
       wins_msglens << fixed << setw(10) << setprecision(1) << eccentricity << "\t";
-      computeWins(wins_msglens,msglens_table);
+      computeWins(parameters.ignore_map,wins_msglens,msglens_table);
       
       eccentricity += 0.1;
     } // eccentricity

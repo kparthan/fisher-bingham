@@ -48,6 +48,7 @@ void Structure::read_profile(string &file_name)
   ifstream profile(file_name.c_str());
   string line;
   unit_coordinates.clear();
+  Vector unit_vector(3,0);
 
   while(getline(profile,line)) {
     boost::char_separator<char> sep(",() \t");
@@ -59,7 +60,8 @@ void Structure::read_profile(string &file_name)
       iss >> x;
       values.push_back(x);
     }
-    unit_coordinates.push_back(values);
+    normalize(values,unit_vector);
+    unit_coordinates.push_back(unit_vector);
   }
   profile.close();
 }

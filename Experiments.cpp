@@ -11,24 +11,30 @@ Experiments::Experiments(int iterations) : iterations(iterations)
 
 void Experiments::simulate()
 {
-  int N = 100;
+  int N = 10;
   double kappa,beta,eccentricity;
 
-  string n_str = "N_" + boost::lexical_cast<string>(N);
+  string n_str = "N_" + boost::lexical_cast<string>(N) + "_uniform_prior";
+  //string n_str = "N_" + boost::lexical_cast<string>(N) + "_vmf_prior";
+  //string n_str = "N_" + boost::lexical_cast<string>(N) + "_beta_prior";
   string parent_dir = "./experiments/single_kent/" + n_str + "/";
   string current_dir,kappa_str,eccentricity_str;
   string kappas,betas,negloglike,kldivs,msglens;
   std::vector<Vector> random_sample;
   std::vector<struct Estimates> all_estimates;
+  //string data_file = "random_sample_uniform.dat";
+  //string data_file = "random_sample_vmf.dat";
+  //string data_file = "random_sample_beta.dat";
+  string data_file = "random_sample.dat";
 
-  kappa = 10;
+  kappa = 50;
   while (kappa <= 100) {
     ostringstream ssk;
     ssk << fixed << setprecision(0);
     ssk << kappa;
     kappa_str = ssk.str();
     eccentricity = 0.1;
-    while (eccentricity < 1) {
+    while (eccentricity <= 0.95) {
       beta = 0.5 * kappa * eccentricity;
       ostringstream sse;
       sse << fixed << setprecision(1);
@@ -51,11 +57,17 @@ void Experiments::simulate()
       ofstream fmsg(msglens.c_str());
       
       cout << "kappa: " << kappa << "; beta: " << beta << "; e: " << eccentricity << endl;
-      Kent kent(ZAXIS,XAXIS,YAXIS,kappa,beta);
+      //Kent kent(ZAXIS,XAXIS,YAXIS,kappa,beta);
+      double psi = 60; psi *= PI/180;
+      double alpha = 60; alpha *= PI/180;
+      double eta = 70; eta *= PI/180;
+      Kent kent(psi,alpha,eta,kappa,beta);
 
       for (int i=0; i<iterations; i++) {
         cout << "Iteration: " << i+1 << endl;
-        random_sample = kent.generate(N);
+        kent.generate(N);
+        random_sample = load_matrix(data_file);
+        //random_sample = kent.generate(N);
         kent.computeAllEstimators(random_sample,all_estimates,0,1);
         for (int j=0; j<all_estimates.size(); j++) {
           fk << scientific << all_estimates[j].kappa << "\t";
