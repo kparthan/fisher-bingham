@@ -367,12 +367,23 @@ void vMF::computeAllEstimators(
   cout << "KL-divergence: " << computeKLDivergence(ml_est) << endl << endl;
   all_estimates.push_back(ml_est);
 
+  /*struct Estimates_vMF tmp = ml_est;
+  Vector spherical(3,0);
+  cartesian2spherical(ml_est.mean,spherical);
+  Matrix r1 = rotate_about_xaxis(-spherical[2]);
+  Matrix r2 = rotate_about_zaxis(PI/2-spherical[1]);
+  Matrix r = prod(r2,r1);
+  tmp.mean = prod(r,ml_est.mean);
+  Matrix rt = trans(r);*/
+
   // MAP
   type = "MAP";
   struct Estimates_vMF map_est = mlapprox_est;
   Optimize2 opt_map(type);
   opt_map.initialize(N,map_est.R,map_est.mean,map_est.kappa);
   opt_map.computeEstimates(map_est);
+  //tmp.mean = prod(rt,map_est.mean);
+  //map_est.mean = tmp.mean;
   print(type,map_est);
   msglen = computeMessageLength(map_est);
   cout << "msglen: " << msglen << endl;

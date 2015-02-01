@@ -1803,9 +1803,9 @@ void TestFunctions(void)
 
   //test.fisher();
 
-  //test.mml_estimation();
+  test.mml_estimation();
 
-  test.mml_estimation2();
+  //test.mml_estimation2();
 
   //test.vmf_all_estimation();
 
