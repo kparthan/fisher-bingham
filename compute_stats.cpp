@@ -163,12 +163,12 @@ int minimumIndex(Vector &values)
   int min_index = 0;
   long double min_val = values[0];
   for (int i=1; i<values.size(); i++) { 
-    if (i != MAP) {
+    //if (i != MAP) {
       if (values[i] <= min_val) {
         min_index = i;
         min_val = values[i];
       }
-    }
+    //}
   }
   return min_index;
 }

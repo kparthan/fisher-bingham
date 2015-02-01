@@ -159,6 +159,59 @@ class MAPObjectiveFunction
     }
 };
 
+// MAP2 
+class MAP2ObjectiveFunction
+{
+  private:
+    double psi,alpha,eta;
+
+    Vector sample_mean;
+
+    Matrix S;
+
+    double N;
+
+  public:
+    MAP2ObjectiveFunction(
+      double psi, double alpha, double eta,
+      Vector &sample_mean, Matrix &S, double sample_size
+    ) : sample_mean(sample_mean), S(S), N(sample_size), psi(psi), alpha(alpha), eta(eta)
+    {}
+
+    static double wrap(
+      const std::vector<double> &x, 
+      std::vector<double> &grad, 
+      void *data) {
+        for (int i=0; i<x.size(); i++) {
+          if(boost::math::isnan(x[i])) {  // return this sub-optimal state 
+            if (FAIL_STATUS == 0) {
+              MAP_FAIL++;
+              FAIL_STATUS = 1;
+            }
+            return -HUGE_VAL;
+          } // if() ends ...
+        } // for() ends ...
+        return (*reinterpret_cast<MAPObjectiveFunction*>(data))(x, grad); 
+    }
+
+    /*!
+     *  minimize function: N * log c(k,b) - k  (m0' x) - b (mj' xx' mj -  mi xx' mi)
+     *  \sum_x: sample mean
+     *  \sum_xx' : dispersion matrix (S)
+     *  k,b,m0,mj,mi are parameters
+     */
+    double operator() (const std::vector<double> &x, std::vector<double> &grad) {
+      double k = x[0];
+      double b = x[1];
+
+      Kent kent(psi,alpha,eta,k,b);
+      double log_prior = kent.computeLogPriorProbability();// - log(sin(alpha));
+      double fval = -log_prior + kent.computeNegativeLogLikelihood(sample_mean,S,N);
+                    //- 2 * N * log(AOM);
+      return fval;
+    }
+};
+
 // MML
 class MMLObjectiveFunction
 {

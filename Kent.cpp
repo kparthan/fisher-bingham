@@ -632,7 +632,7 @@ void Kent::computeAllEstimators(
   all_estimates.push_back(ml_est);
 
   type = "MAP";
-  struct Estimates map_est = moment_est;
+  struct Estimates map_est = ml_est;
   //struct Estimates map_est = asymptotic_est;
   Optimize opt2(type);
   opt2.initialize(N,map_est.mean,map_est.major_axis,map_est.minor_axis,
