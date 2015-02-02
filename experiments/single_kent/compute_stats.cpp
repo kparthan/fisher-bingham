@@ -295,7 +295,7 @@ int main(int argc, char **argv)
   double MAX_KAPPA = 100;
   double KAPPA_INCREMENT = 10;
   //string n_str = "N_" + boost::lexical_cast<string>(parameters.N) + "_uniform_prior/";
-  //string n_str = "N_" + boost::lexical_cast<string>(parameters.N) + "_vmf_prior/";
+  string n_str = "N_" + boost::lexical_cast<string>(parameters.N) + "_vmf_prior/";
   //string n_str = "N_" + boost::lexical_cast<string>(parameters.N) + "_beta_prior/";
   //string n_str = "./N_" + boost::lexical_cast<string>(parameters.N) + "/";
 
