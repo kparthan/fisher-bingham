@@ -8,7 +8,7 @@ extern int ENABLE_DATA_PARALLELISM;
 extern int NUM_THREADS;
 extern int ESTIMATION;
 extern double IMPROVEMENT_RATE;
-int SPLITTING = 0;
+extern int SPLITTING;
 extern int IGNORE_SPLIT;
 extern double MIN_N;
 extern int MSGLEN_FAIL;

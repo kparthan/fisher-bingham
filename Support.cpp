@@ -24,6 +24,7 @@ int MSGLEN_FAIL;
 int VERBOSE,COMPUTE_KLDIV;
 int IGNORE_SPLIT;
 double MIN_N;
+int SPLITTING = 0;
 
 struct stat st = {0};
 

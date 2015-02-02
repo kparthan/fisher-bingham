@@ -71,6 +71,8 @@ class vMF
     //! Generate a random canonical sample
     void generateCanonical(std::vector<Vector> &, int);
 
+    double computeLogParametersProbability(double);
+
     double computeLogPriorProbability();
 
     double computeLogPriorMean();

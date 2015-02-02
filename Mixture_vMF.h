@@ -41,7 +41,8 @@ class Mixture_vMF
     double null_msglen;
 
     //! Optimal encoding length
-    double part1,part2,minimum_msglen;
+    double Ik,Iw,sum_It,Il,kd_term,part1,part2,minimum_msglen;
+    Vector It;
 
   public:
     //! Null constructor
@@ -103,10 +104,12 @@ class Mixture_vMF
     double log_probability(Vector &);
 
     //! Computes the negative log likelihood
-    double negativeLogLikelihood(std::vector<Vector> &);
+    double computeNegativeLogLikelihood(std::vector<Vector> &);
 
     //! Computes the minimum message length
-    double computeMinimumMessageLength();
+    double computeMinimumMessageLength(int verbose = 0);
+
+    void printIndividualMsgLengths(ostream &);
 
     //! Gets the minimum message length
     double getMinimumMessageLength();
@@ -167,6 +170,8 @@ class Mixture_vMF
 
     //! Computes the approx KL divergence between two mixtures
     double computeKLDivergence(Mixture_vMF &);
+
+    double computeKLDivergence(Mixture_vMF &, std::vector<Vector> &);
 };
 
 #endif

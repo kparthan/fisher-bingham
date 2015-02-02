@@ -269,6 +269,14 @@ std::vector<Vector> vMF::generate(int sample_size)
   }
 }
 
+double vMF::computeLogParametersProbability(double Neff)
+{
+  double log_prior_density = computeLogPriorProbability();
+  double log_expected_fisher = computeLogFisherInformation(Neff);
+  double logp = -log_prior_density + 0.5 * log_expected_fisher;
+  return logp;
+}
+
 double vMF::computeLogPriorProbability()
 {
   double log_prior_mean = computeLogPriorMean();
