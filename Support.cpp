@@ -40,7 +40,7 @@ struct stat st = {0};
 struct Parameters parseCommandLineInput(int argc, char **argv)
 {
   struct Parameters parameters;
-  string constrain,pdf;
+  string constrain,pdf,estimation_method;
   double improvement_rate;
 
   bool noargs = 1;
@@ -71,6 +71,8 @@ struct Parameters parseCommandLineInput(int argc, char **argv)
        ("bins","parameter to generate heat maps")
        ("res",value<double>(&parameters.res),"resolution used in heat map images")
        ("mt",value<int>(&parameters.num_threads),"flag to enable multithreading")
+       ("estimation",value<string>(&estimation_method),"type of estimation")
+       ("estimate_all","flag to estimate using all methods")
        ("improvement",value<double>(&improvement_rate),"improvement rate")
   ;
   variables_map vm;
@@ -194,6 +196,29 @@ struct Parameters parseCommandLineInput(int argc, char **argv)
     IMPROVEMENT_RATE = improvement_rate;
   } else {
     IMPROVEMENT_RATE = 0.001; // 0.1 % default
+  }
+
+  if (vm.count("estimate_all")) {
+    parameters.estimate_all = SET;
+  } else {
+    parameters.estimate_all = UNSET;
+  }
+
+  if (vm.count("estimation")) {
+    if (estimation_method.compare("moment") == 0) {
+      ESTIMATION = MOMENT;
+    } else if (estimation_method.compare("mle") == 0) {
+      ESTIMATION = MLE;
+    } else if (estimation_method.compare("map") == 0) {
+      ESTIMATION = MAP;
+    } else if (estimation_method.compare("mml") == 0) {
+      ESTIMATION = MML;
+    } else {
+      cout << "Invalid estimation method ...\n";
+      Usage(argv[0],desc);
+    }
+  } else {  // default is MML estimation ...
+    ESTIMATION = MML;
   }
 
   return parameters;

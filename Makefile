@@ -21,6 +21,7 @@ OBJECTS = main.o \
   Optimize2.o \
   Structure.o \
   Mixture.o \
+  Mixture_ML.o \
   Mixture_vMF.o \
   Test.o \
   Experiments.o
@@ -67,6 +68,9 @@ Structure.o: Structure.cpp Structure.h Header.h
 	g++ $(CFLAGS) $< -o $@
 
 Mixture.o: Mixture.cpp Mixture.h Header.h
+	g++ $(CFLAGS) $< -o $@
+
+Mixture_ML.o: Mixture_ML.cpp Mixture_ML.h Header.h
 	g++ $(CFLAGS) $< -o $@
 
 Mixture_vMF.o: Mixture_vMF.cpp Mixture_vMF.h Header.h
