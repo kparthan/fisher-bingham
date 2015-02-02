@@ -8,6 +8,8 @@ class Test
   private:
 
   public:
+    void bessel();
+
     void testing_cartesian2sphericalPoleXAxis();
 
     void parallel_sum_computation(void);

@@ -209,12 +209,14 @@ double Kent::computeSeriesSum(double k, double b, double d)
   int j = 0;
   double gj;
 
-  log_bessel_prev = log(cyl_bessel_i(d,k));
+  //log_bessel_prev = log(cyl_bessel_i(d,k));
+  log_bessel_prev = computeLogModifiedBesselFirstKind(d,k);
   log_f0 = lgamma<double>(0.5) + log_bessel_prev;
   log_fj_prev = log_f0;
   while (1) {
     d += 2;
-    log_bessel_current = log(cyl_bessel_i(d,k));
+    //log_bessel_current = log(cyl_bessel_i(d,k));
+    log_bessel_current = computeLogModifiedBesselFirstKind(d,k);
     gj = log_bessel_current - log_bessel_prev;
     gj += log_ex;
     gj += (log(j+0.5) - log(j+1));
@@ -855,34 +857,41 @@ struct Estimates Kent::computeMMLEstimates(std::vector<Vector> &data)
 
 struct Estimates Kent::computeMMLEstimates(Vector &sample_mean, Matrix &S, double N)
 {
-  struct Estimates moment_estimates = computeAsymptoticMomentEstimates(sample_mean,S,N);
+  struct Estimates asymptotic_est = computeAsymptoticMomentEstimates(sample_mean,S,N);
+
   string type = "MOMENT";
-  print(type,moment_estimates);
-  double msglen = computeMessageLength(moment_estimates,sample_mean,S,N);
+  struct Estimates moment_est = asymptotic_est;
+  Optimize opt1(type);
+  opt1.initialize(N,moment_est.mean,moment_est.major_axis,moment_est.minor_axis,
+                 moment_est.kappa,moment_est.beta);
+  opt1.computeEstimates(sample_mean,S,moment_est);
+  print(type,moment_est);
+  double msglen = computeMessageLength(moment_est,sample_mean,S,N);
   cout << "msglen (bpr): " << msglen/N << endl;
 
-  type = "MAP";
-  struct Estimates map_estimates = moment_estimates;
+  /*type = "MAP";
+  struct Estimates map_est = moment_est;
   Optimize opt2(type);
-  opt2.initialize(N,map_estimates.mean,map_estimates.major_axis,map_estimates.minor_axis,
-                  map_estimates.kappa,map_estimates.beta);
-  opt2.computeEstimates(sample_mean,S,map_estimates);
-  print(type,map_estimates);
-  msglen = computeMessageLength(map_estimates,sample_mean,S,N);
-  cout << "msglen (bpr): " << msglen/N << endl;
+  opt2.initialize(N,map_est.mean,map_est.major_axis,map_est.minor_axis,
+                  map_est.kappa,map_est.beta);
+  opt2.computeEstimates(sample_mean,S,map_est);
+  print(type,map_est);
+  msglen = computeMessageLength(map_est,sample_mean,S,N);
+  cout << "msglen (bpr): " << msglen/N << endl;*/
 
-  struct Estimates mml_estimates = map_estimates;
+  //struct Estimates mml_est = map_est;
+  struct Estimates mml_est = moment_est;
   //if (N > 10) {
     type = "MML";
-    Optimize opt(type);
-    opt.initialize(N,mml_estimates.mean,mml_estimates.major_axis,mml_estimates.minor_axis,
-                   mml_estimates.kappa,mml_estimates.beta);
-    opt.computeEstimates(sample_mean,S,mml_estimates);
-    print(type,mml_estimates);
-    msglen = computeMessageLength(mml_estimates,sample_mean,S,N);
+    Optimize opt3(type);
+    opt3.initialize(N,mml_est.mean,mml_est.major_axis,mml_est.minor_axis,
+                   mml_est.kappa,mml_est.beta);
+    opt3.computeEstimates(sample_mean,S,mml_est);
+    print(type,mml_est);
+    msglen = computeMessageLength(mml_est,sample_mean,S,N);
     cout << "msglen (bpr): " << msglen/N << endl;
   //}
-  return mml_estimates;
+  return mml_est;
 }
 
 void Kent::estimateParameters(std::vector<Vector> &data, Vector &weights)

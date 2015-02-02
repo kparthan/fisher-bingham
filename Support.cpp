@@ -576,6 +576,57 @@ double uniform_random()
   //return rand()/(double)RAND_MAX;
 }
 
+double computeLogModifiedBesselFirstKind(double alpha, double x)
+{
+  if (!(alpha >= 0 && fabs(x) >= 0)) {
+    cout << "Error logModifiedBesselFirstKind: (alpha,x) = (" << alpha << "," << x << ")\n";
+    exit(1);
+  }
+  if (fabs(x) <= TOLERANCE) {
+    return -LARGE_NUMBER;
+  } 
+
+  // constant term log(x^2/4)
+  double log_x2_4 = 2.0 * log(x/2.0);
+  double four_x2 = 4.0 / (x * x);
+
+  double m = 1;
+  double log_sm_prev = -boost::math::lgamma<double>(alpha+1); // log(t0)
+  double log_sm_current;
+  double log_tm_prev = log_sm_prev; // log(t0)
+  double log_tm_current;
+  double cm_prev = 0,cm_current; 
+  double ratio = (alpha+1) * four_x2;  // t0/t1
+  while(ratio < 1) {
+    cm_current = (cm_prev + 1) * ratio;
+    log_tm_current = log_tm_prev - log(ratio); 
+    log_sm_prev = log_tm_current + log(cm_current + 1);
+    m++;
+    ratio = m * (m+alpha) * four_x2;
+    log_tm_prev = log_tm_current;
+    cm_prev = cm_current;
+  } // while() ends ...
+  double k = m;
+  log_tm_current = log_tm_prev - log(ratio);  // log(tk)
+  double c = log_tm_current - log_sm_prev;
+  double tk_sk_1 = exp(c);
+  double y = log_sm_prev;
+  double zm = 1;
+  double log_rm_prev = 0,log_rm_current,rm;
+  while(1) {
+    log_sm_current = y + log(1 + tk_sk_1 * zm);
+    m++;
+    log_rm_current = (log_x2_4 - log(m) - log(m+alpha)) + log_rm_prev;
+    rm = exp(log_rm_current);
+    zm += rm;
+    if (rm/zm < 1e-16)  break;
+    log_sm_prev = log_sm_current;
+    log_rm_prev = log_rm_current;
+  } // while() ends ...
+  log_sm_current = y + log(1 + tk_sk_1 * zm);
+  return (log_sm_current + (alpha * log(x/2.0)));
+}
+
 ////////////////////// GEOMETRY FUNCTIONS \\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
 std::vector<Vector> load_matrix(string &file_name)
@@ -1564,7 +1615,7 @@ Vector generateRandomKappas(int K)
 {
   Vector random_kappas;
   for (int i=0; i<K; i++) {
-    double kappa = (rand() / (double) RAND_MAX) * MAX_KAPPA;
+    double kappa = uniform_random() * MAX_KAPPA;
     random_kappas.push_back(kappa);
   }
   return random_kappas;
@@ -1574,7 +1625,7 @@ Vector generateRandomBetas(Vector &kappas)
 {
   Vector random_betas;
   for (int i=0; i<kappas.size(); i++) {
-    double beta = (rand() / (double) RAND_MAX) * (kappas[i]/2);
+    double beta = uniform_random() * 0.5 * kappas[i];
     random_betas.push_back(beta);
   }
   return random_betas;
@@ -1902,6 +1953,8 @@ void TestFunctions(void)
 {
   Test test;
 
+  test.bessel();
+
   //test.testing_cartesian2sphericalPoleXAxis();
 
   //test.parallel_sum_computation();
@@ -1948,7 +2001,7 @@ void TestFunctions(void)
 
   //test.mml_estimation();
 
-  test.mml_estimation2();
+  //test.mml_estimation2();
 
   //test.vmf_all_estimation();
 

@@ -77,6 +77,7 @@ long double computeSum(Vector &);
 double computeLogSurfaceAreaSphere(int);
 void solveQuadratic(Vector &, double, double, double);
 double uniform_random();
+double computeLogModifiedBesselFirstKind(double, double);
 
 std::vector<Vector> load_matrix(string &);
 Matrix outer_prod(Vector &, Vector &);
