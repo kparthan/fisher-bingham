@@ -260,12 +260,14 @@ double Kent::computeSeriesSum2(double k, double b, double d)
   int j = 1;
   double gj;
 
-  log_bessel_prev = log(cyl_bessel_i(d,k));
+  //log_bessel_prev = log(cyl_bessel_i(d,k));
+  log_bessel_prev = computeLogModifiedBesselFirstKind(d,k);
   log_f1 = lgamma<double>(1.5) + log_ex + log_bessel_prev;
   log_fj_prev = log_f1;
   while (1) {
     d += 2;
-    log_bessel_current = log(cyl_bessel_i(d,k));
+    //log_bessel_current = log(cyl_bessel_i(d,k));
+    log_bessel_current = computeLogModifiedBesselFirstKind(d,k);
     gj = log_bessel_current - log_bessel_prev;
     gj += log_ex;
     gj += (log(j+0.5) - log(j));
@@ -301,12 +303,14 @@ double Kent::log_d2c_db2()
   int j = 1;
   double gj;
 
-  log_bessel_prev = log(cyl_bessel_i(d,k));
+  //log_bessel_prev = log(cyl_bessel_i(d,k));
+  log_bessel_prev = computeLogModifiedBesselFirstKind(d,k);
   log_f1 = lgamma<double>(1.5) + log_ex + log_bessel_prev;
   log_fj_prev = log_f1;
   while (1) {
     d += 2;
-    log_bessel_current = log(cyl_bessel_i(d,k));
+    //log_bessel_current = log(cyl_bessel_i(d,k));
+    log_bessel_current = computeLogModifiedBesselFirstKind(d,k);
     gj = log_bessel_current - log_bessel_prev;
     gj += log_ex;
     gj += (2*log(2*j+1) - log(2*j) - log(2*j-1));
