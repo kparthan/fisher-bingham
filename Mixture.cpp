@@ -6,7 +6,12 @@ extern int MIXTURE_SIMULATION;
 extern int INFER_COMPONENTS;
 extern int ENABLE_DATA_PARALLELISM;
 extern int NUM_THREADS;
+extern int ESTIMATION;
 extern double IMPROVEMENT_RATE;
+int SPLITTING = 0;
+extern int IGNORE_SPLIT;
+extern double MIN_N;
+extern int MSGLEN_FAIL;
 
 /*!
  *  \brief Null constructor module
@@ -98,6 +103,12 @@ Mixture Mixture::operator=(const Mixture &source)
     minimum_msglen = source.minimum_msglen;
     part1 = source.part1;
     part2 = source.part2;
+    Ik = source.Ik;
+    Iw = source.Iw;
+    It = source.It;
+    sum_It = source.sum_It;
+    Il = source.Il;
+    kd_term = source.kd_term;
   }
   return *this;
 }
@@ -183,7 +194,11 @@ void Mixture::initialize()
   sample_size = Vector(K,0);
   updateEffectiveSampleSize();
   weights = Vector(K,0);
-  updateWeights();
+  if (ESTIMATION == MML) {
+    updateWeights();
+  } else {
+    updateWeights_ML();
+  }
 
   // initialize parameters of each component
   components = std::vector<Kent>(K);
@@ -202,6 +217,14 @@ void Mixture::updateEffectiveSampleSize()
       count += responsibility[i][j];
     }
     sample_size[i] = count;
+  }
+}
+
+void Mixture::updateWeights_ML()
+{
+  double normalization_constant = N;
+  for (int i=0; i<K; i++) {
+    weights[i] = sample_size[i] / normalization_constant;
   }
 }
 
@@ -257,6 +280,13 @@ void Mixture::updateResponsibilityMatrix()
     for (int j=0; j<K; j++) {
       responsibility[j][i] = probabilities[j] / px;
       assert(!boost::math::isnan(responsibility[j][i]));
+      /*if(boost::math::isnan(responsibility[j][i])) {
+        cout << "error: resp (pj,px): " << probabilities[j] << "; " << px << endl;
+        cout << "pj: "; print(cout,probabilities); cout << endl;
+        cout << "log_den: "; print(cout,log_densities); cout << endl;
+        cout << "weights: "; print(cout,weights); cout << endl;
+        exit(1);
+      }*/
     }
   }
 }
@@ -298,6 +328,13 @@ void Mixture::computeResponsibilityMatrix(std::vector<Vector> &sample,
     }
     out << endl;
   }
+  out << "Cumulative memberships:\n";
+  double comp_sum;
+  for (int j=0; j<K; j++) {
+    comp_sum = computeSum(resp[j]);
+    out << "Component " << j+1 << ": " << comp_sum << endl;
+  }
+  out.close();
   out.close();
 }
 
@@ -308,7 +345,8 @@ double Mixture::log_probability(Vector &x)
 {
   Vector log_densities(K,0);
   for (int j=0; j<K; j++) {
-      log_densities[j] = components[j].log_density(x);
+    log_densities[j] = components[j].log_density(x);
+    assert(!boost::math::isnan(log_densities[j]));
   }
   int max_index = maximumIndex(log_densities);
   double max_log_density = log_densities[max_index];
@@ -328,12 +366,16 @@ double Mixture::log_probability(Vector &x)
  *  \param a reference to a std::vector<array<double,2> >
  *  \return the negative log likelihood (base e)
  */
-double Mixture::negativeLogLikelihood(std::vector<Vector> &sample)
+double Mixture::computeNegativeLogLikelihood(std::vector<Vector> &sample)
 {
   double value = 0,log_density;
   #pragma omp parallel for if(ENABLE_DATA_PARALLELISM) num_threads(NUM_THREADS) private(log_density) reduction(-:value)
   for (int i=0; i<sample.size(); i++) {
     log_density = log_probability(sample[i]);
+    if(boost::math::isnan(log_density)) {
+      writeToFile("resp",responsibility,3); 
+    }
+    assert(!boost::math::isnan(log_density));
     value -= log_density;
   }
   return value;
@@ -344,53 +386,97 @@ double Mixture::negativeLogLikelihood(std::vector<Vector> &sample)
  *  model parameters.
  *  \return the minimum message length
  */
-double Mixture::computeMinimumMessageLength()
+double Mixture::computeMinimumMessageLength(int verbose /* default = 1 (print) */)
 {
+  MSGLEN_FAIL = 0;
+  part1 = 0;
+  part2 = 0;
+  minimum_msglen = 0;
+
+  /****************** PART 1 *********************/
+
   // encode the number of components
   // assume uniform priors
-  double Ik = log(MAX_COMPONENTS);
-  cout << "Ik: " << Ik << endl;
-  assert(Ik > 0);
+  //double Ik = log(MAX_COMPONENTS);
+  Ik = K;
+  //Ik = log(MAX_COMPONENTS) / log(2);
+  //cout << "Ik: " << Ik << endl;
 
   // enocde the weights
-  double Iw = ((K-1)/2.0) * log(N);
+  Iw = ((K-1)/2.0) * log(N);
   Iw -= boost::math::lgamma<double>(K); // log(K-1)!
   for (int i=0; i<K; i++) {
     Iw -= 0.5 * log(weights[i]);
   }
-  cout << "Iw: " << Iw << endl;
-  assert(Iw >= 0);
-
-  // encode the likelihood of the sample
-  double Il = negativeLogLikelihood(data);
-  Il -= 2 * N * log(AOM);
-  cout << "Il: " << Il << endl;
-  assert(Il > 0);
+  Iw /= log(2);
+  //cout << "Iw: " << Iw << endl;
+  //assert(Iw >= 0);
 
   // encode the parameters of the components
-  double It = 0,logp;
+  It.clear();
+  sum_It = 0;
+  double logp;
   for (int i=0; i<K; i++) {
-    logp = components[i].computeLogPriorProbability();
-    It += logp;
+    logp = components[i].computeLogParametersProbability(sample_size[i]);
+    logp /= log(2);
+    It.push_back(logp);
+    sum_It += logp;
   }
-  cout << "It: " << It << endl;
+  //cout << "It: " << sum_It << endl;
   /*if (It <= 0) { cout << It << endl;}
   fflush(stdout);
   assert(It > 0);*/
 
   // the constant term
-  // # of continuous parameters d = 4K-1 (for D = 3)
-  int num_free_params = 4*K - 1;
-  double cd = computeConstantTerm(num_free_params);
-  cout << "cd: " << cd << endl;
+  //int D = data[0].size();
+  int num_free_params = (5 * K) + (K - 1);
+  double log_lattice_constant = logLatticeConstant(num_free_params);
+  kd_term = 0.5 * num_free_params * log_lattice_constant;
+  kd_term /= log(2);
 
-  minimum_msglen = (Ik + Iw + Il + It + cd)/(log(2));
+  part1 = Ik + Iw + sum_It + kd_term;
 
-  part2 = Il + num_free_params/2.0;
-  part2 /= log(2);
-  part1 = minimum_msglen - part2;
+  /****************** PART 2 *********************/
+
+  // encode the likelihood of the sample
+  double Il_partial = computeNegativeLogLikelihood(data);
+  Il = Il_partial - (2 * N * log(AOM));
+  Il /= log(2);
+  //cout << "Il: " << Il << endl;
+  //assert(Il > 0);
+  if (Il < 0 || boost::math::isnan(Il)) {
+    cout << "isnan(Il)\n"; sleep(5);
+    minimum_msglen = LARGE_NUMBER;
+    MSGLEN_FAIL = 1;
+    return minimum_msglen;
+  }
+
+  double constant = 0.5 * num_free_params;
+  constant /= log(2);
+  part2 = Il + constant;
+
+  minimum_msglen = part1 + part2;
+
+  if (verbose == 1) {
+    cout << "Ik: " << Ik << endl;
+    cout << "Iw: " << Iw << endl;
+    cout << "It: " << sum_It << endl;
+    cout << "Il: " << Il << endl;
+  }
 
   return minimum_msglen;
+}
+
+void Mixture::printIndividualMsgLengths(ostream &log_file)
+{
+  log_file << "\t\tIk: " << Ik << endl;
+  log_file << "\t\tIw: " << Iw << endl;
+  log_file << "\t\tIt: " << sum_It << " "; print(log_file,It,3); log_file << endl;
+  log_file << "\t\tlatt: " << kd_term << endl;
+  log_file << "\t\tIl: " << Il << endl;
+  log_file << "\t\tpart1 (Ik+Iw+It+latt): " << part1 << " + " 
+           << "part2 (Il+d/(2*log(2))): " << part2 << " = "
+           << part1 + part2 << " bits." << endl << endl;
 }
 
 /*!
@@ -420,6 +506,12 @@ string Mixture::getLogFile()
  */
 double Mixture::estimateParameters()
 {
+  /*if (SPLITTING == 1) {
+    initialize_children_1();
+  } else {
+    initialize();
+  }*/
+
   initialize();
 
   EM();
@@ -443,36 +535,88 @@ void Mixture::EM()
   int iter = 1;
   printParameters(log,0,0);
 
+  double impr_rate = 0.00001;
   /* EM loop */
-  while (1) {
-    // Expectation (E-step)
-    updateResponsibilityMatrix();
-    updateEffectiveSampleSize();
-    // Maximization (M-step)
-    updateWeights();
-    updateComponents();
-    current = computeMinimumMessageLength();
-    if (fabs(current) >= INFINITY) break;
-    msglens.push_back(current);
-    printParameters(log,iter,current);
-    if (iter != 1) {
-      assert(current > 0);
-      // because EM has to consistently produce lower 
-      // message lengths otherwise something wrong!
-      // IMPORTANT: the below condition should not be 
-      //          fabs(prev - current) <= 0.0001 * fabs(prev)
-      // ... it's very hard to satisfy this condition and EM() goes into
-      // ... an infinite loop!
-      if (iter > 10 && (prev - current) <= IMPROVEMENT_RATE * prev) {
-        log << "\nSample size: " << N << endl;
-        log << "Kent encoding rate: " << current/N << " bits/point" << endl;
-        log << "Null model encoding: " << null_msglen << " bits.";
-        log << "\t(" << null_msglen/N << " bits/point)" << endl;
-        break;
+  if (ESTIMATION == MML) {
+    while (1) {
+      // Expectation (E-step)
+      updateResponsibilityMatrix();
+      updateEffectiveSampleSize();
+      //if (SPLITTING == 1) {
+        for (int i=0; i<K; i++) {
+          if (sample_size[i] < MIN_N) {
+            current = computeMinimumMessageLength();
+            cout << "stopping 1\n";
+            goto stop1;
+          }
+        }
+      //}
+      // Maximization (M-step)
+      updateWeights();
+      updateComponents();
+      current = computeMinimumMessageLength();
+      if (fabs(current) >= INFINITY) break;
+      msglens.push_back(current);
+      printParameters(log,iter,current);
+      if (iter != 1) {
+        //assert(current > 0);
+        // because EM has to consistently produce lower 
+        // message lengths otherwise something wrong!
+        // IMPORTANT: the below condition should not be 
+        //          fabs(prev - current) <= 0.0001 * fabs(prev)
+        // ... it's very hard to satisfy this condition and EM() goes into
+        // ... an infinite loop!
+        if ((iter > 3 && (prev - current) <= impr_rate * prev) ||
+              (iter > 1 && current > prev) || current <= 0 || MSGLEN_FAIL == 1) {
+          stop1:
+          log << "\nSample size: " << N << endl;
+          log << "Kent encoding rate: " << current/N << " bits/point" << endl;
+          log << "Null model encoding: " << null_msglen << " bits.";
+          log << "\t(" << null_msglen/N << " bits/point)" << endl;
+          break;
+        }
       }
+      prev = current;
+      iter++;
     }
-    prev = current;
-    iter++;
+  } else {  // ESTIMATION != MML
+    while (1) {
+      // Expectation (E-step)
+      updateResponsibilityMatrix();
+      updateEffectiveSampleSize();
+      //if (SPLITTING == 1) {
+        for (int i=0; i<K; i++) {
+          if (sample_size[i] < MIN_N) {
+            current = computeMinimumMessageLength();
+            cout << "stopping 2\n";
+            goto stop2;
+          }
+        }
+      //}
+      // Maximization (M-step)
+      updateWeights_ML();
+      updateComponents();
+      //current = negativeLogLikelihood(data);
+      current = computeMinimumMessageLength();
+      msglens.push_back(current);
+      printParameters(log,iter,current);
+      if (iter != 1) {
+        //assert(current > 0);
+        // because EM has to consistently produce lower 
+        // -ve likelihood values otherwise something wrong!
+        if ((iter > 3 && (prev - current) <= impr_rate * prev) ||
+              (iter > 1 && current > prev) || current <= 0 || MSGLEN_FAIL == 1) {
+          stop2:
+          log << "\nSample size: " << N << endl;
+          log << "Kent encoding rate: " << current/N << " bits/point" << endl;
+          log << "Null model encoding: " << null_msglen << " bits.";
+          log << "\t(" << null_msglen/N << " bits/point)" << endl;
+          break;
+        }
+      }
+      prev = current;
+      iter++;
+    }
   }
   log.close();
 }
@@ -674,7 +818,7 @@ int Mixture::randomComponent()
  */
 void Mixture::saveComponentData(int index, std::vector<Vector> &data)
 {
-  string data_file = "./visualize/comp";
+  string data_file = "./visualize/sampled_data/comp";
   data_file += boost::lexical_cast<string>(index+1) + ".dat";
   //components[index].printParameters(cout);
   ofstream file(data_file.c_str());
@@ -707,16 +851,42 @@ std::vector<Vector> Mixture::generate(int num_samples, bool save_data)
     fw << sample_size[i] << endl;
   }
   fw.close();
+
+  std::vector<std::vector<Vector> > random_data;
   std::vector<Vector> sample;
   for (int i=0; i<K; i++) {
     std::vector<Vector> x = components[i].generate((int)sample_size[i]);
-    if (save_data) {
-      saveComponentData(i,x);
+    random_data.push_back(x);
+    for (int j=0; j<random_data[i].size(); j++) {
+      sample.push_back(random_data[i][j]);
     }
-    for (int j=0; j<x.size(); j++) {
-      sample.push_back(x[j]);
-    }
-  }
+  } // for i
+
+  if (save_data) {
+    writeToFile("random_sample.dat",sample);
+    string comp_density_file;
+    string mix_density_file = "./visualize/sampled_data/mixture_density.dat";
+    ofstream mix(mix_density_file.c_str());
+    double comp_density,mix_density;
+    for (int i=0; i<K; i++) {
+      saveComponentData(i,random_data[i]);
+      comp_density_file = "./visualize/sampled_data/comp" 
+                          + boost::lexical_cast<string>(i+1) + "_density.dat";
+      ofstream comp(comp_density_file.c_str());
+      for (int j=0; j<random_data[i].size(); j++) {
+        comp_density = exp(components[i].log_density(random_data[i][j]));
+        mix_density = exp(log_probability(random_data[i][j]));
+        for (int k=0; k<random_data[i][j].size(); k++) {
+          comp << fixed << setw(10) << setprecision(3) << random_data[i][j][k];
+          mix << fixed << setw(10) << setprecision(3) << random_data[i][j][k];
+        } // k
+        comp << "\t\t" << scientific << comp_density << endl;
+        mix <<  "\t\t" << scientific << mix_density << endl;
+      } // j
+      comp.close();
+    } // i
+    mix.close();
+  } // if()
   return sample;
 }
 
@@ -728,6 +898,7 @@ std::vector<Vector> Mixture::generate(int num_samples, bool save_data)
  */
 Mixture Mixture::split(int c, ostream &log)
 {
+  SPLITTING = 1;
   log << "\tSPLIT component " << c + 1 << " ... " << endl;
 
   int num_children = 2; 
@@ -759,6 +930,9 @@ Mixture Mixture::split(int c, ostream &log)
       sum += responsibility_c[i][j];
     }
     sample_size_c[i] = sum;
+    /*if (sample_size_c[i] < MIN_N) {
+      IGNORE_SPLIT = 1;
+    }*/
   }
 
   // child components
@@ -791,10 +965,14 @@ Mixture Mixture::split(int c, ostream &log)
   Vector data_weights_m(N,1);
   Mixture merged(K_m,components_m,weights_m,sample_size_m,responsibility_m,data,data_weights_m);
   log << "\t\tBefore adjustment ...\n";
+  merged.computeMinimumMessageLength();
   merged.printParameters(log,2);
   merged.EM();
   log << "\t\tAfter adjustment ...\n";
+  merged.computeMinimumMessageLength();
   merged.printParameters(log,2);
+  merged.printIndividualMsgLengths(log);
+  SPLITTING = 0;
   return merged;
 }
 
@@ -811,7 +989,12 @@ Mixture Mixture::kill(int c, ostream &log)
   int K_m = K - 1;
   // adjust weights
   Vector weights_m(K_m,0);
-  double residual_sum = 1 - weights[c];
+  double residual_sum = 0;
+  for (int i=0; i<K; i++) {
+    if (i != c) {
+      residual_sum += weights[i];
+    }
+  }
   double wt;
   int index = 0;
   for (int i=0; i<K; i++) {
@@ -821,15 +1004,29 @@ Mixture Mixture::kill(int c, ostream &log)
   }
 
   // adjust responsibility matrix
+  Vector residual_sums(N,0);
+  for (int i=0; i<N; i++) {
+    for (int j=0; j<K; j++) {
+      if (j != c) {
+        residual_sums[i] += responsibility[j][i];
+      }
+    }
+    //if (residual_sums[i] < TOLERANCE) residual_sums[i] = TOLERANCE;
+  }
   Vector resp(N,0);
   std::vector<Vector> responsibility_m(K_m,resp);
   index = 0;
   for (int i=0; i<K; i++) {
     if (i != c) {
-      #pragma omp parallel for if(ENABLE_DATA_PARALLELISM) num_threads(NUM_THREADS) private(residual_sum) 
+      #pragma omp parallel for if(ENABLE_DATA_PARALLELISM) num_threads(NUM_THREADS) //private(residual_sum) 
       for (int j=0; j<N; j++) {
-        residual_sum = 1 - responsibility[c][j];
-        responsibility_m[index][j] = responsibility[i][j] / residual_sum;
+        //residual_sum = 1 - responsibility[c][j];
+        if (residual_sums[j] <= 0.06) {
+          responsibility_m[index][j] = 1.0 / K_m;
+        } else {
+          responsibility_m[index][j] = responsibility[i][j] / residual_sums[j];
+        }
+        assert(responsibility_m[index][j] >= 0 && responsibility_m[index][j] <= 1);
       }
       index++;
     }
@@ -859,10 +1056,13 @@ Mixture Mixture::kill(int c, ostream &log)
   Vector data_weights_m(N,1);
   Mixture modified(K_m,components_m,weights_m,sample_size_m,responsibility_m,data,data_weights_m);
   log << "\t\tBefore adjustment ...\n";
+  modified.computeMinimumMessageLength();
   modified.printParameters(log,2);
   modified.EM();
   log << "\t\tAfter adjustment ...\n";
+  //modified.computeMinimumMessageLength();
   modified.printParameters(log,2);
+  modified.printIndividualMsgLengths(log);
   return modified;
 }
 
@@ -931,6 +1131,7 @@ Mixture Mixture::join(int c1, int c2, ostream &log)
   Vector data_weights_m(N,1);
   Mixture modified(K-1,components_m,weights_m,sample_size_m,responsibility_m,data,data_weights_m);
   log << "\t\tBefore adjustment ...\n";
+  modified.computeMinimumMessageLength();
   modified.printParameters(log,2);
   modified.EM();
   log << "\t\tAfter adjustment ...\n";
@@ -990,5 +1191,22 @@ int Mixture::getNearestComponent(int c)
     }
   }
   return nearest;
+}
+
+double Mixture::computeKLDivergence(Mixture &other)
+{
+  return computeKLDivergence(other,data);
+}
+
+// Monte Carlo
+double Mixture::computeKLDivergence(Mixture &other, std::vector<Vector> &sample)
+{
+  double kldiv = 0,fx,log_fx,log_gx;
+  for (int i=0; i<sample.size(); i++) {
+    log_fx = log_probability(sample[i]);
+    log_gx = other.log_probability(sample[i]);
+    kldiv += (log_fx - log_gx);
+  }
+  return kldiv/(log(2) * sample.size());
 }
 

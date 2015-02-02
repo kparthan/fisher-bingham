@@ -89,6 +89,76 @@ void computeWins(
   out << endl;
 }
 
+// all k fixed e
+void tabulate_eccentricity_kldivs(string &data_file, string &n_str, string &eccentricity_str)
+{
+  std::vector<Vector> kldivs;
+  string kldivs_file;
+  ofstream out(data_file.c_str());
+  double kappa = 10;
+  while (kappa <= 100) {
+    out << fixed << setw(10) << setprecision(0) << kappa;
+    ostringstream ssk;
+    ssk << fixed << setprecision(0);
+    ssk << kappa;
+    string kappa_str = ssk.str();
+    string current_dir = n_str + "k_" + kappa_str + "_e_" + eccentricity_str + "/";
+    string kldivs_file = current_dir + "kldivs";
+    kldivs = load_matrix(kldivs_file,NUM_METHODS);
+    computeWins(0,out,kldivs);
+    kappa += 10;
+  } // while()
+  out.close();
+}
+
+// all e fixed k
+void tabulate_kappa_kldivs(string &data_file, string &n_str, string &kappa_str)
+{
+  std::vector<Vector> kldivs;
+  string kldivs_file;
+  ofstream out(data_file.c_str());
+  double eccentricity = 0.1;
+  while (eccentricity < 0.95) {
+    out << fixed << setw(10) << setprecision(1) << eccentricity;
+    ostringstream sse;
+    sse << fixed << setprecision(1);
+    sse << eccentricity;
+    string eccentricity_str = sse.str();
+    string current_dir = n_str + "k_" + kappa_str + "_e_" + eccentricity_str + "/";
+    kldivs_file = current_dir + "kldivs";
+    kldivs = load_matrix(kldivs_file,NUM_METHODS);
+    computeWins(0,out,kldivs);
+    eccentricity += 0.1;
+  } // while()
+  out.close();
+}
+
+void plot_script_kldivs(string &data_file, string &n_str, string &type_str)
+{
+  string script_file = n_str + type_str + "_kldivs.p";
+  string plot_file = n_str + type_str + "_kldivs.eps";
+  ofstream out(script_file.c_str());
+  out << "set terminal postscript eps enhanced color\n\n";
+  out << "set output \"" << plot_file << "\"\n\n";
+  out << "set key invert reverse left top\n\n";
+  out << "set grid y\n";
+  out << "set style data histograms\n";
+  out << "set style histogram rowstacked\n";
+  out << "set boxwidth 0.5\n";
+  out << "set style fill solid 1.0 border -1\n";
+  out << "set ytics 10 nomirror\n";
+  out << "set yrange [:100]\n";
+  out << "set ylabel \"\% of wins\"\n";
+  out << "set ytics 10\n\n"; 
+  out << "plot \"" << data_file << "\" using 2 t \"MOM\", \\\n"
+      << "\"\" using 3 t \"MLE\", \\\n"
+      << "\"\" using 4 t \"MAP\", \\\n"
+      << "\"\" using 5:xtic(1) t \"MML\"";
+  out.close();
+  string cmd = "gnuplot -persist " + script_file;
+  if(system(cmd.c_str()));
+}
+
 struct Parameters
 {
   int N;
@@ -123,86 +193,18 @@ struct Parameters parseCommandLineInput(int argc, char **argv)
   return parameters;
 }
 
-// all k fixed e
-void tabulate_eccentricity_kldivs(string &data_file, string &n_str, string &eccentricity_str)
-{
-  std::vector<Vector> kldivs;
-  string kldivs_file;
-  ofstream out(data_file.c_str());
-  double kappa = 5;
-  while (kappa <= 50) {
-    out << fixed << setw(10) << setprecision(0) << kappa;
-    ostringstream ssk;
-    ssk << fixed << setprecision(0);
-    ssk << kappa;
-    string kappa_str = ssk.str();
-    string current_dir = n_str + "k_" + kappa_str + "_e_" + eccentricity_str + "/";
-    string kldivs_file = current_dir + "kldivs";
-    kldivs = load_matrix(kldivs_file,NUM_METHODS);
-    computeWins(0,out,kldivs);
-    kappa += 5;
-  } // while()
-  out.close();
-}
-
-// all e fixed k
-void tabulate_kappa_kldivs(string &data_file, string &n_str, string &kappa_str)
-{
-  std::vector<Vector> kldivs;
-  string kldivs_file;
-  ofstream out(data_file.c_str());
-  double eccentricity = 0.1;
-  while (eccentricity < 0.95) {
-    out << fixed << setw(10) << setprecision(1) << eccentricity;
-    ostringstream sse;
-    sse << fixed << setprecision(1);
-    sse << eccentricity;
-    string eccentricity_str = sse.str();
-    string current_dir = n_str + "k_" + kappa_str + "_e_" + eccentricity_str + "/";
-    kldivs_file = current_dir + "kldivs";
-    kldivs = load_matrix(kldivs_file,NUM_METHODS);
-    computeWins(0,out,kldivs);
-    eccentricity += 0.1;
-  } // while()
-  out.close();
-}
-
-void plot_script_kldivs(string &data_file, string &n_str, string &type_str)
-{
-  string script_file = n_str + "e_" + type_str + "_kldivs.p";
-  string plot_file = n_str + "e_" + type_str + "_kldivs.eps";
-  ofstream out(script_file.c_str());
-  out << "set terminal postscript eps enhanced color\n\n";
-  out << "set output \"" << plot_file << "\"\n\n";
-  out << "set key invert reverse left top\n\n";
-  out << "set grid y\n";
-  out << "set style data histograms\n";
-  out << "set style histogram rowstacked\n";
-  out << "set boxwidth 0.5\n";
-  out << "set style fill solid 1.0 border -1\n";
-  out << "set ytics 10 nomirror\n";
-  out << "set yrange [:100]\n";
-  out << "set ylabel \"\% of wins\"\n";
-  out << "set ytics 10\n\n"; 
-  out << "plot \"" << data_file << "\" using 2 t \"MOM\", \\\n"
-      << "\"\" using 3 t \"MLE\", \\\n"
-      << "\"\" using 4 t \"MAP\", \\\n"
-      << "\"\" using 5:xtic(1) t \"MML\"";
-  out.close();
-  string cmd = "gnuplot -persist " + script_file;
-  if(system(cmd.c_str()));
-}
-
 int main(int argc, char **argv)
 {
   struct Parameters parameters = parseCommandLineInput(argc,argv);
   double kappa = parameters.kappa;
   double eccentricity = parameters.eccentricity;
-  double beta;
 
   string data_file,script_file;
   //string n_str = "./N_" + boost::lexical_cast<string>(parameters.N) + "_uniform_prior/";
-  string n_str = "./N_" + boost::lexical_cast<string>(parameters.N) + "/";
+  //string n_str = "./N_" + boost::lexical_cast<string>(parameters.N) + "_vmf_prior/";
+  //string n_str = "./N_" + boost::lexical_cast<string>(parameters.N) + "_beta_prior/";
+  string n_str = "N_" + boost::lexical_cast<string>(parameters.N) + "_kappa_until_50/";
+  //string n_str = "./N_" + boost::lexical_cast<string>(parameters.N) + "/";
 
   if (parameters.quantity == 1) { // all k fixed e
     ostringstream sse;
@@ -210,9 +212,10 @@ int main(int argc, char **argv)
     sse << eccentricity;
     string eccentricity_str = sse.str();
     data_file = n_str + "e_" + eccentricity_str + "_kldivs.dat";
-    script_file = n_str + "e_" + eccentricity_str + "_kldivs.p";
+    //script_file = n_str + "e_" + eccentricity_str + "_kldivs.p";
     tabulate_eccentricity_kldivs(data_file,n_str,eccentricity_str);
-    plot_script_kldivs(data_file,n_str,eccentricity_str);
+    string type_str = "e_" + eccentricity_str;
+    plot_script_kldivs(data_file,n_str,type_str);
   } else if (parameters.quantity == 2) { // all e fixed k
     ostringstream ssk;
     ssk << fixed << setprecision(0);
@@ -220,7 +223,8 @@ int main(int argc, char **argv)
     string kappa_str = ssk.str();
     data_file = n_str + "k_" + kappa_str + "_kldivs.dat";
     tabulate_kappa_kldivs(data_file,n_str,kappa_str);
-    plot_script_kldivs(data_file,n_str,kappa_str);
+    string type_str = "k_" + kappa_str;
+    plot_script_kldivs(data_file,n_str,type_str);
   }
 
   return 0;

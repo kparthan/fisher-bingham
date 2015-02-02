@@ -10,6 +10,7 @@ int MIXTURE_SIMULATION;
 int INFER_COMPONENTS;
 int ENABLE_DATA_PARALLELISM;
 int NUM_THREADS;
+int ESTIMATION;
 double MAX_KAPPA;
 double IMPROVEMENT_RATE;
 int CONSTRAIN_KAPPA;
@@ -19,7 +20,10 @@ int MML_FAIL = 0; // vMF experiments
 bool FAIL_STATUS;
 UniformRandomNumberGenerator *uniform_generator;
 int DISTRIBUTION;
+int MSGLEN_FAIL;
 int VERBOSE,COMPUTE_KLDIV;
+int IGNORE_SPLIT;
+double MIN_N;
 
 struct stat st = {0};
 
@@ -228,6 +232,18 @@ void writeToFile(const char *file_name, std::vector<Vector> &v, int precision)
   for (int i=0; i<v.size(); i++) {
     for (int j=0; j<v[i].size(); j++) {
       file << fixed << setw(10) << setprecision(precision) << v[i][j];
+    }
+    file << endl;
+  }
+  file.close(); 
+}
+
+void writeToFile(const char *file_name, std::vector<Vector> &v)
+{
+  ofstream file(file_name);
+  for (int i=0; i<v.size(); i++) {
+    for (int j=0; j<v[i].size(); j++) {
+      file << setw(15) << scientific << v[i][j];
     }
     file << endl;
   }
@@ -515,6 +531,15 @@ Vector crossProduct(Vector &v1, Vector &v2)
   ans[1] = v1[2] * v2[0] - v1[0] * v2[2];
   ans[2] = v1[0] * v2[1] - v1[1] * v2[0];
   return ans;
+}
+
+long double computeSum(Vector &data)
+{
+  long double sum = 0;
+  for (int i=0; i<data.size(); i++) {
+    sum += data[i];
+  }
+  return sum;
 }
 
 /*!
@@ -1200,6 +1225,14 @@ double computeConstantTerm(int d)
   return ad;
 }
 
+long double logLatticeConstant(int d)
+{
+  long double cd = computeConstantTerm(d);
+  long double ans = -1;
+  ans += (2.0 * cd / d);
+  return ans;
+}
+
 /*!
  *  \brief This function bins the sample data 
  *  \param res a double
@@ -1464,7 +1497,7 @@ Vector generateFromSimplex(int K)
   double random,sum = 0;
   for (int i=0; i<K; i++) {
     // generate a random value in (0,1)
-    random = rand() / (double)RAND_MAX;
+    random = uniform_random();
     assert(random > 0 && random < 1);
     // sampling from an exponential distribution with \lambda = 1
     values[i] = -log(1-random);
@@ -1626,11 +1659,12 @@ Mixture inferComponents(Mixture &mixture, int N, ostream &log)
   std::vector<Kent> components;
   Mixture modified,improved,parent;
   Vector sample_size;
-  //double min_n = 0.01 * N;
-  double min_n = 1;
+
   double null_msglen = mixture.computeNullModelMessageLength();
   log << "Null model encoding: " << null_msglen << " bits."
       << "\t(" << null_msglen/N << " bits/point)\n\n";
+
+  MIN_N = 1;
 
   improved = mixture;
 
@@ -1640,30 +1674,50 @@ Mixture inferComponents(Mixture &mixture, int N, ostream &log)
     log << "Iteration #" << iter << endl;
     log << "Parent:\n";
     parent.printParameters(log,1);
+    parent.printIndividualMsgLengths(log);
     components = parent.getComponents();
     sample_size = parent.getSampleSize();
     K = components.size();
     for (int i=0; i<K; i++) { // split() ...
-      if (sample_size[i] > min_n) {
+      if (sample_size[i] > MIN_N) {
+        IGNORE_SPLIT = 0;
         modified = parent.split(i,log);
-        updateInference(modified,improved,log,SPLIT);
+        if (IGNORE_SPLIT == 0) {
+          updateInference(modified,improved,N,log,SPLIT);
+        } else {
+            log << "\t\tIGNORING SPLIT ... \n\n";
+        }
       }
     }
     if (K >= 2) {  // kill() ...
       for (int i=0; i<K; i++) {
         modified = parent.kill(i,log);
-        updateInference(modified,improved,log,KILL);
+        updateInference(modified,improved,N,log,KILL);
       } // killing each component
     } // if (K > 2) loop
     if (K > 1) {  // join() ...
       for (int i=0; i<K; i++) {
         int j = parent.getNearestComponent(i); // closest component
         modified = parent.join(i,j,log);
-        updateInference(modified,improved,log,JOIN);
+        updateInference(modified,improved,N,log,JOIN);
       } // join() ing nearest components
     } // if (K > 1) loop
+    /*if (improved == parent) {
+      for (int i=0; i<K; i++) { // split() ...
+        if (sample_size[i] > MIN_N) {
+          IGNORE_SPLIT = 0;
+          modified = parent.split(i,log);
+          if (IGNORE_SPLIT == 0) {
+            updateInference(modified,improved,N,log,SPLIT);
+          } else {
+            log << "\t\tIGNORING SPLIT ... \n\n";
+          }
+        }
+      } // for()
+    }*/
     if (improved == parent) goto finish;
   } // if (improved == parent || iter%2 == 0) loop
+
   finish:
   return parent;
 }
@@ -1675,29 +1729,48 @@ Mixture inferComponents(Mixture &mixture, int N, ostream &log)
  *  \param log a reference to a ostream
  *  \param operation an integer
  */
-void updateInference(Mixture &modified, Mixture &current, ostream &log, int operation)
+void updateInference(Mixture &modified, Mixture &current, int N, ostream &log, int operation)
 {
-  double modified_msglen = modified.getMinimumMessageLength();
-  double current_msglen = current.getMinimumMessageLength();
+  long double modified_msglen = modified.getMinimumMessageLength();
+  long double current_msglen = current.getMinimumMessageLength();
 
-  if (modified_msglen < current_msglen) {   // ... improvement
-    double improvement_rate = (current_msglen - modified_msglen) / current_msglen;
-    if (operation == JOIN || 
-        improvement_rate > IMPROVEMENT_RATE) {  // there is > 0.001 % improvement
-      current = modified;
+  long double dI = current_msglen - modified_msglen;
+  long double dI_n = dI / N;
+  long double improvement_rate = (current_msglen - modified_msglen) / current_msglen;
+
+  if (operation == KILL || operation == JOIN) {
+    if (improvement_rate >= 0) {
       log << "\t ... IMPROVEMENT ... (+ " << fixed << setprecision(3) 
           << 100 * improvement_rate << " %) ";
-      if (operation == JOIN && improvement_rate < IMPROVEMENT_RATE) {
-        log << "\t\t[ACCEPT] with negligible improvement (while joining)!\n\n";
-      } else {
-        log << "\t\t[ACCEPT]\n\n";
-      }
-    } else {  // ... no substantial improvement
-      log << "\t ... IMPROVEMENT < " << fixed << setprecision(3) 
-          << 100 * IMPROVEMENT_RATE << " %\t\t\t[REJECT]\n\n";
+      log << "\t\t[ACCEPT]\n\n";
+      current = modified;
+    } else {
+      log << "\t ... NO IMPROVEMENT\t\t\t[REJECT]\n\n";
     }
-  } else {    // ... no improvement
-    log << "\t ... NO IMPROVEMENT\t\t\t[REJECT]\n\n";
+  } /*else if (operation == SPLIT) {
+    if (improvement_rate > IMPROVEMENT_RATE) {
+      log << "\t ... IMPROVEMENT ... (+ " << fixed << setprecision(3) 
+          << 100 * improvement_rate << " %) ";
+      log << "\t\t[ACCEPT]\n\n";
+      current = modified;
+    } else {
+      log << "\t ... NO IMPROVEMENT\t\t\t[REJECT]\n\n";
+    }
+  }*/
+  else if (operation == SPLIT) {
+    if (improvement_rate > IMPROVEMENT_RATE) {
+      log << "\t ... IMPROVEMENT ... (+ " << fixed << setprecision(3) 
+          << 100 * improvement_rate << " %) ";
+      log << "\t\t[ACCEPT]\n\n";
+      current = modified;
+    } else if (improvement_rate > 0 && improvement_rate <= IMPROVEMENT_RATE) {
+      log << "\t ... IMPROVEMENT (" << 100 * improvement_rate << " %) < " << fixed << setprecision(3) 
+          << 100 * IMPROVEMENT_RATE << " %\t\t\t[REJECT]\n\n";
+      log << "\t\tdI: " << dI << " bits.\n";
+      log << "\t\tdI/N: " << dI_n << " bits.\n\n";
+    } else {
+      log << "\t ... NO IMPROVEMENT\t\t\t[REJECT]\n\n";
+    }
   }
 }
 
@@ -1707,11 +1780,12 @@ Mixture_vMF inferComponents_vMF(Mixture_vMF &mixture, int N, ostream &log)
   std::vector<vMF> components;
   Mixture_vMF modified,improved,parent;
   Vector sample_size;
-  //double min_n = 0.01 * N;
-  double min_n = 1;
+
   double null_msglen = mixture.computeNullModelMessageLength();
   log << "Null model encoding: " << null_msglen << " bits."
       << "\t(" << null_msglen/N << " bits/point)\n\n";
+
+  MIN_N = 1;
 
   improved = mixture;
 
@@ -1721,30 +1795,50 @@ Mixture_vMF inferComponents_vMF(Mixture_vMF &mixture, int N, ostream &log)
     log << "Iteration #" << iter << endl;
     log << "Parent:\n";
     parent.printParameters(log,1);
+    parent.printIndividualMsgLengths(log);
     components = parent.getComponents();
     sample_size = parent.getSampleSize();
     K = components.size();
     for (int i=0; i<K; i++) { // split() ...
-      if (sample_size[i] > min_n) {
+      if (sample_size[i] > MIN_N) {
+        IGNORE_SPLIT = 0;
         modified = parent.split(i,log);
-        updateInference_vMF(modified,improved,log,SPLIT);
+        if (IGNORE_SPLIT == 0) {
+          updateInference_vMF(modified,improved,N,log,SPLIT);
+        } else {
+            log << "\t\tIGNORING SPLIT ... \n\n";
+        }
       }
     }
     if (K >= 2) {  // kill() ...
       for (int i=0; i<K; i++) {
         modified = parent.kill(i,log);
-        updateInference_vMF(modified,improved,log,KILL);
+        updateInference_vMF(modified,improved,N,log,KILL);
       } // killing each component
     } // if (K > 2) loop
     if (K > 1) {  // join() ...
       for (int i=0; i<K; i++) {
         int j = parent.getNearestComponent(i); // closest component
         modified = parent.join(i,j,log);
-        updateInference_vMF(modified,improved,log,JOIN);
+        updateInference_vMF(modified,improved,N,log,JOIN);
       } // join() ing nearest components
     } // if (K > 1) loop
+    /*if (improved == parent) {
+      for (int i=0; i<K; i++) { // split() ...
+        if (sample_size[i] > MIN_N) {
+          IGNORE_SPLIT = 0;
+          modified = parent.split(i,log);
+          if (IGNORE_SPLIT == 0) {
+            updateInference_vMF(modified,improved,N,log,SPLIT);
+          } else {
+            log << "\t\tIGNORING SPLIT ... \n\n";
+          }
+        }
+      } // for()
+    }*/
     if (improved == parent) goto finish;
   } // if (improved == parent || iter%2 == 0) loop
+
   finish:
   return parent;
 }
@@ -1756,29 +1850,48 @@ Mixture_vMF inferComponents_vMF(Mixture_vMF &mixture, int N, ostream &log)
  *  \param log a reference to a ostream
  *  \param operation an integer
  */
-void updateInference_vMF(Mixture_vMF &modified, Mixture_vMF &current, ostream &log, int operation)
+void updateInference_vMF(Mixture_vMF &modified, Mixture_vMF &current, int N, ostream &log, int operation)
 {
-  double modified_msglen = modified.getMinimumMessageLength();
-  double current_msglen = current.getMinimumMessageLength();
+  long double modified_msglen = modified.getMinimumMessageLength();
+  long double current_msglen = current.getMinimumMessageLength();
 
-  if (modified_msglen < current_msglen) {   // ... improvement
-    double improvement_rate = (current_msglen - modified_msglen) / current_msglen;
-    if (operation == JOIN || 
-        improvement_rate > IMPROVEMENT_RATE) {  // there is > 0.001 % improvement
-      current = modified;
+  long double dI = current_msglen - modified_msglen;
+  long double dI_n = dI / N;
+  long double improvement_rate = (current_msglen - modified_msglen) / current_msglen;
+
+  if (operation == KILL || operation == JOIN) {
+    if (improvement_rate >= 0) {
       log << "\t ... IMPROVEMENT ... (+ " << fixed << setprecision(3) 
           << 100 * improvement_rate << " %) ";
-      if (operation == JOIN && improvement_rate < IMPROVEMENT_RATE) {
-        log << "\t\t[ACCEPT] with negligible improvement (while joining)!\n\n";
-      } else {
-        log << "\t\t[ACCEPT]\n\n";
-      }
-    } else {  // ... no substantial improvement
-      log << "\t ... IMPROVEMENT < " << fixed << setprecision(3) 
-          << 100 * IMPROVEMENT_RATE << " %\t\t\t[REJECT]\n\n";
+      log << "\t\t[ACCEPT]\n\n";
+      current = modified;
+    } else {
+      log << "\t ... NO IMPROVEMENT\t\t\t[REJECT]\n\n";
     }
-  } else {    // ... no improvement
-    log << "\t ... NO IMPROVEMENT\t\t\t[REJECT]\n\n";
+  } /*else if (operation == SPLIT) {
+    if (improvement_rate > IMPROVEMENT_RATE) {
+      log << "\t ... IMPROVEMENT ... (+ " << fixed << setprecision(3) 
+          << 100 * improvement_rate << " %) ";
+      log << "\t\t[ACCEPT]\n\n";
+      current = modified;
+    } else {
+      log << "\t ... NO IMPROVEMENT\t\t\t[REJECT]\n\n";
+    }
+  }*/
+  else if (operation == SPLIT) {
+    if (improvement_rate > IMPROVEMENT_RATE) {
+      log << "\t ... IMPROVEMENT ... (+ " << fixed << setprecision(3) 
+          << 100 * improvement_rate << " %) ";
+      log << "\t\t[ACCEPT]\n\n";
+      current = modified;
+    } else if (improvement_rate > 0 && improvement_rate <= IMPROVEMENT_RATE) {
+      log << "\t ... IMPROVEMENT (" << 100 * improvement_rate << " %) < " << fixed << setprecision(3) 
+          << 100 * IMPROVEMENT_RATE << " %\t\t\t[REJECT]\n\n";
+      log << "\t\tdI: " << dI << " bits.\n";
+      log << "\t\tdI/N: " << dI_n << " bits.\n\n";
+    } else {
+      log << "\t ... NO IMPROVEMENT\t\t\t[REJECT]\n\n";
+    }
   }
 }
 

@@ -78,6 +78,8 @@ class Kent  // FB5
 
     double computeNegativeLogLikelihood(struct Estimates &, Vector &, Matrix &, double);
 
+    double computeLogParametersProbability(double);
+
     double computeLogPriorProbability();
 
     double computeLogPriorAxes();

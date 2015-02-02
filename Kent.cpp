@@ -103,7 +103,7 @@ std::vector<Vector> Kent::generate(int sample_size)
   //writeToFile("random_sample_uniform.dat",sample,3);
   //writeToFile("random_sample_vmf.dat",sample,3);
   //writeToFile("random_sample_beta.dat",sample,3);
-  writeToFile("random_sample.dat",sample,3);
+  //writeToFile("random_sample.dat",sample,3);
   //std::vector<Vector> scaled_sample = scale_to_aom(sample);
   return sample;
 }
@@ -446,6 +446,14 @@ double Kent::computeNegativeLogLikelihood(
   return kent_est.computeNegativeLogLikelihood(sample_mean,S,N);
 }
 
+double Kent::computeLogParametersProbability(double Neff)
+{
+  double log_prior_density = computeLogPriorProbability();
+  double log_expected_fisher = computeLogFisherInformation(Neff);
+  double logp = -log_prior_density + 0.5 * log_expected_fisher;
+  return logp;
+}
+
 double Kent::computeLogPriorProbability()
 {
   double log_prior_axes = computeLogPriorAxes();
@@ -471,9 +479,9 @@ double Kent::computeLogPriorScale()
   double log_prior = 0;
 
   // vmf kappa prior
-  /*log_prior += log(8/PI);
+  log_prior += log(8/PI);
   log_prior += log(kappa);
-  log_prior -= (2 * log(1+kappa*kappa));*/
+  log_prior -= (2 * log(1+kappa*kappa));
 
   // beta distribution priors
   /*double ex = 2 * beta/kappa;
@@ -483,9 +491,9 @@ double Kent::computeLogPriorScale()
   log_prior += log(f);*/
 
   // uniform priors
-  double K1 = 1,K2=100;
+  /*double K1 = 1,K2=100;
   log_prior -= log(K2-K1);
-  log_prior += (log(2) - log(kappa));
+  log_prior += (log(2) - log(kappa));*/
 
   return log_prior;
 }

@@ -46,45 +46,20 @@ std::vector<Vector> load_matrix(string &file_name, int D)
   return sample;
 }
 
-int minimumIndex(int ignore_map, Vector &values)
-{
-  int min_index = 0;
-  double min_val = values[0];
-  if (ignore_map) {
-    for (int i=1; i<values.size(); i++) { 
-      if (i != MAP) {
-        if (values[i] <= min_val) {
-          min_index = i;
-          min_val = values[i];
-        } // if()
-      } 
-    } // for()
-  } else { // don't ignore_map
-    for (int i=1; i<values.size(); i++) { 
-      if (values[i] <= min_val) {
-        min_index = i;
-        min_val = values[i];
-      } // if()
-    } // for()
-  } // if(ignore_map)
-  return min_index;
-}
-
-void computeWins(
-  int ignore_map, ostream &out, std::vector<Vector> &values
+void computeMeanSquaredError(
+  ostream &out, double p, std::vector<Vector> &p_est_all
 ) {
-  int num_elements = values.size();
-  std::vector<int> wins(values[0].size(),0);
+  int num_elements = p_est_all.size();
 
-  int min_index;
+  Vector error(p_est_all[0].size(),0);
   for (int i=0; i<num_elements; i++) {
-    min_index = minimumIndex(ignore_map,values[i]);
-    wins[min_index]++;
+    for (int j=0; j<p_est_all[0].size(); j++) {
+      error[j] += (p - p_est_all[i][j]) * (p - p_est_all[i][j]);
+    }
   }
-  double percent_wins;
-  for (int j=0; j<wins.size(); j++) {
-    percent_wins = wins[j] * 100.0 / num_elements;
-    out << fixed << setw(10) << setprecision(2) << percent_wins;
+  for (int j=0; j<p_est_all[0].size(); j++) {
+    error[j] /= num_elements;
+    out << fixed << scientific << setprecision(6) << error[j] << "\t";
   }
   out << endl;
 }
@@ -95,6 +70,156 @@ struct Parameters
   double kappa,eccentricity;
   int quantity;
 };
+
+// all k fixed e, MSE(k)
+void tabulate_eccentricity_mse_kappas(
+  string &data_file, string &n_str, string &eccentricity_str
+) {
+  std::vector<Vector> all_kappas;
+  string kappas_file;
+  ofstream out(data_file.c_str());
+  double kappa = 10;
+  while (kappa <= 100) {
+    out << fixed << setw(10) << setprecision(0) << kappa << "\t";
+    ostringstream ssk;
+    ssk << fixed << setprecision(0);
+    ssk << kappa;
+    string kappa_str = ssk.str();
+    string current_dir = n_str + "k_" + kappa_str + "_e_" + eccentricity_str + "/";
+    string kappas_file = current_dir + "kappas";
+    all_kappas = load_matrix(kappas_file,NUM_METHODS);
+    computeMeanSquaredError(out,kappa,all_kappas);
+    kappa += 10;
+  } // while()
+  out.close();
+}
+
+// all k fixed e, MSE(b)
+void tabulate_eccentricity_mse_betas(
+  string &data_file, string &n_str, double eccentricity, string &eccentricity_str
+) {
+  std::vector<Vector> all_betas;
+  string betas_file;
+  ofstream out(data_file.c_str());
+  double kappa = 10,beta;
+  while (kappa <= 100) {
+    beta = 0.5 * kappa * eccentricity;
+    out << fixed << setw(10) << setprecision(0) << kappa << "\t";
+    ostringstream ssk;
+    ssk << fixed << setprecision(0);
+    ssk << kappa;
+    string kappa_str = ssk.str();
+    string current_dir = n_str + "k_" + kappa_str + "_e_" + eccentricity_str + "/";
+    string betas_file = current_dir + "betas";
+    all_betas = load_matrix(betas_file,NUM_METHODS);
+    computeMeanSquaredError(out,beta,all_betas);
+    kappa += 10;
+  } // while()
+  out.close();
+}
+
+// all e fixed k, MSE(k)
+void tabulate_kappa_mse_kappas(
+  string &data_file, string &n_str, double kappa, string &kappa_str
+) {
+  std::vector<Vector> all_kappas;
+  string kappas_file;
+  ofstream out(data_file.c_str());
+  double eccentricity = 0.1;
+  while (eccentricity < 0.95) {
+    out << fixed << setw(10) << setprecision(1) << eccentricity << "\t";
+    ostringstream sse;
+    sse << fixed << setprecision(1);
+    sse << eccentricity;
+    string eccentricity_str = sse.str();
+    string current_dir = n_str + "k_" + kappa_str + "_e_" + eccentricity_str + "/";
+    kappas_file = current_dir + "kappas";
+    all_kappas = load_matrix(kappas_file,NUM_METHODS);
+    computeMeanSquaredError(out,kappa,all_kappas);
+    eccentricity += 0.1;
+  } // while()
+  out.close();
+}
+
+// all e fixed k, MSE(b)
+void tabulate_kappa_mse_betas(
+  string &data_file, string &n_str, double kappa, string &kappa_str
+) {
+  std::vector<Vector> all_betas;
+  string betas_file;
+  ofstream out(data_file.c_str());
+  double eccentricity = 0.1,beta;
+  while (eccentricity < 0.95) {
+    beta = 0.5 * kappa * eccentricity;
+    out << fixed << setw(10) << setprecision(1) << eccentricity << "\t";
+    ostringstream sse;
+    sse << fixed << setprecision(1);
+    sse << eccentricity;
+    string eccentricity_str = sse.str();
+    string current_dir = n_str + "k_" + kappa_str + "_e_" + eccentricity_str + "/";
+    betas_file = current_dir + "betas";
+    all_betas = load_matrix(betas_file,NUM_METHODS);
+    computeMeanSquaredError(out,beta,all_betas);
+    eccentricity += 0.1;
+  } // while()
+  out.close();
+}
+
+void plot_script_mse_kappas(
+  string &data_file, string &n_str, string &type_str, string &xlabel, string &ylabel
+) {
+  string script_file = n_str + type_str + "_mse_kappas.p";
+  string plot_file = n_str + type_str + "_mse_kappas.eps";
+  ofstream out(script_file.c_str());
+  out << "set terminal postscript eps enhanced color\n\n";
+  out << "set output \"" << plot_file << "\"\n\n";
+  out << "set autoscale\n";	
+  out << "set xtics 0.1\n";
+  out << "set ytic auto\n";
+  out << "set style data linespoints\n\n";
+  out << "set xtics font \"Times-Roman, 20\"\n";
+  out << "set ytics font \"Times-Roman, 20\"\n";
+  out << "set xlabel font \"Times-Roman, 25\"\n";
+  out << "set ylabel font \"Times-Roman, 25\"\n\n";
+  out << "set xlabel \"" << xlabel << "\\n\"\n";
+  out << "set ylabel \"" << ylabel << "\\n\"\n";
+  //out << "set xr[10:]\n\n";
+  out << "plot \"" << data_file << "\" using 1:2 title \"MOMENT\" lc rgb \"red\", \\\n"
+      << "\"\" using 1:3 title \"MLE\" lc rgb \"blue\", \\\n"
+      << "\"\" using 1:4 title \"MAP\" lc rgb \"dark-green\", \\\n"
+      << "\"\" using 1:5 title \"MML\" lc rgb \"black\"\n";
+  out.close();
+  string cmd = "gnuplot -persist " + script_file;
+  if(system(cmd.c_str()));
+}
+
+/*void plot_script_mse_betas(
+  string &data_file, string &n_str, string &type_str, string &xlabel, string &ylabel
+) {
+  string script_file = n_str + type_str + "_mse_betas.p";
+  string plot_file = n_str + type_str + "_mse_betas.eps";
+  ofstream out(script_file.c_str());
+  out << "set terminal postscript eps enhanced color\n\n";
+  out << "set output \"" << plot_file << "\"\n\n";
+  out << "set autoscale\n";	
+  out << "set xtics 0.1\n";
+  out << "set ytic auto\n";
+  out << "set style data linespoints\n\n";
+  out << "set xtics font \"Times-Roman, 20\"\n";
+  out << "set ytics font \"Times-Roman, 20\"\n";
+  out << "set xlabel font \"Times-Roman, 25\"\n";
+  out << "set ylabel font \"Times-Roman, 25\"\n\n";
+  out << "set xlabel \"" << xlabel << "\"\n";
+  out << "set ylabel \"" << ylabel << "\"\n";
+  //out << "set xr[10:]\n\n";
+  out << "plot \"" << data_file << "\" using 1:2 title \"MOMENT\" lc rgb \"red\", \\\n"
+      << "\"\" using 1:3 title \"MLE\" lc rgb \"blue\", \\\n"
+      << "\"\" using 1:4 title \"MAP\" lc rgb \"dark-green\", \\\n"
+      << "\"\" using 1:5 title \"MML\" lc rgb \"black\"\n";
+  out.close();
+  string cmd = "gnuplot -persist " + script_file;
+  if(system(cmd.c_str()));
+}*/
 
 struct Parameters parseCommandLineInput(int argc, char **argv)
 {
@@ -123,104 +248,51 @@ struct Parameters parseCommandLineInput(int argc, char **argv)
   return parameters;
 }
 
-// all k fixed e
-void tabulate_eccentricity_kldivs(string &data_file, string &n_str, string &eccentricity_str)
-{
-  std::vector<Vector> kldivs;
-  string kldivs_file;
-  ofstream out(data_file.c_str());
-  double kappa = 5;
-  while (kappa <= 50) {
-    out << fixed << setw(10) << setprecision(0) << kappa;
-    ostringstream ssk;
-    ssk << fixed << setprecision(0);
-    ssk << kappa;
-    string kappa_str = ssk.str();
-    string current_dir = n_str + "k_" + kappa_str + "_e_" + eccentricity_str + "/";
-    string kldivs_file = current_dir + "kldivs";
-    kldivs = load_matrix(kldivs_file,NUM_METHODS);
-    computeWins(0,out,kldivs);
-    kappa += 5;
-  } // while()
-  out.close();
-}
-
-// all e fixed k
-void tabulate_kappa_kldivs(string &data_file, string &n_str, string &kappa_str)
-{
-  std::vector<Vector> kldivs;
-  string kldivs_file;
-  ofstream out(data_file.c_str());
-  double eccentricity = 0.1;
-  while (eccentricity < 0.95) {
-    out << fixed << setw(10) << setprecision(1) << eccentricity;
-    ostringstream sse;
-    sse << fixed << setprecision(1);
-    sse << eccentricity;
-    string eccentricity_str = sse.str();
-    string current_dir = n_str + "k_" + kappa_str + "_e_" + eccentricity_str + "/";
-    kldivs_file = current_dir + "kldivs";
-    kldivs = load_matrix(kldivs_file,NUM_METHODS);
-    computeWins(0,out,kldivs);
-    eccentricity += 0.1;
-  } // while()
-  out.close();
-}
-
-void plot_script_kldivs(string &data_file, string &n_str, string &type_str)
-{
-  string script_file = n_str + "e_" + type_str + "_kldivs.p";
-  string plot_file = n_str + "e_" + type_str + "_kldivs.eps";
-  ofstream out(script_file.c_str());
-  out << "set terminal postscript eps enhanced color\n\n";
-  out << "set output \"" << plot_file << "\"\n\n";
-  out << "set key invert reverse left top\n\n";
-  out << "set grid y\n";
-  out << "set style data histograms\n";
-  out << "set style histogram rowstacked\n";
-  out << "set boxwidth 0.5\n";
-  out << "set style fill solid 1.0 border -1\n";
-  out << "set ytics 10 nomirror\n";
-  out << "set yrange [:100]\n";
-  out << "set ylabel \"\% of wins\"\n";
-  out << "set ytics 10\n\n"; 
-  out << "plot \"" << data_file << "\" using 2 t \"MOM\", \\\n"
-      << "\"\" using 3 t \"MLE\", \\\n"
-      << "\"\" using 4 t \"MAP\", \\\n"
-      << "\"\" using 5:xtic(1) t \"MML\"";
-  out.close();
-  string cmd = "gnuplot -persist " + script_file;
-  if(system(cmd.c_str()));
-}
-
 int main(int argc, char **argv)
 {
   struct Parameters parameters = parseCommandLineInput(argc,argv);
   double kappa = parameters.kappa;
   double eccentricity = parameters.eccentricity;
-  double beta;
 
   string data_file,script_file;
   //string n_str = "./N_" + boost::lexical_cast<string>(parameters.N) + "_uniform_prior/";
-  string n_str = "./N_" + boost::lexical_cast<string>(parameters.N) + "/";
+  string n_str = "./N_" + boost::lexical_cast<string>(parameters.N) + "_vmf_prior/";
+  //string n_str = "./N_" + boost::lexical_cast<string>(parameters.N) + "/";
 
   if (parameters.quantity == 1) { // all k fixed e
     ostringstream sse;
     sse << fixed << setprecision(1);
     sse << eccentricity;
     string eccentricity_str = sse.str();
-    data_file = n_str + "e_" + eccentricity_str + "_kldivs.dat";
-    script_file = n_str + "e_" + eccentricity_str + "_kldivs.p";
-    tabulate_eccentricity_kldivs(data_file,n_str,eccentricity_str);
-    plot_script_kldivs(data_file,n_str,eccentricity_str);
+    string type_str = "e_" + eccentricity_str;
+
+    data_file = n_str + "e_" + eccentricity_str + "_mse_kappas.dat";
+    tabulate_eccentricity_mse_kappas(data_file,n_str,eccentricity_str);
+    string xlabel = "Kappa";
+    string ylabel = "MSE (Kappa)";
+    plot_script_mse_kappas(data_file,n_str,type_str,xlabel,ylabel);
+
+    /*data_file = n_str + "e_" + eccentricity_str + "_mse_betas.dat";
+    tabulate_eccentricity_mse_betas(data_file,n_str,eccentricity,eccentricity_str);
+    ylabel = "MSE (Beta)";
+    plot_script_mse_betas(data_file,n_str,type_str,xlabel,ylabel);*/
   } else if (parameters.quantity == 2) { // all e fixed k
     ostringstream ssk;
     ssk << fixed << setprecision(0);
     ssk << kappa;
     string kappa_str = ssk.str();
-    data_file = n_str + "k_" + kappa_str + "_kldivs.dat";
-    tabulate_kappa_kldivs(data_file,n_str,kappa_str);
-    plot_script_kldivs(data_file,n_str,kappa_str);
+    string type_str = "k_" + kappa_str;
+
+    data_file = n_str + "k_" + kappa_str + "_mse_kappas.dat";
+    tabulate_kappa_mse_kappas(data_file,n_str,kappa,kappa_str);
+    string xlabel = "eccentricity";
+    string ylabel = "MSE (Kappa)";
+    plot_script_mse_kappas(data_file,n_str,type_str,xlabel,ylabel);
+
+    /*data_file = n_str + "k_" + kappa_str + "_mse_betas.dat";
+    tabulate_kappa_mse_betas(data_file,n_str,kappa,kappa_str);
+    ylabel = "MSE (Beta)";
+    plot_script_mse_betas(data_file,n_str,type_str,xlabel,ylabel);*/
   }
 
   return 0;

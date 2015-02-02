@@ -286,22 +286,31 @@ int main(int argc, char **argv)
 
   double kappa,beta,eccentricity;
 
-  string n_str = "N_" + boost::lexical_cast<string>(parameters.N) + "_uniform_prior/";
+  /*double INIT_KAPPA = 5;
+  double MAX_KAPPA = 50;
+  double KAPPA_INCREMENT = 5;
+  string n_str = "N_" + boost::lexical_cast<string>(parameters.N) + "_kappa_until_50/";*/
+
+  double INIT_KAPPA = 10;
+  double MAX_KAPPA = 100;
+  double KAPPA_INCREMENT = 10;
+  //string n_str = "N_" + boost::lexical_cast<string>(parameters.N) + "_uniform_prior/";
   //string n_str = "N_" + boost::lexical_cast<string>(parameters.N) + "_vmf_prior/";
   //string n_str = "N_" + boost::lexical_cast<string>(parameters.N) + "_beta_prior/";
-  string parent_dir = "experiments/single_kent/" + n_str + "/";
+  //string n_str = "./N_" + boost::lexical_cast<string>(parameters.N) + "/";
+
   string current_dir,kappa_str,eccentricity_str;
   string kappas_file,betas_file,negloglike_file,kldivs_file,msglens_file;
   std::vector<Vector> kappas_table,betas_table,negloglike_table,kldivs_table,msglens_table;
 
-  string wins_kldivs_file = parent_dir + "wins_kldivs";
-  string wins_negloglike_file = parent_dir + "wins_negloglike";
-  string wins_msglens_file = parent_dir + "wins_msglens";
-  string mse_kappa_file = parent_dir + "mse_kappas";
-  string mse_beta_file = parent_dir + "mse_betas";
-  string avg_kldivs_file = parent_dir + "avg_kldivs";
-  string avg_negloglike_file = parent_dir + "avg_negloglike";
-  string avg_msglens_file = parent_dir + "avg_msglens";
+  string wins_kldivs_file = n_str + "wins_kldivs";
+  string wins_negloglike_file = n_str + "wins_negloglike";
+  string wins_msglens_file = n_str + "wins_msglens";
+  string mse_kappa_file = n_str + "mse_kappas";
+  string mse_beta_file = n_str + "mse_betas";
+  string avg_kldivs_file = n_str + "avg_kldivs";
+  string avg_negloglike_file = n_str + "avg_negloglike";
+  string avg_msglens_file = n_str + "avg_msglens";
 
   ofstream wins_kldivs(wins_kldivs_file.c_str());
   ofstream wins_negloglike(wins_negloglike_file.c_str());
@@ -312,8 +321,8 @@ int main(int argc, char **argv)
   ofstream avg_negloglike(avg_negloglike_file.c_str());
   ofstream avg_msglens(avg_msglens_file.c_str());
 
-  kappa = 5;
-  while (kappa <= 50) {
+  kappa = INIT_KAPPA;
+  while (kappa <= MAX_KAPPA) {
     ostringstream ssk;
     ssk << fixed << setprecision(0);
     ssk << kappa;
@@ -325,7 +334,7 @@ int main(int argc, char **argv)
       sse << fixed << setprecision(1);
       sse << eccentricity;
       eccentricity_str = sse.str();
-      current_dir = parent_dir + "k_" + kappa_str + "_e_" + eccentricity_str + "/";
+      current_dir = n_str + "k_" + kappa_str + "_e_" + eccentricity_str + "/";
 
       kappas_file = current_dir + "kappas";
       kappas_table = load_matrix(kappas_file,NUM_METHODS);
@@ -376,7 +385,7 @@ int main(int argc, char **argv)
       
       eccentricity += 0.1;
     } // eccentricity
-    kappa += 5;
+    kappa += KAPPA_INCREMENT;
   } // kappa
   wins_kldivs.close();
   wins_negloglike.close();
