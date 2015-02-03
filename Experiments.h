@@ -2,6 +2,7 @@
 #define EXPERIMENTS_H
 
 #include "Header.h"
+#include "Mixture.h"
 
 class Experiments
 {
@@ -13,21 +14,13 @@ class Experiments
 
     void simulate();
 
-    void computeMeasures(double, double, std::vector<Vector> &, std::vector<Vector> &, int);
+    void checkFolders(string &);
 
-    Vector computeEstimateMedians(ostream &, std::vector<Vector> &);
+    void infer_components_exp1();
 
-    Vector computeEstimateMeans(ostream &, std::vector<Vector> &);
+    void generateData(Mixture &, string &, int);
 
-    void computeBias(ostream &, double, std::vector<Vector> &);
-
-    void computeVariance(ostream &, double, std::vector<Vector> &);
-
-    void computeMeanAbsoluteError(ostream &, double, std::vector<Vector> &);
-
-    void computeMeanSquaredError(ostream &, double, std::vector<Vector> &);
-
-    void computeWinsRatio(bool, const char *, string, int, string);
+    void inferMixtures(Mixture &, string &);
 };
 
 #endif

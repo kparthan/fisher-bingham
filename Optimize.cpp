@@ -142,11 +142,11 @@ std::vector<double> Optimize::minimize(Vector &sample_mean, Matrix &S, int num_p
       x[0] = kappa; x[1] = beta;
       nlopt::result result = opt.optimize(x, minf);
       //if (result == NLOPT_FAILURE) {
-      cout << "mom result: " << result << endl;
+      /*cout << "mom result: " << result << endl;
       if (result == -1) {
         cout << "failed\n";
         exit(1);
-      }
+      }*/
       assert(!boost::math::isnan(minf));
       break;
     }
@@ -225,11 +225,11 @@ std::vector<double> Optimize::minimize(Vector &sample_mean, Matrix &S, int num_p
       x[0] = psi; x[1] = alpha; x[2] = eta; x[3] = kappa; x[4] = beta;
       nlopt::result result = opt.optimize(x, minf);
       //assert(!boost::math::isnan(minf));
-      cout << "mml result: " << result << endl;
-      if (result < 0) {
+      //cout << "mml result: " << result << endl;
+      /*if (result < 0) {
         cout << "failed\n";
         exit(1);
-      }
+      }*/
       if (boost::math::isnan(minf)) {
         cout << "MML5 here:\n";
         x[0] = psi; x[1] = alpha; x[2] = eta; x[3] = kappa; x[4] = beta;

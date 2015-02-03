@@ -228,7 +228,7 @@ void Test::productMatrixVector(void)
 void Test::dispersionMatrix(void)
 {
   string file_name = "./visualize/sampled_data/kent.dat";
-  std::vector<Vector> sample = load_matrix(file_name);
+  std::vector<Vector> sample = load_data_table(file_name);
   Vector unit_mean = computeVectorSum(sample);
   cout << "unit_mean: "; print(cout,unit_mean,3); cout << endl;
   Matrix m = computeDispersionMatrix(sample);
@@ -601,7 +601,7 @@ void Test::moment_estimation(void)
   // Kent example from paper
   cout << "\nReading Whin Sill data ...\n";
   string file_name = "./support/R_codes/whin_sill.txt";
-  std::vector<Vector> whin_sill = load_matrix(file_name);
+  std::vector<Vector> whin_sill = load_data_table(file_name);
   estimates = kent.computeMomentEstimates(whin_sill);
 
   cartesian2spherical(estimates.mean,spherical);
@@ -660,7 +660,7 @@ void Test::ml_estimation(void)
       S(i,j) *= N;
     }
   }
-  kent.computeAllEstimators(sample_mean,S,N,all_estimates,sample_mean,S,1,0);
+  kent.computeAllEstimators(sample_mean,S,N,all_estimates,1,0);
 }
 
 void Test::expectation()
@@ -756,7 +756,7 @@ void Test::mml_estimation(void)
   Kent kent(m0,m1,m2,kappa,beta);
   random_sample = kent.generate(sample_size);
   writeToFile("random_sample.dat",random_sample,3);
-  random_sample = load_matrix(data_file);
+  random_sample = load_data_table(data_file);
   kent.computeAllEstimators(random_sample,all_estimates,1,1);
 }
 
@@ -783,7 +783,7 @@ void Test::mml_estimation2(void)
   Kent kent(psi,alpha,eta,kappa,beta);
   random_sample = kent.generate(sample_size);
   writeToFile("random_sample.dat",random_sample,3);
-  random_sample = load_matrix(data_file);
+  random_sample = load_data_table(data_file);
   kent.computeAllEstimators(random_sample,all_estimates,1,1);
 }
 
@@ -834,7 +834,7 @@ void Test::hypothesis_testing()
   writeToFile("./visualize/sampled_data/kent.dat",random_sample,3);
 
   /*string file_name = "./support/R_codes/whin_sill.txt";
-  random_sample = load_matrix(file_name);*/
+  random_sample = load_data_table(file_name);*/
   kent.computeTestStatistic_vMF(random_sample);
 
   // Generating data from vMF
@@ -866,7 +866,7 @@ void Test::confidence_region()
   writeToFile("./visualize/sampled_data/kent.dat",random_sample,3);
 
   /*string file_name = "./support/R_codes/whin_sill.txt";
-  random_sample = load_matrix(file_name);*/
+  random_sample = load_data_table(file_name);*/
   kent.computeConfidenceRegion(random_sample);
 }
 

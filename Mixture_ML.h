@@ -2,6 +2,7 @@
 #define MIXTURE_ML_H
 
 #include "Kent.h"
+#include "Mixture.h"
 
 class Mixture_ML
 {
@@ -34,7 +35,12 @@ class Mixture_ML
     //! Weights of the components (a_k)
     Vector weights;
 
+    Vector msglens;
+    double null_msglen;
     //! Optimal encoding length
+    double Ik,Iw,sum_It,Il,kd_term,part1,part2,minimum_msglen;
+    Vector It;
+
     double negloglike;
 
   public:
@@ -56,6 +62,8 @@ class Mixture_ML
 
     //! Overloading == operator
     bool operator==(const Mixture_ML &);
+
+    double computeMinimumMessageLength(int verbose = 0);
 
     //! Prepare log file
     string getLogFile();
@@ -150,6 +158,8 @@ class Mixture_ML
     double computeKLDivergence(Mixture_ML &);
 
     double computeKLDivergence(Mixture_ML &, std::vector<Vector> &);
+
+    Mixture convert();
 };
 
 #endif

@@ -44,6 +44,8 @@ class Mixture
     double Ik,Iw,sum_It,Il,kd_term,part1,part2,minimum_msglen;
     Vector It;
 
+    double negloglike;
+
   public:
     //! Null constructor
     Mixture();
@@ -122,6 +124,8 @@ class Mixture
     //! Gets the second part
     double second_part();
 
+    double getNegativeLogLikelihood();
+
     //! Estimate mixture parameters
     double estimateParameters();
 
@@ -136,6 +140,8 @@ class Mixture
 
     //! Prints the model parameters
     void printParameters(ostream &, int);
+
+    void printParameters(string &);
 
     //! Prints the model parameters
     void printParameters(ostream &);

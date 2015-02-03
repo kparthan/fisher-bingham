@@ -90,11 +90,12 @@ class Kent  // FB5
 
     double computeLogFisherInformation(double);
 
-    void computeAllEstimators(std::vector<Vector> &, std::vector<struct Estimates> &, int, int);
+    void computeAllEstimators(
+      std::vector<Vector> &, std::vector<struct Estimates> &, int, int
+    );
 
     void computeAllEstimators(
-      Vector &, Matrix &, double,
-      std::vector<struct Estimates> &, Vector &, Matrix &, int, int
+      Vector &, Matrix &, double, std::vector<struct Estimates> &, int, int
     );
 
     struct Estimates computeAsymptoticMomentEstimates(std::vector<Vector> &);

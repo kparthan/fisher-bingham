@@ -3,7 +3,7 @@
 #include "Kent.h"
 
 extern Vector XAXIS,YAXIS,ZAXIS;
-extern int MOMENT_FAIL,MLE_FAIL,MAP_FAIL,MML_FAIL;
+extern int MOMENT_FAIL,MLE_FAIL,MAP_FAIL,MML_FAIL,ESTIMATION;
 extern struct stat st;
 
 Experiments::Experiments(int iterations) : iterations(iterations)
@@ -70,7 +70,7 @@ void Experiments::simulate()
       for (int i=0; i<iterations; i++) {
         cout << "Iteration: " << i+1 << endl;
         kent.generate(N);
-        random_sample = load_matrix(data_file);
+        random_sample = load_data_table(data_file);
         //random_sample = kent.generate(N);
         kent.computeAllEstimators(random_sample,all_estimates,0,1);
         for (int j=0; j<all_estimates.size(); j++) {
@@ -98,232 +98,198 @@ void Experiments::simulate()
   } // kappa
 }
 
-void Experiments::computeMeasures(
-  double kappa,
-  double beta,
-  std::vector<Vector> &kappa_est_all,
-  std::vector<Vector> &beta_est_all,
-  int N
+void Experiments::checkFolders(string &exp_folder)
+{
+  string data_folder = exp_folder + "data/";
+  if (stat(data_folder.c_str(), &st) == -1) {
+    cout << "Error: data folder not present ...\n";
+    exit(1);
+  }
+
+  string logs_folder = exp_folder + "logs/";
+  if (stat(logs_folder.c_str(), &st) == -1) {
+    mkdir(logs_folder.c_str(), 0700);
+  }
+  string tmp = logs_folder + "moment/";
+  if (stat(tmp.c_str(), &st) == -1) {
+    mkdir(tmp.c_str(), 0700);
+  }
+  tmp = logs_folder + "mle/";
+  if (stat(tmp.c_str(), &st) == -1) {
+    mkdir(tmp.c_str(), 0700);
+  }
+  tmp = logs_folder + "map/";
+  if (stat(tmp.c_str(), &st) == -1) {
+    mkdir(tmp.c_str(), 0700);
+  }
+  tmp = logs_folder + "mml/";
+  if (stat(tmp.c_str(), &st) == -1) {
+    mkdir(tmp.c_str(), 0700);
+  }
+
+  string mixtures_folder = exp_folder + "mixtures/";
+  if (stat(mixtures_folder.c_str(), &st) == -1) {
+    mkdir(mixtures_folder.c_str(), 0700);
+  }
+  tmp = mixtures_folder + "moment/";
+  if (stat(tmp.c_str(), &st) == -1) {
+    mkdir(tmp.c_str(), 0700);
+  }
+  tmp = mixtures_folder + "mle/";
+  if (stat(tmp.c_str(), &st) == -1) {
+    mkdir(tmp.c_str(), 0700);
+  }
+  tmp = mixtures_folder + "map/";
+  if (stat(tmp.c_str(), &st) == -1) {
+    mkdir(tmp.c_str(), 0700);
+  }
+  tmp = mixtures_folder + "mml/";
+  if (stat(tmp.c_str(), &st) == -1) {
+    mkdir(tmp.c_str(), 0700);
+  }
+
+  string results_folder = exp_folder + "results/";
+  if (stat(results_folder.c_str(), &st) == -1) {
+    mkdir(results_folder.c_str(), 0700);
+  }
+}
+
+void Experiments::infer_components_exp1()
+{
+  iterations = 50;
+  int N = 100;
+
+  string parent_folder = "./experiments/infer_components/exp1/";
+  string exp_folder;
+
+  double alpha,alpha_rad,sin_alpha,cos_alpha;
+  double kappa,beta,ecc;
+  Vector mean,major,minor;
+
+  //for (double alpha=5; alpha<=25; alpha+=5) {
+    alpha = 10; // in degrees
+    alpha_rad = alpha * PI / 180;
+
+    mean = ZAXIS;
+    major = XAXIS;
+    minor = YAXIS;
+    kappa = 10; ecc = 0.1;
+    beta = 0.5 * kappa * ecc;
+    Kent kent1(mean,major,minor,kappa,beta);
+
+    sin_alpha = sin(alpha_rad);
+    cos_alpha = cos(alpha_rad);
+    mean[0] = sin_alpha; mean[1] = 0; mean[2] = cos_alpha;
+    major[0] = cos_alpha; major[1] = 0; major[2] = -sin_alpha;
+    kappa = 10; ecc = 0.1;
+    beta = 0.5 * kappa * ecc;
+    Kent kent2(mean,major,minor,kappa,beta);
+
+    Vector weights(2,0.5);
+
+    std::vector<Kent> components;
+    components.push_back(kent1);
+    components.push_back(kent2);
+    Mixture original(2,components,weights);
+
+    std::ostringstream ss;
+    ss << fixed << setprecision(0);
+    ss << alpha;
+    string alpha_str = "alpha_" + ss.str();
+    exp_folder = parent_folder + alpha_str + "/" ;
+    if (stat(exp_folder.c_str(), &st) == -1) {
+      mkdir(exp_folder.c_str(), 0700);
+    }
+
+    //generateData(original,exp_folder,N);
+    inferMixtures(original,exp_folder);
+  //}
+}
+
+void Experiments::generateData(
+  Mixture &original, 
+  string &exp_folder,
+  int sample_size
 ) {
-  double kappa_est,beta_est,diffk,diffb;
-
-  string kappa_str = boost::lexical_cast<string>(kappa);
-  string beta_str = boost::lexical_cast<string>(beta);
-  string tmp = "k_" + kappa_str + "_b_" + beta_str;
-  string folder = "./experiments/single_kent/" + tmp + "/";
-
-  string medians_file = folder + "medians_kappa";
-  ofstream mediansk(medians_file.c_str(),ios::app);
-  mediansk << fixed << setw(10) << N << "\t";
-  Vector medians_kappa = computeEstimateMedians(mediansk,kappa_est_all);
-  mediansk.close();
-
-  medians_file = folder + "medians_beta";
-  ofstream mediansb(medians_file.c_str(),ios::app);
-  mediansb << fixed << setw(10) << N << "\t";
-  Vector medians_beta = computeEstimateMedians(mediansb,beta_est_all);
-  mediansb.close();
-
-  string means_file = folder + "means_kappa";
-  ofstream meansk(means_file.c_str(),ios::app);
-  meansk << fixed << setw(10) << N << "\t";
-  Vector means_kappa = computeEstimateMeans(meansk,kappa_est_all);
-  meansk.close();
-
-  means_file = folder + "means_beta";
-  ofstream meansb(means_file.c_str(),ios::app);
-  meansb << fixed << setw(10) << N << "\t";
-  Vector means_beta = computeEstimateMeans(meansb,beta_est_all);
-  meansb.close();
-
-  string bias_file = folder + "bias_sq_kappa";
-  ofstream biask(bias_file.c_str(),ios::app);
-  biask << fixed << setw(10) << N << "\t";
-  computeBias(biask,kappa,kappa_est_all);
-  biask.close();
-
-  bias_file = folder + "bias_sq_beta";
-  ofstream biasb(bias_file.c_str(),ios::app);
-  biasb << fixed << setw(10) << N << "\t";
-  computeBias(biasb,beta,beta_est_all);
-  biasb.close();
-
-  string variance_file = folder + "variance_kappa";
-  ofstream variancek(variance_file.c_str(),ios::app);
-  variancek << fixed << setw(10) << N << "\t";
-  computeVariance(variancek,kappa,kappa_est_all);
-  variancek.close();
-
-  variance_file = folder + "variance_beta";
-  ofstream varianceb(variance_file.c_str(),ios::app);
-  varianceb << fixed << setw(10) << N << "\t";
-  computeVariance(varianceb,beta,beta_est_all);
-  varianceb.close();
-
-  string error_file = folder + "mean_abs_error_kappa";
-  ofstream abs_error_k(error_file.c_str(),ios::app);
-  computeMeanAbsoluteError(abs_error_k,kappa,kappa_est_all);
-  abs_error_k.close();
-
-  error_file = folder + "mean_abs_error_beta";
-  ofstream abs_error_b(error_file.c_str(),ios::app);
-  computeMeanAbsoluteError(abs_error_b,beta,beta_est_all);
-  abs_error_b.close();
-
-  error_file = folder + "mean_sqd_error_kappa";
-  ofstream sqd_error_k(error_file.c_str(),ios::app);
-  computeMeanSquaredError(sqd_error_k,kappa,kappa_est_all);
-  sqd_error_k.close();
-
-  error_file = folder + "mean_sqd_error_beta";
-  ofstream sqd_error_b(error_file.c_str(),ios::app);
-  computeMeanSquaredError(sqd_error_b,beta,beta_est_all);
-  sqd_error_b.close();
-}
-
-Vector Experiments::computeEstimateMedians(ostream &out, std::vector<Vector> &p_est_all)
-{
-  Vector medians = computeMedians(p_est_all);
-  for (int i=0; i<NUM_METHODS; i++) {
-    out << scientific << medians[i] << "\t";
+  string data_folder = exp_folder + "data/";
+  if (stat(data_folder.c_str(), &st) == -1) {
+      mkdir(data_folder.c_str(), 0700);
   }
-  out << endl;
-  return medians;
-}
+  
+  string iter_str,data_file;
+  std::vector<Vector> data;
 
-Vector Experiments::computeEstimateMeans(ostream &out, std::vector<Vector> &p_est_all)
-{
-  Vector means = computeMeans(p_est_all);
-  for (int i=0; i<NUM_METHODS; i++) {
-    out << scientific << means[i] << "\t";
+  for (int iter=1; iter<=iterations; iter++) {
+    iter_str = boost::lexical_cast<string>(iter);
+    data_file =  data_folder + "mixture_iter_" + iter_str + ".dat";
+    data = original.generate(sample_size,0);
+    writeToFile(data_file,data);
   }
-  out << endl;
-  return means;
 }
 
-void Experiments::computeBias(ostream &out, double p, std::vector<Vector> &p_est_all)
-{
-  Vector avg_p_est = computeMeans(p_est_all);
+void Experiments::inferMixtures(
+  Mixture &original, 
+  string &exp_folder
+) {
+  checkFolders(exp_folder);
 
-  Vector bias_sq(NUM_METHODS,0);
-  for (int j=0; j<NUM_METHODS; j++) {
-    bias_sq[j] = (p - avg_p_est[j]) * (p - avg_p_est[j]);
-    out << scientific << bias_sq[j] << "\t";
-  }
-  out << endl;
-}
+  string data_folder = exp_folder + "data/";
+  string logs_folder = exp_folder + "logs/";
+  string mixtures_folder = exp_folder + "mixtures/";
+  string results_folder = exp_folder + "results/";
 
-void Experiments::computeVariance(ostream &out, double p, std::vector<Vector> &p_est_all)
-{
-  Vector avg_p_est = computeMeans(p_est_all);
-  int num_elements = p_est_all.size();
+  string data_file,log_file,mixture_file,iter_str;
+  std::vector<Vector> data;
+  Mixture inferred;
+  
+  int num_success = 0;
+  double avg_number,variance;
 
-  Vector variance(NUM_METHODS,0);
-  for (int i=0; i<num_elements; i++) {
+  for (int iter=1; iter<=iterations; iter++) {
+    iter_str = boost::lexical_cast<string>(iter);
+
+    data_file = data_folder + "mixture_iter_" + iter_str + ".dat";
+    cout << "data_file: " << data_file << endl;
+    data = load_data_table(data_file);
+
     for (int j=0; j<NUM_METHODS; j++) {
-      variance[j] += (avg_p_est[j] - p_est_all[i][j]) * (avg_p_est[j] - p_est_all[i][j]);
-    }
-  }
-  for (int j=0; j<NUM_METHODS; j++) {
-    variance[j] /= num_elements;
-    out << scientific << variance[j] << "\t";
-  }
-  out << endl;
-}
+      ESTIMATION = j;
+      switch(ESTIMATION) {
+        case MOMENT:
+          log_file = logs_folder + "moment/mixture_iter_" + iter_str + ".log";
+          mixture_file = mixtures_folder + "moment/mixture_iter_" + iter_str;
+          break;
 
-void Experiments::computeMeanAbsoluteError(
-  ostream &out, double p, std::vector<Vector> &p_est_all
-) {
-  int num_elements = p_est_all.size();
+        case MLE:
+          log_file = logs_folder + "mle/mixture_iter_" + iter_str + ".log";
+          mixture_file = mixtures_folder + "mle/mixture_iter_" + iter_str;
+          break;
 
-  Vector error(NUM_METHODS,0);
-  for (int i=0; i<num_elements; i++) {
-    for (int j=0; j<NUM_METHODS; j++) {
-      error[j] += fabs(p - p_est_all[i][j]);
-    }
-  }
-  for (int j=0; j<NUM_METHODS; j++) {
-    error[j] /= num_elements;
-    out << scientific << error[j] << "\t";
-  }
-  out << endl;
-}
+        case MAP:
+          log_file = logs_folder + "map/mixture_iter_" + iter_str + ".log";
+          mixture_file = mixtures_folder + "map/mixture_iter_" + iter_str;
+          break;
 
-void Experiments::computeMeanSquaredError(
-  ostream &out, double p, std::vector<Vector> &p_est_all
-) {
-  int num_elements = p_est_all.size();
+        case MML:
+          log_file = logs_folder + "mml/mixture_iter_" + iter_str + ".log";
+          mixture_file = mixtures_folder + "mml/mixture_iter_" + iter_str;
+          break;
 
-  Vector error(NUM_METHODS,0);
-  for (int i=0; i<num_elements; i++) {
-    for (int j=0; j<NUM_METHODS; j++) {
-      error[j] += (p - p_est_all[i][j]) * (p - p_est_all[i][j]);
-    }
-  }
-  for (int j=0; j<NUM_METHODS; j++) {
-    error[j] /= num_elements;
-    out << scientific << error[j] << "\t";
-  }
-  out << endl;
-}
-
-void Experiments::computeWinsRatio(
-  bool ignore_first, 
-  const char *measure, 
-  string input_file, 
-  int N,
-  string folder
-) {
-  ifstream input(input_file.c_str());
-  // read values from the file
-  string line;
-  int start;
-  if (ignore_first == 0) {
-    start = 1;
-  } else if (ignore_first == 1) {
-    start = 2;
-  }
-  Vector numbers;
-  std::vector<Vector> table;
-  while (getline(input,line)) {
-    boost::char_separator<char> sep(" \t");
-    boost::tokenizer<boost::char_separator<char> > tokens(line,sep);
-    BOOST_FOREACH (const string& t, tokens) {
-      istringstream iss(t);
-      double x;
-      iss >> x;
-      numbers.push_back(x);
-    }
-    Vector values_to_compare;
-    for (int i=start; i<numbers.size(); i++) {
-      values_to_compare.push_back(numbers[i]);
-    }
-    table.push_back(values_to_compare);
-    numbers.clear();
-  }
-  input.close();
-
-  string wins_file = folder + "wins";
-  ofstream out(wins_file.c_str(),ios::app);
-  out << setw(10) << N << "\t";
-  out << setw(20) << measure << "\t";
-  std::vector<int> wins(NUM_METHODS,0);
-  for (int i=0; i<table.size(); i++) {
-    int winner = 0;
-    double min = table[i][0];
-    for (int j=1; j<NUM_METHODS; j++) {
-      if (table[i][j] <= min) {
-        min = table[i][j];
-        winner = j;
+      } // switch() ends ...
+      if (ESTIMATION != MML) {
+        inferred = inferComponents_ML(data,log_file);
+      } else {
+        inferred = inferComponents(data,log_file);
       }
-    } // j loop ends ...
-    wins[winner]++;
-  } // i loop ends ...
-  out << "[";
-  for (int i=0; i<wins.size()-1; i++) {
-    out << wins[i] << " : ";
-  }
-  out << wins[wins.size()-1] << "]\n";
-  out.close();
+      inferred.printParameters(mixture_file);
+    }
+  } // iter() loop ...
+  /*avg_number = computeMean(inferred);
+  variance = computeVariance(inferred);
+  summary << "\nsuccess rate: " //<< setprecision(2) 
+          << num_success * 100 / (double)(iterations) << " %\n";
+  summary << "Avg: " << avg_number << endl;
+  summary << "Variance: " << variance << endl;
+  summary.close();*/
 }
 

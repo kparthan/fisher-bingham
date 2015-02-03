@@ -2,6 +2,7 @@
 #define SUPPORT_H
 
 #include "Mixture.h"
+#include "Mixture_ML.h"
 #include "Mixture_vMF.h"
 
 struct Parameters
@@ -57,6 +58,7 @@ void Usage (const char *, options_description &);
 bool checkFile(string &);
 void writeToFile(const char *, std::vector<Vector> &, int);
 void writeToFile(const char *, std::vector<Vector> &);
+void writeToFile(string &file_name, std::vector<Vector> &);
 string extractName(string &);
 void print(ostream &, Vector &, int);
 void print(string &, struct Estimates &);
@@ -73,13 +75,13 @@ void cartesian2spherical(Vector &, Vector &);
 void spherical2cartesian(Vector &, Vector &);
 double computeDotProduct(Vector &, Vector &);
 Vector crossProduct(Vector &, Vector &); 
-long double computeSum(Vector &);
+double computeSum(Vector &);
 double computeLogSurfaceAreaSphere(int);
 void solveQuadratic(Vector &, double, double, double);
 double uniform_random();
 double computeLogModifiedBesselFirstKind(double, double);
 
-std::vector<Vector> load_matrix(string &);
+std::vector<Vector> load_data_table(string &);
 Matrix outer_prod(Vector &, Vector &);
 Vector prod(Matrix &, Vector &);
 Vector prod(Vector &, Matrix &);
@@ -117,7 +119,7 @@ double computeTestStatistic(double, double, double, int);
 double compute_pvalue(double, chi_squared &);
 
 double computeConstantTerm(int);
-long double logLatticeConstant(int);
+double logLatticeConstant(int);
 std::vector<std::vector<int> > updateBins(std::vector<Vector> &, double);
 void outputBins(std::vector<std::vector<int> > &, double);
 void computeEstimators(struct Parameters &);
@@ -130,8 +132,12 @@ std::vector<Kent> generateRandomComponents(int);
 std::vector<vMF> generateRandomComponents_vMF(int);
 Vector generateRandomKappas(int);
 Vector generateRandomBetas(Vector &);
+Mixture inferComponents(std::vector<Vector> &, string &);
 Mixture inferComponents(Mixture &, int, ostream &);
 void updateInference(Mixture &, Mixture &, int, ostream &, int);
+Mixture inferComponents_ML(std::vector<Vector> &, string &);
+Mixture_ML inferComponents_ML(Mixture_ML &, int, ostream &);
+void updateInference_ML(Mixture_ML &, Mixture_ML &, int, ostream &, int);
 Mixture_vMF inferComponents_vMF(Mixture_vMF &, int, ostream &);
 void updateInference_vMF(Mixture_vMF &, Mixture_vMF &, int, ostream &, int);
 

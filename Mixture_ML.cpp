@@ -33,6 +33,7 @@ Mixture_ML::Mixture_ML(int K, std::vector<Kent> &components, Vector &weights):
   assert(components.size() == K);
   assert(weights.size() == K);
   id = MIXTURE_ID++;
+  minimum_msglen = 0;
   negloglike = 0;
 }
 
@@ -43,11 +44,12 @@ Mixture_ML::Mixture_ML(int K, std::vector<Kent> &components, Vector &weights):
  *  \param data_weights a reference to a Vector
  */
 Mixture_ML::Mixture_ML(int K, std::vector<Vector> &data, Vector &data_weights) : 
-                 K(K), data(data), data_weights(data_weights)
+                       K(K), data(data), data_weights(data_weights)
 {
   id = MIXTURE_ID++;
   N = data.size();
   assert(data_weights.size() == N);
+  minimum_msglen = 0;
   negloglike = 0;
 }
 
@@ -79,6 +81,7 @@ Mixture_ML::Mixture_ML(
   assert(responsibility.size() == K);
   N = data.size();
   assert(data_weights.size() == N);
+  minimum_msglen = 0;
   negloglike = 0;
 }
 
@@ -98,6 +101,18 @@ Mixture_ML Mixture_ML::operator=(const Mixture_ML &source)
     responsibility = source.responsibility;
     sample_size = source.sample_size;
     weights = source.weights;
+    msglens = source.msglens;
+    null_msglen = source.null_msglen;
+    minimum_msglen = source.minimum_msglen;
+    part1 = source.part1;
+    part2 = source.part2;
+    Ik = source.Ik;
+    Iw = source.Iw;
+    It = source.It;
+    sum_It = source.sum_It;
+    Il = source.Il;
+    kd_term = source.kd_term;
+    negloglike = source.negloglike;
   }
   return *this;
 }
@@ -269,7 +284,7 @@ void Mixture_ML::updateResponsibilityMatrix()
  *  \brief This function updates the terms in the responsibility matrix.
  */
 void Mixture_ML::computeResponsibilityMatrix(std::vector<Vector> &sample,
-                                          string &output_file)
+                                             string &output_file)
 {
   int sample_size = sample.size();
   Vector tmp(sample_size,0);
@@ -309,7 +324,6 @@ void Mixture_ML::computeResponsibilityMatrix(std::vector<Vector> &sample,
     out << "Component " << j+1 << ": " << comp_sum << endl;
   }
   out.close();
-  out.close();
 }
 
 /*!
@@ -342,7 +356,7 @@ double Mixture_ML::log_probability(Vector &x)
  */
 double Mixture_ML::computeNegativeLogLikelihood(std::vector<Vector> &sample)
 {
-  double value = 0,log_density;
+  double value=0,log_density;
   #pragma omp parallel for if(ENABLE_DATA_PARALLELISM) num_threads(NUM_THREADS) private(log_density) reduction(-:value)
   for (int i=0; i<sample.size(); i++) {
     log_density = log_probability(sample[i]);
@@ -352,9 +366,90 @@ double Mixture_ML::computeNegativeLogLikelihood(std::vector<Vector> &sample)
     assert(!boost::math::isnan(log_density));
     value -= log_density;
   }
-  return value;
+  negloglike = value;
+  return negloglike;
 }
 
+double Mixture_ML::computeMinimumMessageLength(int verbose /* default = 1 (print) */)
+{
+  MSGLEN_FAIL = 0;
+  part1 = 0;
+  part2 = 0;
+  minimum_msglen = 0;
+
+  /****************** PART 1 *********************/
+
+  // encode the number of components
+  // assume uniform priors
+  //double Ik = log(MAX_COMPONENTS);
+  Ik = K;
+  //Ik = log(MAX_COMPONENTS) / log(2);
+  //cout << "Ik: " << Ik << endl;
+
+  // enocde the weights
+  Iw = ((K-1)/2.0) * log(N);
+  Iw -= boost::math::lgamma<double>(K); // log(K-1)!
+  for (int i=0; i<K; i++) {
+    Iw -= 0.5 * log(weights[i]);
+  }
+  Iw /= log(2);
+  //cout << "Iw: " << Iw << endl;
+  //assert(Iw >= 0);
+
+  // encode the parameters of the components
+  It.clear();
+  sum_It = 0;
+  double logp;
+  for (int i=0; i<K; i++) {
+    logp = components[i].computeLogParametersProbability(sample_size[i]);
+    logp /= log(2);
+    It.push_back(logp);
+    sum_It += logp;
+  }
+  //cout << "It: " << sum_It << endl;
+  /*if (It <= 0) { cout << It << endl;}
+  fflush(stdout);
+  assert(It > 0);*/
+
+  // the constant term
+  //int D = data[0].size();
+  int num_free_params = (5 * K) + (K - 1);
+  double log_lattice_constant = logLatticeConstant(num_free_params);
+  kd_term = 0.5 * num_free_params * log_lattice_constant;
+  kd_term /= log(2);
+
+  part1 = Ik + Iw + sum_It + kd_term;
+
+  /****************** PART 2 *********************/
+
+  // encode the likelihood of the sample
+  double Il_partial = computeNegativeLogLikelihood(data);
+  Il = Il_partial - (2 * N * log(AOM));
+  Il /= log(2);
+  //cout << "Il: " << Il << endl;
+  //assert(Il > 0);
+  if (Il < 0 || boost::math::isnan(Il)) {
+    cout << "isnan(Il)\n"; sleep(5);
+    minimum_msglen = LARGE_NUMBER;
+    MSGLEN_FAIL = 1;
+    return minimum_msglen;
+  }
+
+  double constant = 0.5 * num_free_params;
+  constant /= log(2);
+  part2 = Il + constant;
+
+  minimum_msglen = part1 + part2;
+
+  if (verbose == 1) {
+    cout << "Ik: " << Ik << endl;
+    cout << "Iw: " << Iw << endl;
+    cout << "It: " << sum_It << endl;
+    cout << "Il: " << Il << endl;
+  }
+
+  return minimum_msglen;
+}
 /*!
  *  \brief Prepares the appropriate log file
  */
@@ -496,7 +591,7 @@ void Mixture_ML::printParameters(ostream &os, int num_tabs)
     components[k].printParameters(os);
   }
   os << tabs << "ID: " << id << endl;
-  os << tabs << "Kent encoding: " << negloglike/log(2) << " bits. "
+  os << tabs << "Kent negloglike: " << negloglike/log(2) << " bits. "
      << "(" << negloglike/(N*log(2)) << " bits/point)" << endl << endl;
 }
 
@@ -1002,5 +1097,10 @@ double Mixture_ML::computeKLDivergence(Mixture_ML &other, std::vector<Vector> &s
     kldiv += (log_fx - log_gx);
   }
   return kldiv/(log(2) * sample.size());
+}
+
+Mixture Mixture_ML::convert()
+{
+  return Mixture(K,components,weights);
 }
 

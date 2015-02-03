@@ -34,6 +34,7 @@ Mixture::Mixture(int K, std::vector<Kent> &components, Vector &weights):
   assert(weights.size() == K);
   id = MIXTURE_ID++;
   minimum_msglen = 0;
+  negloglike = 0;
 }
 
 /*!
@@ -49,6 +50,7 @@ Mixture::Mixture(int K, std::vector<Vector> &data, Vector &data_weights) :
   N = data.size();
   assert(data_weights.size() == N);
   minimum_msglen = 0;
+  negloglike = 0;
 }
 
 /*!
@@ -80,6 +82,7 @@ Mixture::Mixture(
   N = data.size();
   assert(data_weights.size() == N);
   minimum_msglen = 0;
+  negloglike = 0;
 }
 
 /*!
@@ -109,6 +112,7 @@ Mixture Mixture::operator=(const Mixture &source)
     sum_It = source.sum_It;
     Il = source.Il;
     kd_term = source.kd_term;
+    negloglike = source.negloglike;
   }
   return *this;
 }
@@ -176,7 +180,7 @@ Vector Mixture::getSampleSize()
 void Mixture::initialize()
 {
   N = data.size();
-  cout << "Sample size: " << N << endl;
+  //cout << "Sample size: " << N << endl;
 
   // initialize responsibility matrix
   //srand(time(NULL));
@@ -220,14 +224,6 @@ void Mixture::updateEffectiveSampleSize()
   }
 }
 
-void Mixture::updateWeights_ML()
-{
-  double normalization_constant = N;
-  for (int i=0; i<K; i++) {
-    weights[i] = sample_size[i] / normalization_constant;
-  }
-}
-
 /*!
  *  \brief This function is used to update the weights of the components.
  */
@@ -236,6 +232,14 @@ void Mixture::updateWeights()
   double normalization_constant = N + (K/2.0);
   for (int i=0; i<K; i++) {
     weights[i] = (sample_size[i] + 0.5) / normalization_constant;
+  }
+}
+
+void Mixture::updateWeights_ML()
+{
+  double normalization_constant = N;
+  for (int i=0; i<K; i++) {
+    weights[i] = sample_size[i] / normalization_constant;
   }
 }
 
@@ -368,7 +372,7 @@ double Mixture::log_probability(Vector &x)
  */
 double Mixture::computeNegativeLogLikelihood(std::vector<Vector> &sample)
 {
-  double value = 0,log_density;
+  double value=0,log_density;
   #pragma omp parallel for if(ENABLE_DATA_PARALLELISM) num_threads(NUM_THREADS) private(log_density) reduction(-:value)
   for (int i=0; i<sample.size(); i++) {
     log_density = log_probability(sample[i]);
@@ -378,7 +382,8 @@ double Mixture::computeNegativeLogLikelihood(std::vector<Vector> &sample)
     assert(!boost::math::isnan(log_density));
     value -= log_density;
   }
-  return value;
+  negloglike = value;
+  return negloglike;
 }
 
 /*!
@@ -587,7 +592,7 @@ void Mixture::EM()
       //if (SPLITTING == 1) {
         for (int i=0; i<K; i++) {
           if (sample_size[i] < MIN_N) {
-            current = computeMinimumMessageLength();
+            current = computeNegativeLogLikelihood(data);
             cout << "stopping 2\n";
             goto stop2;
           }
@@ -597,7 +602,7 @@ void Mixture::EM()
       updateWeights_ML();
       updateComponents();
       //current = negativeLogLikelihood(data);
-      current = computeMinimumMessageLength();
+      current = computeNegativeLogLikelihood(data);
       msglens.push_back(current);
       printParameters(log,iter,current);
       if (iter != 1) {
@@ -607,6 +612,7 @@ void Mixture::EM()
         if ((iter > 3 && (prev - current) <= impr_rate * prev) ||
               (iter > 1 && current > prev) || current <= 0 || MSGLEN_FAIL == 1) {
           stop2:
+          current = computeMinimumMessageLength();
           log << "\nSample size: " << N << endl;
           log << "Kent encoding rate: " << current/N << " bits/point" << endl;
           log << "Null model encoding: " << null_msglen << " bits.";
@@ -660,6 +666,11 @@ double Mixture::second_part()
   return part2;
 }
 
+double Mixture::getNegativeLogLikelihood()
+{
+  return negloglike;
+}
+
 /*!
  *  \brief This function prints the parameters to a log file.
  *  \param os a reference to a ostream
@@ -701,6 +712,13 @@ void Mixture::printParameters(ostream &os, int num_tabs)
   os << tabs << "ID: " << id << endl;
   os << tabs << "Kent encoding: " << minimum_msglen << " bits. "
      << "(" << minimum_msglen/N << " bits/point)" << endl << endl;
+}
+
+void Mixture::printParameters(string &file)
+{
+  ofstream out(file.c_str());
+  printParameters(out);
+  out.close();
 }
 
 /*!
@@ -846,11 +864,11 @@ std::vector<Vector> Mixture::generate(int num_samples, bool save_data)
     int k = randomComponent();
     sample_size[k]++;
   }
-  ofstream fw("sample_size");
+  /*ofstream fw("sample_size");
   for (int i=0; i<sample_size.size(); i++) {
     fw << sample_size[i] << endl;
   }
-  fw.close();
+  fw.close();*/
 
   std::vector<std::vector<Vector> > random_data;
   std::vector<Vector> sample;
@@ -930,9 +948,9 @@ Mixture Mixture::split(int c, ostream &log)
       sum += responsibility_c[i][j];
     }
     sample_size_c[i] = sum;
-    /*if (sample_size_c[i] < MIN_N) {
+    if (sample_size_c[i] < MIN_N) {
       IGNORE_SPLIT = 1;
-    }*/
+    }
   }
 
   // child components

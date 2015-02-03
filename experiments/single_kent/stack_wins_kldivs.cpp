@@ -201,8 +201,8 @@ int main(int argc, char **argv)
 
   string data_file,script_file;
   //string n_str = "./N_" + boost::lexical_cast<string>(parameters.N) + "_uniform_prior/";
-  string n_str = "./N_" + boost::lexical_cast<string>(parameters.N) + "_vmf_prior/";
-  //string n_str = "./N_" + boost::lexical_cast<string>(parameters.N) + "_beta_prior/";
+  //string n_str = "./N_" + boost::lexical_cast<string>(parameters.N) + "_vmf_prior/";
+  string n_str = "./N_" + boost::lexical_cast<string>(parameters.N) + "_beta_prior/";
   //string n_str = "N_" + boost::lexical_cast<string>(parameters.N) + "_kappa_until_50/";
   //string n_str = "./N_" + boost::lexical_cast<string>(parameters.N) + "/";
 

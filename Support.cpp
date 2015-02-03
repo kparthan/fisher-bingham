@@ -195,7 +195,7 @@ struct Parameters parseCommandLineInput(int argc, char **argv)
   if (vm.count("improvement")) {
     IMPROVEMENT_RATE = improvement_rate;
   } else {
-    IMPROVEMENT_RATE = 0.001; // 0.1 % default
+    IMPROVEMENT_RATE = 0.0001; // 0.1 % default
   }
 
   if (vm.count("estimate_all")) {
@@ -267,6 +267,18 @@ void writeToFile(const char *file_name, std::vector<Vector> &v, int precision)
 void writeToFile(const char *file_name, std::vector<Vector> &v)
 {
   ofstream file(file_name);
+  for (int i=0; i<v.size(); i++) {
+    for (int j=0; j<v[i].size(); j++) {
+      file << setw(15) << scientific << v[i][j];
+    }
+    file << endl;
+  }
+  file.close(); 
+}
+
+void writeToFile(string &file_name, std::vector<Vector> &v)
+{
+  ofstream file(file_name.c_str());
   for (int i=0; i<v.size(); i++) {
     for (int j=0; j<v[i].size(); j++) {
       file << setw(15) << scientific << v[i][j];
@@ -425,52 +437,6 @@ double norm(Vector &v)
 
 /*!
  *  \brief This function converts the cartesian coordinates into spherical.
- *  (theta with +Z and phi with +X)
- *  \param cartesian a reference to a Vector 
- *  \param spherical a reference to a Vector 
- */
-/*void cartesian2spherical2(Vector &cartesian, Vector &spherical)
-{
-  Vector unit(3,0);
-  double r = normalize(cartesian,unit);
-
-  double x = unit[0];
-  double y = unit[1];
-  double z = unit[2];
-
-  // theta \in [0,PI]: angle with Z-axis
-  double theta = acos(z);
-
-  // phi \in[0,2 PI]: angle with positive X-axis
-  double ratio = x/sin(theta);
-  if (ratio > 1) {
-    ratio = 1;
-  } else if (ratio < -1) {
-    ratio = -1;
-  }
-  double angle = acos(ratio);
-  double phi = 0;
-  if (x == 0 && y == 0) {
-    phi = 0;
-  } else if (x == 0) {
-    if (y > 0) {
-      phi = angle;
-    } else {
-      phi = 2 * PI - angle;
-    }
-  } else if (y >= 0) {
-    phi = angle;
-  } else if (y < 0) {
-    phi = 2 * PI - angle;
-  }
-
-  spherical[0] = r;
-  spherical[1] = theta;
-  spherical[2] = phi;
-}*/
-
-/*!
- *  \brief This function converts the cartesian coordinates into spherical.
  *  (theta with +X and phi with +Y)
  *  \param cartesian a reference to a Vector 
  *  \param spherical a reference to a Vector 
@@ -515,18 +481,6 @@ void cartesian2spherical(Vector &cartesian, Vector &spherical)
   spherical[2] = phi;
 }
 
-/*!
- *  \brief This function converts the spherical coordinates into cartesian.
- *  \param spherical a reference to a Vector 
- *  \param cartesian a reference to a Vector 
- */
-/*void spherical2cartesian2(Vector &spherical, Vector &cartesian)
-{
-  cartesian[0] = spherical[0] * sin(spherical[1]) * cos(spherical[2]);
-  cartesian[1] = spherical[0] * sin(spherical[1]) * sin(spherical[2]);
-  cartesian[2] = spherical[0] * cos(spherical[1]);
-}*/
-
 void spherical2cartesian(Vector &spherical, Vector &cartesian)
 {
   cartesian[0] = spherical[0] * cos(spherical[1]);
@@ -559,9 +513,9 @@ Vector crossProduct(Vector &v1, Vector &v2)
   return ans;
 }
 
-long double computeSum(Vector &data)
+double computeSum(Vector &data)
 {
-  long double sum = 0;
+  double sum = 0;
   for (int i=0; i<data.size(); i++) {
     sum += data[i];
   }
@@ -654,7 +608,7 @@ double computeLogModifiedBesselFirstKind(double alpha, double x)
 
 ////////////////////// GEOMETRY FUNCTIONS \\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
-std::vector<Vector> load_matrix(string &file_name)
+std::vector<Vector> load_data_table(string &file_name)
 {
   std::vector<Vector> sample;
   ifstream file(file_name.c_str());
@@ -1267,12 +1221,12 @@ double Constraint5_2(const std::vector<double> &x, std::vector<double> &grad, vo
     return (TOLERANCE * x[3] - 2 * x[4]);
 }
 
-double computeTestStatistic(
+double computeTestStatistic( // vMF (null) against Kent (alternative)
   double kappa, 
   double eig_val_sq, 
   double rbar, 
-  int N)  // vMF (null) against Kent (alternative)
-{
+  int N
+) {
   double num = N * kappa * kappa * kappa * eig_val_sq;
   double denom = 4 * (kappa - 3* rbar);
   return num/denom;
@@ -1302,10 +1256,10 @@ double computeConstantTerm(int d)
   return ad;
 }
 
-long double logLatticeConstant(int d)
+double logLatticeConstant(int d)
 {
-  long double cd = computeConstantTerm(d);
-  long double ans = -1;
+  double cd = computeConstantTerm(d);
+  double ans = -1;
   ans += (2.0 * cd / d);
   return ans;
 }
@@ -1730,6 +1684,18 @@ void modelMixture(struct Parameters &parameters, std::vector<Vector> &data)
   }
 }
 
+Mixture inferComponents(std::vector<Vector> &data, string &log_file)
+{
+  Vector data_weights(data.size(),1.0);
+  Mixture m(1,data,data_weights);
+  Mixture mixture = m;
+  mixture.estimateParameters();
+  ofstream log(log_file.c_str());
+  Mixture inferred = inferComponents(mixture,data.size(),log);
+  log.close();
+  return inferred;
+}
+
 Mixture inferComponents(Mixture &mixture, int N, ostream &log)
 {
   int K,iter = 0;
@@ -1741,7 +1707,7 @@ Mixture inferComponents(Mixture &mixture, int N, ostream &log)
   log << "Null model encoding: " << null_msglen << " bits."
       << "\t(" << null_msglen/N << " bits/point)\n\n";
 
-  MIN_N = 1;
+  //MIN_N = 1;
 
   improved = mixture;
 
@@ -1779,19 +1745,6 @@ Mixture inferComponents(Mixture &mixture, int N, ostream &log)
         updateInference(modified,improved,N,log,JOIN);
       } // join() ing nearest components
     } // if (K > 1) loop
-    /*if (improved == parent) {
-      for (int i=0; i<K; i++) { // split() ...
-        if (sample_size[i] > MIN_N) {
-          IGNORE_SPLIT = 0;
-          modified = parent.split(i,log);
-          if (IGNORE_SPLIT == 0) {
-            updateInference(modified,improved,N,log,SPLIT);
-          } else {
-            log << "\t\tIGNORING SPLIT ... \n\n";
-          }
-        }
-      } // for()
-    }*/
     if (improved == parent) goto finish;
   } // if (improved == parent || iter%2 == 0) loop
 
@@ -1808,14 +1761,136 @@ Mixture inferComponents(Mixture &mixture, int N, ostream &log)
  */
 void updateInference(Mixture &modified, Mixture &current, int N, ostream &log, int operation)
 {
-  long double modified_msglen = modified.getMinimumMessageLength();
-  long double current_msglen = current.getMinimumMessageLength();
+  double modified_msglen = modified.getMinimumMessageLength();
+  double current_msglen = current.getMinimumMessageLength();
 
-  long double dI = current_msglen - modified_msglen;
-  long double dI_n = dI / N;
-  long double improvement_rate = (current_msglen - modified_msglen) / current_msglen;
+  double dI = current_msglen - modified_msglen;
+  double dI_n = dI / N;
+  double improvement_rate = (current_msglen - modified_msglen) / current_msglen;
 
   if (operation == KILL || operation == JOIN) {
+  //if (operation == KILL || operation == JOIN || operation == SPLIT) {
+    if (improvement_rate >= 0) {
+      log << "\t ... IMPROVEMENT ... (+ " << fixed << setprecision(3) 
+          << 100 * improvement_rate << " %) ";
+      log << "\t\t[ACCEPT]\n\n";
+      current = modified;
+    } else if (improvement_rate >= -IMPROVEMENT_RATE) {
+      log << "\t ... minimal IMPROVEMENT ... (- " << fixed << setprecision(3) 
+          << 100 * improvement_rate << " %) ";
+      log << "\t\t[ACCEPT]\n\n";
+      current = modified;
+    } else {
+      log << "\t ... NO IMPROVEMENT\t\t\t[REJECT]\n\n";
+    }
+  } else if (operation == SPLIT) {
+    if (improvement_rate > IMPROVEMENT_RATE) {
+      log << "\t ... IMPROVEMENT ... (+ " << fixed << setprecision(3) 
+          << 100 * improvement_rate << " %) ";
+      log << "\t\t[ACCEPT]\n\n";
+      current = modified;
+    } else {
+      log << "\t ... NO IMPROVEMENT\t\t\t[REJECT]\n\n";
+    }
+  }
+  /*else if (operation == SPLIT) {
+    if (improvement_rate > IMPROVEMENT_RATE) {
+      log << "\t ... IMPROVEMENT ... (+ " << fixed << setprecision(3) 
+          << 100 * improvement_rate << " %) ";
+      log << "\t\t[ACCEPT]\n\n";
+      current = modified;
+    } else if (improvement_rate > 0 && improvement_rate <= IMPROVEMENT_RATE) {
+      log << "\t ... IMPROVEMENT (" << 100 * improvement_rate << " %) < " << fixed << setprecision(3) 
+          << 100 * IMPROVEMENT_RATE << " %\t\t\t[REJECT]\n\n";
+      log << "\t\tdI: " << dI << " bits.\n";
+      log << "\t\tdI/N: " << dI_n << " bits.\n\n";
+    } else {
+      log << "\t ... NO IMPROVEMENT\t\t\t[REJECT]\n\n";
+    }
+  }*/
+}
+
+Mixture inferComponents_ML(std::vector<Vector> &data, string &log_file)
+{
+  Vector data_weights(data.size(),1.0);
+  Mixture_ML m(1,data,data_weights);
+  Mixture_ML mixture = m;
+  mixture.estimateParameters();
+  ofstream log(log_file.c_str());
+  Mixture_ML inferred = inferComponents_ML(mixture,data.size(),log);
+  log.close();
+  Mixture ans = inferred.convert();
+  return ans;
+}
+
+Mixture_ML inferComponents_ML(Mixture_ML &mixture, int N, ostream &log)
+{
+  int K,iter = 0;
+  std::vector<Kent> components;
+  Mixture_ML modified,improved,parent;
+  Vector sample_size;
+
+  //MIN_N = 1;
+
+  improved = mixture;
+
+  while (1) {
+    parent = improved;
+    iter++;
+    log << "Iteration #" << iter << endl;
+    log << "Parent:\n";
+    parent.printParameters(log,1);
+    components = parent.getComponents();
+    sample_size = parent.getSampleSize();
+    K = components.size();
+    for (int i=0; i<K; i++) { // split() ...
+      if (sample_size[i] > MIN_N) {
+        IGNORE_SPLIT = 0;
+        modified = parent.split(i,log);
+        if (IGNORE_SPLIT == 0) {
+          updateInference_ML(modified,improved,N,log,SPLIT);
+        } else {
+            log << "\t\tIGNORING SPLIT ... \n\n";
+        }
+      }
+    }
+    if (K >= 2) {  // kill() ...
+      for (int i=0; i<K; i++) {
+        modified = parent.kill(i,log);
+        updateInference_ML(modified,improved,N,log,KILL);
+      } // killing each component
+    } // if (K > 2) loop
+    if (K > 1) {  // join() ...
+      for (int i=0; i<K; i++) {
+        int j = parent.getNearestComponent(i); // closest component
+        modified = parent.join(i,j,log);
+        updateInference_ML(modified,improved,N,log,JOIN);
+      } // join() ing nearest components
+    } // if (K > 1) loop
+    if (improved == parent) goto finish;
+  } // if (improved == parent || iter%2 == 0) loop
+
+  finish:
+  return parent;
+}
+
+/*!
+ *  \brief Updates the inference
+ *  \param modified a reference to a Mixture_ML
+ *  \param current a reference to a Mixture_ML
+ *  \param log a reference to a ostream
+ *  \param operation an integer
+ */
+void updateInference_ML(Mixture_ML &modified, Mixture_ML &current, int N, ostream &log, int operation)
+{
+  double modified_negloglike = modified.getNegativeLogLikelihood();
+  double current_negloglike = current.getNegativeLogLikelihood();
+
+  double dI = current_negloglike - modified_negloglike;
+  double dI_n = dI / N;
+  double improvement_rate = (current_negloglike - modified_negloglike) / current_negloglike;
+
+  if (operation == KILL || operation == JOIN || operation == SPLIT) {
     if (improvement_rate >= 0) {
       log << "\t ... IMPROVEMENT ... (+ " << fixed << setprecision(3) 
           << 100 * improvement_rate << " %) ";
@@ -1834,7 +1909,7 @@ void updateInference(Mixture &modified, Mixture &current, int N, ostream &log, i
       log << "\t ... NO IMPROVEMENT\t\t\t[REJECT]\n\n";
     }
   }*/
-  else if (operation == SPLIT) {
+  /*else if (operation == SPLIT) {
     if (improvement_rate > IMPROVEMENT_RATE) {
       log << "\t ... IMPROVEMENT ... (+ " << fixed << setprecision(3) 
           << 100 * improvement_rate << " %) ";
@@ -1848,7 +1923,7 @@ void updateInference(Mixture &modified, Mixture &current, int N, ostream &log, i
     } else {
       log << "\t ... NO IMPROVEMENT\t\t\t[REJECT]\n\n";
     }
-  }
+  }*/
 }
 
 Mixture_vMF inferComponents_vMF(Mixture_vMF &mixture, int N, ostream &log)
@@ -1862,7 +1937,7 @@ Mixture_vMF inferComponents_vMF(Mixture_vMF &mixture, int N, ostream &log)
   log << "Null model encoding: " << null_msglen << " bits."
       << "\t(" << null_msglen/N << " bits/point)\n\n";
 
-  MIN_N = 1;
+  //MIN_N = 1;
 
   improved = mixture;
 
@@ -1929,12 +2004,12 @@ Mixture_vMF inferComponents_vMF(Mixture_vMF &mixture, int N, ostream &log)
  */
 void updateInference_vMF(Mixture_vMF &modified, Mixture_vMF &current, int N, ostream &log, int operation)
 {
-  long double modified_msglen = modified.getMinimumMessageLength();
-  long double current_msglen = current.getMinimumMessageLength();
+  double modified_msglen = modified.getMinimumMessageLength();
+  double current_msglen = current.getMinimumMessageLength();
 
-  long double dI = current_msglen - modified_msglen;
-  long double dI_n = dI / N;
-  long double improvement_rate = (current_msglen - modified_msglen) / current_msglen;
+  double dI = current_msglen - modified_msglen;
+  double dI_n = dI / N;
+  double improvement_rate = (current_msglen - modified_msglen) / current_msglen;
 
   if (operation == KILL || operation == JOIN) {
     if (improvement_rate >= 0) {
@@ -2043,10 +2118,9 @@ void RunExperiments(int iterations)
 {
   Experiments experiments(iterations);
 
-  //experiments.simulate(10,4.5);
-  //experiments.simulate(10,3);
-  //experiments.simulate(100,30);
-  experiments.simulate();
+  //experiments.simulate();
+
+  experiments.infer_components_exp1();
 }
 
 /*!

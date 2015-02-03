@@ -17,6 +17,8 @@ z = M(:,3);
 colors = [0 0 1];
 plot3(x,y,z,'.','Color',colors);
 
+view ([180 0]);
+
 xlabel('X');
 ylabel('Y');
 zlabel('Z');

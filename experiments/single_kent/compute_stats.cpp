@@ -23,7 +23,7 @@ typedef std::vector<double> Vector;
 #define MAP 2
 #define MML 3 
 
-std::vector<Vector> load_matrix(string &file_name, int D)
+std::vector<Vector> load_table(string &file_name, int D)
 {
   std::vector<Vector> sample;
   ifstream file(file_name.c_str());
@@ -295,8 +295,8 @@ int main(int argc, char **argv)
   double MAX_KAPPA = 100;
   double KAPPA_INCREMENT = 10;
   //string n_str = "N_" + boost::lexical_cast<string>(parameters.N) + "_uniform_prior/";
-  string n_str = "N_" + boost::lexical_cast<string>(parameters.N) + "_vmf_prior/";
-  //string n_str = "N_" + boost::lexical_cast<string>(parameters.N) + "_beta_prior/";
+  //string n_str = "N_" + boost::lexical_cast<string>(parameters.N) + "_vmf_prior/";
+  string n_str = "N_" + boost::lexical_cast<string>(parameters.N) + "_beta_prior/";
   //string n_str = "./N_" + boost::lexical_cast<string>(parameters.N) + "/";
 
   string current_dir,kappa_str,eccentricity_str;
@@ -337,21 +337,21 @@ int main(int argc, char **argv)
       current_dir = n_str + "k_" + kappa_str + "_e_" + eccentricity_str + "/";
 
       kappas_file = current_dir + "kappas";
-      kappas_table = load_matrix(kappas_file,NUM_METHODS);
+      kappas_table = load_table(kappas_file,NUM_METHODS);
       mse_kappa << fixed << setw(10) << kappa;
       mse_kappa << fixed << setw(10) << beta;
       mse_kappa << fixed << setw(10) << setprecision(1) << eccentricity << "\t";
       computeMeanSquaredError(mse_kappa,kappa,kappas_table);
 
       betas_file = current_dir + "betas";
-      betas_table = load_matrix(betas_file,NUM_METHODS);
+      betas_table = load_table(betas_file,NUM_METHODS);
       mse_beta << fixed << setw(10) << kappa;
       mse_beta << fixed << setw(10) << beta;
       mse_beta << fixed << setw(10) << setprecision(1) << eccentricity << "\t";
       computeMeanSquaredError(mse_beta,beta,betas_table);
 
       negloglike_file = current_dir + "negloglike";
-      negloglike_table = load_matrix(negloglike_file,NUM_METHODS);
+      negloglike_table = load_table(negloglike_file,NUM_METHODS);
       avg_negloglike << fixed << setw(10) << kappa;
       avg_negloglike << fixed << setw(10) << beta;
       avg_negloglike << fixed << setw(10) << setprecision(1) << eccentricity << "\t";
@@ -362,7 +362,7 @@ int main(int argc, char **argv)
       computeWins(parameters.ignore_map,wins_negloglike,negloglike_table);
 
       kldivs_file = current_dir + "kldivs";
-      kldivs_table = load_matrix(kldivs_file,NUM_METHODS);
+      kldivs_table = load_table(kldivs_file,NUM_METHODS);
       avg_kldivs << fixed << setw(10) << kappa;
       avg_kldivs << fixed << setw(10) << beta;
       avg_kldivs << fixed << setw(10) << setprecision(1) << eccentricity << "\t";
@@ -373,7 +373,7 @@ int main(int argc, char **argv)
       computeWins(parameters.ignore_map,wins_kldivs,kldivs_table);
 
       msglens_file = current_dir + "msglens";
-      msglens_table = load_matrix(msglens_file,NUM_METHODS);
+      msglens_table = load_table(msglens_file,NUM_METHODS);
       avg_msglens << fixed << setw(10) << kappa;
       avg_msglens << fixed << setw(10) << beta;
       avg_msglens << fixed << setw(10) << setprecision(1) << eccentricity << "\t";
