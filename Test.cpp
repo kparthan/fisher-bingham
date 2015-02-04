@@ -730,6 +730,7 @@ void Test::fisher2()
   double kappa,beta,ecc;
   double log_det_fkb,log_det_faxes;
   double log_prior_axes,log_prior_scale;
+  double ip1,ip2;
 
   kappa = 10;
   ecc = TOLERANCE;
@@ -744,19 +745,27 @@ void Test::fisher2()
 
     log_prior_scale = kent.computeLogPriorScale();
     log_det_fkb = kent.computeLogFisherScale();
+    double log_latt = logLatticeConstant(2);
+    cout << "log(latt_2): " << log_latt << endl;
     cout << "log(prior_scale): " << log_prior_scale << endl;
     cout << "log(det(f_kb)): " << log_det_fkb << endl;
+    ip1 = -log_prior_scale + 0.5 * log_det_fkb + log_latt;
+    cout << "ip1: " << ip1 << endl;
     //cout << "det(f_kb): " << exp(log_det_fkb) << endl;
 
+    log_latt = logLatticeConstant(3);
+    cout << "log(latt_3): " << log_latt << endl;
     log_prior_axes = kent.computeLogPriorAxes();
     log_det_faxes = kent.computeLogFisherAxes();
     cout << "log(prior_axes): " << log_prior_axes << endl;
     cout << "log(det(f_axes)): " << log_det_faxes << endl;
     //cout << "det(f_axes): " << exp(log_det_faxes) << endl;
+    ip2 = -log_prior_axes + 0.5 * log_det_faxes + 1.5 * log_latt;
+    cout << "ip2: " << ip2 << endl;
 
     cout << "log(det(fisher)): " << log_det_fkb+log_det_faxes << "\n\n";
 
-    ecc += 0.1;
+    ecc += 0.01;
   }
 }
 
