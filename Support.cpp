@@ -1262,6 +1262,7 @@ double logLatticeConstant(int d)
   double ans = -1;
   ans += (2.0 * cd / d);
   return ans;
+  //return -d*log(12);
 }
 
 /*!

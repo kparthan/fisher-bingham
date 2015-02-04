@@ -728,11 +728,12 @@ void Test::fisher()
 void Test::fisher2()
 {
   double kappa,beta,ecc;
-  double log_det_fkb,log_det_faxes;
-  double log_prior_axes,log_prior_scale;
-  double ip1,ip2;
+  double log_det_fkb,log_det_faxes,log_det_fisher;
+  double log_latt,log_prior_axes,log_prior_scale,log_prior;
+  double ip1,ip2,ip;
+  double Neff = 1;
 
-  kappa = 10;
+  kappa = 100;
   ecc = TOLERANCE;
   cout << "kappa: " << kappa << endl << endl;
   while (ecc < 0.95) {
@@ -745,13 +746,12 @@ void Test::fisher2()
 
     log_prior_scale = kent.computeLogPriorScale();
     log_det_fkb = kent.computeLogFisherScale();
-    double log_latt = logLatticeConstant(2);
+    log_latt = logLatticeConstant(2);
     cout << "log(latt_2): " << log_latt << endl;
     cout << "log(prior_scale): " << log_prior_scale << endl;
     cout << "log(det(f_kb)): " << log_det_fkb << endl;
     ip1 = -log_prior_scale + 0.5 * log_det_fkb + log_latt;
     cout << "ip1: " << ip1 << endl;
-    //cout << "det(f_kb): " << exp(log_det_fkb) << endl;
 
     log_latt = logLatticeConstant(3);
     cout << "log(latt_3): " << log_latt << endl;
@@ -759,13 +759,25 @@ void Test::fisher2()
     log_det_faxes = kent.computeLogFisherAxes();
     cout << "log(prior_axes): " << log_prior_axes << endl;
     cout << "log(det(f_axes)): " << log_det_faxes << endl;
-    //cout << "det(f_axes): " << exp(log_det_faxes) << endl;
     ip2 = -log_prior_axes + 0.5 * log_det_faxes + 1.5 * log_latt;
     cout << "ip2: " << ip2 << endl;
 
-    cout << "log(det(fisher)): " << log_det_fkb+log_det_faxes << "\n\n";
+    log_latt = logLatticeConstant(5);
+    cout << "log(latt_5): " << log_latt << endl;
+    log_prior = kent.computeLogPriorProbability();
+    log_det_fisher = kent.computeLogFisherInformation(1);
+    cout << "log(prior): " << log_prior << endl;
+    cout << "log(det(fisher)): " << log_det_fisher << endl;
+    ip = -log_prior + 0.5 * log_det_fisher + 2.5 * log_latt;
+    cout << "ip: " << ip << endl;
 
-    ecc += 0.01;
+    Neff = 100;
+    ip += 2.5 * log(Neff);
+    cout << "ip: " << ip;
+
+    cout << "\n\n";
+
+    ecc += 0.005;
   }
 }
 

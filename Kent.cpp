@@ -487,14 +487,14 @@ double Kent::computeLogPriorScale()
   double log_prior = 0;
 
   // vmf kappa prior
-  log_prior += log(8/PI);
+  /*log_prior += log(8/PI);
   log_prior += log(kappa);
-  log_prior -= (2 * log(1+kappa*kappa));
+  log_prior -= (2 * log(1+kappa*kappa));*/
 
   // beta distribution priors
   /*double ex = 2 * beta/kappa;
   if (ex >= 1) ex = 1 - TOLERANCE;
-  beta_distribution<> beta_dist(2,2);
+  beta_distribution<> beta_dist(2,10);
   double f = pdf(beta_dist,ex);
   log_prior += log(f);*/
 
@@ -502,6 +502,11 @@ double Kent::computeLogPriorScale()
   /*double K1 = 1,K2=100;
   log_prior -= log(K2-K1);
   log_prior += (log(2) - log(kappa));*/
+
+  // uniform priors
+  double K1 = 1,K2=100;
+  log_prior -= log(log(K2/K1));
+  log_prior += (log(2) - 2*log(kappa));
 
   return log_prior;
 }
@@ -1111,8 +1116,8 @@ void Kent::printParameters(ostream &os)
   os << "[mu]: "; print(os,mu,6);
   os << "\t[mj]: "; print(os,major_axis,6);
   os << "\t[mi]: "; print(os,minor_axis,6);
-  os << "\t[kappa]:" << fixed << scientific << setprecision(6) << kappa << "\t";
-  os << "\t[beta]:" << fixed << scientific << setprecision(6) << beta << endl;
+  os << "\t[kappa]: " << fixed << setprecision(3) << kappa << "\t\t";
+  os << "\t[beta]: " << fixed << setprecision(3) << beta << endl;
   /*vector<double> spherical(3,0);
   cartesian2spherical(estimates.mu,spherical);
   spherical[1] *= 180/PI; 
