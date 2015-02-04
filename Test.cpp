@@ -725,6 +725,41 @@ void Test::fisher()
   cout << "log(fisher): " << kent.computeLogFisherInformation() << endl;
 }
 
+void Test::fisher2()
+{
+  double kappa,beta,ecc;
+  double log_det_fkb,log_det_faxes;
+  double log_prior_axes,log_prior_scale;
+
+  kappa = 10;
+  ecc = TOLERANCE;
+  cout << "kappa: " << kappa << endl << endl;
+  while (ecc < 0.95) {
+    beta = 0.5 * kappa * ecc;
+    cout << "(ecc,beta): (" << ecc << ", " << beta << ")\n";
+
+    Kent kent(ZAXIS,XAXIS,YAXIS,kappa,beta);
+    kent.computeExpectation();
+    Kent::Constants constants = kent.getConstants();
+
+    log_prior_scale = kent.computeLogPriorScale();
+    log_det_fkb = kent.computeLogFisherScale();
+    cout << "log(prior_scale): " << log_prior_scale << endl;
+    cout << "log(det(f_kb)): " << log_det_fkb << endl;
+    //cout << "det(f_kb): " << exp(log_det_fkb) << endl;
+
+    log_prior_axes = kent.computeLogPriorAxes();
+    log_det_faxes = kent.computeLogFisherAxes();
+    cout << "log(prior_axes): " << log_prior_axes << endl;
+    cout << "log(det(f_axes)): " << log_det_faxes << endl;
+    //cout << "det(f_axes): " << exp(log_det_faxes) << endl;
+
+    cout << "log(det(fisher)): " << log_det_fkb+log_det_faxes << "\n\n";
+
+    ecc += 0.1;
+  }
+}
+
 void Test::mml_estimation(void)
 {
   Vector spherical(3,0);

@@ -2053,7 +2053,7 @@ void TestFunctions(void)
 {
   Test test;
 
-  test.bessel();
+  //test.bessel();
 
   //test.testing_cartesian2sphericalPoleXAxis();
 
@@ -2098,6 +2098,8 @@ void TestFunctions(void)
   //test.kl_divergence();
 
   //test.fisher();
+
+  test.fisher2();
 
   //test.mml_estimation();
 

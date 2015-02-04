@@ -54,6 +54,8 @@ class Test
 
     void fisher();
 
+    void fisher2();
+
     void mml_estimation(void);
 
     void mml_estimation2(void);
