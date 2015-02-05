@@ -838,15 +838,25 @@ void Mixture::saveComponentData(int index, std::vector<Vector> &data)
 {
   string data_file = "./visualize/sampled_data/comp";
   data_file += boost::lexical_cast<string>(index+1) + ".dat";
-  //components[index].printParameters(cout);
   ofstream file(data_file.c_str());
+
+  Vector projection(2,0);
+  double theta,phi,rho,z1,z2;
+  string transformed_file = "./visualize/sampled_data/transformed_comp" 
+                            + boost::lexical_cast<string>(index+1) + ".dat";
+  ofstream transformed_comp(transformed_file.c_str());
+
   for (int j=0; j<data.size(); j++) {
     for (int k=0; k<3; k++) {
       file << fixed << setw(10) << setprecision(3) << data[j][k];
     }
     file << endl;
+    computeLambertProjection(data[j],projection);
+    transformed_comp << fixed << setw(10) << setprecision(3) << projection[0];
+    transformed_comp << fixed << setw(10) << setprecision(3) << projection[1] << endl;
   }
   file.close();
+  transformed_comp.close();
 }
 
 /*!
@@ -882,7 +892,7 @@ std::vector<Vector> Mixture::generate(int num_samples, bool save_data)
 
   if (save_data) {
     writeToFile("random_sample.dat",sample);
-    string comp_density_file;
+    string comp_density_file,transformed_file;
     string mix_density_file = "./visualize/sampled_data/mixture_density.dat";
     ofstream mix(mix_density_file.c_str());
     double comp_density,mix_density;

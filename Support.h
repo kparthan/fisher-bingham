@@ -73,6 +73,8 @@ double norm(Vector &);
 void cartesian2spherical(Vector &, Vector &);
 //void spherical2cartesian2(Vector &, Vector &);
 void spherical2cartesian(Vector &, Vector &);
+void computeLambertProjection(Vector &, Vector &);
+void computeLambertProjection(std::vector<Vector> &);
 double computeDotProduct(Vector &, Vector &);
 Vector crossProduct(Vector &, Vector &); 
 double computeSum(Vector &);

@@ -733,7 +733,7 @@ void Test::fisher2()
   double ip1,ip2,ip;
   double Neff = 1;
 
-  kappa = 100;
+  kappa = 0.001;
   ecc = TOLERANCE;
   cout << "kappa: " << kappa << endl << endl;
   while (ecc < 0.95) {
@@ -744,17 +744,18 @@ void Test::fisher2()
     kent.computeExpectation();
     Kent::Constants constants = kent.getConstants();
 
+    log_latt = 0;
     log_prior_scale = kent.computeLogPriorScale();
     log_det_fkb = kent.computeLogFisherScale();
-    log_latt = logLatticeConstant(2);
-    cout << "log(latt_2): " << log_latt << endl;
+    //log_latt = logLatticeConstant(2);
+    //cout << "log(latt_2): " << log_latt << endl;
     cout << "log(prior_scale): " << log_prior_scale << endl;
     cout << "log(det(f_kb)): " << log_det_fkb << endl;
     ip1 = -log_prior_scale + 0.5 * log_det_fkb + log_latt;
     cout << "ip1: " << ip1 << endl;
 
-    log_latt = logLatticeConstant(3);
-    cout << "log(latt_3): " << log_latt << endl;
+    //log_latt = logLatticeConstant(3);
+    //cout << "log(latt_3): " << log_latt << endl;
     log_prior_axes = kent.computeLogPriorAxes();
     log_det_faxes = kent.computeLogFisherAxes();
     cout << "log(prior_axes): " << log_prior_axes << endl;
@@ -771,7 +772,7 @@ void Test::fisher2()
     ip = -log_prior + 0.5 * log_det_fisher + 2.5 * log_latt;
     cout << "ip: " << ip << endl;
 
-    Neff = 100;
+    Neff = 5;
     ip += 2.5 * log(Neff);
     cout << "ip: " << ip;
 
@@ -821,12 +822,13 @@ void Test::mml_estimation2(void)
   double psi,alpha,eta;
   std::vector<struct Estimates> all_estimates;
   std::vector<Vector> random_sample;
-  double kappa,beta;
-  int sample_size = 100;
+  double kappa,beta,ecc;
+  int sample_size = 1000;
   string data_file = "random_sample.dat";
 
   kappa = 100;
-  beta = 45;
+  ecc = 0.95;
+  beta = 0.5 * kappa * ecc;
 
   // in degrees
   psi = 60;
@@ -836,7 +838,8 @@ void Test::mml_estimation2(void)
   psi *= PI/180;
   alpha *= PI/180;
   eta *= PI/180;
-  Kent kent(psi,alpha,eta,kappa,beta);
+  //Kent kent(psi,alpha,eta,kappa,beta);
+  Kent kent(ZAXIS,XAXIS,YAXIS,kappa,beta);
   random_sample = kent.generate(sample_size);
   writeToFile("random_sample.dat",random_sample,3);
   random_sample = load_data_table(data_file);

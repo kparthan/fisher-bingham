@@ -104,8 +104,10 @@ std::vector<Vector> Kent::generate(int sample_size)
   //writeToFile("random_sample_uniform.dat",sample,3);
   //writeToFile("random_sample_vmf.dat",sample,3);
   //writeToFile("random_sample_beta.dat",sample,3);
-  //writeToFile("random_sample.dat",sample,3);
+  //writeToFile("random_sample_new.dat",sample,3);
+  writeToFile("random_sample.dat",sample,3);
   //std::vector<Vector> scaled_sample = scale_to_aom(sample);
+  computeLambertProjection(sample);
   return sample;
 }
 
@@ -491,12 +493,32 @@ double Kent::computeLogPriorScale()
   log_prior += log(kappa);
   log_prior -= (2 * log(1+kappa*kappa));*/
 
+  // vmf beta prior
+  log_prior += log(4/PI);
+  log_prior += (2 * log(kappa));
+  log_prior -= (2 * log(1+kappa*kappa));
+
+  //log_prior += 2 * log(beta);
+  //log_prior -= (2 * log(1+beta*beta));
+  /*double tmp = atan(0.5*kappa);
+  tmp -= (2*kappa/(kappa*kappa+4));
+  log_prior -= log(tmp);*/
+  //log_prior -= log(0.39629);
+
   // beta distribution priors
   /*double ex = 2 * beta/kappa;
   if (ex >= 1) ex = 1 - TOLERANCE;
-  beta_distribution<> beta_dist(2,10);
+  beta_distribution<> beta_dist(10,10);
   double f = pdf(beta_dist,ex);
   log_prior += log(f);*/
+
+  // gamma distribution prior
+  //boost::gamma_distribution<> gamma_dist(2);
+  double k = 3, t = 2;  // k = shape; t = scale
+  //double f = boost::math::gamma_p_derivative(k,beta/t)/t;
+  //log_prior += log(f);
+  double log_f = 2 * log(beta) - log(16) - (0.5 * beta);
+  log_prior += log_f;
 
   // uniform priors
   /*double K1 = 1,K2=100;
@@ -504,9 +526,12 @@ double Kent::computeLogPriorScale()
   log_prior += (log(2) - log(kappa));*/
 
   // uniform priors
-  double K1 = 1,K2=100;
-  log_prior -= log(log(K2/K1));
-  log_prior += (log(2) - 2*log(kappa));
+  //double K1 = 1,K2=100;
+  //log_prior = log(4) - log(K2+K1) - log(K2-K1);
+  //log_prior -= log(log(K2/K1));
+  //log_prior += (log(2) - 2*log(kappa));
+
+  
 
   return log_prior;
 }

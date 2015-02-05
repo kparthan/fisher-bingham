@@ -488,6 +488,28 @@ void spherical2cartesian(Vector &spherical, Vector &cartesian)
   cartesian[2] = spherical[0] * sin(spherical[1]) * sin(spherical[2]);
 }
 
+void computeLambertProjection(Vector &cartesian, Vector &projection)
+{
+  Vector spherical(3,0);
+  cartesian2spherical(cartesian,spherical);
+  double theta = spherical[1];
+  double phi = spherical[2];
+  double rho = 2 * sin(theta/2);
+  projection[0] = rho * cos(phi);
+  projection[1] = rho * sin(phi);
+}
+
+void computeLambertProjection(std::vector<Vector> &sample)
+{
+  Vector proj(2,0);
+  std::vector<Vector> projections(sample.size(),proj);
+  for (int i=0; i<sample.size(); i++) {
+    computeLambertProjection(sample[i],projections[i]);
+  }
+  string output = "./visualize/sampled_data/transformed.dat";
+  writeToFile(output,projections);
+}
+
 /*!
  *  \brief This function computes the dot product between two Vectors.
  *  \param v1 a reference to a Vector
@@ -2100,11 +2122,11 @@ void TestFunctions(void)
 
   //test.fisher();
 
-  test.fisher2();
+  //test.fisher2();
 
   //test.mml_estimation();
 
-  //test.mml_estimation2();
+  test.mml_estimation2();
 
   //test.vmf_all_estimation();
 
@@ -2121,9 +2143,9 @@ void RunExperiments(int iterations)
 {
   Experiments experiments(iterations);
 
-  //experiments.simulate();
+  experiments.simulate();
 
-  experiments.infer_components_exp1();
+  //experiments.infer_components_exp1();
 }
 
 /*!
