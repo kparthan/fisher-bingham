@@ -17,7 +17,8 @@ void Experiments::simulate()
   //string n_str = "N_" + boost::lexical_cast<string>(N) + "_uniform_prior/";
   //string n_str = "N_" + boost::lexical_cast<string>(N) + "_vmf_prior/";
   //string n_str = "N_" + boost::lexical_cast<string>(N) + "_beta_prior/";
-  string n_str = "N_" + boost::lexical_cast<string>(N) + "_new_prior/";
+  //string n_str = "N_" + boost::lexical_cast<string>(N) + "_new_prior/";
+  string n_str = "N_" + boost::lexical_cast<string>(N) + "_new2_prior/";
   string parent_dir = "experiments/single_kent/" + n_str + "/";
   string current_dir,kappa_str,eccentricity_str;
   string kappas,betas,negloglike,kldivs,msglens;
@@ -27,13 +28,14 @@ void Experiments::simulate()
   //string data_file = "random_sample_vmf.dat";
   //string data_file = "random_sample_beta.dat";
   //string data_file = "random_sample.dat";
-  string data_file = "random_sample_new.dat";
+  string data_file = "random_sample_new2.dat";
 
   double INIT_KAPPA = 10;
   double MAX_KAPPA = 100;
   double KAPPA_INCREMENT = 10;
 
   kappa = INIT_KAPPA;
+  //kappa = 1;
   while (kappa <= MAX_KAPPA) {
     ostringstream ssk;
     ssk << fixed << setprecision(0);

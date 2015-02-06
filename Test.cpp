@@ -733,7 +733,7 @@ void Test::fisher2()
   double ip1,ip2,ip;
   double Neff = 1;
 
-  kappa = 0.001;
+  kappa = 1;
   ecc = TOLERANCE;
   cout << "kappa: " << kappa << endl << endl;
   while (ecc < 0.95) {
@@ -772,7 +772,7 @@ void Test::fisher2()
     ip = -log_prior + 0.5 * log_det_fisher + 2.5 * log_latt;
     cout << "ip: " << ip << endl;
 
-    Neff = 5;
+    Neff = 10;
     ip += 2.5 * log(Neff);
     cout << "ip: " << ip;
 

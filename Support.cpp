@@ -2122,11 +2122,11 @@ void TestFunctions(void)
 
   //test.fisher();
 
-  //test.fisher2();
+  test.fisher2();
 
   //test.mml_estimation();
 
-  test.mml_estimation2();
+  //test.mml_estimation2();
 
   //test.vmf_all_estimation();
 
