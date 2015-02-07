@@ -11,7 +11,7 @@ Experiments::Experiments(int iterations) : iterations(iterations)
 
 void Experiments::simulate()
 {
-  int N = 100;
+  int N = 10;
   double kappa,beta,eccentricity;
 
   //string n_str = "N_" + boost::lexical_cast<string>(N) + "_uniform_prior/";

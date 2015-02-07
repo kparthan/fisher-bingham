@@ -26,17 +26,17 @@ set xtics ("10" 1, "50" 2, "100" 3) scale 0.0
 #set arrow from (1)-0.2,0.41 to (1)+0.5,0.41 lw 2 lc rgb "blue" nohead 
 d_width=0.5*box_width
 
-set output "N_25_vmf_prior/boxplot_kldiv_e_0.9.eps" 
+set output "N_10_new2_prior/boxplot_kldiv_e_0.9.eps" 
 
-plot  "N_25_vmf_prior/k_10_e_0.9/kldivs" using ((1)-3*d_width):1 lt 1 lc rgb "red", \
-      "N_25_vmf_prior/k_10_e_0.9/kldivs" using ((1)-d_width):2 lt 1 lc rgb "blue", \
-      "N_25_vmf_prior/k_10_e_0.9/kldivs" using ((1)+d_width):3 lt 1 lc rgb "dark-green", \
-      "N_25_vmf_prior/k_10_e_0.9/kldivs" using ((1)+3*d_width):4 lt 1 lc rgb "black", \
-      "N_25_vmf_prior/k_50_e_0.9/kldivs" using ((2)-3*d_width):1 lt 1 lc rgb "red", \
-      "N_25_vmf_prior/k_50_e_0.9/kldivs" using ((2)-d_width):2 lt 1 lc rgb "blue", \
-      "N_25_vmf_prior/k_50_e_0.9/kldivs" using ((2)+d_width):3 lt 1 lc rgb "dark-green", \
-      "N_25_vmf_prior/k_50_e_0.9/kldivs" using ((2)+3*d_width):4 lt 1 lc rgb "black", \
-      "N_25_vmf_prior/k_100_e_0.9/kldivs" using ((3)-3*d_width):1 lt 1 lc rgb "red", \
-      "N_25_vmf_prior/k_100_e_0.9/kldivs" using ((3)-d_width):2 lt 1 lc rgb "blue", \
-      "N_25_vmf_prior/k_100_e_0.9/kldivs" using ((3)+d_width):3 lt 1 lc rgb "dark-green", \
-      "N_25_vmf_prior/k_100_e_0.9/kldivs" using ((3)+3*d_width):4 lt 1 lc rgb "black"
+plot  "N_10_new2_prior/k_10_e_0.9/kldivs" using ((1)-3*d_width):1 lt 1 lc rgb "red", \
+      "N_10_new2_prior/k_10_e_0.9/kldivs" using ((1)-d_width):2 lt 1 lc rgb "blue", \
+      "N_10_new2_prior/k_10_e_0.9/kldivs" using ((1)+d_width):3 lt 1 lc rgb "dark-green", \
+      "N_10_new2_prior/k_10_e_0.9/kldivs" using ((1)+3*d_width):4 lt 1 lc rgb "black", \
+      "N_10_new2_prior/k_50_e_0.9/kldivs" using ((2)-3*d_width):1 lt 1 lc rgb "red", \
+      "N_10_new2_prior/k_50_e_0.9/kldivs" using ((2)-d_width):2 lt 1 lc rgb "blue", \
+      "N_10_new2_prior/k_50_e_0.9/kldivs" using ((2)+d_width):3 lt 1 lc rgb "dark-green", \
+      "N_10_new2_prior/k_50_e_0.9/kldivs" using ((2)+3*d_width):4 lt 1 lc rgb "black", \
+      "N_10_new2_prior/k_100_e_0.9/kldivs" using ((3)-3*d_width):1 lt 1 lc rgb "red", \
+      "N_10_new2_prior/k_100_e_0.9/kldivs" using ((3)-d_width):2 lt 1 lc rgb "blue", \
+      "N_10_new2_prior/k_100_e_0.9/kldivs" using ((3)+d_width):3 lt 1 lc rgb "dark-green", \
+      "N_10_new2_prior/k_100_e_0.9/kldivs" using ((3)+3*d_width):4 lt 1 lc rgb "black"

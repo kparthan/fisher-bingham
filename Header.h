@@ -70,6 +70,11 @@ typedef boost::numeric::ublas::zero_matrix<double> ZeroMatrix;
 #define MAP 2
 #define MML 3 
 
+#define AIC 0
+#define BIC 1
+#define ICL 2
+#define MMLC 3
+
 #define PRINT_NON_DETAIL 0
 #define PRINT_DETAIL 1
 

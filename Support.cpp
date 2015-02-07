@@ -10,7 +10,7 @@ int MIXTURE_SIMULATION;
 int INFER_COMPONENTS;
 int ENABLE_DATA_PARALLELISM;
 int NUM_THREADS;
-int ESTIMATION;
+int ESTIMATION,CRITERION;
 double MAX_KAPPA;
 double IMPROVEMENT_RATE;
 int CONSTRAIN_KAPPA;
@@ -40,7 +40,7 @@ struct stat st = {0};
 struct Parameters parseCommandLineInput(int argc, char **argv)
 {
   struct Parameters parameters;
-  string constrain,pdf,estimation_method;
+  string constrain,pdf,estimation_method,criterion;
   double improvement_rate;
 
   bool noargs = 1;
@@ -219,6 +219,20 @@ struct Parameters parseCommandLineInput(int argc, char **argv)
     }
   } else {  // default is MML estimation ...
     ESTIMATION = MML;
+  }
+
+  if (vm.count("criterion")) {
+    if (criterion.compare("aic") == 0) {
+      CRITERION = AIC;
+    } else if (criterion.compare("bic") == 0) {
+      CRITERION = BIC;
+    } else if (criterion.compare("icl") == 0) {
+      CRITERION = ICL;
+    } else if (criterion.compare("mml") == 0) {
+      CRITERION = MMLC;
+    }
+  } else {
+    CRITERION = MMLC;
   }
 
   return parameters;

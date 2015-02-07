@@ -296,7 +296,8 @@ int main(int argc, char **argv)
   double KAPPA_INCREMENT = 10;
   //string n_str = "N_" + boost::lexical_cast<string>(parameters.N) + "_uniform_prior/";
   //string n_str = "N_" + boost::lexical_cast<string>(parameters.N) + "_vmf_prior/";
-  string n_str = "N_" + boost::lexical_cast<string>(parameters.N) + "_beta_prior/";
+  //string n_str = "N_" + boost::lexical_cast<string>(parameters.N) + "_beta_prior/";
+  string n_str = "N_" + boost::lexical_cast<string>(parameters.N) + "_new2_prior/";
   //string n_str = "./N_" + boost::lexical_cast<string>(parameters.N) + "/";
 
   string current_dir,kappa_str,eccentricity_str;
