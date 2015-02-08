@@ -3,7 +3,7 @@
 #include "Kent.h"
 
 extern Vector XAXIS,YAXIS,ZAXIS;
-extern int MOMENT_FAIL,MLE_FAIL,MAP_FAIL,MML_FAIL,ESTIMATION;
+extern int ESTIMATION,CRITERION;
 extern struct stat st;
 
 Experiments::Experiments(int iterations) : iterations(iterations)
@@ -110,21 +110,46 @@ void Experiments::checkFolders(string &exp_folder)
     exit(1);
   }
 
+  string tmp,tmpc;
   string logs_folder = exp_folder + "logs/";
   if (stat(logs_folder.c_str(), &st) == -1) {
     mkdir(logs_folder.c_str(), 0700);
   }
-  string tmp = logs_folder + "moment/";
+  tmp = logs_folder + "moment/";
   if (stat(tmp.c_str(), &st) == -1) {
     mkdir(tmp.c_str(), 0700);
+  }
+  tmpc = tmp + "bic/";
+  if (stat(tmpc.c_str(), &st) == -1) {
+    mkdir(tmpc.c_str(), 0700);
+  }
+  tmpc = tmp + "icl/";
+  if (stat(tmpc.c_str(), &st) == -1) {
+    mkdir(tmpc.c_str(), 0700);
   }
   tmp = logs_folder + "mle/";
   if (stat(tmp.c_str(), &st) == -1) {
     mkdir(tmp.c_str(), 0700);
   }
+  tmpc = tmp + "bic/";
+  if (stat(tmpc.c_str(), &st) == -1) {
+    mkdir(tmpc.c_str(), 0700);
+  }
+  tmpc = tmp + "icl/";
+  if (stat(tmpc.c_str(), &st) == -1) {
+    mkdir(tmpc.c_str(), 0700);
+  }
   tmp = logs_folder + "map/";
   if (stat(tmp.c_str(), &st) == -1) {
     mkdir(tmp.c_str(), 0700);
+  }
+  tmpc = tmp + "bic/";
+  if (stat(tmpc.c_str(), &st) == -1) {
+    mkdir(tmpc.c_str(), 0700);
+  }
+  tmpc = tmp + "icl/";
+  if (stat(tmpc.c_str(), &st) == -1) {
+    mkdir(tmpc.c_str(), 0700);
   }
   tmp = logs_folder + "mml/";
   if (stat(tmp.c_str(), &st) == -1) {
@@ -139,13 +164,37 @@ void Experiments::checkFolders(string &exp_folder)
   if (stat(tmp.c_str(), &st) == -1) {
     mkdir(tmp.c_str(), 0700);
   }
+  tmpc = tmp + "bic/";
+  if (stat(tmpc.c_str(), &st) == -1) {
+    mkdir(tmpc.c_str(), 0700);
+  }
+  tmpc = tmp + "icl/";
+  if (stat(tmpc.c_str(), &st) == -1) {
+    mkdir(tmpc.c_str(), 0700);
+  }
   tmp = mixtures_folder + "mle/";
   if (stat(tmp.c_str(), &st) == -1) {
     mkdir(tmp.c_str(), 0700);
   }
+  tmpc = tmp + "bic/";
+  if (stat(tmpc.c_str(), &st) == -1) {
+    mkdir(tmpc.c_str(), 0700);
+  }
+  tmpc = tmp + "icl/";
+  if (stat(tmpc.c_str(), &st) == -1) {
+    mkdir(tmpc.c_str(), 0700);
+  }
   tmp = mixtures_folder + "map/";
   if (stat(tmp.c_str(), &st) == -1) {
     mkdir(tmp.c_str(), 0700);
+  }
+  tmpc = tmp + "bic/";
+  if (stat(tmpc.c_str(), &st) == -1) {
+    mkdir(tmpc.c_str(), 0700);
+  }
+  tmpc = tmp + "icl/";
+  if (stat(tmpc.c_str(), &st) == -1) {
+    mkdir(tmpc.c_str(), 0700);
   }
   tmp = mixtures_folder + "mml/";
   if (stat(tmp.c_str(), &st) == -1) {
@@ -256,36 +305,35 @@ void Experiments::inferMixtures(
     cout << "data_file: " << data_file << endl;
     data = load_data_table(data_file);
 
-    for (int j=0; j<NUM_METHODS; j++) {
+    for (int j=0; j<NUM_METHODS-1; j++) {
       ESTIMATION = j;
       switch(ESTIMATION) {
         case MOMENT:
-          log_file = logs_folder + "moment/mixture_iter_" + iter_str + ".log";
-          mixture_file = mixtures_folder + "moment/mixture_iter_" + iter_str;
+          CRITERION = BIC;
+          log_file = logs_folder + "moment/bic/mixture_iter_" + iter_str + ".log";
+          mixture_file = mixtures_folder + "moment/bic/mixture_iter_" + iter_str;
           break;
 
         case MLE:
-          log_file = logs_folder + "mle/mixture_iter_" + iter_str + ".log";
-          mixture_file = mixtures_folder + "mle/mixture_iter_" + iter_str;
+          CRITERION = BIC;
+          log_file = logs_folder + "mle/bic/mixture_iter_" + iter_str + ".log";
+          mixture_file = mixtures_folder + "mle/bic/mixture_iter_" + iter_str;
           break;
 
         case MAP:
-          log_file = logs_folder + "map/mixture_iter_" + iter_str + ".log";
-          mixture_file = mixtures_folder + "map/mixture_iter_" + iter_str;
+          CRITERION = BIC;
+          log_file = logs_folder + "map/bic/mixture_iter_" + iter_str + ".log";
+          mixture_file = mixtures_folder + "map/bic/mixture_iter_" + iter_str;
           break;
 
         case MML:
+          CRITERION = MMLC;
           log_file = logs_folder + "mml/mixture_iter_" + iter_str + ".log";
           mixture_file = mixtures_folder + "mml/mixture_iter_" + iter_str;
           break;
 
       } // switch() ends ...
-      /*if (ESTIMATION != MML) {
-        inferred = inferComponents_ML(data,log_file);
-      } else {
-        inferred = inferComponents(data,log_file);
-      }
-      inferred.printParameters(mixture_file);*/
+      inferred = inferComponents(data,log_file);
     }
   } // iter() loop ...
   /*avg_number = computeMean(inferred);

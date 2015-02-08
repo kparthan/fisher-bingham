@@ -1805,8 +1805,8 @@ Mixture inferComponents(Mixture &mixture, int N, ostream &log)
   } // if (improved == parent || iter%2 == 0) loop
 
   finish:
-  string inferred_mixture_file = "./simulation/inferred_mixture";
-  parent.printParameters(inferred_mixture_file);
+  //string inferred_mixture_file = "./simulation/inferred_mixture";
+  //parent.printParameters(inferred_mixture_file);
   return parent;
 }
 
