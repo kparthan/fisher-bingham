@@ -232,16 +232,22 @@ void Experiments::generateData(
   if (stat(data_folder.c_str(), &st) == -1) {
       mkdir(data_folder.c_str(), 0700);
   }
-  
+
+
   string iter_str,data_file;
   std::vector<Vector> data;
-
   for (int iter=1; iter<=iterations; iter++) {
     iter_str = boost::lexical_cast<string>(iter);
     data_file =  data_folder + "mixture_iter_" + iter_str + ".dat";
     data = original.generate(sample_size,0);
     writeToFile(data_file,data);
   }
+
+  // generate large data for computing empirical KL-divergence later ...  
+  int num_samples = 100000;
+  std::vector<Vector> random_sample = original.generate(num_samples,0);
+  data_file = data_folder + "random_sample.dat";
+  writeToFile(data_file,random_sample);
 }
 
 void Experiments::inferMixtures(
@@ -256,9 +262,6 @@ void Experiments::inferMixtures(
   string results_folder = exp_folder + "results/";
   string criterion;
 
-  int num_samples = 10000;
-  std::vector<Vector> random_sample = original.generate(num_samples,0);
-
   //criterion = "bic/";
   //CRITERION = BIC;
 
@@ -267,37 +270,36 @@ void Experiments::inferMixtures(
 
   ESTIMATION = MOMENT;
   inferMixtures(
-    original,random_sample,data_folder,logs_folder,mixtures_folder,results_folder,criterion
+    original,data_folder,logs_folder,mixtures_folder,results_folder,criterion
   );
 
   ESTIMATION = MLE;
   inferMixtures(
-    original,random_sample,data_folder,logs_folder,mixtures_folder,results_folder,criterion
+    original,data_folder,logs_folder,mixtures_folder,results_folder,criterion
   );
 
   ESTIMATION = MAP;
   inferMixtures(
-    original,random_sample,data_folder,logs_folder,mixtures_folder,results_folder,criterion
+    original,data_folder,logs_folder,mixtures_folder,results_folder,criterion
   );
 
   /*criterion = "mml/";
   CRITERION = MMLC;
   ESTIMATION = MML;
   inferMixtures(
-    original,random_sample,data_folder,logs_folder,mixtures_folder,results_folder,criterion
+    original,data_folder,logs_folder,mixtures_folder,results_folder,criterion
   );*/
 }
 
 void Experiments::inferMixtures(
   Mixture &original, 
-  std::vector<Vector> &random_sample,
   string &data_folder,
   string &logs_folder,
   string &mixtures_folder,
   string &results_folder,
   string &criterion
 ) {
-  string data_file,log_file,mixture_file,results_file,iter_str;
+  string data_file,log_file,mixture_file,results_file,iter_str,big_data_file;
   string logs_folder_specific,mixtures_folder_specific;
   std::vector<Vector> data;
   Mixture inferred;
@@ -329,6 +331,10 @@ void Experiments::inferMixtures(
       break;
   } // switch() ends ...
 
+  // for empirical KL-divergence ...
+  big_data_file = data_folder + "random_sample.dat";
+  std::vector<Vector> large_data = load_data_table(big_data_file);
+
   ofstream out(results_file.c_str());
   for (int iter=1; iter<=iterations; iter++) {
     iter_str = boost::lexical_cast<string>(iter);
@@ -342,7 +348,7 @@ void Experiments::inferMixtures(
 
     inferred = inferComponents(data,log_file);
     inferred.printParameters(mixture_file);
-    kldiv = original.computeKLDivergence(inferred,random_sample);
+    kldiv = original.computeKLDivergence(inferred,large_data);
 
     out << setw(10) << inferred.getNumberOfComponents() << "\t\t";
     out << scientific << kldiv << "\t\t";

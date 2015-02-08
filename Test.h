@@ -8,6 +8,8 @@ class Test
   private:
 
   public:
+    void load_data();
+
     void bessel();
 
     void testing_cartesian2sphericalPoleXAxis();

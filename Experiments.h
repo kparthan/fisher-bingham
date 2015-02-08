@@ -25,7 +25,7 @@ class Experiments
     void inferMixtures(Mixture &, string &);
 
     void inferMixtures(
-      Mixture &, std::vector<Vector> &, string &, string &, string &, string &, string &
+      Mixture &, string &, string &, string &, string &, string &
     );
 };
 
