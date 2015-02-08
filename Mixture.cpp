@@ -1277,7 +1277,7 @@ double Mixture::computeKLDivergence(Mixture &other)
 // Monte Carlo
 double Mixture::computeKLDivergence(Mixture &other, std::vector<Vector> &sample)
 {
-  double kldiv = 0,fx,log_fx,log_gx;
+  double kldiv = 0,log_fx,log_gx;
   for (int i=0; i<sample.size(); i++) {
     log_fx = log_probability(sample[i]);
     log_gx = other.log_probability(sample[i]);

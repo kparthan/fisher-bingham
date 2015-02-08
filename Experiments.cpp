@@ -110,100 +110,64 @@ void Experiments::checkFolders(string &exp_folder)
     exit(1);
   }
 
-  string tmp,tmpc;
+  string criterion;
   string logs_folder = exp_folder + "logs/";
   if (stat(logs_folder.c_str(), &st) == -1) {
     mkdir(logs_folder.c_str(), 0700);
   }
-  tmp = logs_folder + "moment/";
-  if (stat(tmp.c_str(), &st) == -1) {
-    mkdir(tmp.c_str(), 0700);
-  }
-  tmpc = tmp + "bic/";
-  if (stat(tmpc.c_str(), &st) == -1) {
-    mkdir(tmpc.c_str(), 0700);
-  }
-  tmpc = tmp + "icl/";
-  if (stat(tmpc.c_str(), &st) == -1) {
-    mkdir(tmpc.c_str(), 0700);
-  }
-  tmp = logs_folder + "mle/";
-  if (stat(tmp.c_str(), &st) == -1) {
-    mkdir(tmp.c_str(), 0700);
-  }
-  tmpc = tmp + "bic/";
-  if (stat(tmpc.c_str(), &st) == -1) {
-    mkdir(tmpc.c_str(), 0700);
-  }
-  tmpc = tmp + "icl/";
-  if (stat(tmpc.c_str(), &st) == -1) {
-    mkdir(tmpc.c_str(), 0700);
-  }
-  tmp = logs_folder + "map/";
-  if (stat(tmp.c_str(), &st) == -1) {
-    mkdir(tmp.c_str(), 0700);
-  }
-  tmpc = tmp + "bic/";
-  if (stat(tmpc.c_str(), &st) == -1) {
-    mkdir(tmpc.c_str(), 0700);
-  }
-  tmpc = tmp + "icl/";
-  if (stat(tmpc.c_str(), &st) == -1) {
-    mkdir(tmpc.c_str(), 0700);
-  }
-  tmp = logs_folder + "mml/";
-  if (stat(tmp.c_str(), &st) == -1) {
-    mkdir(tmp.c_str(), 0700);
-  }
+  criterion = "bic/";
+  create_sub_folders(logs_folder,criterion);
+  criterion = "icl/";
+  create_sub_folders(logs_folder,criterion);
 
   string mixtures_folder = exp_folder + "mixtures/";
   if (stat(mixtures_folder.c_str(), &st) == -1) {
     mkdir(mixtures_folder.c_str(), 0700);
   }
-  tmp = mixtures_folder + "moment/";
-  if (stat(tmp.c_str(), &st) == -1) {
-    mkdir(tmp.c_str(), 0700);
-  }
-  tmpc = tmp + "bic/";
-  if (stat(tmpc.c_str(), &st) == -1) {
-    mkdir(tmpc.c_str(), 0700);
-  }
-  tmpc = tmp + "icl/";
-  if (stat(tmpc.c_str(), &st) == -1) {
-    mkdir(tmpc.c_str(), 0700);
-  }
-  tmp = mixtures_folder + "mle/";
-  if (stat(tmp.c_str(), &st) == -1) {
-    mkdir(tmp.c_str(), 0700);
-  }
-  tmpc = tmp + "bic/";
-  if (stat(tmpc.c_str(), &st) == -1) {
-    mkdir(tmpc.c_str(), 0700);
-  }
-  tmpc = tmp + "icl/";
-  if (stat(tmpc.c_str(), &st) == -1) {
-    mkdir(tmpc.c_str(), 0700);
-  }
-  tmp = mixtures_folder + "map/";
-  if (stat(tmp.c_str(), &st) == -1) {
-    mkdir(tmp.c_str(), 0700);
-  }
-  tmpc = tmp + "bic/";
-  if (stat(tmpc.c_str(), &st) == -1) {
-    mkdir(tmpc.c_str(), 0700);
-  }
-  tmpc = tmp + "icl/";
-  if (stat(tmpc.c_str(), &st) == -1) {
-    mkdir(tmpc.c_str(), 0700);
-  }
-  tmp = mixtures_folder + "mml/";
-  if (stat(tmp.c_str(), &st) == -1) {
-    mkdir(tmp.c_str(), 0700);
-  }
+  criterion = "bic/";
+  create_sub_folders(mixtures_folder,criterion);
+  criterion = "icl/";
+  create_sub_folders(mixtures_folder,criterion);
 
   string results_folder = exp_folder + "results/";
   if (stat(results_folder.c_str(), &st) == -1) {
     mkdir(results_folder.c_str(), 0700);
+  }
+  criterion = "bic/";
+  string results = results_folder + criterion;
+  if (stat(results.c_str(), &st) == -1) {
+    mkdir(results.c_str(), 0700);
+  }
+  criterion = "icl/";
+  results = results_folder + criterion;
+  if (stat(results.c_str(), &st) == -1) {
+    mkdir(results.c_str(), 0700);
+  }
+}
+
+void Experiments::create_sub_folders(string &folder, string &criterion)
+{
+  string tmpc,tmp;
+
+  tmpc = folder + criterion;
+  if (stat(tmpc.c_str(), &st) == -1) {
+    mkdir(tmpc.c_str(), 0700);
+  }
+  tmp = tmpc + "moment/";
+  if (stat(tmp.c_str(), &st) == -1) {
+    mkdir(tmp.c_str(), 0700);
+  }
+  tmp = tmpc + "mle/";
+  if (stat(tmp.c_str(), &st) == -1) {
+    mkdir(tmp.c_str(), 0700);
+  }
+  tmp = tmpc + "map/";
+  if (stat(tmp.c_str(), &st) == -1) {
+    mkdir(tmp.c_str(), 0700);
+  }
+  tmp = folder + "mml/";
+  if (stat(tmp.c_str(), &st) == -1) {
+    mkdir(tmp.c_str(), 0700);
   }
 }
 
@@ -290,14 +254,82 @@ void Experiments::inferMixtures(
   string logs_folder = exp_folder + "logs/";
   string mixtures_folder = exp_folder + "mixtures/";
   string results_folder = exp_folder + "results/";
+  string criterion;
 
-  string data_file,log_file,mixture_file,iter_str;
+  int num_samples = 10000;
+  std::vector<Vector> random_sample = original.generate(num_samples,0);
+
+  //criterion = "bic/";
+  //CRITERION = BIC;
+
+  criterion = "icl/";
+  CRITERION = ICL;
+
+  ESTIMATION = MOMENT;
+  inferMixtures(
+    original,random_sample,data_folder,logs_folder,mixtures_folder,results_folder,criterion
+  );
+
+  ESTIMATION = MLE;
+  inferMixtures(
+    original,random_sample,data_folder,logs_folder,mixtures_folder,results_folder,criterion
+  );
+
+  ESTIMATION = MAP;
+  inferMixtures(
+    original,random_sample,data_folder,logs_folder,mixtures_folder,results_folder,criterion
+  );
+
+  /*criterion = "mml/";
+  CRITERION = MMLC;
+  ESTIMATION = MML;
+  inferMixtures(
+    original,random_sample,data_folder,logs_folder,mixtures_folder,results_folder,criterion
+  );*/
+}
+
+void Experiments::inferMixtures(
+  Mixture &original, 
+  std::vector<Vector> &random_sample,
+  string &data_folder,
+  string &logs_folder,
+  string &mixtures_folder,
+  string &results_folder,
+  string &criterion
+) {
+  string data_file,log_file,mixture_file,results_file,iter_str;
+  string logs_folder_specific,mixtures_folder_specific;
   std::vector<Vector> data;
   Mixture inferred;
+  double kldiv;
   
-  int num_success = 0;
-  double avg_number,variance;
+  switch(ESTIMATION) {
+    case MOMENT:
+      logs_folder_specific = logs_folder + criterion + "moment/";
+      mixtures_folder_specific = mixtures_folder + criterion + "moment/";
+      results_file = results_folder + criterion + "moment";
+      break;
 
+    case MLE:
+      logs_folder_specific = logs_folder + criterion + "mle/";
+      mixtures_folder_specific = mixtures_folder + criterion + "mle/";
+      results_file = results_folder + criterion + "mle";
+      break;
+
+    case MAP:
+      logs_folder_specific = logs_folder + criterion + "map/";
+      mixtures_folder_specific = mixtures_folder + criterion + "map/";
+      results_file = results_folder + criterion + "map";
+      break;
+
+    case MML:
+      logs_folder_specific = logs_folder + "mml/";
+      mixtures_folder_specific = mixtures_folder + "mml/";
+      results_file = results_folder + "mml";
+      break;
+  } // switch() ends ...
+
+  ofstream out(results_file.c_str());
   for (int iter=1; iter<=iterations; iter++) {
     iter_str = boost::lexical_cast<string>(iter);
 
@@ -305,43 +337,17 @@ void Experiments::inferMixtures(
     cout << "data_file: " << data_file << endl;
     data = load_data_table(data_file);
 
-    for (int j=0; j<NUM_METHODS-1; j++) {
-      ESTIMATION = j;
-      switch(ESTIMATION) {
-        case MOMENT:
-          CRITERION = BIC;
-          log_file = logs_folder + "moment/bic/mixture_iter_" + iter_str + ".log";
-          mixture_file = mixtures_folder + "moment/bic/mixture_iter_" + iter_str;
-          break;
+    log_file = logs_folder_specific + "mixture_iter_" + iter_str + ".log";
+    mixture_file = mixtures_folder_specific + "mixture_iter_" + iter_str;
 
-        case MLE:
-          CRITERION = BIC;
-          log_file = logs_folder + "mle/bic/mixture_iter_" + iter_str + ".log";
-          mixture_file = mixtures_folder + "mle/bic/mixture_iter_" + iter_str;
-          break;
+    inferred = inferComponents(data,log_file);
+    inferred.printParameters(mixture_file);
+    kldiv = original.computeKLDivergence(inferred,random_sample);
 
-        case MAP:
-          CRITERION = BIC;
-          log_file = logs_folder + "map/bic/mixture_iter_" + iter_str + ".log";
-          mixture_file = mixtures_folder + "map/bic/mixture_iter_" + iter_str;
-          break;
-
-        case MML:
-          CRITERION = MMLC;
-          log_file = logs_folder + "mml/mixture_iter_" + iter_str + ".log";
-          mixture_file = mixtures_folder + "mml/mixture_iter_" + iter_str;
-          break;
-
-      } // switch() ends ...
-      inferred = inferComponents(data,log_file);
-    }
+    out << setw(10) << inferred.getNumberOfComponents() << "\t\t";
+    out << scientific << kldiv << "\t\t";
+    out << scientific << inferred.getMinimumMessageLength() << endl;
   } // iter() loop ...
-  /*avg_number = computeMean(inferred);
-  variance = computeVariance(inferred);
-  summary << "\nsuccess rate: " //<< setprecision(2) 
-          << num_success * 100 / (double)(iterations) << " %\n";
-  summary << "Avg: " << avg_number << endl;
-  summary << "Variance: " << variance << endl;
-  summary.close();*/
+  out.close();
 }
 

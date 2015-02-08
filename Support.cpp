@@ -2108,9 +2108,9 @@ void RunExperiments(int iterations)
 {
   Experiments experiments(iterations);
 
-  experiments.simulate();
+  //experiments.simulate();
 
-  //experiments.infer_components_exp1();
+  experiments.infer_components_exp1();
 }
 
 /*!
