@@ -2,7 +2,6 @@
 #define SUPPORT_H
 
 #include "Mixture.h"
-#include "Mixture_ML.h"
 #include "Mixture_vMF.h"
 
 struct Parameters
@@ -119,6 +118,8 @@ double Constraint5(const std::vector<double> &, std::vector<double> &, void *);
 double Constraint5_2(const std::vector<double> &, std::vector<double> &, void *);
 double computeTestStatistic(double, double, double, int);
 double compute_pvalue(double, chi_squared &);
+double compute_aic(int, int, double);
+double compute_bic(int, int, double);
 
 double computeConstantTerm(int);
 double logLatticeConstant(int);
@@ -138,8 +139,6 @@ Mixture inferComponents(std::vector<Vector> &, string &);
 Mixture inferComponents(Mixture &, int, ostream &);
 void updateInference(Mixture &, Mixture &, int, ostream &, int);
 Mixture inferComponents_ML(std::vector<Vector> &, string &);
-Mixture_ML inferComponents_ML(Mixture_ML &, int, ostream &);
-void updateInference_ML(Mixture_ML &, Mixture_ML &, int, ostream &, int);
 Mixture_vMF inferComponents_vMF(Mixture_vMF &, int, ostream &);
 void updateInference_vMF(Mixture_vMF &, Mixture_vMF &, int, ostream &, int);
 

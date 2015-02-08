@@ -46,6 +46,8 @@ class Mixture
 
     double negloglike;
 
+    double aic,bic,icl;
+
   public:
     //! Null constructor
     Mixture();
@@ -110,6 +112,8 @@ class Mixture
     //! Computes the negative log likelihood
     double computeNegativeLogLikelihood(std::vector<Vector> &);
 
+    double computeNegativeLogLikelihood(int verbose = 0);
+
     //! Computes the minimum message length
     double computeMinimumMessageLength(int verbose = 0);
 
@@ -126,11 +130,23 @@ class Mixture
 
     double getNegativeLogLikelihood();
 
+    double getAIC();
+
+    double getBIC();
+
+    double getICL();
+
     //! Estimate mixture parameters
     double estimateParameters();
 
     //! EM loop
     void EM();
+
+    void EM(
+      ostream &,
+      void (Mixture::*update_weights)(),
+      double (Mixture::*objective_function)(int)
+    );
 
     //! Computes the null model message length
     double computeNullModelMessageLength();
@@ -180,6 +196,14 @@ class Mixture
     double computeKLDivergence(Mixture &);
 
     double computeKLDivergence(Mixture &, std::vector<Vector> &);
+
+    double computeAIC();
+
+    double computeBIC();
+
+    std::vector<std::vector<int> > compute_cluster_indicators();
+
+    double computeICL();
 };
 
 #endif

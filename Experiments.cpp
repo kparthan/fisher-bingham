@@ -280,12 +280,12 @@ void Experiments::inferMixtures(
           break;
 
       } // switch() ends ...
-      if (ESTIMATION != MML) {
+      /*if (ESTIMATION != MML) {
         inferred = inferComponents_ML(data,log_file);
       } else {
         inferred = inferComponents(data,log_file);
       }
-      inferred.printParameters(mixture_file);
+      inferred.printParameters(mixture_file);*/
     }
   } // iter() loop ...
   /*avg_number = computeMean(inferred);

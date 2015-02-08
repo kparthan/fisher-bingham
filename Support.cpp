@@ -72,6 +72,7 @@ struct Parameters parseCommandLineInput(int argc, char **argv)
        ("res",value<double>(&parameters.res),"resolution used in heat map images")
        ("mt",value<int>(&parameters.num_threads),"flag to enable multithreading")
        ("estimation",value<string>(&estimation_method),"type of estimation")
+       ("criterion",value<string>(&criterion),"type of criterion")
        ("estimate_all","flag to estimate using all methods")
        ("improvement",value<double>(&improvement_rate),"improvement rate")
   ;
@@ -1276,6 +1277,24 @@ double compute_pvalue(double t, chi_squared &chisq)
   return pvalue;
 }
 
+double compute_aic(int k, int n, double neg_log_likelihood)
+{
+  /*double ans = 2 * k * n / (double) (n - k -1);
+  ans += 2 * neg_log_likelihood;*/
+
+  double ans = neg_log_likelihood + k;
+  return ans / (2*log(2));
+}
+
+double compute_bic(int k, int n, double neg_log_likelihood)
+{
+  /*double ans = 2 * neg_log_likelihood;
+  ans += k * (log(n) + log(2*PI));*/
+
+  double ans = neg_log_likelihood + (0.5 * k * log(n));
+  return ans / (log(2));
+}
+
 ////////////////////// MIXTURE FUNCTIONS \\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
 /*!
@@ -1786,6 +1805,8 @@ Mixture inferComponents(Mixture &mixture, int N, ostream &log)
   } // if (improved == parent || iter%2 == 0) loop
 
   finish:
+  string inferred_mixture_file = "./simulation/inferred_mixture";
+  parent.printParameters(inferred_mixture_file);
   return parent;
 }
 
@@ -1797,6 +1818,67 @@ Mixture inferComponents(Mixture &mixture, int N, ostream &log)
  *  \param operation an integer
  */
 void updateInference(Mixture &modified, Mixture &current, int N, ostream &log, int operation)
+{
+  double modified_value,current_value,improvement_rate;
+
+  switch(CRITERION) {
+    case AIC:
+      modified_value = modified.getAIC();
+      current_value = current.getAIC();
+      break;
+
+    case BIC:
+      modified_value = modified.getBIC();
+      current_value = current.getBIC();
+      break;
+
+    case ICL:
+      modified_value = modified.getICL();
+      current_value = current.getICL();
+      break;
+
+    case MMLC:
+      modified_value = modified.getMinimumMessageLength();
+      current_value = current.getMinimumMessageLength();
+      break;
+  }
+
+  improvement_rate = (current_value - modified_value) / current_value;
+
+  //if (operation == KILL || operation == JOIN) {
+  if (operation == KILL || operation == JOIN || operation == SPLIT) {
+    if (improvement_rate >= 0) {
+      log << "\t ... IMPROVEMENT ... (+ " << fixed << setprecision(3) 
+          << 100 * improvement_rate << " %) ";
+      log << "\t\t[ACCEPT]\n\n";
+      current = modified;
+    } /*else if (improvement_rate >= -IMPROVEMENT_RATE) {
+      log << "\t ... minimal IMPROVEMENT ... (- " << fixed << setprecision(3) 
+          << 100 * improvement_rate << " %) ";
+      log << "\t\t[ACCEPT]\n\n";
+      current = modified;
+    }*/ else {
+      log << "\t ... NO IMPROVEMENT\t\t\t[REJECT]\n\n";
+    }
+  }
+  /*else if (operation == SPLIT) {
+    if (improvement_rate > IMPROVEMENT_RATE) {
+      log << "\t ... IMPROVEMENT ... (+ " << fixed << setprecision(3) 
+          << 100 * improvement_rate << " %) ";
+      log << "\t\t[ACCEPT]\n\n";
+      current = modified;
+    } else if (improvement_rate > 0 && improvement_rate <= IMPROVEMENT_RATE) {
+      log << "\t ... IMPROVEMENT (" << 100 * improvement_rate << " %) < " << fixed << setprecision(3) 
+          << 100 * IMPROVEMENT_RATE << " %\t\t\t[REJECT]\n\n";
+      log << "\t\tdI: " << dI << " bits.\n";
+      log << "\t\tdI/N: " << dI_n << " bits.\n\n";
+    } else {
+      log << "\t ... NO IMPROVEMENT\t\t\t[REJECT]\n\n";
+    }
+  }*/
+}
+
+/*void updateInference(Mixture &modified, Mixture &current, int N, ostream &log, int operation)
 {
   double modified_msglen = modified.getMinimumMessageLength();
   double current_msglen = current.getMinimumMessageLength();
@@ -1830,138 +1912,7 @@ void updateInference(Mixture &modified, Mixture &current, int N, ostream &log, i
       log << "\t ... NO IMPROVEMENT\t\t\t[REJECT]\n\n";
     }
   }
-  /*else if (operation == SPLIT) {
-    if (improvement_rate > IMPROVEMENT_RATE) {
-      log << "\t ... IMPROVEMENT ... (+ " << fixed << setprecision(3) 
-          << 100 * improvement_rate << " %) ";
-      log << "\t\t[ACCEPT]\n\n";
-      current = modified;
-    } else if (improvement_rate > 0 && improvement_rate <= IMPROVEMENT_RATE) {
-      log << "\t ... IMPROVEMENT (" << 100 * improvement_rate << " %) < " << fixed << setprecision(3) 
-          << 100 * IMPROVEMENT_RATE << " %\t\t\t[REJECT]\n\n";
-      log << "\t\tdI: " << dI << " bits.\n";
-      log << "\t\tdI/N: " << dI_n << " bits.\n\n";
-    } else {
-      log << "\t ... NO IMPROVEMENT\t\t\t[REJECT]\n\n";
-    }
-  }*/
-}
-
-Mixture inferComponents_ML(std::vector<Vector> &data, string &log_file)
-{
-  Vector data_weights(data.size(),1.0);
-  Mixture_ML m(1,data,data_weights);
-  Mixture_ML mixture = m;
-  mixture.estimateParameters();
-  ofstream log(log_file.c_str());
-  Mixture_ML inferred = inferComponents_ML(mixture,data.size(),log);
-  log.close();
-  Mixture ans = inferred.convert();
-  return ans;
-}
-
-Mixture_ML inferComponents_ML(Mixture_ML &mixture, int N, ostream &log)
-{
-  int K,iter = 0;
-  std::vector<Kent> components;
-  Mixture_ML modified,improved,parent;
-  Vector sample_size;
-
-  //MIN_N = 1;
-
-  improved = mixture;
-
-  while (1) {
-    parent = improved;
-    iter++;
-    log << "Iteration #" << iter << endl;
-    log << "Parent:\n";
-    parent.printParameters(log,1);
-    components = parent.getComponents();
-    sample_size = parent.getSampleSize();
-    K = components.size();
-    for (int i=0; i<K; i++) { // split() ...
-      if (sample_size[i] > MIN_N) {
-        IGNORE_SPLIT = 0;
-        modified = parent.split(i,log);
-        if (IGNORE_SPLIT == 0) {
-          updateInference_ML(modified,improved,N,log,SPLIT);
-        } else {
-            log << "\t\tIGNORING SPLIT ... \n\n";
-        }
-      }
-    }
-    if (K >= 2) {  // kill() ...
-      for (int i=0; i<K; i++) {
-        modified = parent.kill(i,log);
-        updateInference_ML(modified,improved,N,log,KILL);
-      } // killing each component
-    } // if (K > 2) loop
-    if (K > 1) {  // join() ...
-      for (int i=0; i<K; i++) {
-        int j = parent.getNearestComponent(i); // closest component
-        modified = parent.join(i,j,log);
-        updateInference_ML(modified,improved,N,log,JOIN);
-      } // join() ing nearest components
-    } // if (K > 1) loop
-    if (improved == parent) goto finish;
-  } // if (improved == parent || iter%2 == 0) loop
-
-  finish:
-  return parent;
-}
-
-/*!
- *  \brief Updates the inference
- *  \param modified a reference to a Mixture_ML
- *  \param current a reference to a Mixture_ML
- *  \param log a reference to a ostream
- *  \param operation an integer
- */
-void updateInference_ML(Mixture_ML &modified, Mixture_ML &current, int N, ostream &log, int operation)
-{
-  double modified_negloglike = modified.getNegativeLogLikelihood();
-  double current_negloglike = current.getNegativeLogLikelihood();
-
-  double dI = current_negloglike - modified_negloglike;
-  double dI_n = dI / N;
-  double improvement_rate = (current_negloglike - modified_negloglike) / current_negloglike;
-
-  if (operation == KILL || operation == JOIN || operation == SPLIT) {
-    if (improvement_rate >= 0) {
-      log << "\t ... IMPROVEMENT ... (+ " << fixed << setprecision(3) 
-          << 100 * improvement_rate << " %) ";
-      log << "\t\t[ACCEPT]\n\n";
-      current = modified;
-    } else {
-      log << "\t ... NO IMPROVEMENT\t\t\t[REJECT]\n\n";
-    }
-  } /*else if (operation == SPLIT) {
-    if (improvement_rate > IMPROVEMENT_RATE) {
-      log << "\t ... IMPROVEMENT ... (+ " << fixed << setprecision(3) 
-          << 100 * improvement_rate << " %) ";
-      log << "\t\t[ACCEPT]\n\n";
-      current = modified;
-    } else {
-      log << "\t ... NO IMPROVEMENT\t\t\t[REJECT]\n\n";
-    }
-  }*/
-  /*else if (operation == SPLIT) {
-    if (improvement_rate > IMPROVEMENT_RATE) {
-      log << "\t ... IMPROVEMENT ... (+ " << fixed << setprecision(3) 
-          << 100 * improvement_rate << " %) ";
-      log << "\t\t[ACCEPT]\n\n";
-      current = modified;
-    } else if (improvement_rate > 0 && improvement_rate <= IMPROVEMENT_RATE) {
-      log << "\t ... IMPROVEMENT (" << 100 * improvement_rate << " %) < " << fixed << setprecision(3) 
-          << 100 * IMPROVEMENT_RATE << " %\t\t\t[REJECT]\n\n";
-      log << "\t\tdI: " << dI << " bits.\n";
-      log << "\t\tdI/N: " << dI_n << " bits.\n\n";
-    } else {
-      log << "\t ... NO IMPROVEMENT\t\t\t[REJECT]\n\n";
-    }
-  }*/
-}
+}*/
 
 Mixture_vMF inferComponents_vMF(Mixture_vMF &mixture, int N, ostream &log)
 {

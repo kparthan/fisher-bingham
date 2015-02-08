@@ -6,7 +6,7 @@ extern int MIXTURE_SIMULATION;
 extern int INFER_COMPONENTS;
 extern int ENABLE_DATA_PARALLELISM;
 extern int NUM_THREADS;
-extern int ESTIMATION;
+extern int ESTIMATION,CRITERION;
 extern double IMPROVEMENT_RATE;
 extern int SPLITTING;
 extern int IGNORE_SPLIT;
@@ -35,6 +35,7 @@ Mixture::Mixture(int K, std::vector<Kent> &components, Vector &weights):
   id = MIXTURE_ID++;
   minimum_msglen = 0;
   negloglike = 0;
+  aic = 0; bic = 0; icl = 0;
 }
 
 /*!
@@ -51,6 +52,7 @@ Mixture::Mixture(int K, std::vector<Vector> &data, Vector &data_weights) :
   assert(data_weights.size() == N);
   minimum_msglen = 0;
   negloglike = 0;
+  aic = 0; bic = 0; icl = 0;
 }
 
 /*!
@@ -83,6 +85,7 @@ Mixture::Mixture(
   assert(data_weights.size() == N);
   minimum_msglen = 0;
   negloglike = 0;
+  aic = 0; bic = 0; icl = 0;
 }
 
 /*!
@@ -113,6 +116,9 @@ Mixture Mixture::operator=(const Mixture &source)
     Il = source.Il;
     kd_term = source.kd_term;
     negloglike = source.negloglike;
+    aic = source.aic;
+    bic = source.bic;
+    icl = source.icl;
   }
   return *this;
 }
@@ -386,6 +392,11 @@ double Mixture::computeNegativeLogLikelihood(std::vector<Vector> &sample)
   return negloglike;
 }
 
+double Mixture::computeNegativeLogLikelihood(int verbose)
+{
+  return computeNegativeLogLikelihood(data);
+}
+
 /*!
  *  \brief This function computes the minimum message length using the current
  *  model parameters.
@@ -536,97 +547,94 @@ void Mixture::EM()
   computeNullModelMessageLength();
   //cout << "null_msglen: " << null_msglen << endl;
 
-  double prev=0,current;
-  int iter = 1;
   printParameters(log,0,0);
 
-  double impr_rate = 0.00001;
-  /* EM loop */
   if (ESTIMATION == MML) {
-    while (1) {
-      // Expectation (E-step)
-      updateResponsibilityMatrix();
-      updateEffectiveSampleSize();
-      //if (SPLITTING == 1) {
-        for (int i=0; i<K; i++) {
-          if (sample_size[i] < MIN_N) {
-            current = computeMinimumMessageLength();
-            cout << "stopping 1\n";
-            goto stop1;
-          }
-        }
-      //}
-      // Maximization (M-step)
-      updateWeights();
-      updateComponents();
-      current = computeMinimumMessageLength();
-      if (fabs(current) >= INFINITY) break;
-      msglens.push_back(current);
-      printParameters(log,iter,current);
-      if (iter != 1) {
-        //assert(current > 0);
-        // because EM has to consistently produce lower 
-        // message lengths otherwise something wrong!
-        // IMPORTANT: the below condition should not be 
-        //          fabs(prev - current) <= 0.0001 * fabs(prev)
-        // ... it's very hard to satisfy this condition and EM() goes into
-        // ... an infinite loop!
-        if ((iter > 3 && (prev - current) <= impr_rate * prev) ||
-              (iter > 1 && current > prev) || current <= 0 || MSGLEN_FAIL == 1) {
-          stop1:
-          log << "\nSample size: " << N << endl;
-          log << "Kent encoding rate: " << current/N << " bits/point" << endl;
-          log << "Null model encoding: " << null_msglen << " bits.";
-          log << "\t(" << null_msglen/N << " bits/point)" << endl;
-          break;
-        }
-      }
-      prev = current;
-      iter++;
-    }
-  } else {  // ESTIMATION != MML
-    while (1) {
-      // Expectation (E-step)
-      updateResponsibilityMatrix();
-      updateEffectiveSampleSize();
-      //if (SPLITTING == 1) {
-        for (int i=0; i<K; i++) {
-          if (sample_size[i] < MIN_N) {
-            current = computeNegativeLogLikelihood(data);
-            cout << "stopping 2\n";
-            goto stop2;
-          }
-        }
-      //}
-      // Maximization (M-step)
-      updateWeights_ML();
-      updateComponents();
-      //current = negativeLogLikelihood(data);
-      current = computeNegativeLogLikelihood(data);
-      msglens.push_back(current);
-      printParameters(log,iter,current);
-      if (iter != 1) {
-        //assert(current > 0);
-        // because EM has to consistently produce lower 
-        // -ve likelihood values otherwise something wrong!
-        if ((iter > 3 && (prev - current) <= impr_rate * prev) ||
-              (iter > 1 && current > prev) || current <= 0 || MSGLEN_FAIL == 1) {
-          stop2:
-          current = computeMinimumMessageLength();
-          log << "\nSample size: " << N << endl;
-          log << "Kent encoding rate: " << current/N << " bits/point" << endl;
-          log << "Null model encoding: " << null_msglen << " bits.";
-          log << "\t(" << null_msglen/N << " bits/point)" << endl;
-          break;
-        }
-      }
-      prev = current;
-      iter++;
-    }
+    EM(
+      log,
+      &Mixture::updateWeights,
+      &Mixture::computeMinimumMessageLength
+    );
+  } else {
+    EM(
+      log,
+      &Mixture::updateWeights_ML,
+      &Mixture::computeNegativeLogLikelihood
+    );
   }
+
+  switch(CRITERION) {
+    case AIC:
+      aic = computeAIC();
+      break;
+
+    case BIC:
+      bic = computeBIC();
+      break;
+
+    case ICL:
+      icl = computeICL();
+      break;
+
+    case MMLC:
+      break;
+  }
+
   log.close();
 }
 
+void Mixture::EM(
+  ostream &log,
+  void (Mixture::*update_weights)(),
+  double (Mixture::*objective_function)(int)
+) {
+  double prev=0,current;
+  int iter = 1;
+  double impr_rate = 0.00001;
+
+  while (1) {
+    // Expectation (E-step)
+    updateResponsibilityMatrix();
+    updateEffectiveSampleSize();
+    //if (SPLITTING == 1) {
+      for (int i=0; i<K; i++) {
+        if (sample_size[i] < MIN_N) {
+          //current = computeNegativeLogLikelihood(data);
+          current = (this->*objective_function)(0);
+          cout << "stopping \n";
+          goto stop;
+        }
+      }
+    //}
+    // Maximization (M-step)
+    //updateWeights_ML();
+    (this->*update_weights)();
+
+    updateComponents();
+    //current = computeNegativeLogLikelihood(data);
+    current = (this->*objective_function)(0);
+    //msglens.push_back(current);
+    printParameters(log,iter,current);
+    if (iter != 1) {
+      //assert(current > 0);
+      // because EM has to consistently produce lower 
+      // -ve likelihood values otherwise something wrong!
+      if ((iter > 3 && (prev - current) <= impr_rate * prev) ||
+            (iter > 1 && current > prev) || current <= 0 || MSGLEN_FAIL == 1) {
+        stop:
+        current = computeMinimumMessageLength();
+        log << "\nSample size: " << N << endl;
+        log << "Kent encoding rate: " << current << " bits.";
+        log << "\t(" << current/N << " bits/point)" << endl;
+        log << "Null model encoding: " << null_msglen << " bits.";
+        log << "\t(" << null_msglen/N << " bits/point)" << endl;
+        break;
+      }
+    }
+    prev = current;
+    iter++;
+  }
+}
 
 /*!
  *  \brief This function computes the null model message length.
@@ -671,13 +679,28 @@ double Mixture::getNegativeLogLikelihood()
   return negloglike;
 }
 
+double Mixture::getAIC()
+{
+  return aic;
+}
+
+double Mixture::getBIC()
+{
+  return bic;
+}
+
+double Mixture::getICL()
+{
+  return icl;
+}
+
 /*!
  *  \brief This function prints the parameters to a log file.
  *  \param os a reference to a ostream
  *  \param iter an integer
  *  \param msglen a double
  */
-void Mixture::printParameters(ostream &os, int iter, double msglen)
+void Mixture::printParameters(ostream &os, int iter, double value)
 {
   os << "Iteration #: " << iter << endl;
   for (int k=0; k<K; k++) {
@@ -687,7 +710,11 @@ void Mixture::printParameters(ostream &os, int iter, double msglen)
     os << "\t";
     components[k].printParameters(os);
   }
-  os << "\t\t\tmsglen: " << msglen << " bits." << endl;
+  if (ESTIMATION == MML) {
+    os << "\t\t\tmsglen: " << value << " bits." << endl;
+  } else {
+    os << "\t\t\tnegloglike: " << value/log(2) << " bits." << endl;
+  }
 }
 
 /*!
@@ -711,7 +738,28 @@ void Mixture::printParameters(ostream &os, int num_tabs)
   }
   os << tabs << "ID: " << id << endl;
   os << tabs << "Kent encoding: " << minimum_msglen << " bits. "
-     << "(" << minimum_msglen/N << " bits/point)" << endl << endl;
+     << "(" << minimum_msglen/N << " bits/point)" << endl;
+
+  switch(CRITERION) {
+    case AIC:
+      aic = computeAIC();
+      os << tabs << "AIC: " << aic << endl;
+      break;
+
+    case BIC:
+      bic = computeBIC();
+      os << tabs << "BIC: " << bic << endl;
+      break;
+
+    case ICL:
+      icl = computeICL();
+      os << tabs << "ICL: " << icl << endl;
+      break;
+
+    case MMLC:
+      break;
+  }
+  os << endl;
 }
 
 void Mixture::printParameters(string &file)
@@ -1236,5 +1284,54 @@ double Mixture::computeKLDivergence(Mixture &other, std::vector<Vector> &sample)
     kldiv += (log_fx - log_gx);
   }
   return kldiv/(log(2) * sample.size());
+}
+
+/*!
+ *  \brief This function computes the Akaike information criteria (AIC)
+ *  \return the AIC value (natural log -- nits)
+ */
+double Mixture::computeAIC()
+{
+  int k = 6 * K - 1;
+  negloglike = computeNegativeLogLikelihood();
+  return compute_aic(k,N,negloglike);
+}
+
+/*!
+ *  \brief This function computes the Bayesian information criteria (AIC)
+ *  \return the BIC value (natural log -- nits)
+ */
+double Mixture::computeBIC()
+{
+  int k = 6 * K - 1;
+  negloglike = computeNegativeLogLikelihood();
+  return compute_bic(k,N,negloglike);
+}
+
+std::vector<std::vector<int> > Mixture::compute_cluster_indicators()
+{
+  std::vector<int> emptyvec(N,0);
+  std::vector<std::vector<int> > z(K,emptyvec);
+  std::vector<Vector> flipped_resp = flip(responsibility);
+  int max_index;
+  for (int i=0; i<N; i++) {
+    max_index = maximumIndex(flipped_resp[i]);
+    z[max_index][i] = 1;
+  }
+  return z;
+}
+
+double Mixture::computeICL()
+{
+  negloglike = computeNegativeLogLikelihood();
+  std::vector<std::vector<int> > indicators = compute_cluster_indicators();
+  double ec = 0,term;
+  for (int i=0; i<K; i++) {
+    for (int j=0; j<N; j++) {
+      term = indicators[i][j] * log(responsibility[i][j]);
+      ec -= term;
+    }
+  }
+  return (negloglike + ec) / log(2);
 }
 
