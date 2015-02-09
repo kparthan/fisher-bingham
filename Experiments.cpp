@@ -49,9 +49,7 @@ void Experiments::simulate()
       sse << eccentricity;
       eccentricity_str = sse.str();
       current_dir = parent_dir + "k_" + kappa_str + "_e_" + eccentricity_str + "/";
-      if (stat(current_dir.c_str(), &st) == -1) {
-          mkdir(current_dir.c_str(), 0700);
-      }
+      check_and_create_directory(current_dir);
       kappas = current_dir + "kappas";
       betas = current_dir + "betas";
       negloglike = current_dir + "negloglike";
@@ -105,44 +103,31 @@ void Experiments::simulate()
 void Experiments::checkFolders(string &exp_folder)
 {
   string data_folder = exp_folder + "data/";
-  if (stat(data_folder.c_str(), &st) == -1) {
-    cout << "Error: data folder not present ...\n";
-    exit(1);
-  }
+  check_and_create_directory(data_folder);
 
   string criterion;
   string logs_folder = exp_folder + "logs/";
-  if (stat(logs_folder.c_str(), &st) == -1) {
-    mkdir(logs_folder.c_str(), 0700);
-  }
+  check_and_create_directory(logs_folder);
   criterion = "bic/";
   create_sub_folders(logs_folder,criterion);
   criterion = "icl/";
   create_sub_folders(logs_folder,criterion);
 
   string mixtures_folder = exp_folder + "mixtures/";
-  if (stat(mixtures_folder.c_str(), &st) == -1) {
-    mkdir(mixtures_folder.c_str(), 0700);
-  }
+  check_and_create_directory(mixtures_folder);
   criterion = "bic/";
   create_sub_folders(mixtures_folder,criterion);
   criterion = "icl/";
   create_sub_folders(mixtures_folder,criterion);
 
   string results_folder = exp_folder + "results/";
-  if (stat(results_folder.c_str(), &st) == -1) {
-    mkdir(results_folder.c_str(), 0700);
-  }
+  check_and_create_directory(results_folder);
   criterion = "bic/";
   string results = results_folder + criterion;
-  if (stat(results.c_str(), &st) == -1) {
-    mkdir(results.c_str(), 0700);
-  }
+  check_and_create_directory(results);
   criterion = "icl/";
   results = results_folder + criterion;
-  if (stat(results.c_str(), &st) == -1) {
-    mkdir(results.c_str(), 0700);
-  }
+  check_and_create_directory(results);
 }
 
 void Experiments::create_sub_folders(string &folder, string &criterion)
@@ -150,25 +135,15 @@ void Experiments::create_sub_folders(string &folder, string &criterion)
   string tmpc,tmp;
 
   tmpc = folder + criterion;
-  if (stat(tmpc.c_str(), &st) == -1) {
-    mkdir(tmpc.c_str(), 0700);
-  }
+  check_and_create_directory(tmpc);
   tmp = tmpc + "moment/";
-  if (stat(tmp.c_str(), &st) == -1) {
-    mkdir(tmp.c_str(), 0700);
-  }
+  check_and_create_directory(tmp);
   tmp = tmpc + "mle/";
-  if (stat(tmp.c_str(), &st) == -1) {
-    mkdir(tmp.c_str(), 0700);
-  }
+  check_and_create_directory(tmp);
   tmp = tmpc + "map/";
-  if (stat(tmp.c_str(), &st) == -1) {
-    mkdir(tmp.c_str(), 0700);
-  }
+  check_and_create_directory(tmp);
   tmp = folder + "mml/";
-  if (stat(tmp.c_str(), &st) == -1) {
-    mkdir(tmp.c_str(), 0700);
-  }
+  check_and_create_directory(tmp);
 }
 
 void Experiments::infer_components_exp1()
@@ -183,59 +158,63 @@ void Experiments::infer_components_exp1()
   double kappa,beta,ecc;
   Vector mean,major,minor;
 
-  for (double alpha=10; alpha<=50; alpha+=10) {
-    //alpha = 50; // in degrees
-    alpha_rad = alpha * PI / 180;
+  kappa = 80;
+  while(kappa <= 101) {
+    ecc = 0.1;
+    while(ecc < 0.95) {
+      for (alpha=10; alpha<=50; alpha+=10) {
+        //alpha = 50; // in degrees
+        alpha_rad = alpha * PI / 180;
 
-    mean = ZAXIS;
-    major = XAXIS;
-    minor = YAXIS;
-    kappa = 10; ecc = 0.9;
-    beta = 0.5 * kappa * ecc;
-    Kent kent1(mean,major,minor,kappa,beta);
+        mean = ZAXIS;
+        major = XAXIS;
+        minor = YAXIS;
+        //kappa = 10; ecc = 0.9;
+        beta = 0.5 * kappa * ecc;
+        Kent kent1(mean,major,minor,kappa,beta);
 
-    sin_alpha = sin(alpha_rad);
-    cos_alpha = cos(alpha_rad);
-    mean[0] = sin_alpha; mean[1] = 0; mean[2] = cos_alpha;
-    major[0] = cos_alpha; major[1] = 0; major[2] = -sin_alpha;
-    kappa = 10; ecc = 0.9;
-    beta = 0.5 * kappa * ecc;
-    Kent kent2(mean,major,minor,kappa,beta);
+        sin_alpha = sin(alpha_rad);
+        cos_alpha = cos(alpha_rad);
+        mean[0] = sin_alpha; mean[1] = 0; mean[2] = cos_alpha;
+        major[0] = cos_alpha; major[1] = 0; major[2] = -sin_alpha;
+        //kappa = 10; ecc = 0.9;
+        beta = 0.5 * kappa * ecc;
+        Kent kent2(mean,major,minor,kappa,beta);
 
-    Vector weights(2,0.5);
+        Vector weights(2,0.5);
 
-    std::vector<Kent> components;
-    components.push_back(kent1);
-    components.push_back(kent2);
-    Mixture original(2,components,weights);
+        std::vector<Kent> components;
+        components.push_back(kent1);
+        components.push_back(kent2);
+        Mixture original(2,components,weights);
 
-    ostringstream ssk;
-    ssk << fixed << setprecision(0);
-    ssk << kappa;
-    string kappa_str = ssk.str();
+        ostringstream ssk;
+        ssk << fixed << setprecision(0);
+        ssk << kappa;
+        string kappa_str = ssk.str();
 
-    ostringstream sse;
-    sse << fixed << setprecision(1);
-    sse << ecc;
-    string eccentricity_str = sse.str();
+        ostringstream sse;
+        sse << fixed << setprecision(1);
+        sse << ecc;
+        string eccentricity_str = sse.str();
 
-    std::ostringstream ss;
-    ss << fixed << setprecision(0);
-    ss << alpha;
-    string alpha_str = ss.str();
+        std::ostringstream ss;
+        ss << fixed << setprecision(0);
+        ss << alpha;
+        string alpha_str = ss.str();
 
-    parent_folder = common + "k_" + kappa_str + "_e_" + eccentricity_str + "/";
-    if (stat(parent_folder.c_str(), &st) == -1) {
-      mkdir(parent_folder.c_str(), 0700);
-    }
-    exp_folder = parent_folder + "alpha_" + alpha_str + "/" ;
-    if (stat(exp_folder.c_str(), &st) == -1) {
-      mkdir(exp_folder.c_str(), 0700);
-    }
+        parent_folder = common + "k_" + kappa_str + "_e_" + eccentricity_str + "/";
+        check_and_create_directory(parent_folder);
+        exp_folder = parent_folder + "alpha_" + alpha_str + "/" ;
+        check_and_create_directory(exp_folder);
 
-    generateData(original,exp_folder,N);
-    inferMixtures(original,exp_folder);
-  }
+        generateData(original,exp_folder,N);
+        inferMixtures(original,exp_folder);
+      } // alpha()
+      ecc += 0.1;
+    } // ecc()
+    kappa += 10;
+  } // kappa()
 }
 
 void Experiments::generateData(
@@ -244,9 +223,7 @@ void Experiments::generateData(
   int sample_size
 ) {
   string data_folder = exp_folder + "data/";
-  if (stat(data_folder.c_str(), &st) == -1) {
-      mkdir(data_folder.c_str(), 0700);
-  }
+  check_and_create_directory(data_folder);
 
   string iter_str,data_file;
   std::vector<Vector> data;

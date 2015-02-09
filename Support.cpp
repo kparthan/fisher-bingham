@@ -382,6 +382,13 @@ void print(string &type, struct Estimates_vMF &estimates)
   cout << "kappa_est: " << estimates.kappa << endl;
 }
 
+void check_and_create_directory(string &directory)
+{
+  if (stat(directory.c_str(), &st) == -1) {
+      mkdir(directory.c_str(), 0700);
+  }
+}
+
 ////////////////////// MATH FUNCTIONS \\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
 double scale_to_aom(double &x)

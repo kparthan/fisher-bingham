@@ -62,6 +62,7 @@ string extractName(string &);
 void print(ostream &, Vector &, int);
 void print(string &, struct Estimates &);
 void print(string &, struct Estimates_vMF &);
+void check_and_create_directory(string &);
 
 double scale_to_aom(double &);
 std::vector<Vector> scale_to_aom(std::vector<Vector> &);
