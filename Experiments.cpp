@@ -176,21 +176,21 @@ void Experiments::infer_components_exp1()
   iterations = 50;
   int N = 100;
 
-  string parent_folder = "./experiments/infer_components/exp1/";
-  string exp_folder;
+  string common = "./experiments/infer_components/exp1/";
+  string parent_folder,exp_folder;
 
   double alpha,alpha_rad,sin_alpha,cos_alpha;
   double kappa,beta,ecc;
   Vector mean,major,minor;
 
-  //for (double alpha=5; alpha<=25; alpha+=5) {
-    alpha = 10; // in degrees
+  for (double alpha=10; alpha<=50; alpha+=10) {
+    //alpha = 50; // in degrees
     alpha_rad = alpha * PI / 180;
 
     mean = ZAXIS;
     major = XAXIS;
     minor = YAXIS;
-    kappa = 10; ecc = 0.1;
+    kappa = 10; ecc = 0.9;
     beta = 0.5 * kappa * ecc;
     Kent kent1(mean,major,minor,kappa,beta);
 
@@ -198,7 +198,7 @@ void Experiments::infer_components_exp1()
     cos_alpha = cos(alpha_rad);
     mean[0] = sin_alpha; mean[1] = 0; mean[2] = cos_alpha;
     major[0] = cos_alpha; major[1] = 0; major[2] = -sin_alpha;
-    kappa = 10; ecc = 0.1;
+    kappa = 10; ecc = 0.9;
     beta = 0.5 * kappa * ecc;
     Kent kent2(mean,major,minor,kappa,beta);
 
@@ -209,18 +209,33 @@ void Experiments::infer_components_exp1()
     components.push_back(kent2);
     Mixture original(2,components,weights);
 
+    ostringstream ssk;
+    ssk << fixed << setprecision(0);
+    ssk << kappa;
+    string kappa_str = ssk.str();
+
+    ostringstream sse;
+    sse << fixed << setprecision(1);
+    sse << ecc;
+    string eccentricity_str = sse.str();
+
     std::ostringstream ss;
     ss << fixed << setprecision(0);
     ss << alpha;
-    string alpha_str = "alpha_" + ss.str();
-    exp_folder = parent_folder + alpha_str + "/" ;
+    string alpha_str = ss.str();
+
+    parent_folder = common + "k_" + kappa_str + "_e_" + eccentricity_str + "/";
+    if (stat(parent_folder.c_str(), &st) == -1) {
+      mkdir(parent_folder.c_str(), 0700);
+    }
+    exp_folder = parent_folder + "alpha_" + alpha_str + "/" ;
     if (stat(exp_folder.c_str(), &st) == -1) {
       mkdir(exp_folder.c_str(), 0700);
     }
 
-    //generateData(original,exp_folder,N);
+    generateData(original,exp_folder,N);
     inferMixtures(original,exp_folder);
-  //}
+  }
 }
 
 void Experiments::generateData(
@@ -232,7 +247,6 @@ void Experiments::generateData(
   if (stat(data_folder.c_str(), &st) == -1) {
       mkdir(data_folder.c_str(), 0700);
   }
-
 
   string iter_str,data_file;
   std::vector<Vector> data;
@@ -262,11 +276,11 @@ void Experiments::inferMixtures(
   string results_folder = exp_folder + "results/";
   string criterion;
 
-  //criterion = "bic/";
-  //CRITERION = BIC;
+  criterion = "bic/";
+  CRITERION = BIC;
 
-  criterion = "icl/";
-  CRITERION = ICL;
+  //criterion = "icl/";
+  //CRITERION = ICL;
 
   ESTIMATION = MOMENT;
   inferMixtures(
@@ -283,12 +297,12 @@ void Experiments::inferMixtures(
     original,data_folder,logs_folder,mixtures_folder,results_folder,criterion
   );
 
-  /*criterion = "mml/";
+  criterion = "mml/";
   CRITERION = MMLC;
   ESTIMATION = MML;
   inferMixtures(
     original,data_folder,logs_folder,mixtures_folder,results_folder,criterion
-  );*/
+  );
 }
 
 void Experiments::inferMixtures(

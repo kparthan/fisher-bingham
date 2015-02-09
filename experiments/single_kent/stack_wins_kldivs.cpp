@@ -117,7 +117,7 @@ void tabulate_kappa_kldivs(string &data_file, string &n_str, string &kappa_str)
   std::vector<Vector> kldivs;
   string kldivs_file;
   ofstream out(data_file.c_str());
-  double eccentricity = 0.1;
+  double eccentricity = 0.2;
   while (eccentricity < 0.95) {
     out << fixed << setw(10) << setprecision(1) << eccentricity;
     ostringstream sse;
@@ -202,7 +202,8 @@ int main(int argc, char **argv)
   string data_file,script_file;
   //string n_str = "./N_" + boost::lexical_cast<string>(parameters.N) + "_uniform_prior/";
   //string n_str = "./N_" + boost::lexical_cast<string>(parameters.N) + "_vmf_prior/";
-  string n_str = "./N_" + boost::lexical_cast<string>(parameters.N) + "_beta_prior/";
+  //string n_str = "./N_" + boost::lexical_cast<string>(parameters.N) + "_beta_prior/";
+  string n_str = "./N_" + boost::lexical_cast<string>(parameters.N) + "_new2_prior/";
   //string n_str = "N_" + boost::lexical_cast<string>(parameters.N) + "_kappa_until_50/";
   //string n_str = "./N_" + boost::lexical_cast<string>(parameters.N) + "/";
 

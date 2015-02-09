@@ -106,7 +106,7 @@ std::vector<Vector> Kent::generate(int sample_size)
   //writeToFile("random_sample_vmf.dat",sample,3);
   //writeToFile("random_sample_beta.dat",sample,3);
   //writeToFile("random_sample_new2.dat",sample,3);
-  writeToFile("random_sample.dat",sample,3);
+  //writeToFile("random_sample.dat",sample,3);
   //computeLambertProjection(sample);
   return sample;
 }
