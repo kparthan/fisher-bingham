@@ -89,6 +89,10 @@ class Mixture
     //! Initialize parameters
     void initialize();
 
+    void initialize_children_1();
+    void initialize_children_2();
+    void initialize_children_3();
+
     //! Updates the effective sample size
     void updateEffectiveSampleSize();
 

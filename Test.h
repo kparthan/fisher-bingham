@@ -18,6 +18,8 @@ class Test
 
     void uniform_number_generation();
 
+    void arbitrary_rotation();
+
     void matrixFunctions(void);
 
     void productMatrixVector(void);
@@ -69,6 +71,8 @@ class Test
     void hypothesis_testing();
 
     void confidence_region();
+
+    void infer_mixture();
 };
 
 #endif

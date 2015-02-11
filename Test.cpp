@@ -13,6 +13,7 @@
 extern Vector XAXIS,YAXIS,ZAXIS;
 extern int ENABLE_DATA_PARALLELISM;
 extern int NUM_THREADS;
+extern int ESTIMATION,CRITERION;
 
 void Test::load_data()
 {
@@ -100,6 +101,50 @@ void Test::uniform_number_generation()
   for (int i=0; i<10; i++) {
     cout << uniform_random() << endl;
   }
+}
+
+void Test::arbitrary_rotation()
+{
+  double psi,alpha,eta,theta;
+  Vector mu,major_axis,minor_axis;
+  Matrix R,Rx,Ry,Rz;
+
+  psi = 60;
+  alpha = 90;
+  eta = 45;
+
+  psi *= PI/180;
+  alpha *= PI/180;
+  eta *= PI/180;
+
+  Matrix r = computeOrthogonalTransformation(psi,alpha,eta);
+  mu = Vector(3,0); 
+  major_axis = Vector(3,0); 
+  minor_axis = Vector(3,0); 
+  for (int i=0; i<3; i++) {
+    mu[i] = r(i,0);
+    major_axis[i] = r(i,1);
+    minor_axis[i] = r(i,2);
+  }
+  //cout << "r: " << r << endl;
+
+  theta = 50;
+  theta *= PI/180;
+
+  Rx = rotate_about_xaxis(theta);
+  cout << "Rx: " << Rx << endl;
+  R = rotate_about_arbitrary_axis(XAXIS,theta);
+  cout << "R: " << R << endl;
+
+  Ry = rotate_about_yaxis(theta);
+  cout << "Ry: " << Ry << endl;
+  R = rotate_about_arbitrary_axis(YAXIS,theta);
+  cout << "R: " << R << endl;
+
+  Rz = rotate_about_zaxis(theta);
+  cout << "Rz: " << Rz << endl;
+  R = rotate_about_arbitrary_axis(ZAXIS,theta);
+  cout << "R: " << R << endl;
 }
 
 void Test::matrixFunctions()
@@ -442,15 +487,16 @@ void Test::bingham(void)
 
 void Test::kent_bingham_generation(void)
 {
-  double kappa,beta;
+  double ecc,kappa,beta;
   std::vector<Vector> random_sample;
   Vector m0,m1,m2;
-  generateRandomOrthogonalVectors(m0,m1,m2);
+  //generateRandomOrthogonalVectors(m0,m1,m2);
 
+  m0 = ZAXIS; m1 = XAXIS; m2 = YAXIS;
   int N = 10000;
-  kappa = 100;
-  //beta = 47.5;
-  beta = 35;
+  kappa = 1000;
+  ecc = 0.99;
+  beta = 0.5 * kappa * ecc;
   Kent kent(m0,m1,m2,kappa,beta);
   random_sample = kent.generate(N);
   writeToFile("./visualize/sampled_data/kent.dat",random_sample,3);
@@ -936,5 +982,58 @@ void Test::confidence_region()
   /*string file_name = "./support/R_codes/whin_sill.txt";
   random_sample = load_data_table(file_name);*/
   kent.computeConfidenceRegion(random_sample);
+}
+
+void Test::infer_mixture()
+{
+  int N;
+  double alpha,alpha_rad,sin_alpha,cos_alpha;
+  double kappa,beta,ecc;
+  Vector mean,major,minor;
+
+  N = 100;
+  kappa = 80;
+  ecc = 0.1;
+  alpha = 60;
+
+  alpha_rad = alpha * PI / 180;
+
+  mean = ZAXIS;
+  major = XAXIS;
+  minor = YAXIS;
+  beta = 0.5 * kappa * ecc;
+  Kent kent1(mean,major,minor,kappa,beta);
+
+  sin_alpha = sin(alpha_rad);
+  cos_alpha = cos(alpha_rad);
+  mean[0] = sin_alpha; mean[1] = 0; mean[2] = cos_alpha;
+  major[0] = cos_alpha; major[1] = 0; major[2] = -sin_alpha;
+  beta = 0.5 * kappa * ecc;
+  Kent kent2(mean,major,minor,kappa,beta);
+
+  Vector weights(2,0.5);
+
+  std::vector<Kent> components;
+  components.push_back(kent1);
+  components.push_back(kent2);
+  Mixture original(2,components,weights);
+
+  //std::vector<Vector> data = original.generate(N,1);
+  std::vector<Vector> large_data = original.generate(100000,0);
+  string data_file = "random_sample.dat";
+  std::vector<Vector> data = load_data_table(data_file);
+
+  string log_file = "infer_mml.log";
+  ESTIMATION = MML; CRITERION = MML;
+  Mixture inferred = inferComponents(data,log_file);
+  double kldiv_mml = original.computeKLDivergence(inferred,large_data);
+
+  log_file = "infer_map.log";
+  ESTIMATION = MAP; CRITERION = BIC;
+  inferred = inferComponents(data,log_file);
+  double kldiv_map = original.computeKLDivergence(inferred,large_data);
+
+  cout << "kldiv_mml: " << kldiv_mml << endl;
+  cout << "kldiv_map: " << kldiv_map << endl;
 }
 

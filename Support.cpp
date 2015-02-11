@@ -338,13 +338,13 @@ void print(ostream &os, Vector &v, int precision)
     }
   } else if (precision != 0) { // scientific notation
     if (v.size() == 1) {
-      os << fixed << setprecision(3) << "(" << v[0] << ")";
+      os << fixed << setprecision(precision) << "(" << v[0] << ")";
     } else if (v.size() > 1) {
-      os << fixed << setprecision(3) << "(" << v[0] << ", ";
+      os << fixed << setprecision(precision) << "(" << v[0] << ", ";
       for (int i=1; i<v.size()-1; i++) {
-        os << fixed << setprecision(3) << v[i] << ", ";
+        os << fixed << setprecision(precision) << v[i] << ", ";
       }
-      os << fixed << setprecision(3) << v[v.size()-1] << ")\t";
+      os << fixed << setprecision(precision) << v[v.size()-1] << ")\t";
     } else {
       os << "No elements in v ...";
     }
@@ -353,6 +353,7 @@ void print(ostream &os, Vector &v, int precision)
 
 void print(string &type, struct Estimates &estimates)
 {
+  //cout << "MIX_ID: " << MIXTURE_ID-1 << endl;
   cout << "TYPE: " << type << endl;
   Vector spherical(3,0);
   cartesian2spherical(estimates.mean,spherical);
@@ -897,6 +898,25 @@ Matrix computeNormalizedDispersionMatrix(std::vector<Vector> &sample)
 {
   Matrix dispersion = computeDispersionMatrix(sample);
   return dispersion/sample.size();
+}
+
+Matrix rotate_about_arbitrary_axis(Vector &axis, double theta)
+{
+  Matrix K = ZeroMatrix(3,3);
+  K(0,1) = -axis[2];
+  K(0,2) = axis[1];
+  K(1,2) = -axis[0];
+  K(1,0) = -K(0,1);
+  K(2,0) = -K(0,2);
+  K(2,1) = -K(1,2);
+
+  Matrix Ksq = prod(K,K);
+  Matrix I = IdentityMatrix(3,3);
+  Matrix sinm = sin(theta) * K;
+  Matrix cosm = (1-cos(theta)) * Ksq;
+  Matrix tmp = sinm + cosm;
+  Matrix R = I + tmp;
+  return R;
 }
 
 // anti-clockwise rotation about +X
@@ -1812,8 +1832,8 @@ Mixture inferComponents(Mixture &mixture, int N, ostream &log)
   } // if (improved == parent || iter%2 == 0) loop
 
   finish:
-  //string inferred_mixture_file = "./simulation/inferred_mixture";
-  //parent.printParameters(inferred_mixture_file);
+  string inferred_mixture_file = "./simulation/inferred_mixture";
+  parent.printParameters(inferred_mixture_file);
   return parent;
 }
 
@@ -1850,11 +1870,13 @@ void updateInference(Mixture &modified, Mixture &current, int N, ostream &log, i
       break;
   }
 
-  improvement_rate = (current_value - modified_value) / current_value;
+  //improvement_rate = (current_value - modified_value) / current_value;
 
   //if (operation == KILL || operation == JOIN) {
   if (operation == KILL || operation == JOIN || operation == SPLIT) {
-    if (improvement_rate >= 0) {
+    if (current_value > modified_value) {
+    //if (improvement_rate >= 0) {
+      improvement_rate = (current_value - modified_value) / fabs(current_value);
       log << "\t ... IMPROVEMENT ... (+ " << fixed << setprecision(3) 
           << 100 * improvement_rate << " %) ";
       log << "\t\t[ACCEPT]\n\n";
@@ -2048,7 +2070,7 @@ void TestFunctions(void)
 {
   Test test;
 
-  test.load_data();
+  //test.load_data();
 
   //test.bessel();
 
@@ -2057,6 +2079,8 @@ void TestFunctions(void)
   //test.parallel_sum_computation();
 
   //test.uniform_number_generation();
+
+  //test.arbitrary_rotation();
 
   //test.matrixFunctions();
 
@@ -2109,6 +2133,8 @@ void TestFunctions(void)
   //test.hypothesis_testing();
 
   //test.confidence_region();
+
+  test.infer_mixture();
 }
 
 ////////////////////// EXPERIMENTS \\\\\\\\\\\\\\\\\\\\\\\\\\\\

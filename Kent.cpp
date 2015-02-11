@@ -52,9 +52,9 @@ Kent::Kent(Vector &mu, Vector &major_axis, Vector &minor_axis,
   computed = UNSET;
 }
 
-Kent::Kent(double psi, double alpha, double eta, 
-           double kappa, double beta) : 
-           psi(psi), alpha(alpha), eta(eta), kappa(kappa), beta(beta)
+Kent::Kent(
+  double psi, double alpha, double eta, double kappa, double beta
+) : psi(psi), alpha(alpha), eta(eta), kappa(kappa), beta(beta)
 {
   Matrix r = computeOrthogonalTransformation(psi,alpha,eta);
   mu = Vector(3,0); 
@@ -761,8 +761,9 @@ struct Estimates Kent::computeAsymptoticMomentEstimates(std::vector<Vector> &dat
  *  (similar to used in Kent (1982) paper)
  *  (sample_mean1 and S1 are \sum_x and \sum_ x x')
  */
-struct Estimates Kent::computeAsymptoticMomentEstimates(Vector &sample_mean1, Matrix &S1, double N)
-{
+struct Estimates Kent::computeAsymptoticMomentEstimates(
+  Vector &sample_mean1, Matrix &S1, double N
+) {
   Vector sample_mean = sample_mean1;
   Matrix S = S1; 
   for (int i=0; i<3; i++) {
@@ -934,97 +935,52 @@ void Kent::estimateParameters(std::vector<Vector> &data, Vector &weights)
   opt.initialize(Neff,moment_est.mean,moment_est.major_axis,moment_est.minor_axis,
                  moment_est.kappa,moment_est.beta);
   opt.computeEstimates(sample_mean,S,moment_est);
+  //print(type,moment_est);
 
-  /*if (ESTIMATION == MML) {
-    std::vector<struct Estimates> all_estimates;
-    double min_msg;
-    int min_index;
-
-    moment_est.msglen = computeMessageLength(moment_est,sample_mean,S,Neff);
-    all_estimates.push_back(moment_est);
-    min_msg = moment_est.msglen;
-    min_index = MOMENT;
-
-    type = "MLE";
-    struct Estimates ml_est = moment_est;
-    Optimize opt1(type);
-    opt1.initialize(Neff,ml_est.mean,ml_est.major_axis,ml_est.minor_axis,
-                    ml_est.kappa,ml_est.beta);
-    opt1.computeEstimates(sample_mean,S,ml_est);
-    ml_est.msglen = computeMessageLength(ml_est,sample_mean,S,Neff);
-    all_estimates.push_back(ml_est);
-    if (ml_est.msglen < min_msg) {
-      min_index = MLE;
-      min_msg = ml_est.msglen;
+  switch(ESTIMATION) {
+    case MOMENT:
+    {
+      estimates = moment_est;
+      break;
     }
 
-    type = "MAP";
-    struct Estimates map_est = moment_est;
-    Optimize opt2(type);
-    opt2.initialize(Neff,map_est.mean,map_est.major_axis,map_est.minor_axis,
-                    map_est.kappa,map_est.beta);
-    opt2.computeEstimates(sample_mean,S,map_est);
-    map_est.msglen = computeMessageLength(map_est,sample_mean,S,Neff);
-    all_estimates.push_back(map_est);
-    if (map_est.msglen < min_msg) {
-      min_index = MAP;
-      min_msg = map_est.msglen;
+    case MLE:
+    {
+      type = "MLE";
+      struct Estimates ml_est = moment_est;
+      Optimize opt1(type);
+      opt1.initialize(Neff,ml_est.mean,ml_est.major_axis,ml_est.minor_axis,
+                      ml_est.kappa,ml_est.beta);
+      opt1.computeEstimates(sample_mean,S,ml_est);
+      estimates = ml_est;
+      break;
     }
 
-    type = "MML";
-    struct Estimates mml_est = all_estimates[min_index];
-    Optimize opt3(type);
-    opt3.initialize(Neff,mml_est.mean,mml_est.major_axis,mml_est.minor_axis,
-                    mml_est.kappa,mml_est.beta);
-    opt3.computeEstimates(sample_mean,S,mml_est);
-    mml_est.msglen = computeMessageLength(mml_est,sample_mean,S,Neff);
-    all_estimates.push_back(mml_est);
+    case MAP:
+    {
+      type = "MAP";
+      struct Estimates map_est = moment_est;
+      Optimize opt2(type);
+      opt2.initialize(Neff,map_est.mean,map_est.major_axis,map_est.minor_axis,
+                      map_est.kappa,map_est.beta);
+      opt2.computeEstimates(sample_mean,S,map_est);
+      estimates = map_est;
+      break;
+    }
 
-    estimates = mml_est;
-  } else { // ! MML*/
-    switch(ESTIMATION) {
-      case MOMENT:
-      {
-        estimates = moment_est;
-        break;
-      }
-
-      case MLE:
-      {
-        type = "MLE";
-        struct Estimates ml_est = moment_est;
-        Optimize opt1(type);
-        opt1.initialize(Neff,ml_est.mean,ml_est.major_axis,ml_est.minor_axis,
-                        ml_est.kappa,ml_est.beta);
-        opt1.computeEstimates(sample_mean,S,ml_est);
-        estimates = ml_est;
-        break;
-      }
-
-      case MAP:
-      {
-        type = "MAP";
-        struct Estimates map_est = moment_est;
-        Optimize opt2(type);
-        opt2.initialize(Neff,map_est.mean,map_est.major_axis,map_est.minor_axis,
-                        map_est.kappa,map_est.beta);
-        opt2.computeEstimates(sample_mean,S,map_est);
-        estimates = map_est;
-        break;
-      }
-
-      case MML:
-      {
-        type = "MML";
-        struct Estimates mml_est = moment_est;
-        Optimize opt3(type);
-        opt3.initialize(Neff,mml_est.mean,mml_est.major_axis,mml_est.minor_axis,
-                        mml_est.kappa,mml_est.beta);
-        opt3.computeEstimates(sample_mean,S,mml_est);
-        estimates = mml_est;
-      }
-    } // switch()
-  //} // if ()
+    case MML:
+    {
+      type = "MML";
+      struct Estimates mml_est = moment_est;
+      Optimize opt3(type);
+      opt3.initialize(Neff,mml_est.mean,mml_est.major_axis,mml_est.minor_axis,
+                      mml_est.kappa,mml_est.beta);
+      opt3.computeEstimates(sample_mean,S,mml_est);
+      estimates = mml_est;
+      //print(type,mml_est);
+      break;
+    }
+  } // switch()
   
   updateParameters(estimates);
 }
@@ -1127,7 +1083,7 @@ double Kent::computeMessageLength(Vector &sample_mean, Matrix &S, double N)
 }
 
 double Kent::computeMessageLength(struct Estimates &estimates, 
-                                       Vector &sample_mean, Matrix &S, double N)
+                                  Vector &sample_mean, Matrix &S, double N)
 {
   Kent kent_est(estimates.mean,estimates.major_axis,estimates.minor_axis,
                 estimates.kappa,estimates.beta);
@@ -1136,9 +1092,9 @@ double Kent::computeMessageLength(struct Estimates &estimates,
 
 void Kent::printParameters(ostream &os)
 {
-  os << "[mu]: "; print(os,mu,6);
-  os << "\t[mj]: "; print(os,major_axis,6);
-  os << "\t[mi]: "; print(os,minor_axis,6);
+  os << "[mu]: "; print(os,mu,3);
+  os << "\t[mj]: "; print(os,major_axis,3);
+  os << "\t[mi]: "; print(os,minor_axis,3);
   os << "\t[kappa]: " << fixed << setprecision(3) << kappa << "\t\t";
   os << "\t[beta]: " << fixed << setprecision(3) << beta << endl;
   /*vector<double> spherical(3,0);

@@ -96,6 +96,7 @@ Vector computeNormalizedVectorSum(std::vector<Vector> &);
 Matrix computeDispersionMatrix(std::vector<Vector> &);
 Matrix computeDispersionMatrix(std::vector<Vector> &, Vector &);
 Matrix computeNormalizedDispersionMatrix(std::vector<Vector> &);
+Matrix rotate_about_arbitrary_axis(Vector &, double);
 Matrix rotate_about_xaxis(double);
 Matrix rotate_about_yaxis(double);
 Matrix rotate_about_zaxis(double);

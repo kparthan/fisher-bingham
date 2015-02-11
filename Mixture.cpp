@@ -1,5 +1,6 @@
 #include "Mixture.h"
 #include "Support.h"
+#include "Optimize.h"
 
 extern int MIXTURE_ID;
 extern int MIXTURE_SIMULATION;
@@ -215,6 +216,166 @@ void Mixture::initialize()
   updateComponents();
 }
 
+void Mixture::initialize_children_1()
+{
+  N = data.size();
+  //cout << "Sample size: " << N << endl;
+
+  // initialize responsibility matrix
+  //srand(time(NULL));
+  Vector tmp(N,0);
+  responsibility = std::vector<Vector>(K,tmp);
+  /*for (int i=0; i<K; i++) {
+    responsibility.push_back(tmp);
+  }*/
+
+  #pragma omp parallel for if(ENABLE_DATA_PARALLELISM) num_threads(NUM_THREADS) 
+  for (int i=0; i<N; i++) {
+    responsibility[0][i] = uniform_random();
+    responsibility[1][i] = 1 - responsibility[0][i];
+  }
+  sample_size = Vector(K,0);
+  updateEffectiveSampleSize();
+  weights = Vector(K,0);
+  if (ESTIMATION == MML) {
+    updateWeights();
+  } else {
+    updateWeights_ML();
+  }
+
+  // initialize parameters of each component
+  components = std::vector<Kent>(K);
+  updateComponents();
+}
+
+void Mixture::initialize_children_2()
+{
+  N = data.size();
+
+  // initialize responsibility matrix
+  Vector tmp(N,0);
+  responsibility = std::vector<Vector>(K,tmp);
+
+  #pragma omp parallel for if(ENABLE_DATA_PARALLELISM) num_threads(NUM_THREADS) 
+  for (int i=0; i<N; i++) {
+    responsibility[0][i] = uniform_random();
+    responsibility[1][i] = 1 - responsibility[0][i];
+  }
+  sample_size = Vector(K,0);
+  updateEffectiveSampleSize();
+  weights = Vector(K,0);
+  if (ESTIMATION == MML) {
+    updateWeights();
+  } else {
+    updateWeights_ML();
+  }
+
+  // initialize parameters of each component
+  double Neff;
+  Vector sample_mean = computeVectorSum(data,data_weights,Neff);
+  Matrix S = computeDispersionMatrix(data,data_weights);
+  Kent parent;
+
+  struct Estimates asymptotic_est = parent.computeAsymptoticMomentEstimates(sample_mean,S,Neff);
+  string type = "MOMENT";
+  struct Estimates moment_est = asymptotic_est;
+  Optimize opt(type);
+  opt.initialize(Neff,moment_est.mean,moment_est.major_axis,moment_est.minor_axis,
+                 moment_est.kappa,moment_est.beta);
+  opt.computeEstimates(sample_mean,S,moment_est);
+
+  Vector mu,rotation_axis,spherical(3,0);
+  double theta,psi,alpha,eta,kappa,beta;
+
+  rotation_axis = moment_est.minor_axis;
+  kappa = moment_est.kappa;
+  beta = moment_est.beta;
+  //beta = 0;
+
+  theta = 0.5 * PI * uniform_random();
+  Matrix R = rotate_about_arbitrary_axis(rotation_axis,theta);
+  mu = prod(R,moment_est.mean);
+  cartesian2spherical(mu,spherical);
+  alpha = spherical[1]; eta = spherical[2];
+  psi = uniform_random() * 2 * PI;
+  Kent child1(psi,alpha,eta,kappa,beta);
+
+  theta = 0.5 * PI * uniform_random();
+  R = rotate_about_arbitrary_axis(rotation_axis,-theta);
+  mu = prod(R,moment_est.mean);
+  cartesian2spherical(mu,spherical);
+  alpha = spherical[1]; eta = spherical[2];
+  psi = uniform_random() * 2 * PI;
+  Kent child2(psi,alpha,eta,kappa,beta);
+
+  components = std::vector<Kent>(K);
+  components[0] = child1; components[1] = child2;
+  //updateComponents();
+}
+
+void Mixture::initialize_children_3()
+{
+  N = data.size();
+
+  // initialize responsibility matrix
+  Vector tmp(N,0);
+  responsibility = std::vector<Vector>(K,tmp);
+
+  #pragma omp parallel for if(ENABLE_DATA_PARALLELISM) num_threads(NUM_THREADS) 
+  for (int i=0; i<N; i++) {
+    responsibility[0][i] = uniform_random();
+    responsibility[1][i] = 1 - responsibility[0][i];
+  }
+  sample_size = Vector(K,0);
+  updateEffectiveSampleSize();
+  weights = Vector(K,0);
+  if (ESTIMATION == MML) {
+    updateWeights();
+  } else {
+    updateWeights_ML();
+  }
+
+  // initialize parameters of each component
+  double Neff;
+  Vector sample_mean = computeVectorSum(data,data_weights,Neff);
+  Matrix S = computeDispersionMatrix(data,data_weights);
+  Kent parent;
+
+  struct Estimates asymptotic_est = parent.computeAsymptoticMomentEstimates(sample_mean,S,Neff);
+  string type = "MOMENT";
+  struct Estimates moment_est = asymptotic_est;
+  Optimize opt(type);
+  opt.initialize(Neff,moment_est.mean,moment_est.major_axis,moment_est.minor_axis,
+                 moment_est.kappa,moment_est.beta);
+  opt.computeEstimates(sample_mean,S,moment_est);
+
+  Vector mu,mj,mi,spherical(3,0);
+  double theta,psi,alpha,eta,kappa,beta;
+
+  mi = moment_est.minor_axis;
+  kappa = moment_est.kappa;
+  beta = moment_est.beta;
+
+  //double ecc = 2 * beta / kappa;
+  //theta = 0.5 * PI * ecc;
+  double span = uniform_random();
+  theta = 0.5 * PI * span;
+  Matrix R = rotate_about_arbitrary_axis(mi,theta);
+  mu = prod(R,moment_est.mean);
+  mj = crossProduct(mi,mu);
+  Kent child1(mu,mj,mi,kappa,beta);
+
+  theta = 0.5 * PI * span;
+  R = rotate_about_arbitrary_axis(mi,-theta);
+  mu = prod(R,moment_est.mean);
+  mj = crossProduct(mi,mu);
+  Kent child2(mu,mj,mi,kappa,beta);
+
+  components = std::vector<Kent>(K);
+  components[0] = child1; components[1] = child2;
+  //updateComponents();
+}
+
 /*!
  *  \brief This function updates the effective sample size of each component.
  */
@@ -261,7 +422,6 @@ void Mixture::updateComponents()
       comp_data_wts[j] = responsibility[i][j] * data_weights[j];
     }
     components[i].estimateParameters(data,comp_data_wts);
-    //components[i].updateParameters();
   }
 }
 
@@ -394,7 +554,9 @@ double Mixture::computeNegativeLogLikelihood(std::vector<Vector> &sample)
 
 double Mixture::computeNegativeLogLikelihood(int verbose)
 {
-  return computeNegativeLogLikelihood(data);
+  //return computeNegativeLogLikelihood(data);
+  double neglog = computeNegativeLogLikelihood(data);
+  return neglog - (2 * N * log(AOM));
 }
 
 /*!
@@ -460,7 +622,8 @@ double Mixture::computeMinimumMessageLength(int verbose /* default = 1 (print) *
   Il /= log(2);
   //cout << "Il: " << Il << endl;
   //assert(Il > 0);
-  if (Il < 0 || boost::math::isnan(Il)) {
+  //if (Il < 0 || boost::math::isnan(Il)) {
+  if (boost::math::isnan(Il)) {
     cout << "isnan(Il)\n"; sleep(5);
     minimum_msglen = LARGE_NUMBER;
     MSGLEN_FAIL = 1;
@@ -522,13 +685,15 @@ string Mixture::getLogFile()
  */
 double Mixture::estimateParameters()
 {
-  /*if (SPLITTING == 1) {
-    initialize_children_1();
+  if (SPLITTING == 1) {
+    //initialize_children_1();
+    //initialize_children_2();
+    initialize_children_3();
   } else {
     initialize();
-  }*/
+  }
 
-  initialize();
+  //initialize();
 
   EM();
 
@@ -591,6 +756,7 @@ void Mixture::EM(
   double prev=0,current;
   int iter = 1;
   double impr_rate = 0.00001;
+  int MIN_ITER = 5;
 
   while (1) {
     // Expectation (E-step)
@@ -599,7 +765,6 @@ void Mixture::EM(
     //if (SPLITTING == 1) {
       for (int i=0; i<K; i++) {
         if (sample_size[i] < MIN_N) {
-          //current = computeNegativeLogLikelihood(data);
           current = (this->*objective_function)(0);
           cout << "stopping \n";
           goto stop;
@@ -607,20 +772,20 @@ void Mixture::EM(
       }
     //}
     // Maximization (M-step)
-    //updateWeights_ML();
     (this->*update_weights)();
 
     updateComponents();
-    //current = computeNegativeLogLikelihood(data);
     current = (this->*objective_function)(0);
-    //msglens.push_back(current);
     printParameters(log,iter,current);
     if (iter != 1) {
       //assert(current > 0);
-      // because EM has to consistently produce lower 
-      // -ve likelihood values otherwise something wrong!
-      if ((iter > 3 && (prev - current) <= impr_rate * prev) ||
-            (iter > 1 && current > prev) || current <= 0 || MSGLEN_FAIL == 1) {
+      //if ((iter > 3 && (prev - current) <= impr_rate * prev) ||
+      //      (iter > 1 && current > prev) || current <= 0 || MSGLEN_FAIL == 1) {
+      if (
+          (iter > MIN_ITER && current >= prev) ||
+          MSGLEN_FAIL == 1 ||
+          (iter > MIN_ITER && (fabs(prev - current) <= impr_rate * fabs(prev)))
+         ) {
         stop:
         current = computeMinimumMessageLength();
         log << "\nSample size: " << N << endl;
@@ -1293,7 +1458,7 @@ double Mixture::computeKLDivergence(Mixture &other, std::vector<Vector> &sample)
 double Mixture::computeAIC()
 {
   int k = 6 * K - 1;
-  negloglike = computeNegativeLogLikelihood();
+  negloglike = computeNegativeLogLikelihood(data);
   return compute_aic(k,N,negloglike);
 }
 
@@ -1304,7 +1469,7 @@ double Mixture::computeAIC()
 double Mixture::computeBIC()
 {
   int k = 6 * K - 1;
-  negloglike = computeNegativeLogLikelihood();
+  negloglike = computeNegativeLogLikelihood(data);
   return compute_bic(k,N,negloglike);
 }
 
@@ -1323,7 +1488,7 @@ std::vector<std::vector<int> > Mixture::compute_cluster_indicators()
 
 double Mixture::computeICL()
 {
-  negloglike = computeNegativeLogLikelihood();
+  negloglike = computeNegativeLogLikelihood(data);
   std::vector<std::vector<int> > indicators = compute_cluster_indicators();
   double ec = 0,term;
   for (int i=0; i<K; i++) {
