@@ -15,14 +15,16 @@ class MaximumLikelihoodObjectiveFunction_vMF
     double N,R;
 
   public:
-    MaximumLikelihoodObjectiveFunction_vMF(double sample_size, double magnitude) :
-                                           N(sample_size), R(magnitude)
+    MaximumLikelihoodObjectiveFunction_vMF(
+      double sample_size, double magnitude
+    ) : N(sample_size), R(magnitude)
     {}
 
     static double wrap(
       const std::vector<double> &x, 
       std::vector<double> &grad, 
-      void *data) {
+      void *data
+    ) {
         if(boost::math::isnan(x[0])) {  // return this sub-optimal state 
           if (FAIL_STATUS == 0) {
             MLE_FAIL++;
@@ -33,12 +35,15 @@ class MaximumLikelihoodObjectiveFunction_vMF
         return (*reinterpret_cast<MaximumLikelihoodObjectiveFunction_vMF*>(data))(x, grad); 
     }
 
-    double operator() (const std::vector<double> &x, std::vector<double> &grad) {
+    double operator() (
+      const std::vector<double> &x, std::vector<double> &grad
+    ) {
       double k = x[0];
 
       vMF vmf(k);
       double log_norm = vmf.getLogNormalizationConstant();
-      double fval = (N * log_norm) + (k * R) + (2 * N * log(AOM));
+      //double fval = (N * log_norm) + (k * R) + (2 * N * log(AOM));
+      double fval = (N * log_norm) + (k * R);
       return -fval;
     }
 };
@@ -52,13 +57,16 @@ class MAPObjectiveFunction_vMF
     Vector mean;
 
   public:
-    MAPObjectiveFunction_vMF(double N, double R, Vector &mean) : N(N), R(R), mean(mean)
+    MAPObjectiveFunction_vMF(
+      double N, double R, Vector &mean
+    ) : N(N), R(R), mean(mean)
     {}
 
     static double wrap(
       const std::vector<double> &x, 
       std::vector<double> &grad, 
-      void *data) {
+      void *data
+    ) {
         if(boost::math::isnan(x[0])) {  // return this sub-optimal state 
           if (FAIL_STATUS == 0) {
             MAP_FAIL++;
@@ -74,8 +82,8 @@ class MAPObjectiveFunction_vMF
 
       vMF vmf(mean,k);
       double log_prior = vmf.computeLogPriorProbability(); 
-      double fval = -log_prior + vmf.computeNegativeLogLikelihood(R,N)
-                    - 2 * N * log(AOM);
+      double fval = -log_prior + vmf.computeNegativeLogLikelihood(R,N);
+                    //- 2 * N * log(AOM);
       return fval;
     }
 };
@@ -91,7 +99,9 @@ class MMLObjectiveFunction_vMF
     double const_lattk;
 
   public:
-    MMLObjectiveFunction_vMF(double N, double R, Vector &mean) : N(N), R(R), mean(mean)
+    MMLObjectiveFunction_vMF(
+      double N, double R, Vector &mean
+    ) : N(N), R(R), mean(mean)
     {
       const_lattk = -3.816;
     }
@@ -99,7 +109,8 @@ class MMLObjectiveFunction_vMF
     static double wrap(
       const std::vector<double> &x, 
       std::vector<double> &grad, 
-      void *data) {
+      void *data
+    ) {
         if(boost::math::isnan(x[0])) {  // return this sub-optimal state 
           if (FAIL_STATUS == 0) {
             MML2_FAIL++;

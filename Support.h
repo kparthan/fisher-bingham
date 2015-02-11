@@ -140,7 +140,7 @@ Vector generateRandomBetas(Vector &);
 Mixture inferComponents(std::vector<Vector> &, string &);
 Mixture inferComponents(Mixture &, int, ostream &);
 void updateInference(Mixture &, Mixture &, int, ostream &, int);
-Mixture inferComponents_ML(std::vector<Vector> &, string &);
+Mixture_vMF inferComponents_vMF(std::vector<Vector> &, string &);
 Mixture_vMF inferComponents_vMF(Mixture_vMF &, int, ostream &);
 void updateInference_vMF(Mixture_vMF &, Mixture_vMF &, int, ostream &, int);
 

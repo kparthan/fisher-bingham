@@ -73,6 +73,8 @@ class Test
     void confidence_region();
 
     void infer_mixture();
+
+    void infer_mixture_vmf();
 };
 
 #endif

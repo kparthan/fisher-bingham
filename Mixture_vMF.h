@@ -44,6 +44,10 @@ class Mixture_vMF
     double Ik,Iw,sum_It,Il,kd_term,part1,part2,minimum_msglen;
     Vector It;
 
+    double negloglike;
+
+    double aic,bic,icl;
+
   public:
     //! Null constructor
     Mixture_vMF();
@@ -56,7 +60,7 @@ class Mixture_vMF
 
     //! Constructor
     Mixture_vMF(int, std::vector<vMF> &, Vector &, Vector &, 
-            std::vector<Vector> &, std::vector<Vector> &, Vector &);
+                std::vector<Vector> &, std::vector<Vector> &, Vector &);
 
     //! Overloading = operator
     Mixture_vMF operator=(const Mixture_vMF &);
@@ -85,11 +89,17 @@ class Mixture_vMF
     //! Initialize parameters
     void initialize();
 
+    void initialize_children_1();
+    void initialize_children_2();
+    void initialize_children_3();
+
     //! Updates the effective sample size
     void updateEffectiveSampleSize();
 
     //! Update the component weights
     void updateWeights();
+
+    void updateWeights_ML();
 
     //! Update components
     void updateComponents();
@@ -106,6 +116,8 @@ class Mixture_vMF
     //! Computes the negative log likelihood
     double computeNegativeLogLikelihood(std::vector<Vector> &);
 
+    double computeNegativeLogLikelihood(int verbose = 0);
+
     //! Computes the minimum message length
     double computeMinimumMessageLength(int verbose = 0);
 
@@ -120,11 +132,25 @@ class Mixture_vMF
     //! Gets the second part
     double second_part();
 
+    double getNegativeLogLikelihood();
+
+    double getAIC();
+
+    double getBIC();
+
+    double getICL();
+
     //! Estimate mixture parameters
     double estimateParameters();
 
     //! EM loop
     void EM();
+
+    void EM(
+      ostream &,
+      void (Mixture_vMF::*update_weights)(),
+      double (Mixture_vMF::*objective_function)(int)
+    );
 
     //! Computes the null model message length
     double computeNullModelMessageLength();
@@ -134,6 +160,8 @@ class Mixture_vMF
 
     //! Prints the model parameters
     void printParameters(ostream &, int);
+
+    void printParameters(string &);
 
     //! Prints the model parameters
     void printParameters(ostream &);
@@ -172,6 +200,14 @@ class Mixture_vMF
     double computeKLDivergence(Mixture_vMF &);
 
     double computeKLDivergence(Mixture_vMF &, std::vector<Vector> &);
+
+    double computeAIC();
+
+    double computeBIC();
+
+    std::vector<std::vector<int> > compute_cluster_indicators();
+
+    double computeICL();
 };
 
 #endif

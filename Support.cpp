@@ -1907,41 +1907,17 @@ void updateInference(Mixture &modified, Mixture &current, int N, ostream &log, i
   }*/
 }
 
-/*void updateInference(Mixture &modified, Mixture &current, int N, ostream &log, int operation)
+Mixture_vMF inferComponents_vMF(std::vector<Vector> &data, string &log_file)
 {
-  double modified_msglen = modified.getMinimumMessageLength();
-  double current_msglen = current.getMinimumMessageLength();
-
-  double dI = current_msglen - modified_msglen;
-  double dI_n = dI / N;
-  double improvement_rate = (current_msglen - modified_msglen) / current_msglen;
-
-  if (operation == KILL || operation == JOIN) {
-  //if (operation == KILL || operation == JOIN || operation == SPLIT) {
-    if (improvement_rate >= 0) {
-      log << "\t ... IMPROVEMENT ... (+ " << fixed << setprecision(3) 
-          << 100 * improvement_rate << " %) ";
-      log << "\t\t[ACCEPT]\n\n";
-      current = modified;
-    } else if (improvement_rate >= -IMPROVEMENT_RATE) {
-      log << "\t ... minimal IMPROVEMENT ... (- " << fixed << setprecision(3) 
-          << 100 * improvement_rate << " %) ";
-      log << "\t\t[ACCEPT]\n\n";
-      current = modified;
-    } else {
-      log << "\t ... NO IMPROVEMENT\t\t\t[REJECT]\n\n";
-    }
-  } else if (operation == SPLIT) {
-    if (improvement_rate > IMPROVEMENT_RATE) {
-      log << "\t ... IMPROVEMENT ... (+ " << fixed << setprecision(3) 
-          << 100 * improvement_rate << " %) ";
-      log << "\t\t[ACCEPT]\n\n";
-      current = modified;
-    } else {
-      log << "\t ... NO IMPROVEMENT\t\t\t[REJECT]\n\n";
-    }
-  }
-}*/
+  Vector data_weights(data.size(),1.0);
+  Mixture_vMF m(1,data,data_weights);
+  Mixture_vMF mixture = m;
+  mixture.estimateParameters();
+  ofstream log(log_file.c_str());
+  Mixture_vMF inferred = inferComponents_vMF(mixture,data.size(),log);
+  log.close();
+  return inferred;
+}
 
 Mixture_vMF inferComponents_vMF(Mixture_vMF &mixture, int N, ostream &log)
 {
@@ -1992,23 +1968,12 @@ Mixture_vMF inferComponents_vMF(Mixture_vMF &mixture, int N, ostream &log)
         updateInference_vMF(modified,improved,N,log,JOIN);
       } // join() ing nearest components
     } // if (K > 1) loop
-    /*if (improved == parent) {
-      for (int i=0; i<K; i++) { // split() ...
-        if (sample_size[i] > MIN_N) {
-          IGNORE_SPLIT = 0;
-          modified = parent.split(i,log);
-          if (IGNORE_SPLIT == 0) {
-            updateInference_vMF(modified,improved,N,log,SPLIT);
-          } else {
-            log << "\t\tIGNORING SPLIT ... \n\n";
-          }
-        }
-      } // for()
-    }*/
     if (improved == parent) goto finish;
   } // if (improved == parent || iter%2 == 0) loop
 
   finish:
+  string inferred_mixture_file = "./simulation/inferred_mixture";
+  parent.printParameters(inferred_mixture_file);
   return parent;
 }
 
@@ -2021,43 +1986,39 @@ Mixture_vMF inferComponents_vMF(Mixture_vMF &mixture, int N, ostream &log)
  */
 void updateInference_vMF(Mixture_vMF &modified, Mixture_vMF &current, int N, ostream &log, int operation)
 {
-  double modified_msglen = modified.getMinimumMessageLength();
-  double current_msglen = current.getMinimumMessageLength();
+  double modified_value,current_value,improvement_rate;
 
-  double dI = current_msglen - modified_msglen;
-  double dI_n = dI / N;
-  double improvement_rate = (current_msglen - modified_msglen) / current_msglen;
+  switch(CRITERION) {
+    case AIC:
+      modified_value = modified.getAIC();
+      current_value = current.getAIC();
+      break;
 
-  if (operation == KILL || operation == JOIN) {
-    if (improvement_rate >= 0) {
+    case BIC:
+      modified_value = modified.getBIC();
+      current_value = current.getBIC();
+      break;
+
+    case ICL:
+      modified_value = modified.getICL();
+      current_value = current.getICL();
+      break;
+
+    case MMLC:
+      modified_value = modified.getMinimumMessageLength();
+      current_value = current.getMinimumMessageLength();
+      break;
+  }
+
+  //if (operation == KILL || operation == JOIN) {
+  if (operation == KILL || operation == JOIN || operation == SPLIT) {
+    if (current_value > modified_value) {
+    //if (improvement_rate >= 0) {
+      improvement_rate = (current_value - modified_value) / fabs(current_value);
       log << "\t ... IMPROVEMENT ... (+ " << fixed << setprecision(3) 
           << 100 * improvement_rate << " %) ";
       log << "\t\t[ACCEPT]\n\n";
       current = modified;
-    } else {
-      log << "\t ... NO IMPROVEMENT\t\t\t[REJECT]\n\n";
-    }
-  } /*else if (operation == SPLIT) {
-    if (improvement_rate > IMPROVEMENT_RATE) {
-      log << "\t ... IMPROVEMENT ... (+ " << fixed << setprecision(3) 
-          << 100 * improvement_rate << " %) ";
-      log << "\t\t[ACCEPT]\n\n";
-      current = modified;
-    } else {
-      log << "\t ... NO IMPROVEMENT\t\t\t[REJECT]\n\n";
-    }
-  }*/
-  else if (operation == SPLIT) {
-    if (improvement_rate > IMPROVEMENT_RATE) {
-      log << "\t ... IMPROVEMENT ... (+ " << fixed << setprecision(3) 
-          << 100 * improvement_rate << " %) ";
-      log << "\t\t[ACCEPT]\n\n";
-      current = modified;
-    } else if (improvement_rate > 0 && improvement_rate <= IMPROVEMENT_RATE) {
-      log << "\t ... IMPROVEMENT (" << 100 * improvement_rate << " %) < " << fixed << setprecision(3) 
-          << 100 * IMPROVEMENT_RATE << " %\t\t\t[REJECT]\n\n";
-      log << "\t\tdI: " << dI << " bits.\n";
-      log << "\t\tdI/N: " << dI_n << " bits.\n\n";
     } else {
       log << "\t ... NO IMPROVEMENT\t\t\t[REJECT]\n\n";
     }
@@ -2134,7 +2095,9 @@ void TestFunctions(void)
 
   //test.confidence_region();
 
-  test.infer_mixture();
+  //test.infer_mixture();
+
+  test.infer_mixture_vmf();
 }
 
 ////////////////////// EXPERIMENTS \\\\\\\\\\\\\\\\\\\\\\\\\\\\

@@ -1,12 +1,14 @@
 #include "Mixture_vMF.h"
 #include "Support.h"
+#include "Optimize.h"
+#include "Kent.h"
 
 extern int MIXTURE_ID;
 extern int MIXTURE_SIMULATION;
 extern int INFER_COMPONENTS;
 extern int ENABLE_DATA_PARALLELISM;
 extern int NUM_THREADS;
-extern int ESTIMATION;
+extern int ESTIMATION,CRITERION;
 extern double IMPROVEMENT_RATE;
 extern int SPLITTING;
 extern int IGNORE_SPLIT;
@@ -27,13 +29,16 @@ Mixture_vMF::Mixture_vMF()
  *  \param components a reference to a std::vector<vMF>
  *  \param weights a reference to a Vector 
  */
-Mixture_vMF::Mixture_vMF(int K, std::vector<vMF> &components, Vector &weights):
-                         K(K), components(components), weights(weights)
+Mixture_vMF::Mixture_vMF(
+  int K, std::vector<vMF> &components, Vector &weights
+): K(K), components(components), weights(weights)
 {
   assert(components.size() == K);
   assert(weights.size() == K);
   id = MIXTURE_ID++;
   minimum_msglen = 0;
+  negloglike = 0;
+  aic = 0; bic = 0; icl = 0;
 }
 
 /*!
@@ -49,6 +54,8 @@ Mixture_vMF::Mixture_vMF(int K, std::vector<Vector> &data, Vector &data_weights)
   N = data.size();
   assert(data_weights.size() == N);
   minimum_msglen = 0;
+  negloglike = 0;
+  aic = 0; bic = 0; icl = 0;
 }
 
 /*!
@@ -80,6 +87,8 @@ Mixture_vMF::Mixture_vMF(
   N = data.size();
   assert(data_weights.size() == N);
   minimum_msglen = 0;
+  negloglike = 0;
+  aic = 0; bic = 0; icl = 0;
 }
 
 /*!
@@ -109,6 +118,10 @@ Mixture_vMF Mixture_vMF::operator=(const Mixture_vMF &source)
     sum_It = source.sum_It;
     Il = source.Il;
     kd_term = source.kd_term;
+    negloglike = source.negloglike;
+    aic = source.aic;
+    bic = source.bic;
+    icl = source.icl;
   }
   return *this;
 }
@@ -201,6 +214,146 @@ void Mixture_vMF::initialize()
   updateComponents();
 }
 
+void Mixture_vMF::initialize_children_1()
+{
+  N = data.size();
+
+  // initialize responsibility matrix
+  Vector tmp(N,0);
+  responsibility = std::vector<Vector>(K,tmp);
+
+  #pragma omp parallel for if(ENABLE_DATA_PARALLELISM) num_threads(NUM_THREADS) 
+  for (int i=0; i<N; i++) {
+    responsibility[0][i] = uniform_random();
+    responsibility[1][i] = 1 - responsibility[0][i];
+  }
+  sample_size = Vector(K,0);
+  updateEffectiveSampleSize();
+  weights = Vector(K,0);
+  if (ESTIMATION == MML) {
+    updateWeights();
+  } else {
+    updateWeights_ML();
+  }
+
+  // initialize parameters of each component
+  components = std::vector<vMF>(K);
+  updateComponents();
+}
+
+void Mixture_vMF::initialize_children_2()
+{
+  N = data.size();
+
+  // initialize responsibility matrix
+  Vector tmp(N,0);
+  responsibility = std::vector<Vector>(K,tmp);
+
+  #pragma omp parallel for if(ENABLE_DATA_PARALLELISM) num_threads(NUM_THREADS) 
+  for (int i=0; i<N; i++) {
+    responsibility[0][i] = uniform_random();
+    responsibility[1][i] = 1 - responsibility[0][i];
+  }
+  sample_size = Vector(K,0);
+  updateEffectiveSampleSize();
+  weights = Vector(K,0);
+  if (ESTIMATION == MML) {
+    updateWeights();
+  } else {
+    updateWeights_ML();
+  }
+
+  // initialize parameters of each component
+  double Neff;
+  Vector sample_mean = computeVectorSum(data,data_weights,Neff);
+  Matrix S = computeDispersionMatrix(data,data_weights);
+  Kent parent;
+
+  struct Estimates asymptotic_est = parent.computeAsymptoticMomentEstimates(sample_mean,S,Neff);
+  string type = "MOMENT";
+  struct Estimates moment_est = asymptotic_est;
+  Optimize opt(type);
+  opt.initialize(Neff,moment_est.mean,moment_est.major_axis,moment_est.minor_axis,
+                 moment_est.kappa,moment_est.beta);
+  opt.computeEstimates(sample_mean,S,moment_est);
+
+  Vector mu,rotation_axis,spherical(3,0);
+  double theta,psi,alpha,eta,kappa,beta;
+
+  rotation_axis = moment_est.minor_axis;
+  kappa = moment_est.kappa;
+
+  theta = 0.5 * PI * uniform_random();
+  Matrix R = rotate_about_arbitrary_axis(rotation_axis,theta);
+  mu = prod(R,moment_est.mean);
+  vMF child1(mu,kappa);
+
+  theta = 0.5 * PI * uniform_random();
+  R = rotate_about_arbitrary_axis(rotation_axis,-theta);
+  mu = prod(R,moment_est.mean);
+  vMF child2(mu,kappa);
+
+  components = std::vector<vMF>(K);
+  components[0] = child1; components[1] = child2;
+}
+
+void Mixture_vMF::initialize_children_3()
+{
+  N = data.size();
+
+  // initialize responsibility matrix
+  Vector tmp(N,0);
+  responsibility = std::vector<Vector>(K,tmp);
+
+  #pragma omp parallel for if(ENABLE_DATA_PARALLELISM) num_threads(NUM_THREADS) 
+  for (int i=0; i<N; i++) {
+    responsibility[0][i] = uniform_random();
+    responsibility[1][i] = 1 - responsibility[0][i];
+  }
+  sample_size = Vector(K,0);
+  updateEffectiveSampleSize();
+  weights = Vector(K,0);
+  if (ESTIMATION == MML) {
+    updateWeights();
+  } else {
+    updateWeights_ML();
+  }
+
+  // initialize parameters of each component
+  double Neff;
+  Vector sample_mean = computeVectorSum(data,data_weights,Neff);
+  Matrix S = computeDispersionMatrix(data,data_weights);
+  Kent parent;
+
+  struct Estimates asymptotic_est = parent.computeAsymptoticMomentEstimates(sample_mean,S,Neff);
+  string type = "MOMENT";
+  struct Estimates moment_est = asymptotic_est;
+  Optimize opt(type);
+  opt.initialize(Neff,moment_est.mean,moment_est.major_axis,moment_est.minor_axis,
+                 moment_est.kappa,moment_est.beta);
+  opt.computeEstimates(sample_mean,S,moment_est);
+
+  Vector mu,mj,mi,spherical(3,0);
+  double theta,psi,alpha,eta,kappa,beta;
+
+  mi = moment_est.minor_axis;
+  kappa = moment_est.kappa;
+
+  double span = uniform_random();
+  theta = 0.5 * PI * span;
+  Matrix R = rotate_about_arbitrary_axis(mi,theta);
+  mu = prod(R,moment_est.mean);
+  vMF child1(mu,kappa);
+
+  //theta = 0.5 * PI * span;
+  R = rotate_about_arbitrary_axis(mi,-theta);
+  mu = prod(R,moment_est.mean);
+  vMF child2(mu,kappa);
+
+  components = std::vector<vMF>(K);
+  components[0] = child1; components[1] = child2;
+}
+
 /*!
  *  \brief This function updates the effective sample size of each component.
  */
@@ -227,6 +380,14 @@ void Mixture_vMF::updateWeights()
   }
 }
 
+void Mixture_vMF::updateWeights_ML()
+{
+  double normalization_constant = N;
+  for (int i=0; i<K; i++) {
+    weights[i] = sample_size[i] / normalization_constant;
+  }
+}
+
 /*!
  *  \brief This function is used to update the components.
  */
@@ -239,7 +400,6 @@ void Mixture_vMF::updateComponents()
       comp_data_wts[j] = responsibility[i][j] * data_weights[j];
     }
     components[i].estimateParameters(data,comp_data_wts);
-    //components[i].updateParameters();
   }
 }
 
@@ -357,7 +517,15 @@ double Mixture_vMF::computeNegativeLogLikelihood(std::vector<Vector> &sample)
     assert(!boost::math::isnan(log_density));
     value -= log_density;
   }
-  return value;
+  negloglike = value;
+  return negloglike;
+}
+
+double Mixture_vMF::computeNegativeLogLikelihood(int verbose)
+{
+  //return computeNegativeLogLikelihood(data);
+  double neglog = computeNegativeLogLikelihood(data);
+  return neglog - (2 * N * log(AOM));
 }
 
 /*!
@@ -485,13 +653,15 @@ string Mixture_vMF::getLogFile()
  */
 double Mixture_vMF::estimateParameters()
 {
-  /*if (SPLITTING == 1) {
-    initialize_children_1();
+  if (SPLITTING == 1) {
+    //initialize_children_1();
+    //initialize_children_2();
+    initialize_children_3();
   } else {
     initialize();
-  }*/
+  }
 
-  initialize();
+  //initialize();
 
   EM();
 
@@ -510,43 +680,85 @@ void Mixture_vMF::EM()
   computeNullModelMessageLength();
   //cout << "null_msglen: " << null_msglen << endl;
 
-  double prev=0,current;
-  int iter = 1;
   printParameters(log,0,0);
 
+  if (ESTIMATION == MML) {
+    EM(
+      log,
+      &Mixture_vMF::updateWeights,
+      &Mixture_vMF::computeMinimumMessageLength
+    );
+  } else {
+    EM(
+      log,
+      &Mixture_vMF::updateWeights_ML,
+      &Mixture_vMF::computeNegativeLogLikelihood
+    );
+  }
+
+  switch(CRITERION) {
+    case AIC:
+      aic = computeAIC();
+      break;
+
+    case BIC:
+      bic = computeBIC();
+      break;
+
+    case ICL:
+      icl = computeICL();
+      break;
+
+    case MMLC:
+      break;
+  }
+
+  log.close();
+}
+
+void Mixture_vMF::EM(
+  ostream &log,
+  void (Mixture_vMF::*update_weights)(),
+  double (Mixture_vMF::*objective_function)(int)
+) {
+  double prev=0,current;
+  int iter = 1;
   double impr_rate = 0.00001;
-  /* EM loop */
+  int MIN_ITER = 5;
+
   while (1) {
     // Expectation (E-step)
     updateResponsibilityMatrix();
     updateEffectiveSampleSize();
-    for (int i=0; i<K; i++) {
-      if (sample_size[i] < MIN_N) {
-        current = computeMinimumMessageLength();
-        cout << "stopping 1\n";
-        goto stop;
+    //if (SPLITTING == 1) {
+      for (int i=0; i<K; i++) {
+        if (sample_size[i] < MIN_N) {
+          current = (this->*objective_function)(0);
+          cout << "stopping \n";
+          goto stop;
+        }
       }
-    }
+    //}
     // Maximization (M-step)
-    updateWeights();
+    (this->*update_weights)();
+
     updateComponents();
-    current = computeMinimumMessageLength();
-    if (fabs(current) >= INFINITY) break;
-    msglens.push_back(current);
+    current = (this->*objective_function)(0);
     printParameters(log,iter,current);
     if (iter != 1) {
-      assert(current > 0);
-      // because EM has to consistently produce lower 
-      // message lengths otherwise something wrong!
-      // IMPORTANT: the below condition should not be 
-      //          fabs(prev - current) <= 0.0001 * fabs(prev)
-      // ... it's very hard to satisfy this condition and EM() goes into
-      // ... an infinite loop!
-      if ((iter > 3 && (prev - current) <= impr_rate * prev) ||
-            (iter > 1 && current > prev) || current <= 0 || MSGLEN_FAIL == 1) {
+      //assert(current > 0);
+      //if ((iter > 3 && (prev - current) <= impr_rate * prev) ||
+      //      (iter > 1 && current > prev) || current <= 0 || MSGLEN_FAIL == 1) {
+      if (
+          (iter > MIN_ITER && current >= prev) ||
+          MSGLEN_FAIL == 1 ||
+          (iter > MIN_ITER && (fabs(prev - current) <= impr_rate * fabs(prev)))
+         ) {
         stop:
+        current = computeMinimumMessageLength();
         log << "\nSample size: " << N << endl;
-        log << "vMF encoding rate: " << current/N << " bits/point" << endl;
+        log << "vMF encoding rate: " << current << " bits.";
+        log << "\t(" << current/N << " bits/point)" << endl;
         log << "Null model encoding: " << null_msglen << " bits.";
         log << "\t(" << null_msglen/N << " bits/point)" << endl;
         break;
@@ -555,7 +767,6 @@ void Mixture_vMF::EM()
     prev = current;
     iter++;
   }
-  log.close();
 }
 
 
@@ -597,13 +808,33 @@ double Mixture_vMF::second_part()
   return part2;
 }
 
+double Mixture_vMF::getNegativeLogLikelihood()
+{
+  return negloglike;
+}
+
+double Mixture_vMF::getAIC()
+{
+  return aic;
+}
+
+double Mixture_vMF::getBIC()
+{
+  return bic;
+}
+
+double Mixture_vMF::getICL()
+{
+  return icl;
+}
+
 /*!
  *  \brief This function prints the parameters to a log file.
  *  \param os a reference to a ostream
  *  \param iter an integer
  *  \param msglen a double
  */
-void Mixture_vMF::printParameters(ostream &os, int iter, double msglen)
+void Mixture_vMF::printParameters(ostream &os, int iter, double value)
 {
   os << "Iteration #: " << iter << endl;
   for (int k=0; k<K; k++) {
@@ -613,7 +844,11 @@ void Mixture_vMF::printParameters(ostream &os, int iter, double msglen)
     os << "\t";
     components[k].printParameters(os);
   }
-  os << "\t\t\tmsglen: " << msglen << " bits." << endl;
+  if (ESTIMATION == MML) {
+    os << "\t\t\tmsglen: " << value << " bits." << endl;
+  } else {
+    os << "\t\t\tnegloglike: " << value/log(2) << " bits." << endl;
+  }
 }
 
 /*!
@@ -637,7 +872,35 @@ void Mixture_vMF::printParameters(ostream &os, int num_tabs)
   }
   os << tabs << "ID: " << id << endl;
   os << tabs << "vMF encoding: " << minimum_msglen << " bits. "
-     << "(" << minimum_msglen/N << " bits/point)" << endl << endl;
+     << "(" << minimum_msglen/N << " bits/point)" << endl;
+
+  switch(CRITERION) {
+    case AIC:
+      aic = computeAIC();
+      os << tabs << "AIC: " << aic << endl;
+      break;
+
+    case BIC:
+      bic = computeBIC();
+      os << tabs << "BIC: " << bic << endl;
+      break;
+
+    case ICL:
+      icl = computeICL();
+      os << tabs << "ICL: " << icl << endl;
+      break;
+
+    case MMLC:
+      break;
+  }
+  os << endl;
+}
+
+void Mixture_vMF::printParameters(string &file)
+{
+  ofstream out(file.c_str());
+  printParameters(out);
+  out.close();
 }
 
 /*!
@@ -748,15 +1011,25 @@ void Mixture_vMF::saveComponentData(int index, std::vector<Vector> &data)
 {
   string data_file = "./visualize/sampled_data/comp";
   data_file += boost::lexical_cast<string>(index+1) + ".dat";
-  //components[index].printParameters(cout);
   ofstream file(data_file.c_str());
+
+  Vector projection(2,0);
+  double theta,phi,rho,z1,z2;
+  string transformed_file = "./visualize/sampled_data/transformed_comp" 
+                            + boost::lexical_cast<string>(index+1) + ".dat";
+  ofstream transformed_comp(transformed_file.c_str());
+
   for (int j=0; j<data.size(); j++) {
     for (int k=0; k<3; k++) {
       file << fixed << setw(10) << setprecision(3) << data[j][k];
     }
     file << endl;
+    computeLambertProjection(data[j],projection);
+    transformed_comp << fixed << setw(10) << setprecision(3) << projection[0];
+    transformed_comp << fixed << setw(10) << setprecision(3) << projection[1] << endl;
   }
   file.close();
+  transformed_comp.close();
 }
 
 /*!
@@ -766,8 +1039,7 @@ void Mixture_vMF::saveComponentData(int index, std::vector<Vector> &data)
  *  \param save_data a boolean variable
  *  \return the random sample
  */
-std::vector<Vector>
-Mixture_vMF::generate(int num_samples, bool save_data) 
+std::vector<Vector> Mixture_vMF::generate(int num_samples, bool save_data) 
 {
   sample_size = Vector(K,0);
   for (int i=0; i<num_samples; i++) {
@@ -775,11 +1047,11 @@ Mixture_vMF::generate(int num_samples, bool save_data)
     int k = randomComponent();
     sample_size[k]++;
   }
-  ofstream fw("sample_size");
+  /*ofstream fw("sample_size");
   for (int i=0; i<sample_size.size(); i++) {
     fw << sample_size[i] << endl;
   }
-  fw.close();
+  fw.close();*/
 
   std::vector<std::vector<Vector> > random_data;
   std::vector<Vector> sample;
@@ -859,9 +1131,9 @@ Mixture_vMF Mixture_vMF::split(int c, ostream &log)
       sum += responsibility_c[i][j];
     }
     sample_size_c[i] = sum;
-    /*if (sample_size_c[i] < MIN_N) {
+    if (sample_size_c[i] < MIN_N) {
       IGNORE_SPLIT = 1;
-    }*/
+    }
   }
 
   // child components
@@ -1139,5 +1411,50 @@ double Mixture_vMF::computeKLDivergence(Mixture_vMF &other, std::vector<Vector> 
     kldiv += (log_fx - log_gx);
   }
   return kldiv/(log(2) * sample.size());
+}
+
+double Mixture_vMF::computeAIC()
+{
+  int k = 4 * K - 1;
+  negloglike = computeNegativeLogLikelihood(data);
+  return compute_aic(k,N,negloglike);
+}
+
+/*!
+ *  \brief This function computes the Bayesian information criteria (AIC)
+ *  \return the BIC value (natural log -- nits)
+ */
+double Mixture_vMF::computeBIC()
+{
+  int k = 4 * K - 1;
+  negloglike = computeNegativeLogLikelihood(data);
+  return compute_bic(k,N,negloglike);
+}
+
+std::vector<std::vector<int> > Mixture_vMF::compute_cluster_indicators()
+{
+  std::vector<int> emptyvec(N,0);
+  std::vector<std::vector<int> > z(K,emptyvec);
+  std::vector<Vector> flipped_resp = flip(responsibility);
+  int max_index;
+  for (int i=0; i<N; i++) {
+    max_index = maximumIndex(flipped_resp[i]);
+    z[max_index][i] = 1;
+  }
+  return z;
+}
+
+double Mixture_vMF::computeICL()
+{
+  negloglike = computeNegativeLogLikelihood(data);
+  std::vector<std::vector<int> > indicators = compute_cluster_indicators();
+  double ec = 0,term;
+  for (int i=0; i<K; i++) {
+    for (int j=0; j<N; j++) {
+      term = indicators[i][j] * log(responsibility[i][j]);
+      ec -= term;
+    }
+  }
+  return (negloglike + ec) / log(2);
 }
 
