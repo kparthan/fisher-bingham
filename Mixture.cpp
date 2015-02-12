@@ -666,7 +666,7 @@ string Mixture::getLogFile()
       file_name = "./simulation/logs/";
     }
   } else if (INFER_COMPONENTS == SET) {
-    file_name = "./infer/logs/";
+    file_name = "./infer/logs/kent/";
     file_name += "m_" + boost::lexical_cast<string>(id) + "_";
   }
   file_name += boost::lexical_cast<string>(K) + ".log";

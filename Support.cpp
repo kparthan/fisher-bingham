@@ -196,7 +196,7 @@ struct Parameters parseCommandLineInput(int argc, char **argv)
   if (vm.count("improvement")) {
     IMPROVEMENT_RATE = improvement_rate;
   } else {
-    IMPROVEMENT_RATE = 0.0001; // 0.1 % default
+    IMPROVEMENT_RATE = 1e-5; // 0.001 % default
   }
 
   if (vm.count("estimate_all")) {
@@ -1870,37 +1870,38 @@ void updateInference(Mixture &modified, Mixture &current, int N, ostream &log, i
       break;
   }
 
-  //improvement_rate = (current_value - modified_value) / current_value;
+  if (current_value > modified_value) {
+    improvement_rate = (current_value - modified_value) / fabs(current_value);
+    if (operation == KILL || operation == JOIN) {
+      log << "\t ... IMPROVEMENT ... (+ " << fixed << setprecision(3) 
+          << 100 * improvement_rate << " %) ";
+      log << "\t\t[ACCEPT]\n\n";
+      current = modified;
+    } // kill | join 
+    if (operation == SPLIT) {
+      if (improvement_rate >= IMPROVEMENT_RATE) {
+        log << "\t ... IMPROVEMENT ... (+ " << fixed << setprecision(3) 
+            << 100 * improvement_rate << " %) ";
+        log << "\t\t[ACCEPT]\n\n";
+        current = modified;
+      } else {
+        log << "\t ... IMPROVEMENT ... (+ " << fixed << setprecision(3) 
+            << 100 * improvement_rate << " %) < (" 
+            << 100 * IMPROVEMENT_RATE << " %)" ;
+        log << "\t\t[REJECT]\n\n";
+      } // if-else() 
+    } // split
+  } else {
+    log << "\t ... NO IMPROVEMENT\t\t\t[REJECT]\n\n";
+  } // if (current > modified)
 
-  //if (operation == KILL || operation == JOIN) {
-  if (operation == KILL || operation == JOIN || operation == SPLIT) {
+  /*if (operation == KILL || operation == JOIN || operation == SPLIT) {
     if (current_value > modified_value) {
-    //if (improvement_rate >= 0) {
       improvement_rate = (current_value - modified_value) / fabs(current_value);
       log << "\t ... IMPROVEMENT ... (+ " << fixed << setprecision(3) 
           << 100 * improvement_rate << " %) ";
       log << "\t\t[ACCEPT]\n\n";
       current = modified;
-    } /*else if (improvement_rate >= -IMPROVEMENT_RATE) {
-      log << "\t ... minimal IMPROVEMENT ... (- " << fixed << setprecision(3) 
-          << 100 * improvement_rate << " %) ";
-      log << "\t\t[ACCEPT]\n\n";
-      current = modified;
-    }*/ else {
-      log << "\t ... NO IMPROVEMENT\t\t\t[REJECT]\n\n";
-    }
-  }
-  /*else if (operation == SPLIT) {
-    if (improvement_rate > IMPROVEMENT_RATE) {
-      log << "\t ... IMPROVEMENT ... (+ " << fixed << setprecision(3) 
-          << 100 * improvement_rate << " %) ";
-      log << "\t\t[ACCEPT]\n\n";
-      current = modified;
-    } else if (improvement_rate > 0 && improvement_rate <= IMPROVEMENT_RATE) {
-      log << "\t ... IMPROVEMENT (" << 100 * improvement_rate << " %) < " << fixed << setprecision(3) 
-          << 100 * IMPROVEMENT_RATE << " %\t\t\t[REJECT]\n\n";
-      log << "\t\tdI: " << dI << " bits.\n";
-      log << "\t\tdI/N: " << dI_n << " bits.\n\n";
     } else {
       log << "\t ... NO IMPROVEMENT\t\t\t[REJECT]\n\n";
     }
@@ -2010,19 +2011,30 @@ void updateInference_vMF(Mixture_vMF &modified, Mixture_vMF &current, int N, ost
       break;
   }
 
-  //if (operation == KILL || operation == JOIN) {
-  if (operation == KILL || operation == JOIN || operation == SPLIT) {
-    if (current_value > modified_value) {
-    //if (improvement_rate >= 0) {
-      improvement_rate = (current_value - modified_value) / fabs(current_value);
+  if (current_value > modified_value) {
+    improvement_rate = (current_value - modified_value) / fabs(current_value);
+    if (operation == KILL || operation == JOIN) {
       log << "\t ... IMPROVEMENT ... (+ " << fixed << setprecision(3) 
           << 100 * improvement_rate << " %) ";
       log << "\t\t[ACCEPT]\n\n";
       current = modified;
-    } else {
-      log << "\t ... NO IMPROVEMENT\t\t\t[REJECT]\n\n";
-    }
-  }
+    } // kill | join 
+    if (operation == SPLIT) {
+      if (improvement_rate >= IMPROVEMENT_RATE) {
+        log << "\t ... IMPROVEMENT ... (+ " << fixed << setprecision(3) 
+            << 100 * improvement_rate << " %) ";
+        log << "\t\t[ACCEPT]\n\n";
+        current = modified;
+      } else {
+        log << "\t ... IMPROVEMENT ... (+ " << fixed << setprecision(3) 
+            << 100 * improvement_rate << " %) < (" 
+            << 100 * IMPROVEMENT_RATE << " %)" ;
+        log << "\t\t[REJECT]\n\n";
+      } // if-else() 
+    } // split
+  } else {
+    log << "\t ... NO IMPROVEMENT\t\t\t[REJECT]\n\n";
+  } // if (current > modified)
 }
 
 ////////////////////// TESTING FUNCTIONS \\\\\\\\\\\\\\\\\\\\\\\\\\\\
