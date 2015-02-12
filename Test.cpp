@@ -1064,10 +1064,11 @@ void Test::infer_mixture_vmf()
   components.push_back(vmf2);
   Mixture_vMF original(2,components,weights);
 
-  std::vector<Vector> data = original.generate(N,1);
-  /*std::vector<Vector> large_data = original.generate(100000,0);
+  std::vector<Vector> data;
+  data = original.generate(N,1);
+  std::vector<Vector> large_data = original.generate(100000,0);
   string data_file = "random_sample.dat";
-  std::vector<Vector> data = load_data_table(data_file);
+  data = load_data_table(data_file);
 
   string log_file = "infer_mml.log";
   ESTIMATION = MML; CRITERION = MMLC;
@@ -1080,6 +1081,6 @@ void Test::infer_mixture_vmf()
   double kldiv_map = original.computeKLDivergence(inferred,large_data);
 
   cout << "kldiv_mml: " << kldiv_mml << endl;
-  cout << "kldiv_map: " << kldiv_map << endl;*/
+  cout << "kldiv_map: " << kldiv_map << endl;
 }
 

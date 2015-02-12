@@ -2095,9 +2095,9 @@ void TestFunctions(void)
 
   //test.confidence_region();
 
-  test.infer_mixture();
+  //test.infer_mixture();
 
-  //test.infer_mixture_vmf();
+  test.infer_mixture_vmf();
 }
 
 ////////////////////// EXPERIMENTS \\\\\\\\\\\\\\\\\\\\\\\\\\\\
