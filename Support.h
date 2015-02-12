@@ -45,7 +45,7 @@ struct Estimates_vMF
 {
   double Neff;
   double R,Rbar;
-  double theta,phi;
+  double alpha,eta;
   Vector mean;
   double kappa;
 };

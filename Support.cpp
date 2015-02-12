@@ -379,7 +379,7 @@ void print(string &type, struct Estimates_vMF &estimates)
   cout << "TYPE: " << type << endl;
   Vector spherical(3,0);
   cout << "m0_est: "; print(cout,estimates.mean,3);
-  cout << "\t(" << estimates.theta*180/PI << "," << estimates.phi*180/PI << ")\n";
+  cout << "\t(" << estimates.alpha*180/PI << "," << estimates.eta*180/PI << ")\n";
   cout << "kappa_est: " << estimates.kappa << endl;
 }
 
@@ -2095,9 +2095,9 @@ void TestFunctions(void)
 
   //test.confidence_region();
 
-  //test.infer_mixture();
+  test.infer_mixture();
 
-  test.infer_mixture_vmf();
+  //test.infer_mixture_vmf();
 }
 
 ////////////////////// EXPERIMENTS \\\\\\\\\\\\\\\\\\\\\\\\\\\\

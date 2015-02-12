@@ -991,9 +991,9 @@ void Test::infer_mixture()
   double kappa,beta,ecc;
   Vector mean,major,minor;
 
-  N = 100;
-  kappa = 80;
-  ecc = 0.1;
+  N = 10000;
+  kappa = 100;
+  ecc = 0.5;
   alpha = 60;
 
   alpha_rad = alpha * PI / 180;
@@ -1024,7 +1024,7 @@ void Test::infer_mixture()
   std::vector<Vector> data = load_data_table(data_file);
 
   string log_file = "infer_mml.log";
-  ESTIMATION = MML; CRITERION = MML;
+  ESTIMATION = MML; CRITERION = MMLC;
   Mixture inferred = inferComponents(data,log_file);
   double kldiv_mml = original.computeKLDivergence(inferred,large_data);
 
@@ -1043,48 +1043,43 @@ void Test::infer_mixture_vmf()
   double kappa,alpha,alpha_rad,sin_alpha,cos_alpha;
   Vector mean;
 
-  N = 100;
-  kappa = 80;
+  N = 10000;
+  kappa = 100;
   alpha = 60;
 
   alpha_rad = alpha * PI / 180;
 
   mean = ZAXIS;
-  major = XAXIS;
-  minor = YAXIS;
-  beta = 0.5 * kappa * ecc;
-  Kent kent1(mean,major,minor,kappa,beta);
+  vMF vmf1(mean,kappa);
 
   sin_alpha = sin(alpha_rad);
   cos_alpha = cos(alpha_rad);
   mean[0] = sin_alpha; mean[1] = 0; mean[2] = cos_alpha;
-  major[0] = cos_alpha; major[1] = 0; major[2] = -sin_alpha;
-  beta = 0.5 * kappa * ecc;
-  Kent kent2(mean,major,minor,kappa,beta);
+  vMF vmf2(mean,kappa);
 
   Vector weights(2,0.5);
 
-  std::vector<Kent> components;
-  components.push_back(kent1);
-  components.push_back(kent2);
-  Mixture original(2,components,weights);
+  std::vector<vMF> components;
+  components.push_back(vmf1);
+  components.push_back(vmf2);
+  Mixture_vMF original(2,components,weights);
 
-  //std::vector<Vector> data = original.generate(N,1);
-  std::vector<Vector> large_data = original.generate(100000,0);
+  std::vector<Vector> data = original.generate(N,1);
+  /*std::vector<Vector> large_data = original.generate(100000,0);
   string data_file = "random_sample.dat";
   std::vector<Vector> data = load_data_table(data_file);
 
   string log_file = "infer_mml.log";
-  ESTIMATION = MML; CRITERION = MML;
-  Mixture inferred = inferComponents(data,log_file);
+  ESTIMATION = MML; CRITERION = MMLC;
+  Mixture_vMF inferred = inferComponents_vMF(data,log_file);
   double kldiv_mml = original.computeKLDivergence(inferred,large_data);
 
   log_file = "infer_map.log";
   ESTIMATION = MAP; CRITERION = BIC;
-  inferred = inferComponents(data,log_file);
+  inferred = inferComponents_vMF(data,log_file);
   double kldiv_map = original.computeKLDivergence(inferred,large_data);
 
   cout << "kldiv_mml: " << kldiv_mml << endl;
-  cout << "kldiv_map: " << kldiv_map << endl;
+  cout << "kldiv_map: " << kldiv_map << endl;*/
 }
 

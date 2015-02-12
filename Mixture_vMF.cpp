@@ -323,8 +323,23 @@ void Mixture_vMF::initialize_children_3()
   double Neff;
   Vector sample_mean = computeVectorSum(data,data_weights,Neff);
   Matrix S = computeDispersionMatrix(data,data_weights);
-  Kent parent;
 
+  // find vMF kappa
+  vMF vmf;
+  struct Estimates_vMF vmf_est;
+  vmf_est.mean = Vector(3,0);
+  vmf_est.R = normalize(sample_mean,vmf_est.mean); 
+  vmf_est.Neff = Neff;
+  vmf_est.Rbar = vmf_est.R / vmf_est.Neff;
+  if (vmf_est.Rbar >= 1) {
+    assert((vmf_est.Rbar - 1) <= 0.0001);
+    vmf_est.Rbar = 1 - TOLERANCE;
+    vmf_est.R = vmf_est.Neff * vmf_est.Rbar;
+  } 
+  vmf.estimateMLApproxKappa(vmf_est);
+
+  // find direction of max variance
+  Kent parent;
   struct Estimates asymptotic_est = parent.computeAsymptoticMomentEstimates(sample_mean,S,Neff);
   string type = "MOMENT";
   struct Estimates moment_est = asymptotic_est;
@@ -333,13 +348,13 @@ void Mixture_vMF::initialize_children_3()
                  moment_est.kappa,moment_est.beta);
   opt.computeEstimates(sample_mean,S,moment_est);
 
-  Vector mu,mj,mi,spherical(3,0);
-  double theta,psi,alpha,eta,kappa,beta;
+  Vector mu,mi,spherical(3,0);
+  double kappa,span,theta;
 
   mi = moment_est.minor_axis;
-  kappa = moment_est.kappa;
+  kappa = vmf_est.kappa;
 
-  double span = uniform_random();
+  span = uniform_random();
   theta = 0.5 * PI * span;
   Matrix R = rotate_about_arbitrary_axis(mi,theta);
   mu = prod(R,moment_est.mean);
@@ -1087,6 +1102,7 @@ std::vector<Vector> Mixture_vMF::generate(int num_samples, bool save_data)
       comp.close();
     } // i
     mix.close();
+    generateHeatmapData(1);
   } // if()
   return sample;
 }
@@ -1346,8 +1362,8 @@ Mixture_vMF Mixture_vMF::join(int c1, int c2, ostream &log)
  */
 void Mixture_vMF::generateHeatmapData(double res)
 {
-  string data_fbins2D = "./visualize/prob_bins2D.dat";
-  string data_fbins3D = "./visualize/prob_bins3D.dat";
+  string data_fbins2D = "./visualize/sampled_data/prob_bins2D.dat";
+  string data_fbins3D = "./visualize/sampled_data/prob_bins3D.dat";
   ofstream fbins2D(data_fbins2D.c_str());
   ofstream fbins3D(data_fbins3D.c_str());
   Vector x(3,1);

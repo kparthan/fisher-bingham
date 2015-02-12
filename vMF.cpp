@@ -3,12 +3,14 @@
 #include "Normal.h"
 #include "Optimize2.h"
 
+extern Vector XAXIS;
+
 /*!
  *  \brief This is a constructor module
  */
 vMF::vMF()
 {
-  mu = Vector(3,0); mu[2] = 1;
+  mu = XAXIS;
   kappa = 1;
   updateConstants();
 }
@@ -26,7 +28,7 @@ vMF::vMF(Vector &mu, double kappa) : mu(mu), kappa(kappa)
 
 vMF::vMF(double kappa) : kappa(kappa)
 {
-  mu = Vector(3,0); mu[2] = 1;
+  mu = XAXIS;
   updateConstants();
 }
 
@@ -42,8 +44,8 @@ void vMF::updateConstants()
   log_cd = computeLogNormalizationConstant();
   Vector spherical(3,0);
   cartesian2spherical(mu,spherical);
-  theta = spherical[1];
-  phi = spherical[2];
+  alpha = spherical[1];
+  eta = spherical[2];
 }
 
 /*!
@@ -59,9 +61,6 @@ double vMF::computeLogNormalizationConstant()
     log_cd = log(kappa) - log(2*PI) - kappa;
     double tmp = 1 - exp(-2*kappa);
     log_cd -= log(tmp);
-    /*log_cd = log(kappa) - log(2*PI);
-    double tmp = exp(kappa) - exp(-kappa);
-    log_cd -= log(tmp);*/
     return log_cd;
   }
 }
@@ -75,8 +74,8 @@ vMF vMF::operator=(const vMF &source)
   if (this != &source) {
     mu = source.mu;
     kmu = source.kmu;
-    theta = source.theta;
-    phi = source.phi;
+    alpha = source.alpha;
+    eta = source.eta;
     kappa = source.kappa;
     log_cd = source.log_cd;
   }
@@ -288,8 +287,9 @@ double vMF::computeLogPriorProbability()
 
 double vMF::computeLogPriorMean()
 {
-  double angle = theta;
+  double angle = alpha;
   if (angle < TOLERANCE) angle = TOLERANCE;
+  if (fabs(angle-PI) < TOLERANCE) angle = PI-TOLERANCE;
   
   double log_prior = 0;
   log_prior = log(sin(angle));
@@ -314,11 +314,12 @@ double vMF::computeLogPriorScale()
 double vMF::computeLogFisherInformation()
 {
   double log_fisher = 0;
-  if (theta < TOLERANCE) {
-    log_fisher += 2 * log(sin(TOLERANCE));
-  } else {
-    log_fisher += 2 * log(sin(theta));
-  }
+
+  double angle = alpha;
+  if (angle < TOLERANCE) angle = TOLERANCE;
+  if (fabs(angle-PI) < TOLERANCE) angle = PI-TOLERANCE;
+
+  log_fisher += 2 * log(sin(angle));
   log_fisher += log(kappa);
   double kappa_inv = 1 / kappa;
   // A_3(k)
@@ -429,8 +430,8 @@ void vMF::estimateMean(
 
   Vector spherical(3,0);
   cartesian2spherical(estimates.mean,spherical);
-  estimates.theta = spherical[1];
-  estimates.phi = spherical[2];
+  estimates.alpha = spherical[1];
+  estimates.eta = spherical[2];
 }
 
 void vMF::estimateMLApproxKappa(struct Estimates_vMF &estimates)

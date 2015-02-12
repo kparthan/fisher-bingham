@@ -219,15 +219,10 @@ void Mixture::initialize()
 void Mixture::initialize_children_1()
 {
   N = data.size();
-  //cout << "Sample size: " << N << endl;
 
   // initialize responsibility matrix
-  //srand(time(NULL));
   Vector tmp(N,0);
   responsibility = std::vector<Vector>(K,tmp);
-  /*for (int i=0; i<K; i++) {
-    responsibility.push_back(tmp);
-  }*/
 
   #pragma omp parallel for if(ENABLE_DATA_PARALLELISM) num_threads(NUM_THREADS) 
   for (int i=0; i<N; i++) {
@@ -1127,6 +1122,7 @@ std::vector<Vector> Mixture::generate(int num_samples, bool save_data)
       comp.close();
     } // i
     mix.close();
+    generateHeatmapData(1);
   } // if()
   return sample;
 }
@@ -1386,8 +1382,8 @@ Mixture Mixture::join(int c1, int c2, ostream &log)
  */
 void Mixture::generateHeatmapData(double res)
 {
-  string data_fbins2D = "./visualize/prob_bins2D.dat";
-  string data_fbins3D = "./visualize/prob_bins3D.dat";
+  string data_fbins2D = "./visualize/sampled_data/prob_bins2D.dat";
+  string data_fbins3D = "./visualize/sampled_data/prob_bins3D.dat";
   ofstream fbins2D(data_fbins2D.c_str());
   ofstream fbins3D(data_fbins3D.c_str());
   Vector x(3,1);

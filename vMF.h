@@ -9,7 +9,7 @@ class vMF
     //! (unit) mean of the distribution
 		Vector mu,kmu;
 
-    double theta,phi;
+    double alpha,eta;
 
     //! Concentration parameter 
 		double kappa;
