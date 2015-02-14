@@ -148,6 +148,21 @@ void Experiments::create_sub_folders(string &folder, string &criterion)
 
 void Experiments::infer_components_exp1()
 {
+  double kappa,ecc;
+
+  kappa = 10;
+  //while(kappa <= 101) {
+    ecc = 0.1;
+    while(ecc < 0.95) {
+      infer_components_exp1(kappa,ecc);
+      ecc += 0.1;
+    } // ecc()
+    //kappa += 10;
+  //} // kappa()
+}
+
+void Experiments::infer_components_exp1(double kappa, double ecc)
+{
   iterations = 50;
   int N = 100;
 
@@ -155,66 +170,58 @@ void Experiments::infer_components_exp1()
   string parent_folder,exp_folder;
 
   double alpha,alpha_rad,sin_alpha,cos_alpha;
-  double kappa,beta,ecc;
+  double beta;
   Vector mean,major,minor;
 
-  kappa = 80;
-  while(kappa <= 101) {
-    ecc = 0.1;
-    while(ecc < 0.95) {
-      for (alpha=10; alpha<=50; alpha+=10) {
-        //alpha = 50; // in degrees
-        alpha_rad = alpha * PI / 180;
+  for (alpha=10; alpha<=50; alpha+=10) {
+    //alpha = 50; // in degrees
+    alpha_rad = alpha * PI / 180;
 
-        mean = ZAXIS;
-        major = XAXIS;
-        minor = YAXIS;
-        //kappa = 10; ecc = 0.9;
-        beta = 0.5 * kappa * ecc;
-        Kent kent1(mean,major,minor,kappa,beta);
+    mean = ZAXIS;
+    major = XAXIS;
+    minor = YAXIS;
+    //kappa = 10; ecc = 0.9;
+    beta = 0.5 * kappa * ecc;
+    Kent kent1(mean,major,minor,kappa,beta);
 
-        sin_alpha = sin(alpha_rad);
-        cos_alpha = cos(alpha_rad);
-        mean[0] = sin_alpha; mean[1] = 0; mean[2] = cos_alpha;
-        major[0] = cos_alpha; major[1] = 0; major[2] = -sin_alpha;
-        //kappa = 10; ecc = 0.9;
-        beta = 0.5 * kappa * ecc;
-        Kent kent2(mean,major,minor,kappa,beta);
+    sin_alpha = sin(alpha_rad);
+    cos_alpha = cos(alpha_rad);
+    mean[0] = sin_alpha; mean[1] = 0; mean[2] = cos_alpha;
+    major[0] = cos_alpha; major[1] = 0; major[2] = -sin_alpha;
+    //kappa = 10; ecc = 0.9;
+    beta = 0.5 * kappa * ecc;
+    Kent kent2(mean,major,minor,kappa,beta);
 
-        Vector weights(2,0.5);
+    Vector weights(2,0.5);
 
-        std::vector<Kent> components;
-        components.push_back(kent1);
-        components.push_back(kent2);
-        Mixture original(2,components,weights);
+    std::vector<Kent> components;
+    components.push_back(kent1);
+    components.push_back(kent2);
+    Mixture original(2,components,weights);
 
-        ostringstream ssk;
-        ssk << fixed << setprecision(0);
-        ssk << kappa;
-        string kappa_str = ssk.str();
+    ostringstream ssk;
+    ssk << fixed << setprecision(0);
+    ssk << kappa;
+    string kappa_str = ssk.str();
 
-        ostringstream sse;
-        sse << fixed << setprecision(1);
-        sse << ecc;
-        string eccentricity_str = sse.str();
+    ostringstream sse;
+    sse << fixed << setprecision(1);
+    sse << ecc;
+    string eccentricity_str = sse.str();
 
-        std::ostringstream ss;
-        ss << fixed << setprecision(0);
-        ss << alpha;
-        string alpha_str = ss.str();
+    std::ostringstream ss;
+    ss << fixed << setprecision(0);
+    ss << alpha;
+    string alpha_str = ss.str();
 
-        parent_folder = common + "k_" + kappa_str + "_e_" + eccentricity_str + "/";
-        check_and_create_directory(parent_folder);
-        exp_folder = parent_folder + "alpha_" + alpha_str + "/" ;
-        check_and_create_directory(exp_folder);
+    parent_folder = common + "k_" + kappa_str + "_e_" + eccentricity_str + "/";
+    check_and_create_directory(parent_folder);
+    exp_folder = parent_folder + "alpha_" + alpha_str + "/" ;
+    check_and_create_directory(exp_folder);
 
-        generateData(original,exp_folder,N);
-        inferMixtures(original,exp_folder);
-      } // alpha()
-      ecc += 0.1;
-    } // ecc()
-    kappa += 10;
-  } // kappa()
+    generateData(original,exp_folder,N);
+    inferMixtures(original,exp_folder);
+  } // alpha()
 }
 
 void Experiments::generateData(

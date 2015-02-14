@@ -19,6 +19,7 @@ class Experiments
     void create_sub_folders(string &, string &);
 
     void infer_components_exp1();
+    void infer_components_exp1(double, double);
 
     void generateData(Mixture &, string &, int);
 
