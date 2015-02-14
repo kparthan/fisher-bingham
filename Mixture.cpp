@@ -318,8 +318,10 @@ void Mixture::initialize_children_3()
 
   #pragma omp parallel for if(ENABLE_DATA_PARALLELISM) num_threads(NUM_THREADS) 
   for (int i=0; i<N; i++) {
-    responsibility[0][i] = uniform_random();
-    responsibility[1][i] = 1 - responsibility[0][i];
+    int index = rand() % K;
+    responsibility[index][i] = 1;
+    //responsibility[0][i] = uniform_random();
+    //responsibility[1][i] = 1 - responsibility[0][i];
   }
   sample_size = Vector(K,0);
   updateEffectiveSampleSize();
