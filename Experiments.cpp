@@ -4,6 +4,8 @@
 
 extern Vector XAXIS,YAXIS,ZAXIS;
 extern int ESTIMATION,CRITERION;
+extern int INFER_COMPONENTS;
+extern string EM_LOG_FOLDER;
 extern struct stat st;
 
 Experiments::Experiments(int iterations) : iterations(iterations)
@@ -148,11 +150,13 @@ void Experiments::create_sub_folders(string &folder, string &criterion)
 
 void Experiments::infer_components_exp1()
 {
+  INFER_COMPONENTS = SET;
+
   double kappa,ecc;
 
-  kappa = 10;
+  kappa = 100;
   //while(kappa <= 101) {
-    ecc = 0.1;
+    ecc = 0.6;
     while(ecc < 0.95) {
       infer_components_exp1(kappa,ecc);
       ecc += 0.1;
@@ -220,7 +224,7 @@ void Experiments::infer_components_exp1(double kappa, double ecc)
     check_and_create_directory(exp_folder);
 
     generateData(original,exp_folder,N);
-    inferMixtures(original,exp_folder);
+    inferMixtures_exp1(original,exp_folder);
   } // alpha()
 }
 
@@ -248,7 +252,7 @@ void Experiments::generateData(
   writeToFile(data_file,random_sample);
 }
 
-void Experiments::inferMixtures(
+void Experiments::inferMixtures_exp1(
   Mixture &original, 
   string &exp_folder
 ) {
@@ -263,33 +267,48 @@ void Experiments::inferMixtures(
   criterion = "bic/";
   CRITERION = BIC;
 
-  //criterion = "icl/";
-  //CRITERION = ICL;
-
   ESTIMATION = MOMENT;
-  inferMixtures(
+  inferMixtures_exp1(
     original,data_folder,logs_folder,mixtures_folder,results_folder,criterion
   );
 
   ESTIMATION = MLE;
-  inferMixtures(
+  inferMixtures_exp1(
     original,data_folder,logs_folder,mixtures_folder,results_folder,criterion
   );
 
   ESTIMATION = MAP;
-  inferMixtures(
+  inferMixtures_exp1(
     original,data_folder,logs_folder,mixtures_folder,results_folder,criterion
   );
+
+  /*criterion = "icl/";
+  CRITERION = ICL;
+
+  ESTIMATION = MOMENT;
+  inferMixtures_exp1(
+    original,data_folder,logs_folder,mixtures_folder,results_folder,criterion
+  );
+
+  ESTIMATION = MLE;
+  inferMixtures_exp1(
+    original,data_folder,logs_folder,mixtures_folder,results_folder,criterion
+  );
+
+  ESTIMATION = MAP;
+  inferMixtures_exp1(
+    original,data_folder,logs_folder,mixtures_folder,results_folder,criterion
+  );*/
 
   criterion = "mml/";
   CRITERION = MMLC;
   ESTIMATION = MML;
-  inferMixtures(
+  inferMixtures_exp1(
     original,data_folder,logs_folder,mixtures_folder,results_folder,criterion
   );
 }
 
-void Experiments::inferMixtures(
+void Experiments::inferMixtures_exp1(
   Mixture &original, 
   string &data_folder,
   string &logs_folder,
@@ -352,6 +371,183 @@ void Experiments::inferMixtures(
     out << scientific << kldiv << "\t\t";
     out << scientific << inferred.getMinimumMessageLength() << endl;
   } // iter() loop ...
+  out.close();
+}
+
+void Experiments::infer_components_exp2()
+{
+  INFER_COMPONENTS = SET;
+  int K = 6;
+  int N = 1000;
+  int large_N = 100000;
+  int num_mixtures = 50;
+  iterations = 1;
+
+  string common = "./experiments/infer_components/exp2/";
+  string K_str = boost::lexical_cast<string>(K);
+  EM_LOG_FOLDER = "./infer/logs/kent/K_" + K_str + "/";
+  check_and_create_directory(EM_LOG_FOLDER);
+
+  string exp_folder = common + "K_" + K_str + "/";
+  check_and_create_directory(exp_folder);
+  checkFolders(exp_folder);
+
+  string data_folder = exp_folder + "data/";
+  string original_mix_folder = exp_folder + "original/";
+  check_and_create_directory(original_mix_folder);
+
+  string mix_file,index_str,data_file;
+  std::vector<Vector> random_sample,large_sample;
+  for (int index=1; index<=num_mixtures; index++) {
+    index_str = boost::lexical_cast<string>(index);
+
+    Vector weights = generateFromSimplex(K);
+    std::vector<Kent> components = generateRandomComponents(K);
+    Mixture original(K,components,weights);
+    mix_file = original_mix_folder + "mixture_" + index_str;
+    original.printParameters(mix_file);
+
+    large_sample = original.generate(large_N,0);
+    random_sample = original.generate(N,0);
+    data_file = data_folder + "mixture_" + index_str + ".dat";
+    writeToFile(data_file,random_sample);
+
+    inferMixtures_exp2(index_str,original,random_sample,large_sample,exp_folder);
+  } // for()
+}
+
+void Experiments::inferMixtures_exp2(
+  string &index_str,
+  Mixture &original, 
+  std::vector<Vector> &random_sample,
+  std::vector<Vector> &large_sample,
+  string &exp_folder
+) {
+  string logs_folder = exp_folder + "logs/";
+  string mixtures_folder = exp_folder + "mixtures/";
+  string results_folder = exp_folder + "results/";
+  string criterion;
+
+  criterion = "bic/";
+  CRITERION = BIC;
+
+  ESTIMATION = MOMENT;
+  inferMixtures_exp2(
+    index_str,
+    original,random_sample,large_sample,
+    logs_folder,mixtures_folder,results_folder,
+    criterion
+  );
+
+  ESTIMATION = MLE;
+  inferMixtures_exp2(
+    index_str,
+    original,random_sample,large_sample,
+    logs_folder,mixtures_folder,results_folder,
+    criterion
+  );
+
+  ESTIMATION = MAP;
+  inferMixtures_exp2(
+    index_str,
+    original,random_sample,large_sample,
+    logs_folder,mixtures_folder,results_folder,
+    criterion
+  );
+
+  criterion = "icl/";
+  CRITERION = ICL;
+
+  ESTIMATION = MOMENT;
+  inferMixtures_exp2(
+    index_str,
+    original,random_sample,large_sample,
+    logs_folder,mixtures_folder,results_folder,
+    criterion
+  );
+
+  ESTIMATION = MLE;
+  inferMixtures_exp2(
+    index_str,
+    original,random_sample,large_sample,
+    logs_folder,mixtures_folder,results_folder,
+    criterion
+  );
+
+  ESTIMATION = MAP;
+  inferMixtures_exp2(
+    index_str,
+    original,random_sample,large_sample,
+    logs_folder,mixtures_folder,results_folder,
+    criterion
+  );
+
+  criterion = "mml/";
+  CRITERION = MMLC;
+
+  ESTIMATION = MML;
+  inferMixtures_exp2(
+    index_str,
+    original,random_sample,large_sample,
+    logs_folder,mixtures_folder,results_folder,
+    criterion
+  );
+}
+
+void Experiments::inferMixtures_exp2(
+  string &index_str,
+  Mixture &original, 
+  std::vector<Vector> &random_sample,
+  std::vector<Vector> &large_sample,
+  string &logs_folder,
+  string &mixtures_folder,
+  string &results_folder,
+  string &criterion
+) {
+  string log_file,mixture_file,results_file,iter_str;
+  string logs_folder_specific,mixtures_folder_specific;
+  Mixture inferred;
+  double kldiv;
+  
+  switch(ESTIMATION) {
+    case MOMENT:
+      logs_folder_specific = logs_folder + criterion + "moment/";
+      mixtures_folder_specific = mixtures_folder + criterion + "moment/";
+      results_file = results_folder + criterion + "moment";
+      break;
+
+    case MLE:
+      logs_folder_specific = logs_folder + criterion + "mle/";
+      mixtures_folder_specific = mixtures_folder + criterion + "mle/";
+      results_file = results_folder + criterion + "mle";
+      break;
+
+    case MAP:
+      logs_folder_specific = logs_folder + criterion + "map/";
+      mixtures_folder_specific = mixtures_folder + criterion + "map/";
+      results_file = results_folder + criterion + "map";
+      break;
+
+    case MML:
+      logs_folder_specific = logs_folder + "mml/";
+      mixtures_folder_specific = mixtures_folder + "mml/";
+      results_file = results_folder + "mml";
+      break;
+  } // switch() ends ...
+
+  // for empirical KL-divergence ...
+  ofstream out(results_file.c_str(),ios::app);
+
+  log_file = logs_folder_specific + "mixture_" + index_str + ".log";
+  mixture_file = mixtures_folder_specific + "mixture_" + index_str;
+
+  inferred = inferComponents(random_sample,log_file);
+  inferred.printParameters(mixture_file);
+  kldiv = original.computeKLDivergence(inferred,large_sample);
+
+  out << setw(10) << inferred.getNumberOfComponents() << "\t\t";
+  out << scientific << kldiv << "\t\t";
+  out << scientific << inferred.getMinimumMessageLength() << endl;
   out.close();
 }
 

@@ -25,6 +25,7 @@ int VERBOSE,COMPUTE_KLDIV;
 int IGNORE_SPLIT;
 double MIN_N;
 int SPLITTING = 0;
+string EM_LOG_FOLDER;
 
 struct stat st = {0};
 
@@ -1053,6 +1054,14 @@ void generateRandomOrthogonalVectors(
   minor_axis = prod(r,ZAXIS);
 }
 
+void generateRandomOrientations(
+  double &psi, double &alpha, double &eta
+) {
+  psi = (2 * PI) * uniform_random();
+  alpha = PI * uniform_random();
+  eta = (2 * PI) * uniform_random();
+}
+
 Matrix generateRandomCovarianceMatrix(int D)
 {
   // generate random orthogonal vectors
@@ -1640,10 +1649,13 @@ std::vector<Kent> generateRandomComponents(int num_components)
   Vector betas = generateRandomBetas(kappas);
 
   std::vector<Kent> components;
+  double psi,alpha,eta;
   for (int i=0; i<num_components; i++) {
-    generateRandomOrthogonalVectors(mean,major_axis,minor_axis);
-    // initialize component parameters
-    Kent kent(mean,major_axis,minor_axis,kappas[i],betas[i]);
+    //generateRandomOrthogonalVectors(mean,major_axis,minor_axis);
+    //Kent kent(mean,major_axis,minor_axis,kappas[i],betas[i]);
+
+    generateRandomOrientations(psi,alpha,eta);
+    Kent kent(psi,alpha,eta,kappas[i],betas[i]);
     components.push_back(kent);
   }
   return components;
@@ -1676,8 +1688,12 @@ std::vector<vMF> generateRandomComponents_vMF(int num_components)
 Vector generateRandomKappas(int K)
 {
   Vector random_kappas;
+  double max_kappa;
+
+  //max_kappa = MAX_KAPPA;
+  max_kappa = 100;
   for (int i=0; i<K; i++) {
-    double kappa = uniform_random() * MAX_KAPPA;
+    double kappa = uniform_random() * max_kappa;
     random_kappas.push_back(kappa);
   }
   return random_kappas;
@@ -1832,8 +1848,8 @@ Mixture inferComponents(Mixture &mixture, int N, ostream &log)
   } // if (improved == parent || iter%2 == 0) loop
 
   finish:
-  string inferred_mixture_file = "./simulation/inferred_mixture";
-  parent.printParameters(inferred_mixture_file);
+  //string inferred_mixture_file = "./simulation/inferred_mixture";
+  //parent.printParameters(inferred_mixture_file);
   return parent;
 }
 
@@ -2120,7 +2136,9 @@ void RunExperiments(int iterations)
 
   //experiments.simulate();
 
-  experiments.infer_components_exp1();
+  //experiments.infer_components_exp1();
+
+  experiments.infer_components_exp2();
 }
 
 /*!

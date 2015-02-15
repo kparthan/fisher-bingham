@@ -107,6 +107,7 @@ Matrix align_xaxis_with_vector(Vector &);
 Matrix align_vector_with_xaxis(Vector &);
 Matrix align_vector_with_xaxis(double, double);
 void generateRandomOrthogonalVectors(Vector &, Vector &, Vector &);
+void generateRandomOrientations(double &, double &, double &);
 Matrix generateRandomCovarianceMatrix(int);
 std::vector<Vector> transform(std::vector<Vector> &, Matrix &);
 bool invertMatrix(const Matrix &, Matrix &);

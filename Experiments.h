@@ -23,10 +23,19 @@ class Experiments
 
     void generateData(Mixture &, string &, int);
 
-    void inferMixtures(Mixture &, string &);
-
-    void inferMixtures(
+    void inferMixtures_exp1(Mixture &, string &);
+    void inferMixtures_exp1(
       Mixture &, string &, string &, string &, string &, string &
+    );
+
+    void infer_components_exp2();
+    void inferMixtures_exp2(
+      string &, Mixture &, std::vector<Vector> &, std::vector<Vector> &, string &
+    );
+    void inferMixtures_exp2(
+      string &, 
+      Mixture &, std::vector<Vector> &, std::vector<Vector> &, 
+      string &, string &, string &, string &
     );
 };
 

@@ -13,6 +13,7 @@ extern int SPLITTING;
 extern int IGNORE_SPLIT;
 extern double MIN_N;
 extern int MSGLEN_FAIL;
+extern string EM_LOG_FOLDER;
 
 /*!
  *  \brief Null constructor module
@@ -668,8 +669,8 @@ string Mixture::getLogFile()
       file_name = "./simulation/logs/";
     }
   } else if (INFER_COMPONENTS == SET) {
-    file_name = "./infer/logs/kent/";
-    file_name += "m_" + boost::lexical_cast<string>(id) + "_";
+    //file_name = "./infer/logs/kent/";
+    file_name = EM_LOG_FOLDER + "m_" + boost::lexical_cast<string>(id) + "_";
   }
   file_name += boost::lexical_cast<string>(K) + ".log";
   return file_name;
