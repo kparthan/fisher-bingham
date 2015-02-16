@@ -2109,7 +2109,7 @@ void TestFunctions(void)
 
   //test.fisher();
 
-  //test.fisher2();
+  test.fisher2();
 
   //test.mml_estimation();
 
@@ -2125,7 +2125,7 @@ void TestFunctions(void)
 
   //test.infer_mixture();
 
-  test.infer_mixture_vmf();
+  //test.infer_mixture_vmf();
 }
 
 ////////////////////// EXPERIMENTS \\\\\\\\\\\\\\\\\\\\\\\\\\\\

@@ -479,7 +479,10 @@ double Kent::computeLogPriorAxes()
   if (fabs(angle-PI) < TOLERANCE) angle = PI-TOLERANCE;
   
   double log_prior = 0;
-  log_prior += (log(sin(angle)));
+  if (ESTIMATION == MML) {
+    log_prior += (log(sin(angle)));
+    //log_prior += log(1-cos(psi));
+  }
   log_prior -= (log(8) + 2*log(PI));
   return log_prior;
 }
@@ -489,17 +492,17 @@ double Kent::computeLogPriorScale()
   double log_prior = 0;
 
   // vmf kappa prior
-  /*log_prior += log(8/PI);
+  log_prior += log(8/PI);
   log_prior += log(kappa);
-  log_prior -= (2 * log(1+kappa*kappa));*/
+  log_prior -= (2 * log(1+kappa*kappa));
 
   // vmf beta prior
-  log_prior += (2 * log(4/PI));
+  /*log_prior += (2 * log(4/PI));
   log_prior += (2 * log(kappa));
   log_prior -= (2 * log(1+kappa*kappa));
 
   log_prior += (2 * log(beta));
-  log_prior -= (2 * log(1+beta*beta));
+  log_prior -= (2 * log(1+beta*beta));*/
   /*double tmp = atan(0.5*kappa);
   tmp -= (2*kappa/(kappa*kappa+4));
   log_prior -= log(tmp);*/

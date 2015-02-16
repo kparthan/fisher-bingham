@@ -2,17 +2,18 @@
 
 extern int CONSTRAIN_KAPPA;
 extern double MAX_KAPPA;
+extern int ESTIMATION;
 
 Optimize::Optimize(string type)
 {
   if (type.compare("MOMENT") == 0) {
-    estimation = MOMENT;
+    ESTIMATION = MOMENT;
   } else if (type.compare("MLE") == 0) {
-    estimation = MLE;
+    ESTIMATION = MLE;
   } else if (type.compare("MAP") == 0) {
-    estimation = MAP;
+    ESTIMATION = MAP;
   } else if (type.compare("MML") == 0) {
-    estimation = MML;
+    ESTIMATION = MML;
   }
 }
 
@@ -37,7 +38,7 @@ void Optimize::initialize(double sample_size, Vector &m0, Vector &m1, Vector &m2
 void Optimize::computeEstimates(Vector &sample_mean, Matrix &S, struct Estimates &estimates)
 {
   computeOrthogonalTransformation(mean,major,psi,alpha,eta);
-  switch(estimation) {
+  switch(ESTIMATION) {
     case MOMENT:
     {
       std::vector<double> theta = minimize(sample_mean,S,2);
@@ -128,7 +129,7 @@ std::vector<double> Optimize::minimize(Vector &sample_mean, Matrix &S, int num_p
   double minf;
   FAIL_STATUS = 0;
 
-  switch(estimation) {
+  switch(ESTIMATION) {
     case MOMENT:
     {
       opt.set_lower_bounds(lb);
