@@ -1375,13 +1375,12 @@ void Mixture_vMF::generateHeatmapData(double res)
       spherical2cartesian(x,point);
       double pr = exp(log_probability(point));
       // 2D bins
-      //fbins2D << fixed << setw(10) << setprecision(4) << floor(pr * 100);
-      fbins2D << fixed << setw(10) << setprecision(4) << pr;
+      fbins2D << scientific << setprecision(6) << pr << "\t";
       // 3D bins
       for (int k=0; k<3; k++) {
-        fbins3D << fixed << setw(10) << setprecision(4) << point[k];
+        fbins3D << scientific << setprecision(6) << point[k] << "\t";
       }
-      fbins3D << fixed << setw(10) << setprecision(4) << pr << endl;
+      fbins3D << scientific << setprecision(6) << pr << endl;
     }
     fbins2D << endl;
   }

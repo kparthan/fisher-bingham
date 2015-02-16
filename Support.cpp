@@ -1410,8 +1410,8 @@ void outputBins(std::vector<std::vector<int> > &bins, double res)
 {
   double theta=0,phi;
   string fbins2D_file,fbins3D_file;
-  fbins2D_file = "./visualize/bins2D.dat";
-  fbins3D_file = "./visualize/bins3D.dat";
+  fbins2D_file = "./visualize/sampled_data/bins2D.dat";
+  fbins3D_file = "./visualize/sampled_data/bins3D.dat";
   ofstream fbins2D(fbins2D_file.c_str());
   ofstream fbins3D(fbins3D_file.c_str());
   Vector cartesian(3,0);
