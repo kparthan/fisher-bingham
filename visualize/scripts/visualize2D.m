@@ -34,8 +34,8 @@ for k = 1:K
 end  
 
 % create legend
-N = [1:K];
-legend_cell = [cellstr(num2str(N','%d'))];
-legend(legend_cell);
+%N = [1:K];
+%legend_cell = [cellstr(num2str(N','%d'))];
+%legend(legend_cell);
 
 end

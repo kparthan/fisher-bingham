@@ -35,8 +35,8 @@ zlabel('Z');
 
 % create legend
 N = [1:K];
-legend_cell = cellstr('unit sphere');
-legend_cell = [legend_cell ; cellstr(num2str(N','%d'))];
+%legend_cell = cellstr('unit sphere');
+%legend_cell = [legend_cell ; cellstr(num2str(N','%d'))];
 %legend(legend_cell);
 
 end
