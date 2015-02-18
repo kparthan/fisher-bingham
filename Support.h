@@ -157,6 +157,7 @@ Vector computeMedians(std::vector<Vector> &);
 double computeMean(Vector &);
 Vector computeMeans(std::vector<Vector> &);
 double computeVariance(Vector &);
+int minimumIndex(Vector &);
 int maximumIndex(Vector &);
 
 #endif

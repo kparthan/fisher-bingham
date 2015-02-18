@@ -741,6 +741,7 @@ void Kent::computeAllEstimators(
     mml_est.kldiv = computeKLDivergence(mml_est);
   }
   if (verbose) {
+    cout << endl;
     print(type,mml_est);
     cout << fixed << "msglen: " << mml_est.msglen << endl;
     cout << "negloglike: " << mml_est.negloglike << endl;

@@ -1724,7 +1724,10 @@ void modelOneComponent(struct Parameters &parameters, std::vector<Vector> &data)
     double psi = 60; psi *= PI/180;
     double alpha = 60; alpha *= PI/180;
     double eta = 70; eta *= PI/180;
-    Kent kent(psi,alpha,eta,100,45);
+    double kappa = 100;
+    double ecc = 0.9;
+    double beta = 0.5 * kappa * ecc;
+    Kent kent(psi,alpha,eta,kappa,beta);
     std::vector<struct Estimates> all_estimates;
     kent.computeAllEstimators(data,all_estimates,1,1);
   } else if (DISTRIBUTION == VMF) {
@@ -2109,11 +2112,11 @@ void TestFunctions(void)
 
   //test.fisher();
 
-  test.fisher2();
+  //test.fisher2();
 
   //test.mml_estimation();
 
-  //test.mml_estimation2();
+  test.mml_estimation2();
 
   //test.vmf_all_estimation();
 
@@ -2289,6 +2292,19 @@ double computeVariance(Vector &list)
     sum += (list[i]-mean) * (list[i]-mean);
   }
   return sum / (double) (list.size()-1);
+}
+
+int minimumIndex(Vector &values)
+{
+  int min_index = 0;
+  long double min_val = values[0];
+  for (int i=1; i<values.size(); i++) { 
+    if (values[i] <= min_val) {
+      min_index = i;
+      min_val = values[i];
+    }
+  }
+  return min_index;
 }
 
 int maximumIndex(Vector &values)

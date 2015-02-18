@@ -788,7 +788,7 @@ void Test::fisher2()
   double ip1,ip2,ip;
   double Neff = 1;
 
-  kappa = 1;
+  kappa = 10;
   ecc = TOLERANCE;
   cout << "kappa: " << kappa << endl << endl;
   while (ecc < 0.95) {
@@ -881,8 +881,8 @@ void Test::mml_estimation2(void)
   int sample_size = 10;
   string data_file = "random_sample.dat";
 
-  kappa = 100;
-  ecc = 0.1;
+  kappa = 10;
+  ecc = 0.9;
   beta = 0.5 * kappa * ecc;
 
   // in degrees
@@ -893,8 +893,8 @@ void Test::mml_estimation2(void)
   psi *= PI/180;
   alpha *= PI/180;
   eta *= PI/180;
-  //Kent kent(psi,alpha,eta,kappa,beta);
-  Kent kent(ZAXIS,XAXIS,YAXIS,kappa,beta);
+  Kent kent(psi,alpha,eta,kappa,beta);
+  //Kent kent(ZAXIS,XAXIS,YAXIS,kappa,beta);
   random_sample = kent.generate(sample_size);
   writeToFile("random_sample.dat",random_sample,3);
   random_sample = load_data_table(data_file);

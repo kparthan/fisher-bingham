@@ -224,8 +224,8 @@ void Mixture_vMF::initialize_children_1()
 
   #pragma omp parallel for if(ENABLE_DATA_PARALLELISM) num_threads(NUM_THREADS) 
   for (int i=0; i<N; i++) {
-    responsibility[0][i] = uniform_random();
-    responsibility[1][i] = 1 - responsibility[0][i];
+    int index = rand() % K;
+    responsibility[index][i] = 1;
   }
   sample_size = Vector(K,0);
   updateEffectiveSampleSize();
@@ -251,8 +251,8 @@ void Mixture_vMF::initialize_children_2()
 
   #pragma omp parallel for if(ENABLE_DATA_PARALLELISM) num_threads(NUM_THREADS) 
   for (int i=0; i<N; i++) {
-    responsibility[0][i] = uniform_random();
-    responsibility[1][i] = 1 - responsibility[0][i];
+    int index = rand() % K;
+    responsibility[index][i] = 1;
   }
   sample_size = Vector(K,0);
   updateEffectiveSampleSize();
@@ -307,8 +307,8 @@ void Mixture_vMF::initialize_children_3()
 
   #pragma omp parallel for if(ENABLE_DATA_PARALLELISM) num_threads(NUM_THREADS) 
   for (int i=0; i<N; i++) {
-    responsibility[0][i] = uniform_random();
-    responsibility[1][i] = 1 - responsibility[0][i];
+    int index = rand() % K;
+    responsibility[index][i] = 1;
   }
   sample_size = Vector(K,0);
   updateEffectiveSampleSize();
@@ -365,6 +365,77 @@ void Mixture_vMF::initialize_children_3()
   mu = prod(R,moment_est.mean);
   vMF child2(mu,kappa);
 
+  components = std::vector<vMF>(K);
+  components[0] = child1; components[1] = child2;
+}
+
+void Mixture_vMF::initialize_children_4()
+{
+  N = data.size();
+
+  // initialize responsibility matrix
+  Vector tmp(N,0);
+
+  // initial (random) component means for k-means
+  Vector spherical(3,1),mu1(3,0),mu2(3,0);
+  spherical[1] = uniform_random() * PI;
+  spherical[2] = uniform_random() * 2 * PI;
+  spherical2cartesian(spherical,mu1);
+  spherical[1] = uniform_random() * PI;
+  spherical[2] = uniform_random() * 2 * PI;
+  spherical2cartesian(spherical,mu2);
+
+  int NUM_ITERATIONS = 10;
+  Vector distances(K,0);
+  double dp;
+  std::vector<Vector> init_means(K);
+  init_means[0] = mu1; init_means[1] = mu2;
+  std::vector<Vector> means = init_means;
+  cout << "init_means[0]: "; print(cout,init_means[0],3); cout << endl;
+  cout << "init_means[1]: "; print(cout,init_means[1],3); cout << endl;
+
+  int nearest;
+  for (int iter=0; iter<NUM_ITERATIONS; iter++) {
+    // update memberships
+    responsibility = std::vector<Vector>(K,tmp);
+    for (int i=0; i<N; i++) {
+      for (int j=0; j<K; j++) {
+        dp = computeDotProduct(init_means[j],data[i]);
+        distances[j] = data_weights[i] * acos(dp);
+      } // for j()
+      nearest = minimumIndex(distances);
+      responsibility[nearest][i] = 1;
+    } // for i()
+    // update means
+    for (int i=0; i<K; i++) {
+      means[i] = Vector(3,0);
+      for (int j=0; j<N; j++) {
+        if (responsibility[i][j] > 0.99) {
+          for (int k=0; k<3; k++) {
+            means[i][k] += data[j][k];
+          } // k
+        } // if()
+      } // j
+      normalize(means[i],init_means[i]);
+    } // i
+  } // iter
+
+  sample_size = Vector(K,0);
+  updateEffectiveSampleSize();
+  weights = Vector(K,0);
+  if (ESTIMATION == MML) {
+    updateWeights();
+  } else {
+    updateWeights_ML();
+  }
+
+  cout << "init_means[0]: "; print(cout,init_means[0],3); cout << endl;
+  cout << "init_means[1]: "; print(cout,init_means[1],3); cout << endl;
+
+  vMF child1;
+  child1.estimateParameters(data,responsibility[0]);
+  vMF child2;
+  child2.estimateParameters(data,responsibility[1]);
   components = std::vector<vMF>(K);
   components[0] = child1; components[1] = child2;
 }
@@ -671,7 +742,8 @@ double Mixture_vMF::estimateParameters()
   if (SPLITTING == 1) {
     //initialize_children_1();
     //initialize_children_2();
-    initialize_children_3();
+    //initialize_children_3();
+    initialize_children_4();
   } else {
     initialize();
   }

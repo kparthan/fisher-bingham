@@ -227,8 +227,8 @@ void Mixture::initialize_children_1()
 
   #pragma omp parallel for if(ENABLE_DATA_PARALLELISM) num_threads(NUM_THREADS) 
   for (int i=0; i<N; i++) {
-    responsibility[0][i] = uniform_random();
-    responsibility[1][i] = 1 - responsibility[0][i];
+    int index = rand() % K;
+    responsibility[index][i] = 1;
   }
   sample_size = Vector(K,0);
   updateEffectiveSampleSize();
@@ -254,8 +254,8 @@ void Mixture::initialize_children_2()
 
   #pragma omp parallel for if(ENABLE_DATA_PARALLELISM) num_threads(NUM_THREADS) 
   for (int i=0; i<N; i++) {
-    responsibility[0][i] = uniform_random();
-    responsibility[1][i] = 1 - responsibility[0][i];
+    int index = rand() % K;
+    responsibility[index][i] = 1;
   }
   sample_size = Vector(K,0);
   updateEffectiveSampleSize();
@@ -321,8 +321,6 @@ void Mixture::initialize_children_3()
   for (int i=0; i<N; i++) {
     int index = rand() % K;
     responsibility[index][i] = 1;
-    //responsibility[0][i] = uniform_random();
-    //responsibility[1][i] = 1 - responsibility[0][i];
   }
   sample_size = Vector(K,0);
   updateEffectiveSampleSize();
@@ -669,8 +667,9 @@ string Mixture::getLogFile()
       file_name = "./simulation/logs/";
     }
   } else if (INFER_COMPONENTS == SET) {
-    //file_name = "./infer/logs/kent/";
-    file_name = EM_LOG_FOLDER + "m_" + boost::lexical_cast<string>(id) + "_";
+    file_name = "./infer/logs/kent/";
+    file_name += "m_" + boost::lexical_cast<string>(id) + "_";
+    //file_name = EM_LOG_FOLDER + "m_" + boost::lexical_cast<string>(id) + "_";
   }
   file_name += boost::lexical_cast<string>(K) + ".log";
   return file_name;
@@ -982,6 +981,10 @@ void Mixture::load(string &file_name)
     double kappa = numbers[10];
     double beta = numbers[11];
     double ex = 2 * beta / kappa;
+    if (ex >= 1) {
+      ex = 1 - TOLERANCE;
+      beta = 0.5 * kappa * ex;
+    }
     if (fabs(ex - 1) <= TOLERANCE) {
       beta -= TOLERANCE;
     }

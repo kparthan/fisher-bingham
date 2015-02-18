@@ -272,6 +272,9 @@ class MMLObjectiveFunction
       double log_prior = kent.computeLogPriorProbability();
       double log_fisher = kent.computeLogFisherInformation(N);
       double part1 = const_lattk - log_prior + 0.5 * log_fisher;
+      if (part1 <= 1) {
+        part1 = 1; cout << "Part 1 is negative ...";
+      }
       double part2 = kent.computeNegativeLogLikelihood(sample_mean,S,N) + 2.5
                      - 2 * N * log(AOM);
       double fval = part1 + part2;
