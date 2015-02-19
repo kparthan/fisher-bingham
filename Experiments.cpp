@@ -7,21 +7,25 @@ extern int ESTIMATION,CRITERION;
 extern int INFER_COMPONENTS;
 extern string EM_LOG_FOLDER;
 extern struct stat st;
+extern int MML_FAIL;
 
 Experiments::Experiments(int iterations) : iterations(iterations)
 {}
 
 void Experiments::simulate()
 {
-  int N = 10;
+  int N = 25;
   double kappa,beta,eccentricity;
 
   //string n_str = "N_" + boost::lexical_cast<string>(N) + "_uniform_prior/";
   //string n_str = "N_" + boost::lexical_cast<string>(N) + "_vmf_prior/";
   //string n_str = "N_" + boost::lexical_cast<string>(N) + "_beta_prior/";
   //string n_str = "N_" + boost::lexical_cast<string>(N) + "_new_prior/";
-  string n_str = "N_" + boost::lexical_cast<string>(N) + "_new2_prior/";
+  //string n_str = "N_" + boost::lexical_cast<string>(N) + "_new2_prior/";
+  string n_str = "N_" + boost::lexical_cast<string>(N) + "_new3_prior/";
   string parent_dir = "experiments/single_kent/" + n_str + "/";
+  check_and_create_directory(parent_dir);
+
   string current_dir,kappa_str,eccentricity_str;
   string kappas,betas,negloglike,kldivs,msglens;
   std::vector<Vector> random_sample;
@@ -30,7 +34,7 @@ void Experiments::simulate()
   //string data_file = "random_sample_vmf.dat";
   //string data_file = "random_sample_beta.dat";
   //string data_file = "random_sample.dat";
-  string data_file = "random_sample_new2.dat";
+  //string data_file = "random_sample_new2.dat";
 
   double INIT_KAPPA = 10;
   double MAX_KAPPA = 100;
@@ -72,11 +76,16 @@ void Experiments::simulate()
       Kent kent(psi,alpha,eta,kappa,beta);
 
       for (int i=0; i<iterations; i++) {
+        //repeat:
+        //MML_FAIL = 0;
         cout << "Iteration: " << i+1 << endl;
-        kent.generate(N);
-        random_sample = load_data_table(data_file);
-        //random_sample = kent.generate(N);
+        //kent.generate(N);
+        //random_sample = load_data_table(data_file);
+        random_sample = kent.generate(N);
         kent.computeAllEstimators(random_sample,all_estimates,0,1);
+        /*if (MML_FAIL == 1) {  // ignore iteration
+          goto repeat;
+        }*/
         for (int j=0; j<all_estimates.size(); j++) {
           fk << scientific << all_estimates[j].kappa << "\t";
           fb << scientific << all_estimates[j].beta << "\t";

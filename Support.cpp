@@ -1724,7 +1724,7 @@ void modelOneComponent(struct Parameters &parameters, std::vector<Vector> &data)
     double psi = 60; psi *= PI/180;
     double alpha = 60; alpha *= PI/180;
     double eta = 70; eta *= PI/180;
-    double kappa = 100;
+    double kappa = 10;
     double ecc = 0.9;
     double beta = 0.5 * kappa * ecc;
     Kent kent(psi,alpha,eta,kappa,beta);
@@ -2137,11 +2137,11 @@ void RunExperiments(int iterations)
 {
   Experiments experiments(iterations);
 
-  //experiments.simulate();
+  experiments.simulate();
 
   //experiments.infer_components_exp1();
 
-  experiments.infer_components_exp2();
+  //experiments.infer_components_exp2();
 }
 
 /*!

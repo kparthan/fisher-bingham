@@ -742,8 +742,8 @@ double Mixture_vMF::estimateParameters()
   if (SPLITTING == 1) {
     //initialize_children_1();
     //initialize_children_2();
-    //initialize_children_3();
-    initialize_children_4();
+    initialize_children_3();
+    //initialize_children_4();
   } else {
     initialize();
   }

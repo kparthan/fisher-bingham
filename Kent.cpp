@@ -479,10 +479,10 @@ double Kent::computeLogPriorAxes()
   if (fabs(angle-PI) < TOLERANCE) angle = PI-TOLERANCE;
   
   double log_prior = 0;
-  if (ESTIMATION == MML) {
+  //if (ESTIMATION == MML) {
     log_prior += (log(sin(angle)));
     //log_prior += log(1-cos(psi));
-  }
+  //}
   log_prior -= (log(8) + 2*log(PI));
   return log_prior;
 }
@@ -1058,7 +1058,7 @@ double Kent::computeKLDivergence(Kent &other)
   tmp2 = prod_vMv(mi2,constants1.E_xx);
   ans -= beta2 * (tmp1 - tmp2);
 
-  return ans;
+  return ans/log(2);
 }
 
 double Kent::computeKLDivergence(struct Estimates &estimates)
