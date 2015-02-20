@@ -117,7 +117,7 @@ void tabulate_kappa_kldivs(string &data_file, string &n_str, string &kappa_str)
   std::vector<Vector> kldivs;
   string kldivs_file;
   ofstream out(data_file.c_str());
-  double eccentricity = 0.2;
+  double eccentricity = 0.1;
   while (eccentricity < 0.95) {
     out << fixed << setw(10) << setprecision(1) << eccentricity;
     ostringstream sse;
@@ -193,6 +193,8 @@ struct Parameters parseCommandLineInput(int argc, char **argv)
   return parameters;
 }
 
+// Usage: ./stack_wins_kldivs --n 100 --kappa 10 --all e
+// Usage: ./stack_wins_kldivs --n 100 --eccentricity 0.1 --all k
 int main(int argc, char **argv)
 {
   struct Parameters parameters = parseCommandLineInput(argc,argv);
@@ -203,7 +205,8 @@ int main(int argc, char **argv)
   //string n_str = "./N_" + boost::lexical_cast<string>(parameters.N) + "_uniform_prior/";
   //string n_str = "./N_" + boost::lexical_cast<string>(parameters.N) + "_vmf_prior/";
   //string n_str = "./N_" + boost::lexical_cast<string>(parameters.N) + "_beta_prior/";
-  string n_str = "./N_" + boost::lexical_cast<string>(parameters.N) + "_new2_prior/";
+  //string n_str = "./N_" + boost::lexical_cast<string>(parameters.N) + "_new2_prior/";
+  string n_str = "./N_" + boost::lexical_cast<string>(parameters.N) + "_new32_prior/";
   //string n_str = "N_" + boost::lexical_cast<string>(parameters.N) + "_kappa_until_50/";
   //string n_str = "./N_" + boost::lexical_cast<string>(parameters.N) + "/";
 

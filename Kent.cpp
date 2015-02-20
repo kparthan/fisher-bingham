@@ -727,6 +727,7 @@ void Kent::computeAllEstimators(
   }
 
   type = "MML";
+  //struct Estimates mml_est = asymptotic_est;
   //struct Estimates mml_est = moment_est;
   //struct Estimates mml_est = map_est;
   //struct Estimates mml_est = asymptotic_est;

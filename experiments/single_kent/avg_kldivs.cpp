@@ -158,27 +158,16 @@ double computeVariance(Vector &list)
   return sum / (double) (list.size()-1);
 }
 
-int minimumIndex(int ignore_map, Vector &values)
+int minimumIndex(Vector &values)
 {
   int min_index = 0;
   double min_val = values[0];
-  if (ignore_map) {
-    for (int i=1; i<values.size(); i++) { 
-      if (i != MAP) {
-        if (values[i] <= min_val) {
-          min_index = i;
-          min_val = values[i];
-        } // if()
-      } 
-    } // for()
-  } else { // don't ignore_map
-    for (int i=1; i<values.size(); i++) { 
-      if (values[i] <= min_val) {
-        min_index = i;
-        min_val = values[i];
-      } // if()
-    } // for()
-  } // if(ignore_map)
+  for (int i=1; i<values.size(); i++) { 
+    if (values[i] <= min_val) {
+      min_index = i;
+      min_val = values[i];
+    } // if()
+  } // for()
   return min_index;
 }
 
@@ -195,16 +184,6 @@ int maximumIndex(Vector &values)
   return max_index;
 }
 
-Vector computeEstimateMedians(ostream &out, std::vector<Vector> &p_est_all)
-{
-  Vector medians = computeMedians(p_est_all);
-  for (int i=0; i<p_est_all[0].size(); i++) {
-    out << scientific << medians[i] << "\t";
-  }
-  out << endl;
-  return medians;
-}
-
 Vector computeMeans(ostream &out, std::vector<Vector> &p_est_all)
 {
   Vector means = computeMeans(p_est_all);
@@ -215,33 +194,15 @@ Vector computeMeans(ostream &out, std::vector<Vector> &p_est_all)
   return means;
 }
 
-void computeMeanSquaredError(
-  ostream &out, double p, std::vector<Vector> &p_est_all
-) {
-  int num_elements = p_est_all.size();
-
-  Vector error(p_est_all[0].size(),0);
-  for (int i=0; i<num_elements; i++) {
-    for (int j=0; j<p_est_all[0].size(); j++) {
-      error[j] += (p - p_est_all[i][j]) * (p - p_est_all[i][j]);
-    }
-  }
-  for (int j=0; j<p_est_all[0].size(); j++) {
-    error[j] /= num_elements;
-    out << fixed << scientific << setprecision(6) << error[j] << "\t";
-  }
-  out << endl;
-}
-
 void computeWins(
-  int ignore_map, ostream &out, std::vector<Vector> &values
+  ostream &out, std::vector<Vector> &values
 ) {
   int num_elements = values.size();
   std::vector<int> wins(values[0].size(),0);
 
   int min_index;
   for (int i=0; i<num_elements; i++) {
-    min_index = minimumIndex(ignore_map,values[i]);
+    min_index = minimumIndex(values[i]);
     wins[min_index]++;
   }
   double percent_wins;
@@ -255,45 +216,45 @@ void computeWins(
 struct Parameters
 {
   int N;
-  int ignore_map;
+  double kappa,eccentricity;
+  int quantity;
 };
 
 struct Parameters parseCommandLineInput(int argc, char **argv)
 {
   struct Parameters parameters;
+  string quantity;
 
   options_description desc("Allowed options");
   desc.add_options()
        ("n",value<int>(&parameters.N),"value to be scaled")
-       ("ignore_map","to ignore map estimate or not ?")
+       ("kappa",value<double>(&parameters.kappa),"kappa")
+       ("eccentricity",value<double>(&parameters.eccentricity),"eccentricity")
+       ("all",value<string>(&quantity),"all (kappa/eccentricity) ?")
   ;
   variables_map vm;
   store(command_line_parser(argc,argv).options(desc).run(),vm);
   notify(vm);
 
-  if (vm.count("ignore_map")) {
-    parameters.ignore_map = 1;
-  } else {
-    parameters.ignore_map = 0;
-  }
-
+  if (vm.count("all")) {
+    if (quantity.compare("k") == 0) { // all k fixed e
+      parameters.quantity = 1;
+    } else if (quantity.compare("e") == 0) { // all e fixed k
+      parameters.quantity = 2;
+    }
+  } 
   return parameters;
 }
 
+// Usage: ./avg_kldivs --n 100 --kappa 10 --all e
+// Usage: ./avg_kldivs --n 100 --eccentricity 0.1 --all k
 int main(int argc, char **argv)
 {
   struct Parameters parameters = parseCommandLineInput(argc,argv);
 
   double kappa,beta,eccentricity;
 
-  /*double INIT_KAPPA = 5;
-  double MAX_KAPPA = 50;
-  double KAPPA_INCREMENT = 5;
-  string n_str = "N_" + boost::lexical_cast<string>(parameters.N) + "_kappa_until_50/";*/
-
-  double INIT_KAPPA = 10;
-  double MAX_KAPPA = 100;
-  double KAPPA_INCREMENT = 10;
+  //string n_str = "N_" + boost::lexical_cast<string>(parameters.N) + "_kappa_until_50/";
   //string n_str = "N_" + boost::lexical_cast<string>(parameters.N) + "_uniform_prior/";
   //string n_str = "N_" + boost::lexical_cast<string>(parameters.N) + "_vmf_prior/";
   //string n_str = "N_" + boost::lexical_cast<string>(parameters.N) + "_beta_prior/";
@@ -302,100 +263,67 @@ int main(int argc, char **argv)
   //string n_str = "./N_" + boost::lexical_cast<string>(parameters.N) + "/";
 
   string current_dir,kappa_str,eccentricity_str;
-  string kappas_file,betas_file,negloglike_file,kldivs_file,msglens_file;
-  std::vector<Vector> kappas_table,betas_table,negloglike_table,kldivs_table,msglens_table;
+  string kldivs_file;
+  std::vector<Vector> kldivs_table;
 
-  string wins_kldivs_file = n_str + "wins_kldivs";
-  string wins_negloglike_file = n_str + "wins_negloglike";
-  string wins_msglens_file = n_str + "wins_msglens";
-  string mse_kappa_file = n_str + "mse_kappas";
-  string mse_beta_file = n_str + "mse_betas";
-  string avg_kldivs_file = n_str + "avg_kldivs";
-  string avg_negloglike_file = n_str + "avg_negloglike";
-  string avg_msglens_file = n_str + "avg_msglens";
-
-  ofstream wins_kldivs(wins_kldivs_file.c_str());
-  ofstream wins_negloglike(wins_negloglike_file.c_str());
-  ofstream wins_msglens(wins_msglens_file.c_str());
-  ofstream mse_kappa(mse_kappa_file.c_str());
-  ofstream mse_beta(mse_beta_file.c_str());
-  ofstream avg_kldivs(avg_kldivs_file.c_str());
-  ofstream avg_negloglike(avg_negloglike_file.c_str());
-  ofstream avg_msglens(avg_msglens_file.c_str());
-
-  kappa = INIT_KAPPA;
-  while (kappa <= MAX_KAPPA) {
+  if (parameters.quantity == 1) { // all k fixed e
+    eccentricity = parameters.eccentricity;
+    ostringstream sse;
+    sse << fixed << setprecision(1);
+    sse << eccentricity;
+    string eccentricity_str = sse.str();
+    string avg_kldivs_file = n_str + "e_" + eccentricity_str + "_avg_kldivs.dat";
+    string wins_kldivs_file = n_str + "e_" + eccentricity_str + "_wins_kldivs.dat";
+    ofstream wins_kldivs(wins_kldivs_file.c_str());
+    ofstream avg_kldivs(avg_kldivs_file.c_str());
+    kappa = 10;
+    while (kappa <= 100) {
+      ostringstream ssk;
+      ssk << fixed << setprecision(0);
+      ssk << kappa;
+      kappa_str = ssk.str();
+      current_dir = n_str + "k_" + kappa_str + "_e_" + eccentricity_str + "/";
+      kldivs_file = current_dir + "kldivs";
+      kldivs_table = load_table(kldivs_file,NUM_METHODS);
+      avg_kldivs << fixed << setw(10) << setprecision(1) << eccentricity;
+      avg_kldivs << fixed << setw(10) << kappa << "\t";
+      computeMeans(avg_kldivs,kldivs_table);
+      wins_kldivs << fixed << setw(10) << setprecision(1) << eccentricity;
+      wins_kldivs << fixed << setw(10) << kappa << "\t";
+      computeWins(wins_kldivs,kldivs_table);
+      kappa += 10;
+    } // while()
+    wins_kldivs.close();
+    avg_kldivs.close();
+  } else if (parameters.quantity == 2) { // all e fixed k
+    kappa = parameters.kappa;
     ostringstream ssk;
     ssk << fixed << setprecision(0);
     ssk << kappa;
-    kappa_str = ssk.str();
+    string kappa_str = ssk.str();
+    string avg_kldivs_file = n_str + "k_" + kappa_str + "_avg_kldivs.dat";
+    string wins_kldivs_file = n_str + "k_" + kappa_str + "_wins_kldivs.dat";
+    ofstream wins_kldivs(wins_kldivs_file.c_str());
+    ofstream avg_kldivs(avg_kldivs_file.c_str());
     eccentricity = 0.1;
     while (eccentricity < 0.95) {
-      beta = 0.5 * kappa * eccentricity;
       ostringstream sse;
       sse << fixed << setprecision(1);
       sse << eccentricity;
       eccentricity_str = sse.str();
       current_dir = n_str + "k_" + kappa_str + "_e_" + eccentricity_str + "/";
-
-      kappas_file = current_dir + "kappas";
-      kappas_table = load_table(kappas_file,NUM_METHODS);
-      mse_kappa << fixed << setw(10) << kappa;
-      mse_kappa << fixed << setw(10) << beta;
-      mse_kappa << fixed << setw(10) << setprecision(1) << eccentricity << "\t";
-      computeMeanSquaredError(mse_kappa,kappa,kappas_table);
-
-      betas_file = current_dir + "betas";
-      betas_table = load_table(betas_file,NUM_METHODS);
-      mse_beta << fixed << setw(10) << kappa;
-      mse_beta << fixed << setw(10) << beta;
-      mse_beta << fixed << setw(10) << setprecision(1) << eccentricity << "\t";
-      computeMeanSquaredError(mse_beta,beta,betas_table);
-
-      negloglike_file = current_dir + "negloglike";
-      negloglike_table = load_table(negloglike_file,NUM_METHODS);
-      avg_negloglike << fixed << setw(10) << kappa;
-      avg_negloglike << fixed << setw(10) << beta;
-      avg_negloglike << fixed << setw(10) << setprecision(1) << eccentricity << "\t";
-      computeMeans(avg_negloglike,negloglike_table);
-      wins_negloglike << fixed << setw(10) << kappa;
-      wins_negloglike << fixed << setw(10) << beta;
-      wins_negloglike << fixed << setw(10) << setprecision(1) << eccentricity << "\t";
-      computeWins(parameters.ignore_map,wins_negloglike,negloglike_table);
-
       kldivs_file = current_dir + "kldivs";
       kldivs_table = load_table(kldivs_file,NUM_METHODS);
       avg_kldivs << fixed << setw(10) << kappa;
-      avg_kldivs << fixed << setw(10) << beta;
       avg_kldivs << fixed << setw(10) << setprecision(1) << eccentricity << "\t";
       computeMeans(avg_kldivs,kldivs_table);
       wins_kldivs << fixed << setw(10) << kappa;
-      wins_kldivs << fixed << setw(10) << beta;
       wins_kldivs << fixed << setw(10) << setprecision(1) << eccentricity << "\t";
-      computeWins(parameters.ignore_map,wins_kldivs,kldivs_table);
-
-      msglens_file = current_dir + "msglens";
-      msglens_table = load_table(msglens_file,NUM_METHODS);
-      avg_msglens << fixed << setw(10) << kappa;
-      avg_msglens << fixed << setw(10) << beta;
-      avg_msglens << fixed << setw(10) << setprecision(1) << eccentricity << "\t";
-      computeMeans(avg_msglens,msglens_table);
-      wins_msglens << fixed << setw(10) << kappa;
-      wins_msglens << fixed << setw(10) << beta;
-      wins_msglens << fixed << setw(10) << setprecision(1) << eccentricity << "\t";
-      computeWins(parameters.ignore_map,wins_msglens,msglens_table);
-      
+      computeWins(wins_kldivs,kldivs_table);
       eccentricity += 0.1;
-    } // eccentricity
-    kappa += KAPPA_INCREMENT;
-  } // kappa
-  wins_kldivs.close();
-  wins_negloglike.close();
-  wins_msglens.close();
-  mse_kappa.close();
-  mse_beta.close();
-  avg_kldivs.close();
-  avg_negloglike.close();
-  avg_msglens.close();
+    } // while() 
+    wins_kldivs.close();
+    avg_kldivs.close();
+  } // if()
 }
 
