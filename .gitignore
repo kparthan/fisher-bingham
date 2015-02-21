@@ -1,8 +1,0 @@
-./visualize/*.dat
-./visualize/sampled_data/
-./experiments/single_kent/N_*
-./experiments/infer_components/
-./data/
-./support/nlopt-2.4.2/
-./support/dlib-18.9/
-./support/optpp-2.4/
