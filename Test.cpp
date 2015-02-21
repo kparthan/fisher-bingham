@@ -788,7 +788,7 @@ void Test::fisher2()
   double ip1,ip2,ip;
   double Neff = 1;
 
-  kappa = 10;
+  kappa = 1;
   ecc = TOLERANCE;
   cout << "kappa: " << kappa << endl << endl;
   while (ecc < 0.95) {
@@ -827,7 +827,7 @@ void Test::fisher2()
     ip = -log_prior + 0.5 * log_det_fisher + 2.5 * log_latt;
     cout << "ip: " << ip << endl;
 
-    Neff = 15;
+    Neff = 25;
     ip += 2.5 * log(Neff);
     cout << "ip: " << ip;
 
@@ -878,11 +878,11 @@ void Test::mml_estimation2(void)
   std::vector<struct Estimates> all_estimates;
   std::vector<Vector> random_sample;
   double kappa,beta,ecc;
-  int sample_size = 1000;
+  int sample_size = 100;
   string data_file = "random_sample.dat";
 
   kappa = 10;
-  ecc = 0.9;
+  ecc = 0.1;
   beta = 0.5 * kappa * ecc;
 
   // in degrees

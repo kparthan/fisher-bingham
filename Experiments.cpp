@@ -22,7 +22,7 @@ void Experiments::simulate()
   //string n_str = "N_" + boost::lexical_cast<string>(N) + "_beta_prior/";
   //string n_str = "N_" + boost::lexical_cast<string>(N) + "_new_prior/";
   //string n_str = "N_" + boost::lexical_cast<string>(N) + "_new2_prior/";
-  string n_str = "N_" + boost::lexical_cast<string>(N) + "_new32_prior/";
+  string n_str = "N_" + boost::lexical_cast<string>(N) + "_prior4";
   string parent_dir = "experiments/single_kent/" + n_str + "/";
   check_and_create_directory(parent_dir);
 
