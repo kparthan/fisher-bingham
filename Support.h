@@ -129,6 +129,7 @@ double logLatticeConstant(int);
 std::vector<std::vector<int> > updateBins(std::vector<Vector> &, double);
 void outputBins(std::vector<std::vector<int> > &, double);
 void computeEstimators(struct Parameters &);
+void computeResponsibilityGivenMixture(struct Parameters &);
 bool gatherData(struct Parameters &, std::vector<Vector> &);
 void modelOneComponent(struct Parameters &, std::vector<Vector> &);
 void modelMixture(struct Parameters &, std::vector<Vector> &);

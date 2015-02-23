@@ -75,6 +75,7 @@ struct Parameters parseCommandLineInput(int argc, char **argv)
        ("estimation",value<string>(&estimation_method),"type of estimation")
        ("criterion",value<string>(&criterion),"type of criterion")
        ("estimate_all","flag to estimate using all methods")
+       ("responsibility","flag to compute responsibility matrix")
        ("improvement",value<double>(&improvement_rate),"improvement rate")
   ;
   variables_map vm;
@@ -204,6 +205,12 @@ struct Parameters parseCommandLineInput(int argc, char **argv)
     parameters.estimate_all = SET;
   } else {
     parameters.estimate_all = UNSET;
+  }
+
+  if (vm.count("responsibility")) {
+    parameters.compute_responsibility_matrix = SET;
+  } else {
+    parameters.compute_responsibility_matrix = UNSET;
   }
 
   if (vm.count("estimation")) {
@@ -1456,6 +1463,20 @@ void computeEstimators(struct Parameters &parameters)
   }
 }
 
+void computeResponsibilityGivenMixture(struct Parameters &parameters)
+{
+  std::vector<Vector> unit_coordinates;
+  bool success = gatherData(parameters,unit_coordinates);
+  if (success) {
+    Mixture_vMF mixture;
+    mixture.load(parameters.mixture_file);
+    mixture.computeResponsibilityMatrix(unit_coordinates,parameters.infer_log);
+  } else {
+    cout << "Something wrong in reading data ...\n";
+    exit(1);
+  }
+}
+
 /*!
  *  \brief This function reads through the profiles from a given directory
  *  and collects the data to do mixture modelling.
@@ -1992,7 +2013,8 @@ Mixture_vMF inferComponents_vMF(Mixture_vMF &mixture, int N, ostream &log)
   } // if (improved == parent || iter%2 == 0) loop
 
   finish:
-  string inferred_mixture_file = "./simulation/inferred_mixture";
+  //string inferred_mixture_file = "./simulation/inferred_mixture_vmf";
+  string inferred_mixture_file = "inferred_mixture_vmf";
   parent.printParameters(inferred_mixture_file);
   return parent;
 }

@@ -40,6 +40,10 @@ int main(int argc, char **argv)
     simulateMixtureModel(parameters);
   }
 
+  if (parameters.compute_responsibility_matrix == SET) {
+    computeResponsibilityGivenMixture(parameters);
+  }
+
   delete(uniform_generator);
 
   return 0;

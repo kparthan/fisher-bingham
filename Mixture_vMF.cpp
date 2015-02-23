@@ -272,10 +272,10 @@ void Mixture_vMF::initialize_children_2()
   struct Estimates asymptotic_est = parent.computeAsymptoticMomentEstimates(sample_mean,S,Neff);
   string type = "MOMENT";
   struct Estimates moment_est = asymptotic_est;
-  Optimize opt(type);
+  /*Optimize opt(type);
   opt.initialize(Neff,moment_est.mean,moment_est.major_axis,moment_est.minor_axis,
                  moment_est.kappa,moment_est.beta);
-  opt.computeEstimates(sample_mean,S,moment_est);
+  opt.computeEstimates(sample_mean,S,moment_est);*/
 
   Vector mu,rotation_axis,spherical(3,0);
   double theta,psi,alpha,eta,kappa,beta;
@@ -343,10 +343,10 @@ void Mixture_vMF::initialize_children_3()
   struct Estimates asymptotic_est = parent.computeAsymptoticMomentEstimates(sample_mean,S,Neff);
   string type = "MOMENT";
   struct Estimates moment_est = asymptotic_est;
-  Optimize opt(type);
+  /*Optimize opt(type);
   opt.initialize(Neff,moment_est.mean,moment_est.major_axis,moment_est.minor_axis,
                  moment_est.kappa,moment_est.beta);
-  opt.computeEstimates(sample_mean,S,moment_est);
+  opt.computeEstimates(sample_mean,S,moment_est);*/
 
   Vector mu,mi,spherical(3,0);
   double kappa,span,theta;
@@ -355,6 +355,7 @@ void Mixture_vMF::initialize_children_3()
   kappa = vmf_est.kappa;
 
   span = uniform_random();
+  //span = 0.5;
   theta = 0.5 * PI * span;
   Matrix R = rotate_about_arbitrary_axis(mi,theta);
   mu = prod(R,moment_est.mean);
@@ -401,7 +402,8 @@ void Mixture_vMF::initialize_children_4()
     for (int i=0; i<N; i++) {
       for (int j=0; j<K; j++) {
         dp = computeDotProduct(init_means[j],data[i]);
-        distances[j] = data_weights[i] * acos(dp);
+        //distances[j] = data_weights[i] * acos(dp);
+        distances[j] = data_weights[i] * dp;
       } // for j()
       nearest = minimumIndex(distances);
       responsibility[nearest][i] = 1;
@@ -555,12 +557,12 @@ void Mixture_vMF::computeResponsibilityMatrix(std::vector<Vector> &sample,
     }
     out << endl;
   }
-  out << "Cumulative memberships:\n";
+  /*out << "Cumulative memberships:\n";
   double comp_sum;
   for (int j=0; j<K; j++) {
     comp_sum = computeSum(resp[j]);
     out << "Component " << j+1 << ": " << comp_sum << endl;
-  }
+  }*/
   out.close();
 }
 
@@ -742,8 +744,8 @@ double Mixture_vMF::estimateParameters()
   if (SPLITTING == 1) {
     //initialize_children_1();
     //initialize_children_2();
-    initialize_children_3();
-    //initialize_children_4();
+    //initialize_children_3();
+    initialize_children_4();
   } else {
     initialize();
   }
