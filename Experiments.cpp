@@ -27,7 +27,7 @@ void Experiments::simulate()
   check_and_create_directory(parent_dir);
 
   string current_dir,kappa_str,eccentricity_str;
-  string kappas,betas,negloglike,kldivs,msglens;
+  string kappas,betas,ecc_file,negloglike,kldivs,msglens;
   std::vector<Vector> random_sample;
   std::vector<struct Estimates> all_estimates;
   //string data_file = "random_sample_uniform.dat";
@@ -39,6 +39,7 @@ void Experiments::simulate()
   double INIT_KAPPA = 10;
   double MAX_KAPPA = 100;
   double KAPPA_INCREMENT = 10;
+  double ecc;
 
   kappa = INIT_KAPPA;
   //kappa = 1;
@@ -58,12 +59,14 @@ void Experiments::simulate()
       check_and_create_directory(current_dir);
       kappas = current_dir + "kappas";
       betas = current_dir + "betas";
+      ecc_file = current_dir + "ecc";
       negloglike = current_dir + "negloglike";
       kldivs = current_dir + "kldivs";
       msglens = current_dir + "msglens";
 
       ofstream fk(kappas.c_str());
       ofstream fb(betas.c_str());
+      ofstream fecc(ecc_file.c_str());
       ofstream fnlh(negloglike.c_str());
       ofstream fkl(kldivs.c_str());
       ofstream fmsg(msglens.c_str());
@@ -87,12 +90,15 @@ void Experiments::simulate()
           goto repeat;
         }*/
         for (int j=0; j<all_estimates.size(); j++) {
+          ecc = 2 * all_estimates[j].beta / all_estimates[j].kappa;
+          fecc << scientific << ecc << "\t";
           fk << scientific << all_estimates[j].kappa << "\t";
           fb << scientific << all_estimates[j].beta << "\t";
           fnlh << scientific << all_estimates[j].negloglike << "\t";
           fkl << scientific << all_estimates[j].kldiv << "\t";
           fmsg << scientific << all_estimates[j].msglen << "\t";
         } // for j ()
+        fecc << endl;
         fk << endl;
         fb << endl;
         fnlh << endl;
@@ -101,6 +107,7 @@ void Experiments::simulate()
       } // for i ()
 
       eccentricity += 0.1;
+      fecc.close();
       fk.close();
       fb.close();
       fnlh.close();

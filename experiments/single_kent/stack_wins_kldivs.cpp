@@ -206,8 +206,9 @@ int main(int argc, char **argv)
   //string n_str = "./N_" + boost::lexical_cast<string>(parameters.N) + "_vmf_prior/";
   //string n_str = "./N_" + boost::lexical_cast<string>(parameters.N) + "_beta_prior/";
   //string n_str = "./N_" + boost::lexical_cast<string>(parameters.N) + "_new2_prior/";
-  string n_str = "./N_" + boost::lexical_cast<string>(parameters.N) + "_new32_prior/";
+  //string n_str = "./N_" + boost::lexical_cast<string>(parameters.N) + "_new32_prior/";
   //string n_str = "N_" + boost::lexical_cast<string>(parameters.N) + "_kappa_until_50/";
+  string n_str = "./N_" + boost::lexical_cast<string>(parameters.N) + "_prior4/";
   //string n_str = "./N_" + boost::lexical_cast<string>(parameters.N) + "/";
 
   if (parameters.quantity == 1) { // all k fixed e
