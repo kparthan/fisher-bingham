@@ -25,7 +25,7 @@ class Experiments
 
     void inferMixtures_exp1(Mixture &, string &);
     void inferMixtures_exp1(
-      Mixture &, string &, string &, string &, string &, string &
+      Mixture &, std::vector<Vector> &, string &, string &, string &, string &, string &
     );
 
     void infer_components_exp2();
@@ -37,6 +37,9 @@ class Experiments
       Mixture &, std::vector<Vector> &, std::vector<Vector> &, 
       string &, string &, string &, string &
     );
+
+    void infer_components_exp3();
+    void infer_components_exp3(double, double, double);
 };
 
 #endif

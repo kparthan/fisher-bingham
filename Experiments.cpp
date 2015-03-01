@@ -288,22 +288,25 @@ void Experiments::inferMixtures_exp1(
   string results_folder = exp_folder + "results/";
   string criterion;
 
+  string big_data_file = data_folder + "random_sample.dat";
+  std::vector<Vector> large_data = load_data_table(big_data_file);
+
   criterion = "bic/";
   CRITERION = BIC;
 
   ESTIMATION = MOMENT;
   inferMixtures_exp1(
-    original,data_folder,logs_folder,mixtures_folder,results_folder,criterion
+    original,large_data,data_folder,logs_folder,mixtures_folder,results_folder,criterion
   );
 
   ESTIMATION = MLE;
   inferMixtures_exp1(
-    original,data_folder,logs_folder,mixtures_folder,results_folder,criterion
+    original,large_data,data_folder,logs_folder,mixtures_folder,results_folder,criterion
   );
 
   ESTIMATION = MAP;
   inferMixtures_exp1(
-    original,data_folder,logs_folder,mixtures_folder,results_folder,criterion
+    original,large_data,data_folder,logs_folder,mixtures_folder,results_folder,criterion
   );
 
   /*criterion = "icl/";
@@ -311,29 +314,30 @@ void Experiments::inferMixtures_exp1(
 
   ESTIMATION = MOMENT;
   inferMixtures_exp1(
-    original,data_folder,logs_folder,mixtures_folder,results_folder,criterion
+    original,large_data,data_folder,logs_folder,mixtures_folder,results_folder,criterion
   );
 
   ESTIMATION = MLE;
   inferMixtures_exp1(
-    original,data_folder,logs_folder,mixtures_folder,results_folder,criterion
+    original,large_data,data_folder,logs_folder,mixtures_folder,results_folder,criterion
   );
 
   ESTIMATION = MAP;
   inferMixtures_exp1(
-    original,data_folder,logs_folder,mixtures_folder,results_folder,criterion
+    original,large_data,data_folder,logs_folder,mixtures_folder,results_folder,criterion
   );*/
 
   criterion = "mml/";
   CRITERION = MMLC;
   ESTIMATION = MML;
   inferMixtures_exp1(
-    original,data_folder,logs_folder,mixtures_folder,results_folder,criterion
+    original,large_data,data_folder,logs_folder,mixtures_folder,results_folder,criterion
   );
 }
 
 void Experiments::inferMixtures_exp1(
   Mixture &original, 
+  std::vector<Vector> &large_data,
   string &data_folder,
   string &logs_folder,
   string &mixtures_folder,
@@ -373,8 +377,8 @@ void Experiments::inferMixtures_exp1(
   } // switch() ends ...
 
   // for empirical KL-divergence ...
-  big_data_file = data_folder + "random_sample.dat";
-  std::vector<Vector> large_data = load_data_table(big_data_file);
+  //big_data_file = data_folder + "random_sample.dat";
+  //std::vector<Vector> large_data = load_data_table(big_data_file);
 
   ofstream out(results_file.c_str());
   for (int iter=1; iter<=iterations; iter++) {
@@ -573,5 +577,79 @@ void Experiments::inferMixtures_exp2(
   out << scientific << kldiv << "\t\t";
   out << scientific << inferred.getMinimumMessageLength() << endl;
   out.close();
+}
+
+void Experiments::infer_components_exp3()
+{
+  INFER_COMPONENTS = SET;
+
+  double kappa1,kappa2,ecc;
+
+  kappa1 = 10; kappa2 = 100;
+  //while(kappa <= 101) {
+    ecc = 0.5;
+    while(ecc < 0.95) {
+      infer_components_exp3(kappa1,kappa2,ecc);
+      ecc += 0.1;
+    } // ecc()
+    //kappa += 10;
+  //} // kappa()
+}
+
+void Experiments::infer_components_exp3(double kappa1, double kappa2, double ecc)
+{
+  iterations = 25;
+  int N = 100;
+
+  string common = "./experiments/infer_components/exp3/";
+  string parent_folder,exp_folder;
+
+  double alpha,alpha_rad,sin_alpha,cos_alpha;
+  double beta1,beta2;
+  Vector mean,major,minor;
+
+  //for (alpha=10; alpha<=50; alpha+=10) {
+    alpha = 50; // in degrees
+    alpha_rad = alpha * PI / 180;
+
+    mean = ZAXIS;
+    major = XAXIS;
+    minor = YAXIS;
+    beta1 = 0.5 * kappa1 * ecc;
+    Kent kent1(mean,major,minor,kappa1,beta1);
+
+    sin_alpha = sin(alpha_rad);
+    cos_alpha = cos(alpha_rad);
+    mean[0] = sin_alpha; mean[1] = 0; mean[2] = cos_alpha;
+    major[0] = cos_alpha; major[1] = 0; major[2] = -sin_alpha;
+    beta2 = 0.5 * kappa2 * ecc;
+    Kent kent2(mean,major,minor,kappa2,beta2);
+
+    Vector weights(2,0);
+    weights[0] = 0.8; weights[1] = 0.2;
+
+    std::vector<Kent> components;
+    components.push_back(kent1);
+    components.push_back(kent2);
+    Mixture original(2,components,weights);
+
+    ostringstream sse;
+    sse << fixed << setprecision(1);
+    sse << ecc;
+    string eccentricity_str = sse.str();
+
+    std::ostringstream ss;
+    ss << fixed << setprecision(0);
+    ss << alpha;
+    string alpha_str = ss.str();
+
+    parent_folder = common + "e_" + eccentricity_str + "/";
+    check_and_create_directory(parent_folder);
+    exp_folder = parent_folder + "alpha_" + alpha_str + "/" ;
+    check_and_create_directory(exp_folder);
+
+    generateData(original,exp_folder,N);
+    inferMixtures_exp1(original,exp_folder);
+  //} // alpha()
 }
 
