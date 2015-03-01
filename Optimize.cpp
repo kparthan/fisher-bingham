@@ -190,26 +190,6 @@ std::vector<double> Optimize::minimize(Vector &sample_mean, Matrix &S, int num_p
       break;
     }
 
-    /*case MAP:
-    {
-      opt.set_lower_bounds(lb);
-      opt.set_upper_bounds(ub);
-
-      MAP2ObjectiveFunction map(psi,alpha,eta,sample_mean,S,N);
-      opt.set_min_objective(MAP2ObjectiveFunction::wrap, &map);
-      opt.add_inequality_constraint(Constraint2, NULL, TOLERANCE);
-      opt.set_xtol_rel(1e-4);
-
-      x[0] = kappa; x[1] = beta;
-      nlopt::result result = opt.optimize(x, minf);
-      //assert(!boost::math::isnan(minf));
-      if (boost::math::isnan(minf)) {
-        cout << "MAP here:\n";
-        x[0] = kappa; x[1] = beta;
-      }
-      break;
-    }*/
-
     case MML:
     {
       //lb[4] = AOM;

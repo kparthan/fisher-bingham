@@ -881,14 +881,14 @@ void Test::mml_estimation2(void)
   int sample_size = 100;
   string data_file = "random_sample.dat";
 
-  kappa = 10;
-  ecc = 0.1;
+  kappa = 100;
+  ecc = 0.5;
   beta = 0.5 * kappa * ecc;
 
   // in degrees
-  psi = 60;
-  alpha = 60;
-  eta = 70;
+  psi = 45;
+  alpha = 90;
+  eta = 90;
 
   psi *= PI/180;
   alpha *= PI/180;

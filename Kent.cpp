@@ -509,13 +509,13 @@ double Kent::computeLogPriorScale()
   //log_prior -= log(0.39629);
 
   // beta distribution priors
-  double ex = 2 * beta/kappa;
+  /*double ex = 2 * beta/kappa;
   if (ex >= 1) ex = 1 - TOLERANCE;
-  //beta_distribution<> beta_dist(2,2);
+  beta_distribution<> beta_dist(2,2);
   //beta_distribution<> beta_dist(2,10);
-  beta_distribution<> beta_dist(10,2);
+  //beta_distribution<> beta_dist(10,2);
   double f = pdf(beta_dist,ex);
-  log_prior += log(f);
+  log_prior += log(f);*/
 
   // gamma distribution prior
   //boost::gamma_distribution<> gamma_dist(2);
@@ -821,6 +821,25 @@ struct Estimates Kent::computeAsymptoticMomentEstimates(
     estimates.major_axis = axis2;
     estimates.minor_axis = axis1;
   }
+
+  double s,a,e;
+  computeOrthogonalTransformation(estimates.mean,estimates.major_axis,s,a,e);
+  /*cout << "before: \n";
+  cout << "mean_est: "; print(cout,estimates.mean,3); cout << endl;
+  cout << "major_est: "; print(cout,estimates.major_axis,3); cout << endl;
+  cout << "minor_est: "; print(cout,estimates.minor_axis,3); cout << endl;
+  cout << "psi: " << s*180/PI << "; alpha: " << a*180/PI << "; eta: " << e*180/PI << endl;*/
+  if (s > PI) s -= PI;
+  Matrix r = computeOrthogonalTransformation(s,a,e);
+  estimates.psi = s; estimates.alpha = a; estimates.eta = e;
+  estimates.mean = prod(r,XAXIS);
+  estimates.major_axis = prod(r,YAXIS);
+  estimates.minor_axis = prod(r,ZAXIS);
+  /*cout << "after: \n";
+  cout << "mean_est: "; print(cout,estimates.mean,3); cout << endl;
+  cout << "major_est: "; print(cout,estimates.major_axis,3); cout << endl;
+  cout << "minor_est: "; print(cout,estimates.minor_axis,3); cout << endl;
+  cout << "psi: " << s*180/PI << "; alpha: " << a*180/PI << "; eta: " << e*180/PI << endl;*/
 
   // estimate kappa, beta
   double f1 = 1/(2 - 2*r1 - r2);

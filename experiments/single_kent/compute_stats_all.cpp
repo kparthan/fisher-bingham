@@ -24,6 +24,10 @@ typedef std::vector<double> Vector;
 #define MAP 2
 #define MML 3 
 
+#define PSI M_PI/4.0
+#define ALPHA M_PI/2.0
+#define ETA M_PI/2.0
+
 struct stat st = {0};
 
 std::vector<Vector> load_table(string &file_name, int D)
@@ -109,58 +113,6 @@ std::vector<Vector> flip(std::vector<Vector> &table)
   return inverted_table;
 }
 
-double computeMedian(Vector &list)
-{
-  Vector sorted_list = sort(list);
-  int n = sorted_list.size();
-  if (n % 2 == 1) {
-    return sorted_list[n/2];
-  } else {
-    return (sorted_list[n/2-1]+sorted_list[n/2])/2;
-  }
-}
-
-Vector computeMedians(std::vector<Vector> &table)
-{
-  std::vector<Vector> inverted_table = flip(table);
-  int num_cols = table[0].size();
-  Vector medians(num_cols,0);
-  for (int i=0; i<num_cols; i++) {
-    medians[i] = computeMedian(inverted_table[i]);
-  }
-  return medians;
-}
-
-double computeMean(Vector &list)
-{
-  double sum = 0;
-  for (int i=0; i<list.size(); i++) {
-    sum += list[i];
-  }
-  return sum / (double)list.size();
-}
-
-Vector computeMeans(std::vector<Vector> &table)
-{
-  std::vector<Vector> inverted_table = flip(table);
-  int num_cols = table[0].size();
-  Vector means(num_cols,0);
-  for (int i=0; i<num_cols; i++) {
-    means[i] = computeMean(inverted_table[i]);
-  }
-  return means;
-}
-
-double computeVariance(Vector &list)
-{
-  double mean = computeMean(list);
-  double sum = 0;
-  for (int i=0; i<list.size(); i++) {
-    sum += (list[i]-mean) * (list[i]-mean);
-  }
-  return sum / (double) (list.size()-1);
-}
-
 int minimumIndex(Vector &values)
 {
   int min_index = 0;
@@ -187,42 +139,24 @@ int maximumIndex(Vector &values)
   return max_index;
 }
 
-Vector computeEstimateMedians(ostream &out, std::vector<Vector> &p_est_all)
+double computeMean(Vector &list)
 {
-  Vector medians = computeMedians(p_est_all);
-  for (int i=0; i<p_est_all[0].size(); i++) {
-    out << scientific << medians[i] << "\t";
+  double sum = 0;
+  for (int i=0; i<list.size(); i++) {
+    sum += list[i];
   }
-  out << endl;
-  return medians;
+  return sum / (double)list.size();
 }
 
-Vector computeMeans(ostream &out, std::vector<Vector> &p_est_all)
+Vector computeMeans(std::vector<Vector> &table)
 {
-  Vector means = computeMeans(p_est_all);
-  for (int i=0; i<p_est_all[0].size(); i++) {
-    out << fixed << scientific << setprecision(6) << means[i] << "\t";
+  std::vector<Vector> inverted_table = flip(table);
+  int num_cols = table[0].size();
+  Vector means(num_cols,0);
+  for (int i=0; i<num_cols; i++) {
+    means[i] = computeMean(inverted_table[i]);
   }
-  out << endl;
   return means;
-}
-
-void computeMeanSquaredError(
-  ostream &out, double p, std::vector<Vector> &p_est_all
-) {
-  int num_elements = p_est_all.size();
-
-  Vector error(p_est_all[0].size(),0);
-  for (int i=0; i<num_elements; i++) {
-    for (int j=0; j<p_est_all[0].size(); j++) {
-      error[j] += (p - p_est_all[i][j]) * (p - p_est_all[i][j]);
-    }
-  }
-  for (int j=0; j<p_est_all[0].size(); j++) {
-    error[j] /= num_elements;
-    out << fixed << scientific << setprecision(6) << error[j] << "\t";
-  }
-  out << endl;
 }
 
 /* S **********************************************************************************/ 
@@ -422,7 +356,6 @@ void tabulate_eccentricity_kldivs(
   string &output_file, string &n_str, string &ecc_str
 ) {
   std::vector<Vector> kldivs;
-  string kldivs_file;
   ofstream out(output_file.c_str());
   double kappa = 10;
   while (kappa < 101) {
@@ -458,6 +391,82 @@ void tabulate_kappa_kldivs(
     kldivs_file = current_dir + "kldivs";
     kldivs = load_table(kldivs_file,NUM_METHODS);
     computeWins(out,kldivs);
+    ecc += 0.1;
+  } // while()
+  out.close();
+}
+
+// all k fixed e
+void compute_average_kldivs_fixed_ecc(
+  string &n_str, string &ecc_str, string &kldivs_folder
+) {
+  std::vector<Vector> kldivs;
+  string output_file = kldivs_folder + "kldivs_avg.dat";
+  ofstream out(output_file.c_str());
+  double kappa = 10;
+  while (kappa < 101) {
+    out << fixed << setw(10) << setprecision(0) << kappa << "\t\t";
+    ostringstream ssk;
+    ssk << fixed << setprecision(0);
+    ssk << kappa;
+    string kappa_str = ssk.str();
+    string current_dir = n_str + "k_" + kappa_str + "_e_" + ecc_str + "/";
+    string kldivs_file = current_dir + "kldivs";
+    kldivs = load_table(kldivs_file,NUM_METHODS);
+    Vector avg_kldivs = computeMeans(kldivs);
+    for (int i=0; i<NUM_METHODS; i++) {
+      out << fixed << scientific << setprecision(6) << avg_kldivs[i] << "\t\t";
+    }
+    out << endl;
+
+    kappa += 10;
+  } // while()
+  out.close();
+}
+
+void plot_avg_kldivs(string &kldivs_folder)
+{
+  string avg_kldivs_file = kldivs_folder + "kldivs_avg.dat";
+  string script_file = kldivs_folder + "kldivs_avg.p";
+  string plot_file = kldivs_folder + "kldivs_avg.eps";
+  ofstream out(script_file.c_str());
+  out << "set terminal postscript eps enhanced color\n\n";
+  out << "set output \"" << plot_file << "\"\n\n";
+  out << "set style data linespoints\n";
+  out << "set style fill solid 1.0 noborder\n";
+  out << "set ylabel \"Average KL-divergence\"\n";
+  out << "plot \"" << avg_kldivs_file << "\" using 1:2 t \"MOM\", \\\n"
+      << "\"\" using 1:3 t \"MLE\", \\\n"
+      << "\"\" using 1:4 t \"MAP\", \\\n"
+      << "\"\" using 1:5 t \"MML\"";
+  out.close();
+  string cmd = "gnuplot -persist " + script_file;
+  if(system(cmd.c_str()));
+}
+
+// all e fixed k
+void compute_average_kldivs_fixed_kappa(
+  string &n_str, string &kappa_str, string &kldivs_folder
+) {
+  std::vector<Vector> kldivs;
+  string kldivs_file;
+  string output_file = kldivs_folder + "kldivs_avg.dat";
+  ofstream out(output_file.c_str());
+  double ecc = 0.1;
+  while (ecc < 0.95) {
+    out << fixed << setw(10) << setprecision(1) << ecc << "\t\t";
+    ostringstream sse;
+    sse << fixed << setprecision(1);
+    sse << ecc;
+    string ecc_str = sse.str();
+    string current_dir = n_str + "k_" + kappa_str + "_e_" + ecc_str + "/";
+    kldivs_file = current_dir + "kldivs";
+    kldivs = load_table(kldivs_file,NUM_METHODS);
+    Vector avg_kldivs = computeMeans(kldivs);
+    for (int i=0; i<NUM_METHODS; i++) {
+      out << fixed << scientific << setprecision(6) << avg_kldivs[i] << "\t\t";
+    }
+    out << endl;
     ecc += 0.1;
   } // while()
   out.close();
@@ -614,6 +623,8 @@ void process_kldivs(string &n_str)
 
     // kldivs
     boxplot_kldivs_fixed_ecc(n_str,ecc_str,kldivs_folder);
+    compute_average_kldivs_fixed_ecc(n_str,ecc_str,kldivs_folder);
+    plot_avg_kldivs(kldivs_folder);
 
     // differences
     double max = compute_kldivs_diff_fixed_ecc(n_str,ecc_str,kldivs_folder);
@@ -642,6 +653,8 @@ void process_kldivs(string &n_str)
 
     // kldivs
     boxplot_kldivs_fixed_kappa(n_str,kappa_str,kldivs_folder);
+    compute_average_kldivs_fixed_kappa(n_str,kappa_str,kldivs_folder);
+    plot_avg_kldivs(kldivs_folder);
 
     // differences
     double max = compute_kldivs_diff_fixed_kappa(n_str,kappa_str,kldivs_folder);
@@ -650,6 +663,391 @@ void process_kldivs(string &n_str)
     kappa += 10;
   } // while(kappa)
 }
+/* E **********************************************************************************/ 
+
+/* S **********************************************************************************/ 
+
+Vector computeBiasSquared(std::vector<Vector> &p_est, double p)
+{
+  Vector p_est_means = computeMeans(p_est);
+  Vector biassq(NUM_METHODS,0);
+  for (int i=0; i<NUM_METHODS; i++) {
+    double diff = p_est_means[i] - p;
+    biassq[i] = diff * diff;
+  }
+  return biassq;
+}
+
+Vector computeVariance(std::vector<Vector> &p_est, double p)
+{
+  Vector p_est_means = computeMeans(p_est);
+  Vector variance(NUM_METHODS,0);
+  for (int i=0; i<p_est.size(); i++) {
+    for (int j=0; j<NUM_METHODS; j++) {
+      double diff = p_est_means[j] - p_est[i][j];
+      variance[j] += (diff * diff);
+    }
+  }
+  for (int j=0; j<NUM_METHODS; j++) {
+    variance[j] /= p_est.size();
+  }
+  return variance;
+}
+
+Vector computeMeanSquaredError(std::vector<Vector> &p_est, double p)
+{
+  Vector p_est_means = computeMeans(p_est);
+  Vector mse(NUM_METHODS,0);
+  for (int i=0; i<p_est.size(); i++) {
+    for (int j=0; j<NUM_METHODS; j++) {
+      double diff = p - p_est[i][j];
+      mse[j] += (diff * diff);
+    }
+  }
+  for (int j=0; j<NUM_METHODS; j++) {
+    mse[j] /= p_est.size();
+  }
+  return mse;
+}
+
+void compute_psi_errors(
+  string &errors_folder, string &n_str, string &ecc_str
+) {
+  std::vector<Vector> psi_est;
+  Vector biassq_est,variance_est,mse_est;
+
+  string biassq_file = errors_folder + "biassq_psi";
+  string variance_file = errors_folder + "variance_psi";
+  string mse_file = errors_folder + "mse_psi";
+  ofstream biassq(biassq_file.c_str());
+  ofstream variance(variance_file.c_str());
+  ofstream mse(mse_file.c_str());
+  double kappa = 10;
+  while (kappa < 101) {
+    ostringstream ssk;
+    ssk << fixed << setprecision(0);
+    ssk << kappa;
+    string kappa_str = ssk.str();
+    string current_dir = n_str + "k_" + kappa_str + "_e_" + ecc_str + "/";
+
+    string psi_file = current_dir + "psi_est";
+    psi_est = load_table(psi_file,NUM_METHODS);
+    biassq_est = computeBiasSquared(psi_est,PSI);
+    variance_est = computeVariance(psi_est,PSI);
+    mse_est = computeMeanSquaredError(psi_est,PSI);
+
+    biassq << fixed << setw(10) << setprecision(0) << kappa << "\t";
+    variance << fixed << setw(10) << setprecision(0) << kappa << "\t";
+    mse << fixed << setw(10) << setprecision(0) << kappa << "\t";
+    for(int i=0; i<NUM_METHODS; i++) {
+      biassq << scientific << setprecision(6) << biassq_est[i] << "\t";
+      variance << scientific << setprecision(6) << variance_est[i] << "\t";
+      mse << scientific << setprecision(6) << mse_est[i] << "\t";
+    }
+    biassq << endl;
+    variance << endl;
+    mse << endl;
+
+    kappa += 10;
+  } // while()
+  biassq.close();
+  variance.close();
+  mse.close();
+}
+
+void compute_alpha_errors(
+  string &errors_folder, string &n_str, string &ecc_str
+) {
+  std::vector<Vector> alpha_est;
+  Vector biassq_est,variance_est,mse_est;
+
+  string biassq_file = errors_folder + "biassq_alpha";
+  string variance_file = errors_folder + "variance_alpha";
+  string mse_file = errors_folder + "mse_alpha";
+  ofstream biassq(biassq_file.c_str());
+  ofstream variance(variance_file.c_str());
+  ofstream mse(mse_file.c_str());
+  double kappa = 10;
+  while (kappa < 101) {
+    ostringstream ssk;
+    ssk << fixed << setprecision(0);
+    ssk << kappa;
+    string kappa_str = ssk.str();
+    string current_dir = n_str + "k_" + kappa_str + "_e_" + ecc_str + "/";
+
+    string alpha_file = current_dir + "alpha_est";
+    alpha_est = load_table(alpha_file,NUM_METHODS);
+    biassq_est = computeBiasSquared(alpha_est,ALPHA);
+    variance_est = computeVariance(alpha_est,ALPHA);
+    mse_est = computeMeanSquaredError(alpha_est,ALPHA);
+
+    biassq << fixed << setw(10) << setprecision(0) << kappa << "\t";
+    variance << fixed << setw(10) << setprecision(0) << kappa << "\t";
+    mse << fixed << setw(10) << setprecision(0) << kappa << "\t";
+    for(int i=0; i<NUM_METHODS; i++) {
+      biassq << scientific << setprecision(6) << biassq_est[i] << "\t";
+      variance << scientific << setprecision(6) << variance_est[i] << "\t";
+      mse << scientific << setprecision(6) << mse_est[i] << "\t";
+    }
+    biassq << endl;
+    variance << endl;
+    mse << endl;
+
+    kappa += 10;
+  } // while()
+  biassq.close();
+  variance.close();
+  mse.close();
+}
+
+void compute_eta_errors(
+  string &errors_folder, string &n_str, string &ecc_str
+) {
+  std::vector<Vector> eta_est;
+  Vector biassq_est,variance_est,mse_est;
+
+  string biassq_file = errors_folder + "biassq_eta";
+  string variance_file = errors_folder + "variance_eta";
+  string mse_file = errors_folder + "mse_eta";
+  ofstream biassq(biassq_file.c_str());
+  ofstream variance(variance_file.c_str());
+  ofstream mse(mse_file.c_str());
+  double kappa = 10;
+  while (kappa < 101) {
+    ostringstream ssk;
+    ssk << fixed << setprecision(0);
+    ssk << kappa;
+    string kappa_str = ssk.str();
+    string current_dir = n_str + "k_" + kappa_str + "_e_" + ecc_str + "/";
+
+    string eta_file = current_dir + "eta_est";
+    eta_est = load_table(eta_file,NUM_METHODS);
+    biassq_est = computeBiasSquared(eta_est,ETA);
+    variance_est = computeVariance(eta_est,ETA);
+    mse_est = computeMeanSquaredError(eta_est,ETA);
+
+    biassq << fixed << setw(10) << setprecision(0) << kappa << "\t";
+    variance << fixed << setw(10) << setprecision(0) << kappa << "\t";
+    mse << fixed << setw(10) << setprecision(0) << kappa << "\t";
+    for(int i=0; i<NUM_METHODS; i++) {
+      biassq << scientific << setprecision(6) << biassq_est[i] << "\t";
+      variance << scientific << setprecision(6) << variance_est[i] << "\t";
+      mse << scientific << setprecision(6) << mse_est[i] << "\t";
+    }
+    biassq << endl;
+    variance << endl;
+    mse << endl;
+
+    kappa += 10;
+  } // while()
+  biassq.close();
+  variance.close();
+  mse.close();
+}
+
+void compute_kappa_errors(
+  string &errors_folder, string &n_str, string &ecc_str
+) {
+  std::vector<Vector> kappas_est;
+  Vector biassq_est,variance_est,mse_est;
+
+  string biassq_file = errors_folder + "biassq_kappa";
+  string variance_file = errors_folder + "variance_kappa";
+  string mse_file = errors_folder + "mse_kappa";
+  ofstream biassq(biassq_file.c_str());
+  ofstream variance(variance_file.c_str());
+  ofstream mse(mse_file.c_str());
+  double kappa = 10;
+  while (kappa < 101) {
+    ostringstream ssk;
+    ssk << fixed << setprecision(0);
+    ssk << kappa;
+    string kappa_str = ssk.str();
+    string current_dir = n_str + "k_" + kappa_str + "_e_" + ecc_str + "/";
+
+    string kappas_file = current_dir + "kappa_est";
+    kappas_est = load_table(kappas_file,NUM_METHODS);
+    biassq_est = computeBiasSquared(kappas_est,kappa);
+    variance_est = computeVariance(kappas_est,kappa);
+    mse_est = computeMeanSquaredError(kappas_est,kappa);
+
+    biassq << fixed << setw(10) << setprecision(0) << kappa << "\t";
+    variance << fixed << setw(10) << setprecision(0) << kappa << "\t";
+    mse << fixed << setw(10) << setprecision(0) << kappa << "\t";
+    for(int i=0; i<NUM_METHODS; i++) {
+      biassq << scientific << setprecision(6) << biassq_est[i] << "\t";
+      variance << scientific << setprecision(6) << variance_est[i] << "\t";
+      mse << scientific << setprecision(6) << mse_est[i] << "\t";
+    }
+    biassq << endl;
+    variance << endl;
+    mse << endl;
+
+    kappa += 10;
+  } // while()
+  biassq.close();
+  variance.close();
+  mse.close();
+}
+
+void compute_beta_errors(
+  string &errors_folder, string &n_str, double ecc, string &ecc_str
+) {
+  std::vector<Vector> betas_est;
+  Vector biassq_est,variance_est,mse_est;
+
+  string biassq_file = errors_folder + "biassq_beta";
+  string variance_file = errors_folder + "variance_beta";
+  string mse_file = errors_folder + "mse_beta";
+  ofstream biassq(biassq_file.c_str());
+  ofstream variance(variance_file.c_str());
+  ofstream mse(mse_file.c_str());
+  double kappa = 10;
+  while (kappa < 101) {
+    ostringstream ssk;
+    ssk << fixed << setprecision(0);
+    ssk << kappa;
+    string kappa_str = ssk.str();
+    string current_dir = n_str + "k_" + kappa_str + "_e_" + ecc_str + "/";
+
+    double beta = 0.5 * ecc * kappa;
+
+    string betas_file = current_dir + "beta_est";
+    betas_est = load_table(betas_file,NUM_METHODS);
+    biassq_est = computeBiasSquared(betas_est,beta);
+    variance_est = computeVariance(betas_est,beta);
+    mse_est = computeMeanSquaredError(betas_est,beta);
+
+    biassq << fixed << setw(10) << setprecision(0) << kappa << "\t";
+    variance << fixed << setw(10) << setprecision(0) << kappa << "\t";
+    mse << fixed << setw(10) << setprecision(0) << kappa << "\t";
+    for(int i=0; i<NUM_METHODS; i++) {
+      biassq << scientific << setprecision(6) << biassq_est[i] << "\t";
+      variance << scientific << setprecision(6) << variance_est[i] << "\t";
+      mse << scientific << setprecision(6) << mse_est[i] << "\t";
+    }
+    biassq << endl;
+    variance << endl;
+    mse << endl;
+
+    kappa += 10;
+  } // while()
+  biassq.close();
+  variance.close();
+  mse.close();
+}
+
+void combine(std::vector<string> &files, string &output_file)
+{
+  std::vector<std::vector<Vector> > all_tables;
+
+  for (int i=0; i<files.size(); i++) {
+    std::vector<Vector> table = load_table(files[i],NUM_METHODS+1);
+    all_tables.push_back(table);
+  }
+
+  int num_kappas = all_tables[0].size();
+  ofstream out(output_file.c_str());
+
+  for (int i=0; i<num_kappas; i++) {
+    Vector sum(NUM_METHODS,0);
+    for (int j=0; j<all_tables.size(); j++) {
+      for (int k=0; k<NUM_METHODS; k++) {
+        sum[k] += all_tables[j][i][k+1];
+      } // k
+    } // j
+    out << fixed << setw(10) << setprecision(0) << all_tables[0][i][0] << "\t\t";
+    for (int k=0; k<NUM_METHODS; k++) {
+      out << scientific << setprecision(6) << sum[k] << "\t\t";
+    } // k
+    out << endl;
+  } // i
+
+  out.close();
+}
+
+void compute_all_errors(
+  string &errors_folder, string &n_str, string &ecc_str
+) {
+  std::vector<string> biassq_files,variance_files,mse_files;
+  string biassq_file,variance_file,mse_file,output_file;
+
+  biassq_file = errors_folder + "biassq_psi";
+  biassq_files.push_back(biassq_file);
+  biassq_file = errors_folder + "biassq_alpha";
+  biassq_files.push_back(biassq_file);
+  biassq_file = errors_folder + "biassq_eta";
+  biassq_files.push_back(biassq_file);
+  biassq_file = errors_folder + "biassq_kappa";
+  biassq_files.push_back(biassq_file);
+  biassq_file = errors_folder + "biassq_beta";
+  biassq_files.push_back(biassq_file);
+  output_file = errors_folder + "biassq_all";
+  combine(biassq_files,output_file);
+
+  variance_file = errors_folder + "variance_psi";
+  variance_files.push_back(variance_file);
+  variance_file = errors_folder + "variance_alpha";
+  variance_files.push_back(variance_file);
+  variance_file = errors_folder + "variance_eta";
+  variance_files.push_back(variance_file);
+  variance_file = errors_folder + "variance_kappa";
+  variance_files.push_back(variance_file);
+  variance_file = errors_folder + "variance_beta";
+  variance_files.push_back(variance_file);
+  output_file = errors_folder + "variance_all";
+  combine(variance_files,output_file);
+
+  mse_file = errors_folder + "mse_psi";
+  mse_files.push_back(mse_file);
+  mse_file = errors_folder + "mse_alpha";
+  mse_files.push_back(mse_file);
+  mse_file = errors_folder + "mse_eta";
+  mse_files.push_back(mse_file);
+  mse_file = errors_folder + "mse_kappa";
+  mse_files.push_back(mse_file);
+  mse_file = errors_folder + "mse_beta";
+  mse_files.push_back(mse_file);
+  output_file = errors_folder + "mse_all";
+  combine(mse_files,output_file);
+}
+
+void process_estimates(string &n_str)
+{
+  string errors_folder;
+  string errors_file;
+
+  string all_kappas = n_str + "fixed_ecc/";
+  string ecc_str,ecc_folder;
+  double ecc = 0.1;
+  while (ecc < 0.95) {
+    ostringstream sse;
+    sse << fixed << setprecision(1);
+    sse << ecc;
+    ecc_str = sse.str();
+    ecc_folder = all_kappas + "ecc_" + ecc_str + "/";
+    errors_folder = ecc_folder + "errors/";
+
+    // psi errors
+    compute_psi_errors(errors_folder,n_str,ecc_str);
+    // alpha errors
+    compute_alpha_errors(errors_folder,n_str,ecc_str);
+    // eta errors
+    compute_eta_errors(errors_folder,n_str,ecc_str);
+
+    // kappa errors
+    compute_kappa_errors(errors_folder,n_str,ecc_str);
+    // beta errors
+    compute_beta_errors(errors_folder,n_str,ecc,ecc_str);
+
+    // combined errors
+    compute_all_errors(errors_folder,n_str,ecc_str);
+
+    ecc += 0.1;
+  } // while(ecc)
+
+}
+
 /* E **********************************************************************************/ 
 
 /* S **********************************************************************************/ 
@@ -662,7 +1060,7 @@ void check_and_create_directory(string &directory)
 
 void create_required_folders(string &n_str)
 {
-  string kldivs_folder;
+  string kldivs_folder,errors_folder;
 
   string all_kappas = n_str + "fixed_ecc/";
   check_and_create_directory(all_kappas);
@@ -678,6 +1076,9 @@ void create_required_folders(string &n_str)
 
     kldivs_folder = ecc_folder + "kldivs/";
     check_and_create_directory(kldivs_folder);
+
+    errors_folder = ecc_folder + "errors/";
+    check_and_create_directory(errors_folder);
 
     ecc += 0.1;
   } // while(ecc)
@@ -696,6 +1097,9 @@ void create_required_folders(string &n_str)
 
     kldivs_folder = kappa_folder + "kldivs/";
     check_and_create_directory(kldivs_folder);
+
+    errors_folder = kappa_folder + "errors/";
+    check_and_create_directory(errors_folder);
 
     kappa += 10;
   } // while(kappa)
@@ -731,6 +1135,8 @@ int main(int argc, char **argv)
   create_required_folders(n_str);
 
   process_kldivs(n_str);
+
+  process_estimates(n_str);
 
 }
 

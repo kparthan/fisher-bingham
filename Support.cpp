@@ -373,6 +373,9 @@ void print(string &type, struct Estimates &estimates)
   cartesian2spherical(estimates.minor_axis,spherical);
   cout << "m2_est: "; print(cout,estimates.minor_axis,3);
   cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
+  cout << "psi_est: " << estimates.psi * 180/PI << "; ";
+  cout << "alpha_est: " << estimates.alpha * 180/PI << "; ";
+  cout << "eta_est: " << estimates.eta * 180/PI << "\n";
   cout << "kappa_est: " << estimates.kappa << "; beta_est: " << estimates.beta << endl;
   // check:
   cout << fixed << scientific
@@ -1742,9 +1745,9 @@ void modelOneComponent(struct Parameters &parameters, std::vector<Vector> &data)
   if (DISTRIBUTION == KENT) {
     //Kent kent;
     //Kent kent(ZAXIS,XAXIS,YAXIS,100,45);
-    double psi = 60; psi *= PI/180;
-    double alpha = 60; alpha *= PI/180;
-    double eta = 70; eta *= PI/180;
+    double psi = 45; psi *= PI/180;
+    double alpha = 90; alpha *= PI/180;
+    double eta = 90; eta *= PI/180;
     double kappa = 10;
     double ecc = 0.9;
     double beta = 0.5 * kappa * ecc;

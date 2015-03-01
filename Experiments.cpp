@@ -14,7 +14,7 @@ Experiments::Experiments(int iterations) : iterations(iterations)
 
 void Experiments::simulate()
 {
-  int N = 1000;
+  int N = 100;
   double kappa,beta,eccentricity;
 
   //string n_str = "N_" + boost::lexical_cast<string>(N) + "_uniform_prior/";
@@ -22,12 +22,12 @@ void Experiments::simulate()
   //string n_str = "N_" + boost::lexical_cast<string>(N) + "_beta_prior/";
   //string n_str = "N_" + boost::lexical_cast<string>(N) + "_new_prior/";
   //string n_str = "N_" + boost::lexical_cast<string>(N) + "_new2_prior/";
-  string n_str = "N_" + boost::lexical_cast<string>(N) + "_prior4";
+  string n_str = "N_" + boost::lexical_cast<string>(N) + "_prior2";
   string parent_dir = "experiments/single_kent/" + n_str + "/";
   check_and_create_directory(parent_dir);
 
   string current_dir,kappa_str,eccentricity_str;
-  string kappas,betas,ecc_file,negloglike,kldivs,msglens;
+  string psi_est,alpha_est,eta_est,kappas,betas,ecc_file,negloglike,kldivs,msglens;
   std::vector<Vector> random_sample;
   std::vector<struct Estimates> all_estimates;
   //string data_file = "random_sample_uniform.dat";
@@ -57,13 +57,19 @@ void Experiments::simulate()
       eccentricity_str = sse.str();
       current_dir = parent_dir + "k_" + kappa_str + "_e_" + eccentricity_str + "/";
       check_and_create_directory(current_dir);
-      kappas = current_dir + "kappas";
-      betas = current_dir + "betas";
-      ecc_file = current_dir + "ecc";
+      psi_est = current_dir + "psi_est";
+      alpha_est = current_dir + "alpha_est";
+      eta_est = current_dir + "eta_est";
+      kappas = current_dir + "kappa_est";
+      betas = current_dir + "beta_est";
+      ecc_file = current_dir + "ecc_est";
       negloglike = current_dir + "negloglike";
       kldivs = current_dir + "kldivs";
       msglens = current_dir + "msglens";
 
+      ofstream fpsi(psi_est.c_str());
+      ofstream falpha(alpha_est.c_str());
+      ofstream feta(eta_est.c_str());
       ofstream fk(kappas.c_str());
       ofstream fb(betas.c_str());
       ofstream fecc(ecc_file.c_str());
@@ -73,9 +79,9 @@ void Experiments::simulate()
       
       cout << "kappa: " << kappa << "; beta: " << beta << "; e: " << eccentricity << endl;
       //Kent kent(ZAXIS,XAXIS,YAXIS,kappa,beta);
-      double psi = 60; psi *= PI/180;
-      double alpha = 60; alpha *= PI/180;
-      double eta = 70; eta *= PI/180;
+      double psi = 45; psi *= PI/180;
+      double alpha = 90; alpha *= PI/180;
+      double eta = 90; eta *= PI/180;
       Kent kent(psi,alpha,eta,kappa,beta);
 
       for (int i=0; i<iterations; i++) {
@@ -91,6 +97,9 @@ void Experiments::simulate()
         }*/
         for (int j=0; j<all_estimates.size(); j++) {
           ecc = 2 * all_estimates[j].beta / all_estimates[j].kappa;
+          fpsi << scientific << all_estimates[j].psi << "\t";
+          falpha << scientific << all_estimates[j].alpha << "\t";
+          feta << scientific << all_estimates[j].eta << "\t";
           fecc << scientific << ecc << "\t";
           fk << scientific << all_estimates[j].kappa << "\t";
           fb << scientific << all_estimates[j].beta << "\t";
@@ -98,9 +107,8 @@ void Experiments::simulate()
           fkl << scientific << all_estimates[j].kldiv << "\t";
           fmsg << scientific << all_estimates[j].msglen << "\t";
         } // for j ()
-        fecc << endl;
-        fk << endl;
-        fb << endl;
+        fpsi << endl; falpha << endl; feta << endl;
+        fecc << endl; fk << endl; fb << endl;
         fnlh << endl;
         fkl << endl;
         fmsg << endl;
