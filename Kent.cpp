@@ -481,9 +481,9 @@ double Kent::computeLogPriorAxes()
   double log_prior = 0;
   //if (ESTIMATION == MML) {
     log_prior += (log(sin(angle)));
-    //log_prior += log(1-cos(psi));
+    log_prior += log(1-cos(2*psi));
   //}
-  log_prior -= (log(8) + 2*log(PI));
+  log_prior -= (log(4) + 2*log(PI));
   return log_prior;
 }
 
@@ -822,24 +822,24 @@ struct Estimates Kent::computeAsymptoticMomentEstimates(
     estimates.minor_axis = axis1;
   }
 
-  //double s,a,e;
-  //computeOrthogonalTransformation(estimates.mean,estimates.major_axis,s,a,e);
-  /*cout << "before: \n";
+  double s,a,e;
+  computeOrthogonalTransformation(estimates.mean,estimates.major_axis,s,a,e);
+  cout << "before: \n";
   cout << "mean_est: "; print(cout,estimates.mean,3); cout << endl;
   cout << "major_est: "; print(cout,estimates.major_axis,3); cout << endl;
   cout << "minor_est: "; print(cout,estimates.minor_axis,3); cout << endl;
-  cout << "psi: " << s*180/PI << "; alpha: " << a*180/PI << "; eta: " << e*180/PI << endl;*/
-  /*if (s > PI) s -= PI;
+  cout << "psi: " << s*180/PI << "; alpha: " << a*180/PI << "; eta: " << e*180/PI << endl;
+  if (s > PI) s -= PI;
   Matrix r = computeOrthogonalTransformation(s,a,e);
   estimates.psi = s; estimates.alpha = a; estimates.eta = e;
   estimates.mean = prod(r,XAXIS);
   estimates.major_axis = prod(r,YAXIS);
-  estimates.minor_axis = prod(r,ZAXIS);*/
-  /*cout << "after: \n";
+  estimates.minor_axis = prod(r,ZAXIS);
+  cout << "after: \n";
   cout << "mean_est: "; print(cout,estimates.mean,3); cout << endl;
   cout << "major_est: "; print(cout,estimates.major_axis,3); cout << endl;
   cout << "minor_est: "; print(cout,estimates.minor_axis,3); cout << endl;
-  cout << "psi: " << s*180/PI << "; alpha: " << a*180/PI << "; eta: " << e*180/PI << endl;*/
+  cout << "psi: " << s*180/PI << "; alpha: " << a*180/PI << "; eta: " << e*180/PI << endl;
 
   // estimate kappa, beta
   double f1 = 1/(2 - 2*r1 - r2);

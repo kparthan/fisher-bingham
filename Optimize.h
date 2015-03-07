@@ -209,7 +209,7 @@ class MAP2ObjectiveFunction
       double b = x[1];
 
       Kent kent(psi,alpha,eta,k,b);
-      double log_prior = kent.computeLogPriorProbability();// - log(sin(alpha));
+      double log_prior = kent.computeLogPriorProbability();
       double fval = -log_prior + kent.computeNegativeLogLikelihood(sample_mean,S,N);
                     - 2 * N * log(AOM);
       return fval;

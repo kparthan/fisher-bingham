@@ -155,7 +155,7 @@ std::vector<double> Optimize::minimize(Vector &sample_mean, Matrix &S, int num_p
     case MLE:
     {
       opt.set_lower_bounds(lb);
-      ub[0] = 2*PI; ub[1] = PI; ub[2] = 2*PI;
+      ub[0] = PI; ub[1] = PI; ub[2] = 2*PI;
       opt.set_upper_bounds(ub);
 
       MaximumLikelihoodObjectiveFunction mle(sample_mean,S,N);
@@ -172,7 +172,7 @@ std::vector<double> Optimize::minimize(Vector &sample_mean, Matrix &S, int num_p
     case MAP:
     {
       opt.set_lower_bounds(lb);
-      ub[0] = 2*PI; ub[1] = PI; ub[2] = 2*PI;
+      ub[0] = PI; ub[1] = PI; ub[2] = 2*PI;
       opt.set_upper_bounds(ub);
 
       MAPObjectiveFunction map(sample_mean,S,N);
@@ -194,7 +194,7 @@ std::vector<double> Optimize::minimize(Vector &sample_mean, Matrix &S, int num_p
     {
       //lb[4] = AOM;
       opt.set_lower_bounds(lb);
-      ub[0] = 2*PI; ub[1] = PI; ub[2] = 2*PI;
+      ub[0] = PI; ub[1] = PI; ub[2] = 2*PI;
       opt.set_upper_bounds(ub);
 
       MMLObjectiveFunction mml(sample_mean,S,N);

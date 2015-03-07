@@ -882,7 +882,7 @@ void Test::mml_estimation2(void)
   string data_file = "random_sample.dat";
 
   kappa = 100;
-  ecc = 0.5;
+  ecc = 0.1;
   beta = 0.5 * kappa * ecc;
 
   // in degrees
