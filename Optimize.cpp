@@ -61,13 +61,6 @@ void Optimize::computeEstimates(Vector &sample_mean, Matrix &S, struct Estimates
     {
       std::vector<double> theta = minimize(sample_mean,S,5);
       finalize(theta,estimates);
-      /*std::vector<double> theta = minimize(sample_mean,S,2);
-      estimates.kappa = theta[0];
-      estimates.beta = theta[1];
-      estimates.psi = psi;
-      estimates.alpha = alpha;
-      estimates.eta = eta;
-      validate_scale(estimates.kappa,estimates.beta);*/
       break;
     }
 
@@ -113,21 +106,13 @@ void Optimize::validate_scale(double &k, double &b)
 std::vector<double> Optimize::minimize(Vector &sample_mean, Matrix &S, int num_params)
 {
   std::vector<double> x(num_params);
-  //nlopt::opt opt(nlopt::LN_NELDERMEAD, num_params);
   nlopt::opt opt(nlopt::LN_COBYLA, num_params);
 
   std::vector<double> lb(num_params,TOLERANCE);
   std::vector<double> ub(num_params,HUGE_VAL);
-  //std::vector<double> ub(num_params,MAX_KAPPA);
-
-  // GN_ISRES and GN_ORIG_DIRECT work with finite bounds
-  //nlopt::opt opt(nlopt::GN_ISRES, num_params);
-  //nlopt::opt opt(nlopt::GN_ORIG_DIRECT, num_params);
 
   double LIMIT = 1e-4;
-
   double minf;
-  FAIL_STATUS = 0;
 
   switch(ESTIMATION) {
     case MOMENT:
@@ -192,7 +177,6 @@ std::vector<double> Optimize::minimize(Vector &sample_mean, Matrix &S, int num_p
 
     case MML:
     {
-      //lb[4] = AOM;
       opt.set_lower_bounds(lb);
       ub[0] = PI; ub[1] = PI; ub[2] = 2*PI;
       opt.set_upper_bounds(ub);

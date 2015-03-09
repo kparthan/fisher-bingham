@@ -69,6 +69,9 @@ typedef boost::numeric::ublas::zero_matrix<double> ZeroMatrix;
 #define MLE 1
 #define MAP 2
 #define MML 3 
+#define MAP12 4
+#define MAP22 5
+#define MAP23 6
 
 #define AIC 0
 #define BIC 1
