@@ -16,6 +16,8 @@ OBJECTS = main.o \
   ACG.o \
   Bingham.o \
   Kent.o \
+  Kent_EccTrans.o \
+  Kent_UnifTrans.o \
   FB6.o \
   Optimize.o \
   Optimize2.o \
@@ -58,6 +60,12 @@ Bingham.o: Bingham.cpp Bingham.h Header.h
 	g++ $(CFLAGS) $< -o $@
 
 Kent.o: Kent.cpp Kent.h Header.h
+	g++ $(CFLAGS) $< -o $@
+
+Kent_EccTrans.o: Kent_EccTrans.cpp Kent_EccTrans.h Header.h
+	g++ $(CFLAGS) $< -o $@
+
+Kent_UnifTrans.o: Kent_UnifTrans.cpp Kent_UnifTrans.h Header.h
 	g++ $(CFLAGS) $< -o $@
 
 FB6.o: FB6.cpp FB6.h Header.h

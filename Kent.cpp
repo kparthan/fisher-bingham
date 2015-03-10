@@ -481,7 +481,6 @@ double Kent::computeLogPriorAxes()
   double log_prior = 0;
   //if (ESTIMATION == MML) {
     log_prior += (log(sin(angle)));
-    log_prior += log(1-cos(2*psi));
   //}
   log_prior -= (log(4) + 2*log(PI));
   return log_prior;
@@ -491,10 +490,14 @@ double Kent::computeLogPriorScale()
 {
   double log_prior = 0;
 
-  // vmf kappa prior
-  log_prior += log(8/PI);
+  // ... using vMF (3D) kappa prior
+  /*log_prior += log(8/PI);
   log_prior += log(kappa);
-  log_prior -= (2 * log(1+kappa*kappa));
+  log_prior -= (2 * log(1+kappa*kappa));*/
+
+  // ... using vMF (2D) kappa prior
+  log_prior += log(2);
+  log_prior -= (1.5 * log(1+kappa*kappa));
 
   // vmf beta prior
   /*log_prior += (2 * log(4/PI));
@@ -524,11 +527,6 @@ double Kent::computeLogPriorScale()
   //log_prior += log(f);
   //double log_f = 2 * log(beta) - log(16) - (0.5 * beta);
   //log_prior += log_f;
-
-  // uniform priors
-  /*double K1 = 1,K2=100;
-  log_prior -= log(K2-K1);
-  log_prior += (log(2) - log(kappa));*/
 
   // uniform priors
   //double K1 = 1,K2=100;
@@ -662,8 +660,10 @@ void Kent::computeAllEstimators(
   string type = "MOMENT";
   struct Estimates moment_est = asymptotic_est;
   Optimize opt(type);
-  opt.initialize(N,moment_est.mean,moment_est.major_axis,moment_est.minor_axis,
-                 moment_est.kappa,moment_est.beta);
+  opt.initialize(
+    N,moment_est.mean,moment_est.major_axis,moment_est.minor_axis,
+    moment_est.kappa,moment_est.beta
+  );
   opt.computeEstimates(sample_mean,S,moment_est);
   moment_est.msglen = computeMessageLength(moment_est,sample_mean,S,N);
   moment_est.negloglike = computeNegativeLogLikelihood(moment_est,sample_mean,S,N);
@@ -684,8 +684,10 @@ void Kent::computeAllEstimators(
   struct Estimates ml_est = moment_est;
   //struct Estimates ml_est = asymptotic_est;
   Optimize opt1(type);
-  opt1.initialize(N,ml_est.mean,ml_est.major_axis,ml_est.minor_axis,
-                  ml_est.kappa,ml_est.beta);
+  opt1.initialize(
+    N,ml_est.mean,ml_est.major_axis,ml_est.minor_axis,
+    ml_est.kappa,ml_est.beta
+  );
   opt1.computeEstimates(sample_mean,S,ml_est);
   ml_est.msglen = computeMessageLength(ml_est,sample_mean,S,N);
   ml_est.negloglike = computeNegativeLogLikelihood(ml_est,sample_mean,S,N);
@@ -706,10 +708,11 @@ void Kent::computeAllEstimators(
 
   type = "MAP";
   struct Estimates map_est = moment_est;
-  //struct Estimates map_est = asymptotic_est;
   Optimize opt2(type);
-  opt2.initialize(N,map_est.mean,map_est.major_axis,map_est.minor_axis,
-                  map_est.kappa,map_est.beta);
+  opt2.initialize(
+    N,map_est.mean,map_est.major_axis,map_est.minor_axis,
+    map_est.kappa,map_est.beta
+  );
   opt2.computeEstimates(sample_mean,S,map_est);
   map_est.msglen = computeMessageLength(map_est,sample_mean,S,N);
   map_est.negloglike = computeNegativeLogLikelihood(map_est,sample_mean,S,N);
@@ -730,13 +733,12 @@ void Kent::computeAllEstimators(
 
   type = "MML";
   //struct Estimates mml_est = asymptotic_est;
-  //struct Estimates mml_est = moment_est;
-  //struct Estimates mml_est = map_est;
-  //struct Estimates mml_est = asymptotic_est;
   struct Estimates mml_est = all_estimates[min_index];
   Optimize opt3(type);
-  opt3.initialize(N,mml_est.mean,mml_est.major_axis,mml_est.minor_axis,
-                  mml_est.kappa,mml_est.beta);
+  opt3.initialize(
+    N,mml_est.mean,mml_est.major_axis,mml_est.minor_axis,
+    mml_est.kappa,mml_est.beta
+  );
   opt3.computeEstimates(sample_mean,S,mml_est);
   mml_est.msglen = computeMessageLength(mml_est,sample_mean,S,N);
   mml_est.negloglike = computeNegativeLogLikelihood(mml_est,sample_mean,S,N);
@@ -751,6 +753,52 @@ void Kent::computeAllEstimators(
     cout << "KL-divergence: " << mml_est.kldiv << endl << endl;
   }
   all_estimates.push_back(mml_est);
+
+  /***************************** MAP Variants *********************************/
+
+  type = "MAP_ECCENTRICITY_TRANSFORM";
+  struct Estimates map2_est = moment_est;
+  Optimize optmap2(type);
+  optmap2.initialize(
+    N,map2_est.mean,map2_est.major_axis,map2_est.minor_axis,
+    map2_est.kappa,map2_est.beta
+  );
+  optmap2.computeEstimates(sample_mean,S,map2_est);
+  map2_est.msglen = computeMessageLength(map2_est,sample_mean,S,N);
+  map2_est.negloglike = computeNegativeLogLikelihood(map2_est,sample_mean,S,N);
+  if (compute_kldiv) {
+    map2_est.kldiv = computeKLDivergence(map2_est);
+  }
+  if (verbose) {
+    cout << endl;
+    print(type,map2_est);
+    cout << fixed << "msglen: " << map2_est.msglen << endl;
+    cout << "negloglike: " << map2_est.negloglike << endl;
+    cout << "KL-divergence: " << map2_est.kldiv << endl << endl;
+  }
+  all_estimates.push_back(map2_est);
+
+  type = "MAP_UNIFORM_TRANSFORM";
+  struct Estimates map3_est = moment_est;
+  Optimize optmap3(type);
+  optmap3.initialize(
+    N,map3_est.mean,map3_est.major_axis,map3_est.minor_axis,
+    map3_est.kappa,map3_est.beta
+  );
+  optmap3.computeEstimates(sample_mean,S,map3_est);
+  map3_est.msglen = computeMessageLength(map3_est,sample_mean,S,N);
+  map3_est.negloglike = computeNegativeLogLikelihood(map3_est,sample_mean,S,N);
+  if (compute_kldiv) {
+    map3_est.kldiv = computeKLDivergence(map3_est);
+  }
+  if (verbose) {
+    cout << endl;
+    print(type,map3_est);
+    cout << fixed << "msglen: " << map3_est.msglen << endl;
+    cout << "negloglike: " << map3_est.negloglike << endl;
+    cout << "KL-divergence: " << map3_est.kldiv << endl << endl;
+  }
+  all_estimates.push_back(map3_est);
 }
 
 /*!

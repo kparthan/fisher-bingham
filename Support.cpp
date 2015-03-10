@@ -375,14 +375,15 @@ void print(string &type, struct Estimates &estimates)
   cout << "\t(" << spherical[1]*180/PI << "," << spherical[2]*180/PI << ")\n";
   cout << "psi_est: " << estimates.psi * 180/PI << "; ";
   cout << "alpha_est: " << estimates.alpha * 180/PI << "; ";
-  cout << "eta_est: " << estimates.eta * 180/PI << "\n";
-  cout << "kappa_est: " << estimates.kappa << "; beta_est: " << estimates.beta << endl;
+  cout << "eta_est: " << estimates.eta * 180/PI << "; ";
+  cout << "kappa_est: " << estimates.kappa << "; beta_est: " << estimates.beta 
+       << "; ecc_est: " << 2 * estimates.beta / estimates.kappa << endl;
   // check:
-  cout << fixed << scientific
+  /*cout << fixed << scientific
        << "m0_est . m1_est = " << computeDotProduct(estimates.mean,estimates.major_axis)
        << "; m0_est . m2_est = " << computeDotProduct(estimates.mean,estimates.minor_axis)
        << "; m1_est . m2_est = " << computeDotProduct(estimates.major_axis,estimates.minor_axis)
-       << endl;
+       << endl;*/
 }
 
 void print(string &type, struct Estimates_vMF &estimates)
@@ -1749,7 +1750,7 @@ void modelOneComponent(struct Parameters &parameters, std::vector<Vector> &data)
     double alpha = 90; alpha *= PI/180;
     double eta = 90; eta *= PI/180;
     double kappa = 100;
-    double ecc = 0.1;
+    double ecc = 0.9;
     double beta = 0.5 * kappa * ecc;
     Kent kent(psi,alpha,eta,kappa,beta);
     std::vector<struct Estimates> all_estimates;
@@ -2162,13 +2163,13 @@ void RunExperiments(int iterations)
 {
   Experiments experiments(iterations);
 
-  //experiments.simulate();
+  experiments.simulate();
 
   //experiments.infer_components_exp1();
 
   //experiments.infer_components_exp2();
 
-  experiments.infer_components_exp3();
+  //experiments.infer_components_exp3();
 }
 
 /*!
