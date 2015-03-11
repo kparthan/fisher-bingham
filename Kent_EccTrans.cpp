@@ -4,6 +4,7 @@
 extern Vector XAXIS,YAXIS,ZAXIS;
 extern int VERBOSE,COMPUTE_KLDIV;
 extern int ESTIMATION;
+extern int PRIOR;
 
 /*!
  *  Null constructor
@@ -190,14 +191,14 @@ double Kent_EccTrans::computeLogPriorScale()
 {
   double log_prior = 0;
 
-  // ... using vmf (3D) kappa prior
-  /*log_prior += log(8/PI);
-  log_prior += log(kappa);
-  log_prior -= (2 * log(1+kappa*kappa));*/
-
-  // ... using vmf (2D) kappa prior
-  log_prior += log(2);
-  log_prior -= (1.5 * log(1+kappa*kappa));
+  if (PRIOR == 3) { // ... using vMF (3D) kappa prior
+    log_prior += log(8/PI);
+    log_prior += log(kappa);
+    log_prior -= (2 * log(1+kappa*kappa));
+  } else if (PRIOR == 2) {  // ... using vMF (2D) kappa prior
+    log_prior += log(2);
+    log_prior -= (1.5 * log(1+kappa*kappa));
+  }
 
   return log_prior;
 }

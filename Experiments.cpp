@@ -37,7 +37,7 @@ void Experiments::simulate()
   //string data_file = "random_sample_new2.dat";
 
   double INIT_KAPPA = 10;
-  double MAX_KAPPA = 100;
+  double MAX_KAPPA = 1000 + 1;
   double KAPPA_INCREMENT = 10;
   double ecc;
 
@@ -122,7 +122,8 @@ void Experiments::simulate()
       fkl.close();
       fmsg.close();
     } // eccentricity
-    kappa += KAPPA_INCREMENT;
+    //kappa += KAPPA_INCREMENT;
+    kappa *= KAPPA_INCREMENT;
   } // kappa
 }
 

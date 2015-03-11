@@ -26,6 +26,7 @@ int IGNORE_SPLIT;
 double MIN_N;
 int SPLITTING = 0;
 string EM_LOG_FOLDER;
+int PRIOR;
 
 struct stat st = {0};
 
@@ -43,6 +44,7 @@ struct Parameters parseCommandLineInput(int argc, char **argv)
   struct Parameters parameters;
   string constrain,pdf,estimation_method,criterion;
   double improvement_rate;
+  int prior;
 
   bool noargs = 1;
 
@@ -77,6 +79,7 @@ struct Parameters parseCommandLineInput(int argc, char **argv)
        ("estimate_all","flag to estimate using all methods")
        ("responsibility","flag to compute responsibility matrix")
        ("improvement",value<double>(&improvement_rate),"improvement rate")
+       ("prior",value<int>(&prior),"vMF Kappa prior (2D/3D)")
   ;
   variables_map vm;
   store(command_line_parser(argc,argv).options(desc).run(),vm);
@@ -242,6 +245,12 @@ struct Parameters parseCommandLineInput(int argc, char **argv)
     }
   } else {
     CRITERION = MMLC;
+  }
+
+  if (!vm.count("prior")) {
+    PRIOR = 3;
+  } else {
+    PRIOR = prior;
   }
 
   return parameters;
@@ -1754,7 +1763,8 @@ void modelOneComponent(struct Parameters &parameters, std::vector<Vector> &data)
     double beta = 0.5 * kappa * ecc;
     Kent kent(psi,alpha,eta,kappa,beta);
     std::vector<struct Estimates> all_estimates;
-    kent.computeAllEstimators(data,all_estimates,1,1);
+    //kent.computeAllEstimators(data,all_estimates,1,1);
+    kent.computeAllEstimators(data,all_estimates,1,0);
   } else if (DISTRIBUTION == VMF) {
     vMF vmf;
     vmf.estimateParameters(data,weights);

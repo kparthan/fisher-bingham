@@ -8,6 +8,7 @@
 extern Vector XAXIS,YAXIS,ZAXIS;
 extern int VERBOSE,COMPUTE_KLDIV;
 extern int ESTIMATION;
+extern int PRIOR;
 
 /*!
  *  Null constructor
@@ -490,14 +491,14 @@ double Kent::computeLogPriorScale()
 {
   double log_prior = 0;
 
-  // ... using vMF (3D) kappa prior
-  /*log_prior += log(8/PI);
-  log_prior += log(kappa);
-  log_prior -= (2 * log(1+kappa*kappa));*/
-
-  // ... using vMF (2D) kappa prior
-  log_prior += log(2);
-  log_prior -= (1.5 * log(1+kappa*kappa));
+  if (PRIOR == 3) { // ... using vMF (3D) kappa prior
+    log_prior += log(8/PI);
+    log_prior += log(kappa);
+    log_prior -= (2 * log(1+kappa*kappa));
+  } else if (PRIOR == 2) {  // ... using vMF (2D) kappa prior
+    log_prior += log(2);
+    log_prior -= (1.5 * log(1+kappa*kappa));
+  }
 
   // vmf beta prior
   /*log_prior += (2 * log(4/PI));
@@ -778,27 +779,29 @@ void Kent::computeAllEstimators(
   }
   all_estimates.push_back(map2_est);
 
-  type = "MAP_UNIFORM_TRANSFORM";
-  struct Estimates map3_est = moment_est;
-  Optimize optmap3(type);
-  optmap3.initialize(
-    N,map3_est.mean,map3_est.major_axis,map3_est.minor_axis,
-    map3_est.kappa,map3_est.beta
-  );
-  optmap3.computeEstimates(sample_mean,S,map3_est);
-  map3_est.msglen = computeMessageLength(map3_est,sample_mean,S,N);
-  map3_est.negloglike = computeNegativeLogLikelihood(map3_est,sample_mean,S,N);
-  if (compute_kldiv) {
-    map3_est.kldiv = computeKLDivergence(map3_est);
+  if (PRIOR == 2) {
+    type = "MAP_UNIFORM_TRANSFORM";
+    struct Estimates map3_est = moment_est;
+    Optimize optmap3(type);
+    optmap3.initialize(
+      N,map3_est.mean,map3_est.major_axis,map3_est.minor_axis,
+      map3_est.kappa,map3_est.beta
+    );
+    optmap3.computeEstimates(sample_mean,S,map3_est);
+    map3_est.msglen = computeMessageLength(map3_est,sample_mean,S,N);
+    map3_est.negloglike = computeNegativeLogLikelihood(map3_est,sample_mean,S,N);
+    if (compute_kldiv) {
+      map3_est.kldiv = computeKLDivergence(map3_est);
+    }
+    if (verbose) {
+      cout << endl;
+      print(type,map3_est);
+      cout << fixed << "msglen: " << map3_est.msglen << endl;
+      cout << "negloglike: " << map3_est.negloglike << endl;
+      cout << "KL-divergence: " << map3_est.kldiv << endl << endl;
+    }
+    all_estimates.push_back(map3_est);
   }
-  if (verbose) {
-    cout << endl;
-    print(type,map3_est);
-    cout << fixed << "msglen: " << map3_est.msglen << endl;
-    cout << "negloglike: " << map3_est.negloglike << endl;
-    cout << "KL-divergence: " << map3_est.kldiv << endl << endl;
-  }
-  all_estimates.push_back(map3_est);
 }
 
 /*!

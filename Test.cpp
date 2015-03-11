@@ -897,8 +897,12 @@ void Test::mml_estimation2(void)
   //Kent kent(ZAXIS,XAXIS,YAXIS,kappa,beta);
   random_sample = kent.generate(sample_size);
   writeToFile("random_sample.dat",random_sample,3);
+
+  //data_file = "./support/R_codes/whin_sill.txt";
+
   random_sample = load_data_table(data_file);
   kent.computeAllEstimators(random_sample,all_estimates,1,1);
+  //kent.computeAllEstimators(random_sample,all_estimates,1,0);
 }
 
 void Test::vmf_all_estimation()

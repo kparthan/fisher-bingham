@@ -30,6 +30,11 @@ void Optimize::initialize(
   minor = m2;
   kappa = k;
   beta = b;
+  double e = 2 * b / k;
+  if (e > 1 - TOLERANCE) {
+    e = 1 - TOLERANCE;
+    beta = 0.5 * kappa * e;
+  }
   if (CONSTRAIN_KAPPA == SET) {
     if (kappa >= MAX_KAPPA) {
       double e = 2 * beta / kappa;
@@ -110,7 +115,7 @@ std::vector<double> Optimize::minimize(Vector &sample_mean, Matrix &S, int num_p
   std::vector<double> ub(num_params,0);
 
   double LIMIT = 1e-4;
-  double minf;
+  double minf = 0;
 
   switch(ESTIMATION) {
     case MOMENT:
@@ -188,6 +193,7 @@ std::vector<double> Optimize::minimize(Vector &sample_mean, Matrix &S, int num_p
 
       x[0] = psi; x[1] = alpha; x[2] = eta; x[3] = kappa; x[4] = beta;
       nlopt::result result = opt.optimize(x, minf);
+      //cout << "result: " << result << endl;
       //assert(!boost::math::isnan(minf));
       //cout << "mml result: " << result << endl;
       /*if (result < 0) {
@@ -214,7 +220,7 @@ std::vector<double> Optimize::minimize(Vector &sample_mean, Matrix &S, int num_p
       x[0] = psi; x[1] = alpha; x[2] = eta; x[3] = kappa; x[4] = 2*beta/kappa;
       nlopt::result result = opt.optimize(x, minf);
       //assert(!boost::math::isnan(minf));
-      if (boost::math::isnan(minf) || minf >= INFINITY) {
+      if (boost::math::isnan(minf) || fabs(minf) >= INFINITY) {
         cout << "MAP here:\n";
         x[0] = psi; x[1] = alpha; x[2] = eta; x[3] = kappa; x[4] = 2*beta/kappa;
       }
