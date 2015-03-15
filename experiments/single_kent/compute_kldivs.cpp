@@ -721,6 +721,7 @@ void create_required_folders(string &n_str)
 struct Parameters
 {
   int N;
+  int prior;
 };
 
 struct Parameters parseCommandLineInput(int argc, char **argv)
@@ -730,6 +731,7 @@ struct Parameters parseCommandLineInput(int argc, char **argv)
   options_description desc("Allowed options");
   desc.add_options()
        ("n",value<int>(&parameters.N),"sample size")
+       ("prior",value<int>(&parameters.prior),"vMF Kappa (2D/3D) prior")
   ;
   variables_map vm;
   store(command_line_parser(argc,argv).options(desc).run(),vm);
@@ -742,10 +744,18 @@ int main(int argc, char **argv)
 {
   struct Parameters parameters = parseCommandLineInput(argc,argv);
 
-  //string n_str = "./N_" + boost::lexical_cast<string>(parameters.N) + "_prior1/";
-  string n_str = "./N_" + boost::lexical_cast<string>(parameters.N) + "_prior2/";
+  string n_str = "./N_" + boost::lexical_cast<string>(parameters.N) 
+                + "_prior" + boost::lexical_cast<string>(parameters.prior) + "/";
+
+  if (parameters.prior == 2) {
+    NUM_METHODS = 6;
+  } else if (parameters.prior == 3) {
+    NUM_METHODS = 5;
+  }
+
   create_required_folders(n_str);
 
   process_kldivs(n_str);
 
+}
 
