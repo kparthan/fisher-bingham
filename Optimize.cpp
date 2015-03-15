@@ -204,7 +204,7 @@ std::vector<double> Optimize::minimize(Vector &sample_mean, Matrix &S, int num_p
         cout << "failed\n";
         exit(1);
       }*/
-      if (boost::math::isnan(minf)) {
+      if (boost::math::isnan(minf) || fabs(minf) >= INFINITY) {
         cout << "MML5 here:\n";
         x[0] = psi; x[1] = alpha; x[2] = eta; x[3] = kappa; x[4] = beta;
       }

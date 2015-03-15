@@ -42,7 +42,6 @@ void Experiments::simulate()
   double ecc;
 
   kappa = INIT_KAPPA;
-  //kappa = 1;
   while (kappa <= MAX_KAPPA) {
     ostringstream ssk;
     ssk << fixed << setprecision(0);

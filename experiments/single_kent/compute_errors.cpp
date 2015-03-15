@@ -22,10 +22,16 @@ typedef std::vector<double> Vector;
 #define MLE 1
 #define MAP 2
 #define MML 3 
+#define MAP_ECCENTRICITY_TRANSFORM 4
+#define MAP_UNIFORM_TRANSFORM 5
 
 #define PSI M_PI/4.0
 #define ALPHA M_PI/2.0
 #define ETA M_PI/2.0
+
+#define INIT_KAPPA 1
+#define MAX_KAPPA 100
+#define KAPPA_INCREMENT 10
 
 struct stat st = {0};
 int NUM_METHODS;
@@ -555,8 +561,7 @@ void process_estimates(string &n_str)
 {
   string errors_folder;
 
-  double kappa = 10;
-  double MAX_KAPPA = 1000;
+  double kappa = INIT_KAPPA;
   while (kappa < MAX_KAPPA + 1) {
     ostringstream ssk;
     ssk << fixed << setprecision(0);
@@ -582,7 +587,7 @@ void process_estimates(string &n_str)
     // combined errors
     compute_all_errors(errors_folder);
 
-    kappa *= 10;
+    kappa *= KAPPA_INCREMENT;
   } // while(ecc)
 }
 
@@ -784,8 +789,7 @@ void plot_errors(string &n_str)
 {
   string errors_folder;
 
-  double kappa = 10;
-  double MAX_KAPPA = 1000;
+  double kappa = INIT_KAPPA;
   while (kappa < MAX_KAPPA + 1) {
     ostringstream ssk;
     ssk << fixed << setprecision(0);
@@ -811,7 +815,7 @@ void plot_errors(string &n_str)
     // all errors
     plot_all_errors(n_str,kappa_str,errors_folder);
 
-    kappa *= 10;
+    kappa *= KAPPA_INCREMENT;
   } // while(ecc)
 }
 
@@ -832,8 +836,7 @@ void create_required_folders(string &n_str)
   string all_ecc = n_str + "fixed_kappa/";
   check_and_create_directory(all_ecc);
   string kappa_str,kappa_folder;
-  double kappa = 10;
-  double MAX_KAPPA = 1000;
+  double kappa = INIT_KAPPA;
   while (kappa < MAX_KAPPA + 1) {
     ostringstream ssk;
     ssk << fixed << setprecision(0);
@@ -846,7 +849,7 @@ void create_required_folders(string &n_str)
     check_and_create_directory(errors_folder);
 
     //kappa += 10;
-    kappa *= 10;
+    kappa *= KAPPA_INCREMENT;
   } // while(kappa)
 }
 /* E **********************************************************************************/

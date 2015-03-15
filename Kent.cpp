@@ -880,7 +880,7 @@ struct Estimates Kent::computeAsymptoticMomentEstimates(
   cout << "major_est: "; print(cout,estimates.major_axis,3); cout << endl;
   cout << "minor_est: "; print(cout,estimates.minor_axis,3); cout << endl;
   cout << "psi: " << s*180/PI << "; alpha: " << a*180/PI << "; eta: " << e*180/PI << endl;
-  if (s > PI) s -= PI;
+  if (fabs(s) >= PI) s -= PI;
   Matrix r = computeOrthogonalTransformation(s,a,e);
   estimates.psi = s; estimates.alpha = a; estimates.eta = e;
   estimates.mean = prod(r,XAXIS);
