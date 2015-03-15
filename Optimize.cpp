@@ -48,6 +48,10 @@ void Optimize::computeEstimates(Vector &sample_mean, Matrix &S, struct Estimates
 {
   computeOrthogonalTransformation(mean,major,psi,alpha,eta);
 
+  if (psi < TOLERANCE) psi = TOLERANCE;
+  if (alpha < TOLERANCE) alpha = TOLERANCE;
+  if (eta < TOLERANCE) eta = TOLERANCE;
+
   if (ESTIMATION == MOMENT) {
     std::vector<double> theta = minimize(sample_mean,S,2);
     estimates.kappa = theta[0];

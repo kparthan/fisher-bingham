@@ -554,7 +554,6 @@ void compute_all_errors(
 void process_estimates(string &n_str)
 {
   string errors_folder;
-  string errors_file;
 
   double kappa = 10;
   double MAX_KAPPA = 1000;
@@ -585,10 +584,236 @@ void process_estimates(string &n_str)
 
     kappa *= 10;
   } // while(ecc)
-
 }
 
-void plot_errors()
+void common_plot(
+  string &data_file, string &script_file, string &plot_file, string &ylabel
+) {
+  ofstream out(script_file.c_str());
+  out << "set terminal postscript eps enhanced color\n\n";
+  out << "set output \"" << plot_file << "\"\n\n";
+  out << "set style data linespoints\n";
+  out << "set style fill solid 1.0 noborder\n";
+  out << "set xlabel \"eccentricity\"\n";
+  out << "set ylabel \"" << ylabel << "\"\n";
+  out << "plot \"" << data_file << "\" using 1:2 t \"MOM\", \\\n"
+      << "\"\" using 1:3 t \"MLE\", \\\n"
+      << "\"\" using 1:4 t \"MAP (h1)\", \\\n"
+      << "\"\" using 1:5 t \"MML\", \\\n";
+  for (int i=1; i<=NUM_METHODS-4; i++) {
+    out << "\"\" using 1:" << i+5 << " t \"MAP (h" 
+        << boost::lexical_cast<string>(i+1) << ")\"";
+    if (i != NUM_METHODS-4) {
+      out << ", \\\n";
+    }
+  }
+  out.close();
+  string cmd = "gnuplot -persist " + script_file;
+  if(system(cmd.c_str()));
+}
+
+void plot_psi_errors(
+  string &n_str, string &kappa_str, string &errors_folder
+) {
+  string data_file,script_file,plot_file,ylabel;
+
+  data_file = errors_folder + "biassq_psi";
+  script_file = errors_folder + "biassq_psi.p";
+  plot_file = errors_folder + "biassq_psi.eps";
+  ylabel = "Bias squared";
+  common_plot(data_file,script_file,plot_file,ylabel);
+
+  data_file = errors_folder + "variance_psi";
+  script_file = errors_folder + "variance_psi.p";
+  plot_file = errors_folder + "variance_psi.eps";
+  ylabel = "Variance";
+  common_plot(data_file,script_file,plot_file,ylabel);
+
+  data_file = errors_folder + "mse_psi";
+  script_file = errors_folder + "mse_psi.p";
+  plot_file = errors_folder + "mse_psi.eps";
+  ylabel = "Mean squared error";
+  common_plot(data_file,script_file,plot_file,ylabel);
+}
+
+void plot_alpha_errors(
+  string &n_str, string &kappa_str, string &errors_folder
+) {
+  string data_file,script_file,plot_file,ylabel;
+
+  data_file = errors_folder + "biassq_alpha";
+  script_file = errors_folder + "biassq_alpha.p";
+  plot_file = errors_folder + "biassq_alpha.eps";
+  ylabel = "Bias squared";
+  common_plot(data_file,script_file,plot_file,ylabel);
+
+  data_file = errors_folder + "variance_alpha";
+  script_file = errors_folder + "variance_alpha.p";
+  plot_file = errors_folder + "variance_alpha.eps";
+  ylabel = "Variance";
+  common_plot(data_file,script_file,plot_file,ylabel);
+
+  data_file = errors_folder + "mse_alpha";
+  script_file = errors_folder + "mse_alpha.p";
+  plot_file = errors_folder + "mse_alpha.eps";
+  ylabel = "Mean squared error";
+  common_plot(data_file,script_file,plot_file,ylabel);
+}
+
+void plot_eta_errors(
+  string &n_str, string &kappa_str, string &errors_folder
+) {
+  string data_file,script_file,plot_file,ylabel;
+
+  data_file = errors_folder + "biassq_eta";
+  script_file = errors_folder + "biassq_eta.p";
+  plot_file = errors_folder + "biassq_eta.eps";
+  ylabel = "Bias squared";
+  common_plot(data_file,script_file,plot_file,ylabel);
+
+  data_file = errors_folder + "variance_eta";
+  script_file = errors_folder + "variance_eta.p";
+  plot_file = errors_folder + "variance_eta.eps";
+  ylabel = "Variance";
+  common_plot(data_file,script_file,plot_file,ylabel);
+
+  data_file = errors_folder + "mse_eta";
+  script_file = errors_folder + "mse_eta.p";
+  plot_file = errors_folder + "mse_eta.eps";
+  ylabel = "Mean squared error";
+  common_plot(data_file,script_file,plot_file,ylabel);
+}
+
+void plot_kappa_errors(
+  string &n_str, string &kappa_str, string &errors_folder
+) {
+  string data_file,script_file,plot_file,ylabel;
+
+  data_file = errors_folder + "biassq_kappa";
+  script_file = errors_folder + "biassq_kappa.p";
+  plot_file = errors_folder + "biassq_kappa.eps";
+  ylabel = "Bias squared";
+  common_plot(data_file,script_file,plot_file,ylabel);
+
+  data_file = errors_folder + "variance_kappa";
+  script_file = errors_folder + "variance_kappa.p";
+  plot_file = errors_folder + "variance_kappa.eps";
+  ylabel = "Variance";
+  common_plot(data_file,script_file,plot_file,ylabel);
+
+  data_file = errors_folder + "mse_kappa";
+  script_file = errors_folder + "mse_kappa.p";
+  plot_file = errors_folder + "mse_kappa.eps";
+  ylabel = "Mean squared error";
+  common_plot(data_file,script_file,plot_file,ylabel);
+}
+
+void plot_beta_errors(
+  string &n_str, string &beta_str, string &errors_folder
+) {
+  string data_file,script_file,plot_file,ylabel;
+
+  data_file = errors_folder + "biassq_beta";
+  script_file = errors_folder + "biassq_beta.p";
+  plot_file = errors_folder + "biassq_beta.eps";
+  ylabel = "Bias squared";
+  common_plot(data_file,script_file,plot_file,ylabel);
+
+  data_file = errors_folder + "variance_beta";
+  script_file = errors_folder + "variance_beta.p";
+  plot_file = errors_folder + "variance_beta.eps";
+  ylabel = "Variance";
+  common_plot(data_file,script_file,plot_file,ylabel);
+
+  data_file = errors_folder + "mse_beta";
+  script_file = errors_folder + "mse_beta.p";
+  plot_file = errors_folder + "mse_beta.eps";
+  ylabel = "Mean squared error";
+  common_plot(data_file,script_file,plot_file,ylabel);
+}
+
+void plot_ecc_errors(
+  string &n_str, string &ecc_str, string &errors_folder
+) {
+  string data_file,script_file,plot_file,ylabel;
+
+  data_file = errors_folder + "biassq_ecc";
+  script_file = errors_folder + "biassq_ecc.p";
+  plot_file = errors_folder + "biassq_ecc.eps";
+  ylabel = "Bias squared";
+  common_plot(data_file,script_file,plot_file,ylabel);
+
+  data_file = errors_folder + "variance_ecc";
+  script_file = errors_folder + "variance_ecc.p";
+  plot_file = errors_folder + "variance_ecc.eps";
+  ylabel = "Variance";
+  common_plot(data_file,script_file,plot_file,ylabel);
+
+  data_file = errors_folder + "mse_ecc";
+  script_file = errors_folder + "mse_ecc.p";
+  plot_file = errors_folder + "mse_ecc.eps";
+  ylabel = "Mean squared error";
+  common_plot(data_file,script_file,plot_file,ylabel);
+}
+
+void plot_all_errors(
+  string &n_str, string &all_str, string &errors_folder
+) {
+  string data_file,script_file,plot_file,ylabel;
+
+  data_file = errors_folder + "biassq_all";
+  script_file = errors_folder + "biassq_all.p";
+  plot_file = errors_folder + "biassq_all.eps";
+  ylabel = "Bias squared";
+  common_plot(data_file,script_file,plot_file,ylabel);
+
+  data_file = errors_folder + "variance_all";
+  script_file = errors_folder + "variance_all.p";
+  plot_file = errors_folder + "variance_all.eps";
+  ylabel = "Variance";
+  common_plot(data_file,script_file,plot_file,ylabel);
+
+  data_file = errors_folder + "mse_all";
+  script_file = errors_folder + "mse_all.p";
+  plot_file = errors_folder + "mse_all.eps";
+  ylabel = "Mean squared error";
+  common_plot(data_file,script_file,plot_file,ylabel);
+}
+
+void plot_errors(string &n_str)
+{
+  string errors_folder;
+
+  double kappa = 10;
+  double MAX_KAPPA = 1000;
+  while (kappa < MAX_KAPPA + 1) {
+    ostringstream ssk;
+    ssk << fixed << setprecision(0);
+    ssk << kappa;
+    string kappa_str = ssk.str();
+    string kappa_folder = n_str + "fixed_kappa/kappa_" + kappa_str + "/";
+    string errors_folder = kappa_folder + "errors/";
+
+    // psi errors
+    plot_psi_errors(n_str,kappa_str,errors_folder);
+    // alpha errors
+    plot_alpha_errors(n_str,kappa_str,errors_folder);
+    // eta errors
+    plot_eta_errors(n_str,kappa_str,errors_folder);
+
+    // kappa errors
+    plot_kappa_errors(n_str,kappa_str,errors_folder);
+    // beta errors
+    plot_beta_errors(n_str,kappa_str,errors_folder);
+    // ecc errors
+    plot_ecc_errors(n_str,kappa_str,errors_folder);
+
+    // all errors
+    plot_all_errors(n_str,kappa_str,errors_folder);
+
+    kappa *= 10;
+  } // while(ecc)
+}
 
 /* E **********************************************************************************/ 
 
@@ -661,9 +886,9 @@ int main(int argc, char **argv)
     NUM_METHODS = 5;
   }
 
-  create_required_folders(n_str);
+  //create_required_folders(n_str);
 
-  process_estimates(n_str);
+  //process_estimates(n_str);
 
   plot_errors(n_str);
 
