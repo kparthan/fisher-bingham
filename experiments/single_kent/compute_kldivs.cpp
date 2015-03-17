@@ -18,17 +18,19 @@ using namespace boost::filesystem;
 
 typedef std::vector<double> Vector;
 
-#define NUM_METHODS 4 
 #define MOMENT 0 
 #define MLE 1
 #define MAP 2
 #define MML 3 
+#define MAP_ECCENTRICITY_TRANSFORM 4
+#define MAP_UNIFORM_TRANSFORM 5
 
-#define PSI M_PI/4.0
-#define ALPHA M_PI/2.0
-#define ETA M_PI/2.0
+#define INIT_KAPPA 1
+#define MAX_KAPPA 100
+#define KAPPA_INCREMENT 10
 
 struct stat st = {0};
+int NUM_METHODS;
 
 std::vector<Vector> load_table(string &file_name, int D)
 {
@@ -113,30 +115,24 @@ std::vector<Vector> flip(std::vector<Vector> &table)
   return inverted_table;
 }
 
-int minimumIndex(Vector &values)
+int minimumIndex(int map_index, Vector &values)
 {
+  Vector new_list(4,0);
+  new_list[MOMENT] = values[MOMENT];
+  if (map_index == 5) new_list[MLE] = values[map_index];
+  else new_list[MLE] = values[MLE];
+  new_list[MAP] = values[map_index];
+  new_list[MML] = values[MML];
+
   int min_index = 0;
-  double min_val = values[0];
-  for (int i=1; i<values.size(); i++) { 
-    if (values[i] <= min_val) {
+  double min_val = new_list[0];
+  for (int i=1; i<new_list.size(); i++) { 
+    if (new_list[i] <= min_val) {
       min_index = i;
-      min_val = values[i];
+      min_val = new_list[i];
     } // if()
   } // for()
   return min_index;
-}
-
-int maximumIndex(Vector &values)
-{
-  int max_index = 0;
-  double max_val = values[0];
-  for (int i=1; i<values.size(); i++) { 
-    if (values[i] > max_val) {
-      max_index = i;
-      max_val = values[i];
-    }
-  }
-  return max_index;
 }
 
 double computeMean(Vector &list)
@@ -160,11 +156,12 @@ Vector computeMeans(std::vector<Vector> &table)
 }
 
 /* S **********************************************************************************/ 
-void plot_script1_kldivs(string &kldivs_folder)
+void plot_script_kldivs_wins(string &kldivs_folder, int num_map)
 {
-  string wins_kldivs_file = kldivs_folder + "wins_kldivs.dat";
-  string script_file = kldivs_folder + "plot1_wins_kldivs.p";
-  string plot_file = kldivs_folder + "plot1_wins_kldivs.eps";
+  string map = boost::lexical_cast<string>(num_map);
+  string wins_kldivs_file = kldivs_folder + "wins_kldivs_map" + map + ".dat";
+  string script_file = kldivs_folder + "wins_kldivs_map" + map + ".p";
+  string plot_file = kldivs_folder + "wins_kldivs_map" + map + ".eps";
   ofstream out(script_file.c_str());
   out << "set terminal postscript eps enhanced color\n\n";
   out << "set output \"" << plot_file << "\"\n\n";
@@ -173,112 +170,20 @@ void plot_script1_kldivs(string &kldivs_folder)
   out << "set style fill solid 1.0 noborder\n";
   out << "set ytics 10 nomirror\n";
   out << "set yrange [:100]\n";
+  out << "set xlabel \"eccentricity\"\n";
   out << "set ylabel \"\% of wins\"\n";
   out << "set ytics 10\n\n"; 
-  out << "plot \"" << wins_kldivs_file << "\" using 2 t \"MOM\", \\\n"
-      << "\"\" using 3 t \"MLE\", \\\n"
-      << "\"\" using 4 t \"MAP\", \\\n"
-      << "\"\" using 5:xtic(1) t \"MML\"";
+  if (num_map != 3) {
+    out << "plot \"" << wins_kldivs_file << "\" using 2 t \"MOM\" lc rgb \"red\", \\\n"
+        << "\"\" using 3 t \"MLE\" lc rgb \"blue\", \\\n"
+        << "\"\" using 4 t \"MAP" << num_map << "\" lc rgb \"dark-green\", \\\n"
+        << "\"\" using 5:xtic(1) t \"MML\" lc rgb \"dark-magenta\"";
+  } else {
+    out << "plot \"" << wins_kldivs_file << "\" using 2 t \"MOM\" lc rgb \"red\", \\\n"
+        << "\"\" using 4 t \"MAP3 = MLE\" lc rgb \"dark-green\", \\\n"
+        << "\"\" using 5:xtic(1) t \"MML\" lc rgb \"dark-magenta\"";
+  }
   out.close();
-  string cmd = "gnuplot -persist " + script_file;
-  if(system(cmd.c_str()));
-}
-
-void plot_script2_kldivs(string &kldivs_folder)
-{
-  string wins_kldivs_file = kldivs_folder + "wins_kldivs.dat";
-  string script_file = kldivs_folder + "plot2_wins_kldivs.p";
-  string plot_file = kldivs_folder + "plot2_wins_kldivs.eps";
-  ofstream out(script_file.c_str());
-  out << "set terminal postscript eps enhanced color\n\n";
-  out << "set output \"" << plot_file << "\"\n\n";
-  out << "set style data linespoints\n";
-  out << "set style fill solid 1.0 noborder\n";
-  out << "set ytics 10 nomirror\n";
-  out << "set yrange [:100]\n";
-  out << "set ylabel \"\% of wins\"\n";
-  out << "set ytics 10\n\n"; 
-  out << "plot \"" << wins_kldivs_file << "\" using 1:2 t \"MOM\", \\\n"
-      << "\"\" using 1:3 t \"MLE\", \\\n"
-      << "\"\" using 1:4 t \"MAP\", \\\n"
-      << "\"\" using 1:5 t \"MML\"";
-  out.close();
-  string cmd = "gnuplot -persist " + script_file;
-  if(system(cmd.c_str()));
-}
-
-void plot_stack_wins_kldivs(string &kldivs_folder)
-{
-  string wins_kldivs_file = kldivs_folder + "wins_kldivs.dat";
-  string script_file = kldivs_folder + "stack_wins_kldivs.p";
-  string plot_file = kldivs_folder + "stack_wins_kldivs.eps";
-  ofstream out(script_file.c_str());
-  out << "set terminal postscript eps enhanced color\n\n";
-  out << "set output \"" << plot_file << "\"\n\n";
-  out << "set key invert reverse left top\n\n";
-  out << "set grid y\n";
-  out << "set style data histograms\n";
-  out << "set style histogram rowstacked\n";
-  out << "set boxwidth 0.5\n";
-  out << "set style fill solid 1.0 noborder\n";
-  out << "set ytics 10 nomirror\n";
-  out << "set yrange [:100]\n";
-  out << "set ylabel \"\% of wins\"\n";
-  out << "set ytics 10\n\n"; 
-  out << "plot \"" << wins_kldivs_file << "\" using 2 t \"MOM\", \\\n"
-      << "\"\" using 3 t \"MLE\", \\\n"
-      << "\"\" using 4 t \"MAP\", \\\n"
-      << "\"\" using 5:xtic(1) t \"MML\"";
-  out.close();
-  string cmd = "gnuplot -persist " + script_file;
-  if(system(cmd.c_str()));
-}
-
-void boxplot_kldivs_fixed_ecc(string &n_str, string &ecc_str, string &kldivs_folder)
-{
-  string kldivs_file;
-  string script_file = kldivs_folder + "boxplot_kldivs.p";
-  string plot_file = kldivs_folder + "boxplot_kldivs.eps";
-
-  ofstream out(script_file.c_str());
-  out << "set terminal post eps color enhanced\n";
-  out << "set output \"" << plot_file << "\"\n\n";
-  out << "box_width=0.20\n";
-  out << "set style fill solid 0.25 noborder\n";
-  out << "set style boxplot outliers pointtype 7\n";
-  out << "set style data boxplot\n";
-  out << "set boxwidth box_width #relative\n";
-  out << "set pointsize 0.5\n";
-  out << "unset key\n";
-  out << "set border 2\n";
-  out << "set xtics nomirror\n";
-  out << "set ytics nomirror\n";
-  out << "set xlabel \"{/Symbol k}\\n\"\n";
-  out << "set ylabel \"KL-divergence\"\n";
-  out << "set xlabel font \"Times-Roman, 25\"\n";
-  out << "set ylabel font \"Times-Roman, 25\"\n";
-  out << "set xtics font \"Times-Roman, 20\"\n";
-  out << "set ytics font \"Times-Roman, 20\"\n";
-  out << "set xtics (\"10\" 1, \"50\" 2, \"100\" 3) scale 0.0\n";
-  out << "d_width=0.5*box_width\n\n";
-
-  kldivs_file = n_str + "k_10_e_" + ecc_str + "/kldivs";
-  out << "plot \"" << kldivs_file << "\" using ((1)-3*d_width):1 lt 1 lc rgb \"red\", \\\n"
-      << "\"" << kldivs_file << "\" using ((1)-d_width):2 lt 1 lc rgb \"blue\", \\\n"
-      << "\"" << kldivs_file << "\" using ((1)+d_width):2 lt 1 lc rgb \"dark-green\", \\\n"
-      << "\"" << kldivs_file << "\" using ((1)+3*d_width):2 lt 1 lc rgb \"black\", \\\n";
-  kldivs_file = n_str + "k_50_e_" + ecc_str + "/kldivs";
-  out << "\"" << kldivs_file << "\" using ((2)-3*d_width):1 lt 1 lc rgb \"red\", \\\n"
-      << "\"" << kldivs_file << "\" using ((2)-d_width):2 lt 1 lc rgb \"blue\", \\\n"
-      << "\"" << kldivs_file << "\" using ((2)+d_width):2 lt 1 lc rgb \"dark-green\", \\\n"
-      << "\"" << kldivs_file << "\" using ((2)+3*d_width):2 lt 1 lc rgb \"black\", \\\n";
-  kldivs_file = n_str + "k_100_e_" + ecc_str + "/kldivs";
-  out << "\"" << kldivs_file << "\" using ((3)-3*d_width):1 lt 1 lc rgb \"red\", \\\n"
-      << "\"" << kldivs_file << "\" using ((3)-d_width):2 lt 1 lc rgb \"blue\", \\\n"
-      << "\"" << kldivs_file << "\" using ((3)+d_width):2 lt 1 lc rgb \"dark-green\", \\\n"
-      << "\"" << kldivs_file << "\" using ((3)+3*d_width):2 lt 1 lc rgb \"black\"\n";
-  out.close();
-
   string cmd = "gnuplot -persist " + script_file;
   if(system(cmd.c_str()));
 }
@@ -292,7 +197,7 @@ void boxplot_kldivs_fixed_kappa(string &n_str, string &kappa_str, string &kldivs
   ofstream out(script_file.c_str());
   out << "set terminal post eps color enhanced\n";
   out << "set output \"" << plot_file << "\"\n\n";
-  out << "box_width=0.20\n";
+  out << "box_width=0.12\n";
   out << "set style fill solid 0.25 noborder\n";
   out << "set style boxplot outliers pointtype 7\n";
   out << "set style data boxplot\n";
@@ -302,7 +207,7 @@ void boxplot_kldivs_fixed_kappa(string &n_str, string &kappa_str, string &kldivs
   out << "set border 2\n";
   out << "set xtics nomirror\n";
   out << "set ytics nomirror\n";
-  out << "set xlabel \"{/Symbol k}\\n\"\n";
+  out << "set xlabel \"eccentricity\\n\"\n";
   out << "set ylabel \"KL-divergence\"\n";
   out << "set xlabel font \"Times-Roman, 25\"\n";
   out << "set ylabel font \"Times-Roman, 25\"\n";
@@ -311,21 +216,56 @@ void boxplot_kldivs_fixed_kappa(string &n_str, string &kappa_str, string &kldivs
   out << "set xtics (\"0.1\" 1, \"0.5\" 2, \"0.9\" 3) scale 0.0\n";
   out << "d_width=0.5*box_width\n\n";
 
+  // e = 0.1
   kldivs_file = n_str + "k_" + kappa_str + "_e_0.1/kldivs";
-  out << "plot \"" << kldivs_file << "\" using ((1)-3*d_width):1 lt 1 lc rgb \"red\", \\\n"
-      << "\"" << kldivs_file << "\" using ((1)-d_width):2 lt 1 lc rgb \"blue\", \\\n"
-      << "\"" << kldivs_file << "\" using ((1)+d_width):2 lt 1 lc rgb \"dark-green\", \\\n"
-      << "\"" << kldivs_file << "\" using ((1)+3*d_width):2 lt 1 lc rgb \"black\", \\\n";
+  if (NUM_METHODS == 6) {
+    out << "plot \"" << kldivs_file << "\" using ((1)-5*d_width):1 lt 1 lc rgb \"red\", \\\n"
+        << "\"" << kldivs_file << "\" using ((1)-3*d_width):2 lt 1 lc rgb \"blue\", \\\n"
+        << "\"" << kldivs_file << "\" using ((1)-d_width):3 lt 1 lc rgb \"dark-green\", \\\n"
+        << "\"" << kldivs_file << "\" using ((1)+d_width):4 lt 1 lc rgb \"dark-magenta\", \\\n"
+        << "\"" << kldivs_file << "\" using ((1)+3*d_width):5 lt 1 lc rgb \"pink\", \\\n"
+        << "\"" << kldivs_file << "\" using ((1)+5*d_width):6 lt 1 lc rgb \"purple\", \\\n";
+  } else if (NUM_METHODS == 5) {
+    out << "plot \"" << kldivs_file << "\" using ((1)-4*d_width):1 t \"MOM\" lt 1 lc rgb \"red\", \\\n"
+        << "\"" << kldivs_file << "\" using ((1)-2*d_width):2 lt 1 lc rgb \"blue\", \\\n"
+        << "\"" << kldivs_file << "\" using (1):3 lt 1 lc rgb \"dark-green\", \\\n"
+        << "\"" << kldivs_file << "\" using ((1)+2*d_width):4 lt 1 lc rgb \"dark-magenta\", \\\n"
+        << "\"" << kldivs_file << "\" using ((1)+4*d_width):5 lt 1 lc rgb \"pink\", \\\n";
+  }
+
+  // e = 0.5
   kldivs_file = n_str + "k_" + kappa_str + "_e_0.5/kldivs";
-  out << "\"" << kldivs_file << "\" using ((2)-3*d_width):1 lt 1 lc rgb \"red\", \\\n"
-      << "\"" << kldivs_file << "\" using ((2)-d_width):2 lt 1 lc rgb \"blue\", \\\n"
-      << "\"" << kldivs_file << "\" using ((2)+d_width):2 lt 1 lc rgb \"dark-green\", \\\n"
-      << "\"" << kldivs_file << "\" using ((2)+3*d_width):2 lt 1 lc rgb \"black\", \\\n";
+  if (NUM_METHODS == 6) {
+    out << "\"" << kldivs_file << "\" using ((2)-5*d_width):1 lt 1 lc rgb \"red\", \\\n"
+        << "\"" << kldivs_file << "\" using ((2)-3*d_width):2 lt 1 lc rgb \"blue\", \\\n"
+        << "\"" << kldivs_file << "\" using ((2)-d_width):3 lt 1 lc rgb \"dark-green\", \\\n"
+        << "\"" << kldivs_file << "\" using ((2)+d_width):4 lt 1 lc rgb \"dark-magenta\", \\\n"
+        << "\"" << kldivs_file << "\" using ((2)+3*d_width):5 lt 1 lc rgb \"pink\", \\\n"
+        << "\"" << kldivs_file << "\" using ((2)+5*d_width):6 lt 1 lc rgb \"purple\", \\\n";
+  } else if (NUM_METHODS == 5) {
+    out << "\"" << kldivs_file << "\" using ((2)-4*d_width):1 lt 1 lc rgb \"red\", \\\n"
+        << "\"" << kldivs_file << "\" using ((2)-2*d_width):2 lt 1 lc rgb \"blue\", \\\n"
+        << "\"" << kldivs_file << "\" using (2):3 lt 1 lc rgb \"dark-green\", \\\n"
+        << "\"" << kldivs_file << "\" using ((2)+2*d_width):4 lt 1 lc rgb \"dark-magenta\", \\\n"
+        << "\"" << kldivs_file << "\" using ((2)+4*d_width):5 lt 1 lc rgb \"pink\", \\\n";
+  }
+
+  // e = 0.9
   kldivs_file = n_str + "k_" + kappa_str + "_e_0.9/kldivs";
-  out << "\"" << kldivs_file << "\" using ((3)-3*d_width):1 lt 1 lc rgb \"red\", \\\n"
-      << "\"" << kldivs_file << "\" using ((3)-d_width):2 lt 1 lc rgb \"blue\", \\\n"
-      << "\"" << kldivs_file << "\" using ((3)+d_width):2 lt 1 lc rgb \"dark-green\", \\\n"
-      << "\"" << kldivs_file << "\" using ((3)+3*d_width):2 lt 1 lc rgb \"black\"\n";
+  if (NUM_METHODS == 6) {
+    out << "\"" << kldivs_file << "\" using ((3)-5*d_width):1 lt 1 lc rgb \"red\", \\\n"
+        << "\"" << kldivs_file << "\" using ((3)-3*d_width):2 lt 1 lc rgb \"blue\", \\\n"
+        << "\"" << kldivs_file << "\" using ((3)-d_width):3 lt 1 lc rgb \"dark-green\", \\\n"
+        << "\"" << kldivs_file << "\" using ((3)+d_width):4 lt 1 lc rgb \"dark-magenta\", \\\n"
+        << "\"" << kldivs_file << "\" using ((3)+3*d_width):5 lt 1 lc rgb \"pink\", \\\n"
+        << "\"" << kldivs_file << "\" using ((3)+5*d_width):6 lt 1 lc rgb \"purple\"\n";
+  } else if (NUM_METHODS == 5) {
+    out << "\"" << kldivs_file << "\" using ((3)-4*d_width):1 lt 1 lc rgb \"red\", \\\n"
+        << "\"" << kldivs_file << "\" using ((3)-2*d_width):2 lt 1 lc rgb \"blue\", \\\n"
+        << "\"" << kldivs_file << "\" using (3):3 lt 1 lc rgb \"dark-green\", \\\n"
+        << "\"" << kldivs_file << "\" using ((3)+2*d_width):4 lt 1 lc rgb \"dark-magenta\", \\\n"
+        << "\"" << kldivs_file << "\" using ((3)+4*d_width):5 lt 1 lc rgb \"pink\"\n";
+  }
   out.close();
 
   string cmd = "gnuplot -persist " + script_file;
@@ -333,49 +273,25 @@ void boxplot_kldivs_fixed_kappa(string &n_str, string &kappa_str, string &kldivs
 }
 
 void computeWins(
-  ostream &out, std::vector<Vector> &values
+  int map_index, ostream &out, std::vector<Vector> &values
 ) {
-  int num_elements = values.size();
-  std::vector<int> wins(values[0].size(),0);
-
+  std::vector<int> wins(4,0);
   int min_index;
-  for (int i=0; i<num_elements; i++) {
-    min_index = minimumIndex(values[i]);
+
+  for (int i=0; i<values.size(); i++) {
+    min_index = minimumIndex(map_index,values[i]);
     wins[min_index]++;
   }
   double percent_wins;
   for (int j=0; j<wins.size(); j++) {
-    percent_wins = wins[j] * 100.0 / num_elements;
+    percent_wins = wins[j] * 100.0 / values.size();
     out << fixed << setw(10) << setprecision(2) << percent_wins;
   }
   out << endl;
 }
 
-// all k fixed e
-void tabulate_eccentricity_kldivs(
-  string &output_file, string &n_str, string &ecc_str
-) {
-  std::vector<Vector> kldivs;
-  ofstream out(output_file.c_str());
-  double kappa = 10;
-  while (kappa < 101) {
-    out << fixed << setw(10) << setprecision(0) << kappa;
-    ostringstream ssk;
-    ssk << fixed << setprecision(0);
-    ssk << kappa;
-    string kappa_str = ssk.str();
-    string current_dir = n_str + "k_" + kappa_str + "_e_" + ecc_str + "/";
-    string kldivs_file = current_dir + "kldivs";
-    kldivs = load_table(kldivs_file,NUM_METHODS);
-    computeWins(out,kldivs);
-    kappa += 10;
-  } // while()
-  out.close();
-}
-
-// all e fixed k
 void tabulate_kappa_kldivs(
-  string &output_file, string &n_str, string &kappa_str
+  int map_index, string &output_file, string &n_str, string &kappa_str
 ) {
   std::vector<Vector> kldivs;
   string kldivs_file;
@@ -390,36 +306,8 @@ void tabulate_kappa_kldivs(
     string current_dir = n_str + "k_" + kappa_str + "_e_" + ecc_str + "/";
     kldivs_file = current_dir + "kldivs";
     kldivs = load_table(kldivs_file,NUM_METHODS);
-    computeWins(out,kldivs);
+    computeWins(map_index,out,kldivs);
     ecc += 0.1;
-  } // while()
-  out.close();
-}
-
-// all k fixed e
-void compute_average_kldivs_fixed_ecc(
-  string &n_str, string &ecc_str, string &kldivs_folder
-) {
-  std::vector<Vector> kldivs;
-  string output_file = kldivs_folder + "kldivs_avg.dat";
-  ofstream out(output_file.c_str());
-  double kappa = 10;
-  while (kappa < 101) {
-    out << fixed << setw(10) << setprecision(0) << kappa << "\t\t";
-    ostringstream ssk;
-    ssk << fixed << setprecision(0);
-    ssk << kappa;
-    string kappa_str = ssk.str();
-    string current_dir = n_str + "k_" + kappa_str + "_e_" + ecc_str + "/";
-    string kldivs_file = current_dir + "kldivs";
-    kldivs = load_table(kldivs_file,NUM_METHODS);
-    Vector avg_kldivs = computeMeans(kldivs);
-    for (int i=0; i<NUM_METHODS; i++) {
-      out << fixed << scientific << setprecision(6) << avg_kldivs[i] << "\t\t";
-    }
-    out << endl;
-
-    kappa += 10;
   } // while()
   out.close();
 }
@@ -435,16 +323,24 @@ void plot_avg_kldivs(string &kldivs_folder)
   out << "set style data linespoints\n";
   out << "set style fill solid 1.0 noborder\n";
   out << "set ylabel \"Average KL-divergence\"\n";
-  out << "plot \"" << avg_kldivs_file << "\" using 1:2 t \"MOM\", \\\n"
-      << "\"\" using 1:3 t \"MLE\", \\\n"
-      << "\"\" using 1:4 t \"MAP\", \\\n"
-      << "\"\" using 1:5 t \"MML\"";
+  if (NUM_METHODS == 6) {
+    out << "plot \"" << avg_kldivs_file << "\" using 1:2 t \"MOM\" lc rgb \"red\", \\\n"
+        << "\"\" using 1:7 t \"MAP3 = MLE\" lc rgb \"blue\", \\\n"
+        << "\"\" using 1:4 t \"MAP1\" lc rgb \"dark-green\", \\\n"
+        << "\"\" using 1:5 t \"MML\" lc rgb \"dark-magenta\", \\\n"
+        << "\"\" using 1:6 t \"MAP2\" lc rgb \"black\"\n";
+  } else if (NUM_METHODS == 5) {
+    out << "plot \"" << avg_kldivs_file << "\" using 1:2 t \"MOM\" lc rgb \"red\", \\\n"
+        << "\"\" using 1:3 t \"MLE\" lc rgb \"blue\", \\\n"
+        << "\"\" using 1:4 t \"MAP1\" lc rgb \"dark-green\", \\\n"
+        << "\"\" using 1:5 t \"MML\" lc rgb \"dark-magenta\", \\\n"
+        << "\"\" using 1:6 t \"MAP2\" lc rgb \"black\"\n";
+  }
   out.close();
   string cmd = "gnuplot -persist " + script_file;
   if(system(cmd.c_str()));
 }
 
-// all e fixed k
 void compute_average_kldivs_fixed_kappa(
   string &n_str, string &kappa_str, string &kldivs_folder
 ) {
@@ -478,50 +374,20 @@ void compute_kldivs_diff(
   Vector &kldivs_losses
 ) {
   double diff;
-  kldivs_wins = Vector(3,0);
-  kldivs_losses = Vector(3,0);
+  kldivs_wins = Vector(NUM_METHODS,0);
+  kldivs_losses = Vector(NUM_METHODS,0);
   for (int i=0; i<kldivs.size(); i++) {
-    for (int j=0; j<NUM_METHODS-1; j++) {
-      diff = kldivs[i][j] - kldivs[i][MML];
-      if (diff < 0) {  // MML loses ...
-        kldivs_wins[j] -= diff;
-      } else {  // MML wins ...
-        kldivs_losses[j] -= diff;
-      } // if ()
-    } // j ()
+    for (int j=0; j<NUM_METHODS; j++) {
+      if (j != MML) {
+        diff = kldivs[i][j] - kldivs[i][MML];
+        if (diff < 0) {  // MML loses ...
+          kldivs_wins[j] -= diff;
+        } else {  // MML wins ...
+          kldivs_losses[j] -= diff;
+        } // if ()
+      } // j ()
+    }
   } // i ()
-}
-
-double compute_kldivs_diff_fixed_ecc(string &n_str, string &ecc_str, string &kldivs_folder)
-{
-  double max = 0;
-  Vector kldivs_wins,kldivs_losses;
-  string output = kldivs_folder + "kldivs_diff.dat";
-  ofstream out(output.c_str());
-  double kappa = 10;
-  while (kappa < 101) {
-    ostringstream ssk;
-    ssk << fixed << setprecision(0);
-    ssk << kappa;
-    string kappa_str = ssk.str();
-    string current_dir = n_str + "k_" + kappa_str + "_e_" + ecc_str + "/";
-    string kldivs_file = current_dir + "kldivs";
-    std::vector<Vector> kldivs_table = load_table(kldivs_file,NUM_METHODS);
-    compute_kldivs_diff(kldivs_table,kldivs_wins,kldivs_losses);
-    out << fixed << setw(10) << setprecision(0) << kappa << "\t\t";
-    for (int i=0; i<3; i++) {
-      out << fixed << scientific << setprecision(6) << kldivs_wins[i] << "\t\t";
-      if (kldivs_wins[i] > max) max = kldivs_wins[i];
-    }
-    for (int i=0; i<3; i++) {
-      out << fixed << scientific << setprecision(6) << kldivs_losses[i] << "\t\t";
-      if (fabs(kldivs_losses[i]) > max) max = fabs(kldivs_losses[i]);
-    }
-    out << endl;
-    kappa += 10;
-  } // while()
-  out.close();
-  return max;
 }
 
 double compute_kldivs_diff_fixed_kappa(string &n_str, string &kappa_str, string &kldivs_folder)
@@ -541,13 +407,17 @@ double compute_kldivs_diff_fixed_kappa(string &n_str, string &kappa_str, string 
     std::vector<Vector> kldivs_table = load_table(kldivs_file,NUM_METHODS);
     compute_kldivs_diff(kldivs_table,kldivs_wins,kldivs_losses);
     out << fixed << setw(10) << setprecision(1) << ecc << "\t\t";
-    for (int i=0; i<3; i++) {
-      out << fixed << scientific << setprecision(6) << kldivs_wins[i] << "\t\t";
-      if (kldivs_wins[i] > max) max = kldivs_wins[i];
+    for (int i=0; i<NUM_METHODS; i++) {
+      if (i != MML) {
+        out << fixed << scientific << setprecision(6) << kldivs_wins[i] << "\t\t";
+        if (kldivs_wins[i] > max) max = kldivs_wins[i];
+      }
     }
-    for (int i=0; i<3; i++) {
-      out << fixed << scientific << setprecision(6) << kldivs_losses[i] << "\t\t";
-      if (fabs(kldivs_losses[i]) > max) max = fabs(kldivs_losses[i]);
+    for (int i=0; i<NUM_METHODS; i++) {
+      if (i != MML) {
+        out << fixed << scientific << setprecision(6) << kldivs_losses[i] << "\t\t";
+        if (fabs(kldivs_losses[i]) > max) max = fabs(kldivs_losses[i]);
+      }
     }
     out << endl;
     ecc += 0.1;
@@ -564,9 +434,10 @@ void plot_kldivs_diff(string &kldivs_folder, double max)
   else if (max > 0.1) ytics = 0.1;
   else ytics = 0.05;
   string kldivs_diff_file = kldivs_folder + "kldivs_diff.dat";
-  string script_file = kldivs_folder + "plot_kldivs_diff.p";
-  string plot_file = kldivs_folder + "plot_kldivs_diff.eps";
+  string script_file = kldivs_folder + "kldivs_diff.p";
+  string plot_file = kldivs_folder + "kldivs_diff.eps";
   ofstream out(script_file.c_str());
+  out << "unset xlabel\n";
   out << "set terminal postscript eps enhanced color\n\n";
   out << "set output \"" << plot_file << "\"\n\n";
   out << "set ylabel \"Difference in KL-divergence\" offset 0,-7,0\n";
@@ -581,17 +452,31 @@ void plot_kldivs_diff(string &kldivs_folder, double max)
   out << "set style fill solid 1.0 noborder\n";
   out << "set yr [0:" << max+0.1 << "]\n";
   out << "plot \"" << kldivs_diff_file << "\" using 2 t \"MOM\" lc rgb \"red\", \\\n"
-      << "\"\" using 3 t \"MLE\" lc rgb \"green\", \\\n"
-      << "\"\" using 4 t \"MAP\" lc rgb \"blue\"\n";
+      << "\"\" using 3 t \"MLE\" lc rgb \"blue\", \\\n"
+      << "\"\" using 4 t \"MAP1\" lc rgb \"dark-green\", \\\n";
+  if (NUM_METHODS == 6) {
+    out << "\"\" using 5 t \"MAP2\" lc rgb \"pink\", \\\n"
+        << "\"\" using 6 t \"MAP3\" lc rgb \"purple\"\n";
+  } else if (NUM_METHODS == 5) {
+    out << "\"\" using 5 t \"MAP2\" lc rgb \"pink\"\n";
+  }
   out << "unset ylabel\n";
+  out << "set xlabel \"eccentricity\"\n";
   out << "set tmargin 0\n";
   out << "set bmargin at screen 0.1\n";
   out << "set xtics nomirror\n";
   out << "set yr [" << -(max+0.1) << ":0]\n";
-  out << "plot \"" << kldivs_diff_file << "\" using 5 notitle lc rgb \"red\", \\\n"
-      << "\"\" using 6 notitle lc rgb \"green\", \\\n"
-      << "\"\" using 7:xtic(1) notitle lc rgb \"blue\", \\\n"
-      << "0 lt 1 lw 10 lc rgb \"black\" notitle\n";
+  int resume_index = NUM_METHODS;
+  out << "plot \"" << kldivs_diff_file << "\" using " << resume_index+1 << "notitle lc rgb \"red\", \\\n"
+      << "\"\" using " << resume_index+2 << " notitle lc rgb \"blue\", \\\n"
+      << "\"\" using " << resume_index+3 << " notitle lc rgb \"dark-green\", \\\n";
+  if (NUM_METHODS == 6) {
+    out << "\"\" using " << resume_index+4 << " notitle lc rgb \"pink\", \\\n"
+        << "\"\" using " << resume_index+5 << ":xtic(1) notitle lc rgb \"purple\", \\\n";
+  } else if (NUM_METHODS == 5) {
+    out << "\"\" using " << resume_index+4 << ":xtic(1) notitle lc rgb \"pink\", \\\n"; 
+  }
+  out << "0 lt 1 lw 10 lc rgb \"black\" notitle\n";
   out << "unset multiplot";
   out.close();
   string cmd = "gnuplot -persist " + script_file;
@@ -603,40 +488,17 @@ void process_kldivs(string &n_str)
   string kldivs_folder;
   string wins_kldivs_file;
 
-  string all_kappas = n_str + "fixed_ecc/";
-  string ecc_str,ecc_folder;
-  double ecc = 0.1;
-  while (ecc < 0.95) {
-    ostringstream sse;
-    sse << fixed << setprecision(1);
-    sse << ecc;
-    ecc_str = sse.str();
-    ecc_folder = all_kappas + "ecc_" + ecc_str + "/";
-    kldivs_folder = ecc_folder + "kldivs/";
-
-    // kldivs wins
-    wins_kldivs_file = kldivs_folder + "wins_kldivs.dat";
-    tabulate_eccentricity_kldivs(wins_kldivs_file,n_str,ecc_str);
-    plot_stack_wins_kldivs(kldivs_folder);
-    plot_script1_kldivs(kldivs_folder);
-    plot_script2_kldivs(kldivs_folder);
-
-    // kldivs
-    boxplot_kldivs_fixed_ecc(n_str,ecc_str,kldivs_folder);
-    compute_average_kldivs_fixed_ecc(n_str,ecc_str,kldivs_folder);
-    plot_avg_kldivs(kldivs_folder);
-
-    // differences
-    double max = compute_kldivs_diff_fixed_ecc(n_str,ecc_str,kldivs_folder);
-    plot_kldivs_diff(kldivs_folder,max);
-
-    ecc += 0.1;
-  } // while(ecc)
+  int num_maps,map_index;
+  if (NUM_METHODS == 5) {
+    num_maps = 2;
+  } else {
+    num_maps = 3;
+  }
 
   string all_ecc = n_str + "fixed_kappa/";
   string kappa_str,kappa_folder;
-  double kappa = 10;
-  while (kappa < 101) {
+  double kappa = INIT_KAPPA;
+  while (kappa < MAX_KAPPA + 1) {
     ostringstream ssk;
     ssk << fixed << setprecision(0);
     ssk << kappa;
@@ -645,14 +507,20 @@ void process_kldivs(string &n_str)
     kldivs_folder = kappa_folder + "kldivs/";
 
     // kldivs wins
-    wins_kldivs_file = kldivs_folder + "wins_kldivs.dat";
-    tabulate_kappa_kldivs(wins_kldivs_file,n_str,kappa_str);
-    plot_stack_wins_kldivs(kldivs_folder);
-    plot_script1_kldivs(kldivs_folder);
-    plot_script2_kldivs(kldivs_folder);
+    for (int i=1; i<=num_maps; i++) {
+      if (i == 1) map_index = 2;
+      else if (i == 2) map_index = 4;
+      else if (i == 3) map_index = 5;
+      wins_kldivs_file = kldivs_folder + "wins_kldivs_map"
+                         + boost::lexical_cast<string>(i) + ".dat";
+      tabulate_kappa_kldivs(map_index,wins_kldivs_file,n_str,kappa_str);
+      plot_script_kldivs_wins(kldivs_folder,i);
+    }
 
-    // kldivs
+    // boxplot kldivs
     boxplot_kldivs_fixed_kappa(n_str,kappa_str,kldivs_folder);
+
+    // average kldivs
     compute_average_kldivs_fixed_kappa(n_str,kappa_str,kldivs_folder);
     plot_avg_kldivs(kldivs_folder);
 
@@ -660,7 +528,7 @@ void process_kldivs(string &n_str)
     double max = compute_kldivs_diff_fixed_kappa(n_str,kappa_str,kldivs_folder);
     plot_kldivs_diff(kldivs_folder,max);
 
-    kappa += 10;
+    kappa *= KAPPA_INCREMENT;
   } // while(kappa)
 }
 /* E **********************************************************************************/ 
@@ -675,34 +543,13 @@ void check_and_create_directory(string &directory)
 
 void create_required_folders(string &n_str)
 {
-  string kldivs_folder,errors_folder;
-
-  string all_kappas = n_str + "fixed_ecc/";
-  check_and_create_directory(all_kappas);
-  string ecc_str,ecc_folder;
-  double ecc = 0.1;
-  while (ecc < 0.95) {
-    ostringstream sse;
-    sse << fixed << setprecision(1);
-    sse << ecc;
-    ecc_str = sse.str();
-    ecc_folder = all_kappas + "ecc_" + ecc_str + "/";
-    check_and_create_directory(ecc_folder);
-
-    kldivs_folder = ecc_folder + "kldivs/";
-    check_and_create_directory(kldivs_folder);
-
-    errors_folder = ecc_folder + "errors/";
-    check_and_create_directory(errors_folder);
-
-    ecc += 0.1;
-  } // while(ecc)
+  string kldivs_folder;
 
   string all_ecc = n_str + "fixed_kappa/";
   check_and_create_directory(all_ecc);
   string kappa_str,kappa_folder;
-  double kappa = 10;
-  while (kappa < 101) {
+  double kappa = INIT_KAPPA;
+  while (kappa < MAX_KAPPA + 1) {
     ostringstream ssk;
     ssk << fixed << setprecision(0);
     ssk << kappa;
@@ -713,7 +560,8 @@ void create_required_folders(string &n_str)
     kldivs_folder = kappa_folder + "kldivs/";
     check_and_create_directory(kldivs_folder);
 
-    kappa += 10;
+    //kappa += 10;
+    kappa *= KAPPA_INCREMENT;
   } // while(kappa)
 }
 /* E **********************************************************************************/

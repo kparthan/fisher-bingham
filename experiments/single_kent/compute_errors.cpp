@@ -889,9 +889,9 @@ int main(int argc, char **argv)
     NUM_METHODS = 5;
   }
 
-  //create_required_folders(n_str);
+  create_required_folders(n_str);
 
-  //process_estimates(n_str);
+  process_estimates(n_str);
 
   plot_errors(n_str);
 
