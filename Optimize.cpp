@@ -3,6 +3,7 @@
 extern int CONSTRAIN_KAPPA;
 extern double MAX_KAPPA;
 extern int ESTIMATION;
+extern Vector XAXIS,YAXIS,ZAXIS;
 
 Optimize::Optimize(string type)
 {
@@ -46,8 +47,17 @@ void Optimize::initialize(
 
 void Optimize::computeEstimates(Vector &sample_mean, Matrix &S, struct Estimates &estimates)
 {
-  computeOrthogonalTransformation(mean,major,psi,alpha,eta);
+  double s,a,e;
+  computeOrthogonalTransformation(mean,major,s,a,e);
+  while (s >= PI) s -= PI;
+  assert(s >= 0 && s < PI);
+  Matrix r = computeOrthogonalTransformation(s,a,e);
+  psi = s; alpha = a; eta = e;
+  mean = prod(r,XAXIS);
+  major = prod(r,YAXIS);
+  minor = prod(r,ZAXIS);
 
+  assert(psi <= PI);
   if (psi < TOLERANCE) psi = TOLERANCE;
   if (alpha < TOLERANCE) alpha = TOLERANCE;
   if (eta < TOLERANCE) eta = TOLERANCE;

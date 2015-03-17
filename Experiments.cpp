@@ -37,12 +37,12 @@ void Experiments::simulate()
   //string data_file = "random_sample_new2.dat";
 
   double INIT_KAPPA = 1;
-  double MAX_KAPPA = 100 + 1;
+  double MAX_KAPPA = 100;
   double KAPPA_INCREMENT = 10;
   double ecc;
 
   kappa = INIT_KAPPA;
-  while (kappa <= MAX_KAPPA) {
+  while (kappa <= MAX_KAPPA + 1) {
     ostringstream ssk;
     ssk << fixed << setprecision(0);
     ssk << kappa;
@@ -66,15 +66,15 @@ void Experiments::simulate()
       kldivs = current_dir + "kldivs";
       msglens = current_dir + "msglens";
 
-      ofstream fpsi(psi_est.c_str());
-      ofstream falpha(alpha_est.c_str());
-      ofstream feta(eta_est.c_str());
-      ofstream fk(kappas.c_str());
-      ofstream fb(betas.c_str());
-      ofstream fecc(ecc_file.c_str());
-      ofstream fnlh(negloglike.c_str());
-      ofstream fkl(kldivs.c_str());
-      ofstream fmsg(msglens.c_str());
+      ofstream fpsi(psi_est.c_str(),ios::app);
+      ofstream falpha(alpha_est.c_str(),ios::app);
+      ofstream feta(eta_est.c_str(),ios::app);
+      ofstream fk(kappas.c_str(),ios::app);
+      ofstream fb(betas.c_str(),ios::app);
+      ofstream fecc(ecc_file.c_str(),ios::app);
+      ofstream fnlh(negloglike.c_str(),ios::app);
+      ofstream fkl(kldivs.c_str(),ios::app);
+      ofstream fmsg(msglens.c_str(),ios::app);
       
       cout << "kappa: " << kappa << "; beta: " << beta << "; e: " << eccentricity << endl;
       //Kent kent(ZAXIS,XAXIS,YAXIS,kappa,beta);
@@ -84,16 +84,19 @@ void Experiments::simulate()
       Kent kent(psi,alpha,eta,kappa,beta);
 
       for (int i=0; i<iterations; i++) {
-        //repeat:
-        //MML_FAIL = 0;
+        repeat:
         cout << "Iteration: " << i+1 << endl;
-        //kent.generate(N);
-        //random_sample = load_data_table(data_file);
         random_sample = kent.generate(N);
         kent.computeAllEstimators(random_sample,all_estimates,0,1);
-        /*if (MML_FAIL == 1) {  // ignore iteration
+        Vector msglens(all_estimates.size(),0);
+        for (int j=0; j<all_estimates.size(); j++) {
+          if (all_estimates[j].kldiv < 0 || all_estimates[j].msglen < 0) goto repeat;
+          msglens[j] = all_estimates[j].msglen;
+        }
+        int min_index = minimumIndex(msglens);
+        if (min_index != MML) {  // ignore iteration
           goto repeat;
-        }*/
+        }
         for (int j=0; j<all_estimates.size(); j++) {
           ecc = 2 * all_estimates[j].beta / all_estimates[j].kappa;
           fpsi << scientific << all_estimates[j].psi << "\t";

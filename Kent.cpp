@@ -875,11 +875,11 @@ struct Estimates Kent::computeAsymptoticMomentEstimates(
 
   double s,a,e;
   computeOrthogonalTransformation(estimates.mean,estimates.major_axis,s,a,e);
-  cout << "before: \n";
+  /*cout << "before: \n";
   cout << "mean_est: "; print(cout,estimates.mean,3); cout << endl;
   cout << "major_est: "; print(cout,estimates.major_axis,3); cout << endl;
   cout << "minor_est: "; print(cout,estimates.minor_axis,3); cout << endl;
-  cout << "psi: " << s*180/PI << "; alpha: " << a*180/PI << "; eta: " << e*180/PI << endl;
+  cout << "psi: " << s*180/PI << "; alpha: " << a*180/PI << "; eta: " << e*180/PI << endl;*/
   if (s >= PI) s -= PI;
   assert(s >= 0 && s < PI);
   Matrix r = computeOrthogonalTransformation(s,a,e);
@@ -887,11 +887,11 @@ struct Estimates Kent::computeAsymptoticMomentEstimates(
   estimates.mean = prod(r,XAXIS);
   estimates.major_axis = prod(r,YAXIS);
   estimates.minor_axis = prod(r,ZAXIS);
-  cout << "after: \n";
+  /*cout << "after: \n";
   cout << "mean_est: "; print(cout,estimates.mean,3); cout << endl;
   cout << "major_est: "; print(cout,estimates.major_axis,3); cout << endl;
   cout << "minor_est: "; print(cout,estimates.minor_axis,3); cout << endl;
-  cout << "psi: " << s*180/PI << "; alpha: " << a*180/PI << "; eta: " << e*180/PI << endl;
+  cout << "psi: " << s*180/PI << "; alpha: " << a*180/PI << "; eta: " << e*180/PI << endl;*/
 
   // estimate kappa, beta
   double f1 = 1/(2 - 2*r1 - r2);
