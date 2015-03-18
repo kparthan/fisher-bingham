@@ -601,16 +601,18 @@ void common_plot(
   out << "set style fill solid 1.0 noborder\n";
   out << "set xlabel \"eccentricity\"\n";
   out << "set ylabel \"" << ylabel << "\"\n";
-  out << "plot \"" << data_file << "\" using 1:2 t \"MOM\", \\\n"
-      << "\"\" using 1:3 t \"MLE\", \\\n"
-      << "\"\" using 1:4 t \"MAP (h1)\", \\\n"
-      << "\"\" using 1:5 t \"MML\", \\\n";
-  for (int i=1; i<=NUM_METHODS-4; i++) {
-    out << "\"\" using 1:" << i+5 << " t \"MAP (h" 
-        << boost::lexical_cast<string>(i+1) << ")\"";
-    if (i != NUM_METHODS-4) {
-      out << ", \\\n";
-    }
+  if (NUM_METHODS == 5) {
+    out << "plot \"" << data_file << "\" using 1:2 t \"MOM\" lc rgb \"red\", \\\n"
+        << "\"\" using 1:3 t \"MLE\" lc rgb \"blue\", \\\n"
+        << "\"\" using 1:4 t \"MAP1\" lc rgb \"dark-green\", \\\n"
+        << "\"\" using 1:5 t \"MML\" lc rgb \"dark-magenta\", \\\n"
+        << "\"\" using 1:6 t \"MAP2\" lc rgb \"black\"\n";
+  } else if (NUM_METHODS == 6) {
+    out << "plot \"" << data_file << "\" using 1:2 t \"MOM\" lc rgb \"red\", \\\n"
+        << "\"\" using 1:7 t \"MAP3 = MLE\" lc rgb \"blue\", \\\n"
+        << "\"\" using 1:4 t \"MAP1\" lc rgb \"dark-green\", \\\n"
+        << "\"\" using 1:5 t \"MML\" lc rgb \"dark-magenta\", \\\n"
+        << "\"\" using 1:6 t \"MAP2\" lc rgb \"black\"\n";
   }
   out.close();
   string cmd = "gnuplot -persist " + script_file;

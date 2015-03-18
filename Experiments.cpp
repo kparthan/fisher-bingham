@@ -36,8 +36,8 @@ void Experiments::simulate()
   //string data_file = "random_sample.dat";
   //string data_file = "random_sample_new2.dat";
 
-  double INIT_KAPPA = 10;
-  double MAX_KAPPA = 100;
+  double INIT_KAPPA = 1;
+  double MAX_KAPPA = 1;
   double KAPPA_INCREMENT = 10;
   double ecc;
 
@@ -47,8 +47,8 @@ void Experiments::simulate()
     ssk << fixed << setprecision(0);
     ssk << kappa;
     kappa_str = ssk.str();
-    eccentricity = 0.1;
-    while (eccentricity <= 0.95) {
+    eccentricity = 0.9;
+    //while (eccentricity <= 0.95) {
       beta = 0.5 * kappa * eccentricity;
       ostringstream sse;
       sse << fixed << setprecision(1);
@@ -123,7 +123,7 @@ void Experiments::simulate()
       fnlh.close();
       fkl.close();
       fmsg.close();
-    } // eccentricity
+    //} // eccentricity
     //kappa += KAPPA_INCREMENT;
     kappa *= KAPPA_INCREMENT;
   } // kappa
