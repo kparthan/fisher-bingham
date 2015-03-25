@@ -31,6 +31,7 @@ typedef std::vector<double> Vector;
 
 struct stat st = {0};
 int NUM_METHODS;
+string common,common_kappa;
 
 std::vector<Vector> load_table(string &file_name, int D)
 {
@@ -161,7 +162,7 @@ void plot_script_kldivs_wins(string &kldivs_folder, int num_map)
   string map = boost::lexical_cast<string>(num_map);
   string wins_kldivs_file = kldivs_folder + "wins_kldivs_map" + map + ".dat";
   string script_file = kldivs_folder + "wins_kldivs_map" + map + ".p";
-  string plot_file = kldivs_folder + "wins_kldivs_map" + map + ".eps";
+  string plot_file = kldivs_folder + common_kappa + "wins_kldivs_map" + map + ".eps";
   ofstream out(script_file.c_str());
   out << "set terminal postscript eps enhanced color\n\n";
   out << "set output \"" << plot_file << "\"\n\n";
@@ -192,7 +193,7 @@ void boxplot_kldivs_fixed_kappa(string &n_str, string &kappa_str, string &kldivs
 {
   string kldivs_file;
   string script_file = kldivs_folder + "boxplot_kldivs.p";
-  string plot_file = kldivs_folder + "boxplot_kldivs.eps";
+  string plot_file = kldivs_folder + common_kappa + "boxplot_kldivs.eps";
 
   ofstream out(script_file.c_str());
   out << "set terminal post eps color enhanced\n";
@@ -316,7 +317,7 @@ void plot_avg_kldivs(string &kldivs_folder)
 {
   string avg_kldivs_file = kldivs_folder + "kldivs_avg.dat";
   string script_file = kldivs_folder + "kldivs_avg.p";
-  string plot_file = kldivs_folder + "kldivs_avg.eps";
+  string plot_file = kldivs_folder + common_kappa + "kldivs_avg.eps";
   ofstream out(script_file.c_str());
   out << "set terminal postscript eps enhanced color\n\n";
   out << "set output \"" << plot_file << "\"\n\n";
@@ -435,7 +436,7 @@ void plot_kldivs_diff(string &kldivs_folder, double max)
   else ytics = 0.05;
   string kldivs_diff_file = kldivs_folder + "kldivs_diff.dat";
   string script_file = kldivs_folder + "kldivs_diff.p";
-  string plot_file = kldivs_folder + "kldivs_diff.eps";
+  string plot_file = kldivs_folder + common_kappa + "kldivs_diff.eps";
   ofstream out(script_file.c_str());
   out << "unset xlabel\n";
   out << "set terminal postscript eps enhanced color\n\n";
@@ -506,6 +507,8 @@ void process_kldivs(string &n_str)
     kappa_folder = all_ecc + "kappa_" + kappa_str + "/";
     kldivs_folder = kappa_folder + "kldivs/";
 
+    common_kappa = common + "_k" + kappa_str + "_";
+ 
     // kldivs wins
     for (int i=1; i<=num_maps; i++) {
       if (i == 1) map_index = 2;
@@ -594,6 +597,9 @@ int main(int argc, char **argv)
 
   string n_str = "./N_" + boost::lexical_cast<string>(parameters.N) 
                 + "_prior" + boost::lexical_cast<string>(parameters.prior) + "/";
+
+  common = "n" + boost::lexical_cast<string>(parameters.N) 
+                + "_p" + boost::lexical_cast<string>(parameters.prior);
 
   if (parameters.prior == 2) {
     NUM_METHODS = 6;

@@ -35,6 +35,7 @@ typedef std::vector<double> Vector;
 
 struct stat st = {0};
 int NUM_METHODS;
+string common,common_kappa;
 
 std::vector<Vector> load_table(string &file_name, int D)
 {
@@ -626,19 +627,19 @@ void plot_psi_errors(
 
   data_file = errors_folder + "biassq_psi";
   script_file = errors_folder + "biassq_psi.p";
-  plot_file = errors_folder + "biassq_psi.eps";
+  plot_file = errors_folder + common_kappa + "biassq_psi.eps";
   ylabel = "Bias squared";
   common_plot(data_file,script_file,plot_file,ylabel);
 
   data_file = errors_folder + "variance_psi";
   script_file = errors_folder + "variance_psi.p";
-  plot_file = errors_folder + "variance_psi.eps";
+  plot_file = errors_folder + common_kappa + "variance_psi.eps";
   ylabel = "Variance";
   common_plot(data_file,script_file,plot_file,ylabel);
 
   data_file = errors_folder + "mse_psi";
   script_file = errors_folder + "mse_psi.p";
-  plot_file = errors_folder + "mse_psi.eps";
+  plot_file = errors_folder + common_kappa + "mse_psi.eps";
   ylabel = "Mean squared error";
   common_plot(data_file,script_file,plot_file,ylabel);
 }
@@ -650,19 +651,19 @@ void plot_alpha_errors(
 
   data_file = errors_folder + "biassq_alpha";
   script_file = errors_folder + "biassq_alpha.p";
-  plot_file = errors_folder + "biassq_alpha.eps";
+  plot_file = errors_folder + common_kappa + "biassq_alpha.eps";
   ylabel = "Bias squared";
   common_plot(data_file,script_file,plot_file,ylabel);
 
   data_file = errors_folder + "variance_alpha";
   script_file = errors_folder + "variance_alpha.p";
-  plot_file = errors_folder + "variance_alpha.eps";
+  plot_file = errors_folder + common_kappa + "variance_alpha.eps";
   ylabel = "Variance";
   common_plot(data_file,script_file,plot_file,ylabel);
 
   data_file = errors_folder + "mse_alpha";
   script_file = errors_folder + "mse_alpha.p";
-  plot_file = errors_folder + "mse_alpha.eps";
+  plot_file = errors_folder + common_kappa + "mse_alpha.eps";
   ylabel = "Mean squared error";
   common_plot(data_file,script_file,plot_file,ylabel);
 }
@@ -674,19 +675,19 @@ void plot_eta_errors(
 
   data_file = errors_folder + "biassq_eta";
   script_file = errors_folder + "biassq_eta.p";
-  plot_file = errors_folder + "biassq_eta.eps";
+  plot_file = errors_folder + common_kappa + "biassq_eta.eps";
   ylabel = "Bias squared";
   common_plot(data_file,script_file,plot_file,ylabel);
 
   data_file = errors_folder + "variance_eta";
   script_file = errors_folder + "variance_eta.p";
-  plot_file = errors_folder + "variance_eta.eps";
+  plot_file = errors_folder + common_kappa + "variance_eta.eps";
   ylabel = "Variance";
   common_plot(data_file,script_file,plot_file,ylabel);
 
   data_file = errors_folder + "mse_eta";
   script_file = errors_folder + "mse_eta.p";
-  plot_file = errors_folder + "mse_eta.eps";
+  plot_file = errors_folder + common_kappa + "mse_eta.eps";
   ylabel = "Mean squared error";
   common_plot(data_file,script_file,plot_file,ylabel);
 }
@@ -698,19 +699,19 @@ void plot_kappa_errors(
 
   data_file = errors_folder + "biassq_kappa";
   script_file = errors_folder + "biassq_kappa.p";
-  plot_file = errors_folder + "biassq_kappa.eps";
+  plot_file = errors_folder + common_kappa + "biassq_kappa.eps";
   ylabel = "Bias squared";
   common_plot(data_file,script_file,plot_file,ylabel);
 
   data_file = errors_folder + "variance_kappa";
   script_file = errors_folder + "variance_kappa.p";
-  plot_file = errors_folder + "variance_kappa.eps";
+  plot_file = errors_folder + common_kappa + "variance_kappa.eps";
   ylabel = "Variance";
   common_plot(data_file,script_file,plot_file,ylabel);
 
   data_file = errors_folder + "mse_kappa";
   script_file = errors_folder + "mse_kappa.p";
-  plot_file = errors_folder + "mse_kappa.eps";
+  plot_file = errors_folder + common_kappa + "mse_kappa.eps";
   ylabel = "Mean squared error";
   common_plot(data_file,script_file,plot_file,ylabel);
 }
@@ -722,19 +723,19 @@ void plot_beta_errors(
 
   data_file = errors_folder + "biassq_beta";
   script_file = errors_folder + "biassq_beta.p";
-  plot_file = errors_folder + "biassq_beta.eps";
+  plot_file = errors_folder + common_kappa + "biassq_beta.eps";
   ylabel = "Bias squared";
   common_plot(data_file,script_file,plot_file,ylabel);
 
   data_file = errors_folder + "variance_beta";
   script_file = errors_folder + "variance_beta.p";
-  plot_file = errors_folder + "variance_beta.eps";
+  plot_file = errors_folder + common_kappa + "variance_beta.eps";
   ylabel = "Variance";
   common_plot(data_file,script_file,plot_file,ylabel);
 
   data_file = errors_folder + "mse_beta";
   script_file = errors_folder + "mse_beta.p";
-  plot_file = errors_folder + "mse_beta.eps";
+  plot_file = errors_folder + common_kappa + "mse_beta.eps";
   ylabel = "Mean squared error";
   common_plot(data_file,script_file,plot_file,ylabel);
 }
@@ -746,19 +747,19 @@ void plot_ecc_errors(
 
   data_file = errors_folder + "biassq_ecc";
   script_file = errors_folder + "biassq_ecc.p";
-  plot_file = errors_folder + "biassq_ecc.eps";
+  plot_file = errors_folder + common_kappa + "biassq_ecc.eps";
   ylabel = "Bias squared";
   common_plot(data_file,script_file,plot_file,ylabel);
 
   data_file = errors_folder + "variance_ecc";
   script_file = errors_folder + "variance_ecc.p";
-  plot_file = errors_folder + "variance_ecc.eps";
+  plot_file = errors_folder + common_kappa + "variance_ecc.eps";
   ylabel = "Variance";
   common_plot(data_file,script_file,plot_file,ylabel);
 
   data_file = errors_folder + "mse_ecc";
   script_file = errors_folder + "mse_ecc.p";
-  plot_file = errors_folder + "mse_ecc.eps";
+  plot_file = errors_folder + common_kappa + "mse_ecc.eps";
   ylabel = "Mean squared error";
   common_plot(data_file,script_file,plot_file,ylabel);
 }
@@ -770,19 +771,19 @@ void plot_all_errors(
 
   data_file = errors_folder + "biassq_all";
   script_file = errors_folder + "biassq_all.p";
-  plot_file = errors_folder + "biassq_all.eps";
+  plot_file = errors_folder + common_kappa + "biassq_all.eps";
   ylabel = "Bias squared";
   common_plot(data_file,script_file,plot_file,ylabel);
 
   data_file = errors_folder + "variance_all";
   script_file = errors_folder + "variance_all.p";
-  plot_file = errors_folder + "variance_all.eps";
+  plot_file = errors_folder + common_kappa + "variance_all.eps";
   ylabel = "Variance";
   common_plot(data_file,script_file,plot_file,ylabel);
 
   data_file = errors_folder + "mse_all";
   script_file = errors_folder + "mse_all.p";
-  plot_file = errors_folder + "mse_all.eps";
+  plot_file = errors_folder + common_kappa + "mse_all.eps";
   ylabel = "Mean squared error";
   common_plot(data_file,script_file,plot_file,ylabel);
 }
@@ -800,6 +801,8 @@ void plot_errors(string &n_str)
     string kappa_folder = n_str + "fixed_kappa/kappa_" + kappa_str + "/";
     string errors_folder = kappa_folder + "errors/";
 
+    common_kappa = common + "_k" + kappa_str + "_";
+ 
     // psi errors
     plot_psi_errors(n_str,kappa_str,errors_folder);
     // alpha errors
@@ -884,6 +887,9 @@ int main(int argc, char **argv)
 
   string n_str = "./N_" + boost::lexical_cast<string>(parameters.N) 
                 + "_prior" + boost::lexical_cast<string>(parameters.prior) + "/";
+
+  common = "n" + boost::lexical_cast<string>(parameters.N) 
+                + "_p" + boost::lexical_cast<string>(parameters.prior);
 
   if (parameters.prior == 2) {
     NUM_METHODS = 6;
