@@ -14,7 +14,7 @@ Experiments::Experiments(int iterations) : iterations(iterations)
 
 void Experiments::simulate()
 {
-  int N = 40;
+  int N = 10;
   double kappa,beta,eccentricity;
 
   //string n_str = "N_" + boost::lexical_cast<string>(N) + "_uniform_prior/";
@@ -36,7 +36,7 @@ void Experiments::simulate()
   //string data_file = "random_sample.dat";
   //string data_file = "random_sample_new2.dat";
 
-  double INIT_KAPPA = 10;
+  double INIT_KAPPA = 1;
   double MAX_KAPPA = 100;
   double KAPPA_INCREMENT = 10;
   double ecc;

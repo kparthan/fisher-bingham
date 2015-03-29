@@ -66,7 +66,7 @@ class Kent  // FB5
 
     void computeExpectation();
 
-    double computeLogFisherAxes();
+    double computeLogFisherAxes(double N = 1);
 
     double computeLogFisherScale();
 
@@ -86,9 +86,9 @@ class Kent  // FB5
 
     double computeLogPriorScale();
 
-    double computeLogFisherInformation();
+    double computeLogFisherInformation_Single(double);
 
-    double computeLogFisherInformation(double);
+    double computeLogFisherInformation(double N = 1);
 
     void computeAllEstimators(
       std::vector<Vector> &, std::vector<struct Estimates> &, int, int

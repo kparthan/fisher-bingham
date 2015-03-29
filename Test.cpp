@@ -882,7 +882,7 @@ void Test::mml_estimation2(void)
   string data_file = "random_sample.dat";
 
   kappa = 10;
-  ecc = 0.7;
+  ecc = 0.9;
   beta = 0.5 * kappa * ecc;
 
   // in degrees
@@ -901,8 +901,8 @@ void Test::mml_estimation2(void)
   //data_file = "./support/R_codes/whin_sill.txt";
 
   random_sample = load_data_table(data_file);
-  //kent.computeAllEstimators(random_sample,all_estimates,1,1);
-  kent.computeAllEstimators(random_sample,all_estimates,1,0);
+  kent.computeAllEstimators(random_sample,all_estimates,1,1);
+  //kent.computeAllEstimators(random_sample,all_estimates,1,0);
 }
 
 void Test::vmf_all_estimation()

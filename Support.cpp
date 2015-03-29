@@ -1758,8 +1758,8 @@ void modelOneComponent(struct Parameters &parameters, std::vector<Vector> &data)
     double psi = 45; psi *= PI/180;
     double alpha = 90; alpha *= PI/180;
     double eta = 90; eta *= PI/180;
-    double kappa = 1;
-    double ecc = 0.1;
+    double kappa = 10;
+    double ecc = 0.9;
     double beta = 0.5 * kappa * ecc;
     Kent kent(psi,alpha,eta,kappa,beta);
     std::vector<struct Estimates> all_estimates;
