@@ -8,6 +8,7 @@ extern int INFER_COMPONENTS;
 extern string EM_LOG_FOLDER;
 extern struct stat st;
 extern int MML_FAIL;
+extern int PRIOR;
 
 Experiments::Experiments(int iterations) : iterations(iterations)
 {}
@@ -22,7 +23,8 @@ void Experiments::simulate()
   //string n_str = "N_" + boost::lexical_cast<string>(N) + "_beta_prior/";
   //string n_str = "N_" + boost::lexical_cast<string>(N) + "_new_prior/";
   //string n_str = "N_" + boost::lexical_cast<string>(N) + "_new2_prior/";
-  string n_str = "N_" + boost::lexical_cast<string>(N) + "_prior3";
+  string n_str = "N_" + boost::lexical_cast<string>(N) 
+                 + "_prior" + boost::lexical_cast<string>(PRIOR) + "/";
   string parent_dir = "experiments/single_kent/" + n_str + "/";
   check_and_create_directory(parent_dir);
 
