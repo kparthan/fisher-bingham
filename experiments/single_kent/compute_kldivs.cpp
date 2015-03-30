@@ -595,11 +595,11 @@ int main(int argc, char **argv)
 {
   struct Parameters parameters = parseCommandLineInput(argc,argv);
 
-  string n_str = "./N_" + boost::lexical_cast<string>(parameters.N) 
+  string n_str = "./estimates/N_" + boost::lexical_cast<string>(parameters.N) 
                 + "_prior" + boost::lexical_cast<string>(parameters.prior) + "/";
 
   common = "n" + boost::lexical_cast<string>(parameters.N) 
-                + "_p" + boost::lexical_cast<string>(parameters.prior);
+           + "_p" + boost::lexical_cast<string>(parameters.prior);
 
   if (parameters.prior == 2) {
     NUM_METHODS = 6;

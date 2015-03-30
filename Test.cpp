@@ -878,11 +878,11 @@ void Test::mml_estimation2(void)
   std::vector<struct Estimates> all_estimates;
   std::vector<Vector> random_sample;
   double kappa,beta,ecc;
-  int sample_size = 10;
+  int sample_size = 50;
   string data_file = "random_sample.dat";
 
   kappa = 10;
-  ecc = 0.9;
+  ecc = 0.3;
   beta = 0.5 * kappa * ecc;
 
   // in degrees

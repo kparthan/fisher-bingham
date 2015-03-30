@@ -29,10 +29,6 @@ typedef std::vector<double> Vector;
 #define ALPHA M_PI/2.0
 #define ETA M_PI/2.0
 
-#define INIT_ECC 0.1
-#define MAX_ECC 0.9
-#define ECC_INCREMENT 0.4
-
 struct stat st = {0};
 int NUM_METHODS;
 string kappa_str,ecc_str,prior_str,errors_folder;
@@ -120,30 +116,24 @@ std::vector<Vector> flip(std::vector<Vector> &table)
   return inverted_table;
 }
 
-int minimumIndex(Vector &values)
+int minimumIndex(int map_index, Vector &values)
 {
+  Vector new_list(4,0);
+  new_list[MOMENT] = values[MOMENT];
+  if (map_index == 5) new_list[MLE] = values[map_index];
+  else new_list[MLE] = values[MLE];
+  new_list[MAP] = values[map_index];
+  new_list[MML] = values[MML];
+
   int min_index = 0;
-  double min_val = values[0];
-  for (int i=1; i<values.size(); i++) { 
-    if (values[i] <= min_val) {
+  double min_val = new_list[0];
+  for (int i=1; i<new_list.size(); i++) { 
+    if (new_list[i] <= min_val) {
       min_index = i;
-      min_val = values[i];
+      min_val = new_list[i];
     } // if()
   } // for()
   return min_index;
-}
-
-int maximumIndex(Vector &values)
-{
-  int max_index = 0;
-  double max_val = values[0];
-  for (int i=1; i<values.size(); i++) { 
-    if (values[i] > max_val) {
-      max_index = i;
-      max_val = values[i];
-    }
-  }
-  return max_index;
 }
 
 double computeMean(Vector &list)
@@ -213,7 +203,7 @@ Vector computeMeanSquaredError(std::vector<Vector> &p_est, double p)
 
 void compute_psi_errors(int N) 
 {
-  string n_str = "N_" + boost::lexical_cast<string>(N);
+  string n_str = "./estimates/N_" + boost::lexical_cast<string>(N);
   std::vector<Vector> psi_est;
   Vector biassq_est,variance_est,mse_est;
 
@@ -252,7 +242,7 @@ void compute_psi_errors(int N)
 
 void compute_alpha_errors(int N) 
 {
-  string n_str = "N_" + boost::lexical_cast<string>(N);
+  string n_str = "./estimates/N_" + boost::lexical_cast<string>(N);
   std::vector<Vector> alpha_est;
   Vector biassq_est,variance_est,mse_est;
 
@@ -291,7 +281,7 @@ void compute_alpha_errors(int N)
 
 void compute_eta_errors(int N) 
 {
-  string n_str = "N_" + boost::lexical_cast<string>(N);
+  string n_str = "./estimates/N_" + boost::lexical_cast<string>(N);
   std::vector<Vector> eta_est;
   Vector biassq_est,variance_est,mse_est;
 
@@ -331,7 +321,7 @@ void compute_eta_errors(int N)
 void compute_kappa_errors(
   int N, double kappa
 ) {
-  string n_str = "N_" + boost::lexical_cast<string>(N);
+  string n_str = "./estimates/N_" + boost::lexical_cast<string>(N);
   std::vector<Vector> kappas_est;
   Vector biassq_est,variance_est,mse_est;
 
@@ -371,7 +361,7 @@ void compute_kappa_errors(
 void compute_beta_errors(
   int N, double kappa, double ecc
 ) {
-  string n_str = "N_" + boost::lexical_cast<string>(N);
+  string n_str = "./estimates/N_" + boost::lexical_cast<string>(N);
   std::vector<Vector> betas_est;
   Vector biassq_est,variance_est,mse_est;
 
@@ -413,7 +403,7 @@ void compute_beta_errors(
 void compute_ecc_errors(
   int N, double kappa, double ecc
 ) {
-  string n_str = "N_" + boost::lexical_cast<string>(N);
+  string n_str = "./estimates/N_" + boost::lexical_cast<string>(N);
   std::vector<Vector> ecc_est;
   Vector biassq_est,variance_est,mse_est;
 
@@ -525,11 +515,55 @@ void compute_all_errors(
   combine(mse_files,output_file);
 }
 
+void computeWins(
+  int map_index, ostream &out, std::vector<Vector> &values
+) {
+  std::vector<int> wins(4,0);
+  int min_index;
+
+  for (int i=0; i<values.size(); i++) {
+    min_index = minimumIndex(map_index,values[i]);
+    wins[min_index]++;
+  }
+  double percent_wins;
+  for (int j=0; j<wins.size(); j++) {
+    percent_wins = wins[j] * 100.0 / values.size();
+    out << fixed << setw(10) << setprecision(2) << percent_wins;
+  }
+  out << endl;
+}
+
+void process_kldivs(int N)
+{
+  int num_maps,map_index;
+  if (NUM_METHODS == 5) {
+    num_maps = 2;
+  } else {
+    num_maps = 3;
+  }
+
+  string n_str = "./estimates/N_" + boost::lexical_cast<string>(N);
+  for (int i=1; i<=num_maps; i++) {
+    if (i == 1) map_index = 2;
+    else if (i == 2) map_index = 4;
+    else if (i == 3) map_index = 5;
+    string wins_kldivs_file = errors_folder + "wins_kldivs_map"
+                              + boost::lexical_cast<string>(i) + ".dat";
+    ofstream out(wins_kldivs_file.c_str(),ios::app);
+    out << fixed << setw(10) << setprecision(0) << N << "\t\t";
+    string kldivs_file = n_str + "_prior" + prior_str + "/"
+                         "k_" + kappa_str + "_e_" + ecc_str + "/kldivs";
+    std::vector<Vector> kldivs = load_table(kldivs_file,NUM_METHODS);
+    computeWins(map_index,out,kldivs);
+    out.close();
+  }
+}
+
 void process_estimates(double kappa, double ecc)
 {
   string n_str;
 
-  for (int N=5; N<=100; N+=5) {
+  for (int N=10; N<=50; N+=5) {
     // psi errors
     compute_psi_errors(N);
     // alpha errors
@@ -546,6 +580,9 @@ void process_estimates(double kappa, double ecc)
 
     // combined errors
     compute_all_errors(errors_folder);
+
+    // process kldivs
+    process_kldivs(N);
   } // for(N)
 }
 
@@ -766,6 +803,52 @@ void plot_errors()
   plot_all_errors(kappa_str,errors_folder);
 }
 
+void plot_script_kldivs_wins(string &kldivs_folder, int num_map)
+{
+  string map = boost::lexical_cast<string>(num_map);
+  string wins_kldivs_file = kldivs_folder + "wins_kldivs_map" + map + ".dat";
+  string script_file = kldivs_folder + "wins_kldivs_map" + map + ".p";
+  string plot_file = kldivs_folder + "wins_kldivs_map" + map + ".eps";
+  ofstream out(script_file.c_str());
+  out << "set terminal postscript eps enhanced color\n\n";
+  out << "set output \"" << plot_file << "\"\n\n";
+  out << "set grid y\n";
+  out << "set style data histograms\n";
+  out << "set style fill solid 1.0 noborder\n";
+  out << "set ytics 10 nomirror\n";
+  out << "set yrange [:100]\n";
+  out << "set xlabel \"Sample size\"\n";
+  out << "set ylabel \"\% of wins\"\n";
+  out << "set ytics 10\n\n"; 
+  if (num_map != 3) {
+    out << "plot \"" << wins_kldivs_file << "\" using 2 t \"MOM\" lc rgb \"red\", \\\n"
+        << "\"\" using 3 t \"MLE\" lc rgb \"blue\", \\\n"
+        << "\"\" using 4 t \"MAP" << num_map << "\" lc rgb \"dark-green\", \\\n"
+        << "\"\" using 5:xtic(1) t \"MML\" lc rgb \"dark-magenta\"";
+  } else {
+    out << "plot \"" << wins_kldivs_file << "\" using 2 t \"MOM\" lc rgb \"red\", \\\n"
+        << "\"\" using 4 t \"MAP3 = MLE\" lc rgb \"dark-green\", \\\n"
+        << "\"\" using 5:xtic(1) t \"MML\" lc rgb \"dark-magenta\"";
+  }
+  out.close();
+  string cmd = "gnuplot -persist " + script_file;
+  if(system(cmd.c_str()));
+}
+
+void plot_kldivs()
+{
+  int num_maps,map_index;
+  if (NUM_METHODS == 5) {
+    num_maps = 2;
+  } else {
+    num_maps = 3;
+  }
+
+  for (int i=1; i<=num_maps; i++) {
+    plot_script_kldivs_wins(errors_folder,i);
+  }
+}
+
 /* E **********************************************************************************/ 
 
 /* S **********************************************************************************/ 
@@ -791,7 +874,7 @@ void create_required_folders(
 
   prior_str = boost::lexical_cast<string>(prior);
 
-  string all = "./varying_n_prior" + prior_str + "/";
+  string all = "./estimates/varying_n_prior" + prior_str + "/";
   check_and_create_directory(all);
 
   errors_folder = all + "k_" + kappa_str + "_e_" + ecc_str + "/";
@@ -840,6 +923,8 @@ int main(int argc, char **argv)
   process_estimates(kappa,ecc);
 
   plot_errors();
+
+  plot_kldivs();
 
 }
 
