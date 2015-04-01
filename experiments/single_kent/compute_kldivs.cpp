@@ -171,9 +171,13 @@ void plot_script_kldivs_wins(string &kldivs_folder, int num_map)
   out << "set style fill solid 1.0 noborder\n";
   out << "set ytics 10 nomirror\n";
   out << "set yrange [:100]\n";
-  out << "set xlabel \"eccentricity\"\n";
+  out << "set xlabel \"eccentricity\\n\"\n";
   out << "set ylabel \"\% of wins\"\n";
   out << "set ytics 10\n\n"; 
+  out << "set xlabel font \"Times-Roman, 25\"\n";
+  out << "set ylabel font \"Times-Roman, 25\"\n";
+  out << "set xtics font \"Times-Roman, 20\"\n";
+  out << "set ytics font \"Times-Roman, 20\"\n";
   if (num_map != 3) {
     out << "plot \"" << wins_kldivs_file << "\" using 2 t \"MOM\" lc rgb \"red\", \\\n"
         << "\"\" using 3 t \"MLE\" lc rgb \"blue\", \\\n"
@@ -324,6 +328,10 @@ void plot_avg_kldivs(string &kldivs_folder)
   out << "set style data linespoints\n";
   out << "set style fill solid 1.0 noborder\n";
   out << "set ylabel \"Average KL-divergence\"\n";
+  out << "set xlabel font \"Times-Roman, 25\"\n";
+  out << "set ylabel font \"Times-Roman, 25\"\n";
+  out << "set xtics font \"Times-Roman, 20\"\n";
+  out << "set ytics font \"Times-Roman, 20\"\n";
   if (NUM_METHODS == 6) {
     out << "plot \"" << avg_kldivs_file << "\" using 1:2 t \"MOM\" lc rgb \"red\", \\\n"
         << "\"\" using 1:7 t \"MAP3 = MLE\" lc rgb \"blue\", \\\n"
@@ -451,6 +459,10 @@ void plot_kldivs_diff(string &kldivs_folder, double max)
   out << "set grid y\n";
   out << "set style data histograms\n";
   out << "set style fill solid 1.0 noborder\n";
+  out << "set xlabel font \"Times-Roman, 25\"\n";
+  out << "set ylabel font \"Times-Roman, 25\"\n";
+  out << "set xtics font \"Times-Roman, 20\"\n";
+  out << "set ytics font \"Times-Roman, 20\"\n";
   out << "set yr [0:" << max+0.1 << "]\n";
   out << "plot \"" << kldivs_diff_file << "\" using 2 t \"MOM\" lc rgb \"red\", \\\n"
       << "\"\" using 3 t \"MLE\" lc rgb \"blue\", \\\n"
@@ -462,7 +474,7 @@ void plot_kldivs_diff(string &kldivs_folder, double max)
     out << "\"\" using 5 t \"MAP2\" lc rgb \"pink\"\n";
   }
   out << "unset ylabel\n";
-  out << "set xlabel \"eccentricity\"\n";
+  out << "set xlabel \"eccentricity\\n\"\n";
   out << "set tmargin 0\n";
   out << "set bmargin at screen 0.1\n";
   out << "set xtics nomirror\n";

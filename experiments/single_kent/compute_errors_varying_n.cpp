@@ -32,6 +32,7 @@ typedef std::vector<double> Vector;
 struct stat st = {0};
 int NUM_METHODS;
 string kappa_str,ecc_str,prior_str,errors_folder;
+string common;
 
 std::vector<Vector> load_table(string &file_name, int D)
 {
@@ -207,9 +208,9 @@ void compute_psi_errors(int N)
   std::vector<Vector> psi_est;
   Vector biassq_est,variance_est,mse_est;
 
-  string biassq_file = errors_folder + "biassq_psi";
-  string variance_file = errors_folder + "variance_psi";
-  string mse_file = errors_folder + "mse_psi";
+  string biassq_file = errors_folder + common + "biassq_psi";
+  string variance_file = errors_folder + common + "variance_psi";
+  string mse_file = errors_folder + common + "mse_psi";
   ofstream biassq(biassq_file.c_str(),ios::app);
   ofstream variance(variance_file.c_str(),ios::app);
   ofstream mse(mse_file.c_str(),ios::app);
@@ -246,9 +247,9 @@ void compute_alpha_errors(int N)
   std::vector<Vector> alpha_est;
   Vector biassq_est,variance_est,mse_est;
 
-  string biassq_file = errors_folder + "biassq_alpha";
-  string variance_file = errors_folder + "variance_alpha";
-  string mse_file = errors_folder + "mse_alpha";
+  string biassq_file = errors_folder + common + "biassq_alpha";
+  string variance_file = errors_folder + common + "variance_alpha";
+  string mse_file = errors_folder + common + "mse_alpha";
   ofstream biassq(biassq_file.c_str(),ios::app);
   ofstream variance(variance_file.c_str(),ios::app);
   ofstream mse(mse_file.c_str(),ios::app);
@@ -285,9 +286,9 @@ void compute_eta_errors(int N)
   std::vector<Vector> eta_est;
   Vector biassq_est,variance_est,mse_est;
 
-  string biassq_file = errors_folder + "biassq_eta";
-  string variance_file = errors_folder + "variance_eta";
-  string mse_file = errors_folder + "mse_eta";
+  string biassq_file = errors_folder + common + "biassq_eta";
+  string variance_file = errors_folder + common + "variance_eta";
+  string mse_file = errors_folder + common + "mse_eta";
   ofstream biassq(biassq_file.c_str(),ios::app);
   ofstream variance(variance_file.c_str(),ios::app);
   ofstream mse(mse_file.c_str(),ios::app);
@@ -325,9 +326,9 @@ void compute_kappa_errors(
   std::vector<Vector> kappas_est;
   Vector biassq_est,variance_est,mse_est;
 
-  string biassq_file = errors_folder + "biassq_kappa";
-  string variance_file = errors_folder + "variance_kappa";
-  string mse_file = errors_folder + "mse_kappa";
+  string biassq_file = errors_folder + common + "biassq_kappa";
+  string variance_file = errors_folder + common + "variance_kappa";
+  string mse_file = errors_folder + common + "mse_kappa";
   ofstream biassq(biassq_file.c_str(),ios::app);
   ofstream variance(variance_file.c_str(),ios::app);
   ofstream mse(mse_file.c_str(),ios::app);
@@ -365,9 +366,9 @@ void compute_beta_errors(
   std::vector<Vector> betas_est;
   Vector biassq_est,variance_est,mse_est;
 
-  string biassq_file = errors_folder + "biassq_beta";
-  string variance_file = errors_folder + "variance_beta";
-  string mse_file = errors_folder + "mse_beta";
+  string biassq_file = errors_folder + common + "biassq_beta";
+  string variance_file = errors_folder + common + "variance_beta";
+  string mse_file = errors_folder + common + "mse_beta";
   ofstream biassq(biassq_file.c_str(),ios::app);
   ofstream variance(variance_file.c_str(),ios::app);
   ofstream mse(mse_file.c_str(),ios::app);
@@ -407,9 +408,9 @@ void compute_ecc_errors(
   std::vector<Vector> ecc_est;
   Vector biassq_est,variance_est,mse_est;
 
-  string biassq_file = errors_folder + "biassq_ecc";
-  string variance_file = errors_folder + "variance_ecc";
-  string mse_file = errors_folder + "mse_ecc";
+  string biassq_file = errors_folder + common + "biassq_ecc";
+  string variance_file = errors_folder + common + "variance_ecc";
+  string mse_file = errors_folder + common + "mse_ecc";
   ofstream biassq(biassq_file.c_str(),ios::app);
   ofstream variance(variance_file.c_str(),ios::app);
   ofstream mse(mse_file.c_str(),ios::app);
@@ -475,43 +476,43 @@ void compute_all_errors(
   std::vector<string> biassq_files,variance_files,mse_files;
   string biassq_file,variance_file,mse_file,output_file;
 
-  biassq_file = errors_folder + "biassq_psi";
+  biassq_file = errors_folder + common + "biassq_psi";
   biassq_files.push_back(biassq_file);
-  biassq_file = errors_folder + "biassq_alpha";
+  biassq_file = errors_folder + common + "biassq_alpha";
   biassq_files.push_back(biassq_file);
-  biassq_file = errors_folder + "biassq_eta";
+  biassq_file = errors_folder + common + "biassq_eta";
   biassq_files.push_back(biassq_file);
-  biassq_file = errors_folder + "biassq_kappa";
+  biassq_file = errors_folder + common + "biassq_kappa";
   biassq_files.push_back(biassq_file);
-  biassq_file = errors_folder + "biassq_beta";
+  biassq_file = errors_folder + common + "biassq_beta";
   biassq_files.push_back(biassq_file);
-  output_file = errors_folder + "biassq_all";
+  output_file = errors_folder + common + "biassq_all";
   combine(biassq_files,output_file);
 
-  variance_file = errors_folder + "variance_psi";
+  variance_file = errors_folder + common + "variance_psi";
   variance_files.push_back(variance_file);
-  variance_file = errors_folder + "variance_alpha";
+  variance_file = errors_folder + common + "variance_alpha";
   variance_files.push_back(variance_file);
-  variance_file = errors_folder + "variance_eta";
+  variance_file = errors_folder + common + "variance_eta";
   variance_files.push_back(variance_file);
-  variance_file = errors_folder + "variance_kappa";
+  variance_file = errors_folder + common + "variance_kappa";
   variance_files.push_back(variance_file);
-  variance_file = errors_folder + "variance_beta";
+  variance_file = errors_folder + common + "variance_beta";
   variance_files.push_back(variance_file);
-  output_file = errors_folder + "variance_all";
+  output_file = errors_folder + common + "variance_all";
   combine(variance_files,output_file);
 
-  mse_file = errors_folder + "mse_psi";
+  mse_file = errors_folder + common + "mse_psi";
   mse_files.push_back(mse_file);
-  mse_file = errors_folder + "mse_alpha";
+  mse_file = errors_folder + common + "mse_alpha";
   mse_files.push_back(mse_file);
-  mse_file = errors_folder + "mse_eta";
+  mse_file = errors_folder + common + "mse_eta";
   mse_files.push_back(mse_file);
-  mse_file = errors_folder + "mse_kappa";
+  mse_file = errors_folder + common + "mse_kappa";
   mse_files.push_back(mse_file);
-  mse_file = errors_folder + "mse_beta";
+  mse_file = errors_folder + common + "mse_beta";
   mse_files.push_back(mse_file);
-  output_file = errors_folder + "mse_all";
+  output_file = errors_folder + common + "mse_all";
   combine(mse_files,output_file);
 }
 
@@ -547,7 +548,7 @@ void process_kldivs(int N)
     if (i == 1) map_index = 2;
     else if (i == 2) map_index = 4;
     else if (i == 3) map_index = 5;
-    string wins_kldivs_file = errors_folder + "wins_kldivs_map"
+    string wins_kldivs_file = errors_folder + common + "wins_kldivs_map"
                               + boost::lexical_cast<string>(i) + ".dat";
     ofstream out(wins_kldivs_file.c_str(),ios::app);
     out << fixed << setw(10) << setprecision(0) << N << "\t\t";
@@ -594,9 +595,13 @@ void common_plot(
   out << "set output \"" << plot_file << "\"\n\n";
   out << "set style data linespoints\n";
   out << "set style fill solid 1.0 noborder\n";
-  out << "set xlabel \"Sample size\"\n";
+  out << "set xlabel \"Sample size\\n\"\n";
   out << "set ylabel \"" << ylabel << "\"\n";
   out << "set xr [10:50]\n";
+  out << "set xlabel font \"Times-Roman, 25\"\n";
+  out << "set ylabel font \"Times-Roman, 25\"\n";
+  out << "set xtics font \"Times-Roman, 20\"\n";
+  out << "set ytics font \"Times-Roman, 20\"\n";
   if (NUM_METHODS == 5) {
     out << "plot \"" << data_file << "\" using 1:2 t \"MOM\" lc rgb \"red\", \\\n"
         << "\"\" using 1:3 t \"MLE\" lc rgb \"blue\", \\\n"
@@ -620,21 +625,21 @@ void plot_psi_errors(
 ) {
   string data_file,script_file,plot_file,ylabel;
 
-  data_file = errors_folder + "biassq_psi";
-  script_file = errors_folder + "biassq_psi.p";
-  plot_file = errors_folder + "biassq_psi.eps";
+  data_file = errors_folder + common + "biassq_psi";
+  script_file = errors_folder + common + "biassq_psi.p";
+  plot_file = errors_folder + common + "biassq_psi.eps";
   ylabel = "Bias squared";
   common_plot(data_file,script_file,plot_file,ylabel);
 
-  data_file = errors_folder + "variance_psi";
-  script_file = errors_folder + "variance_psi.p";
-  plot_file = errors_folder + "variance_psi.eps";
+  data_file = errors_folder + common + "variance_psi";
+  script_file = errors_folder + common + "variance_psi.p";
+  plot_file = errors_folder + common + "variance_psi.eps";
   ylabel = "Variance";
   common_plot(data_file,script_file,plot_file,ylabel);
 
-  data_file = errors_folder + "mse_psi";
-  script_file = errors_folder + "mse_psi.p";
-  plot_file = errors_folder + "mse_psi.eps";
+  data_file = errors_folder + common + "mse_psi";
+  script_file = errors_folder + common + "mse_psi.p";
+  plot_file = errors_folder + common + "mse_psi.eps";
   ylabel = "Mean squared error";
   common_plot(data_file,script_file,plot_file,ylabel);
 }
@@ -644,21 +649,21 @@ void plot_alpha_errors(
 ) {
   string data_file,script_file,plot_file,ylabel;
 
-  data_file = errors_folder + "biassq_alpha";
-  script_file = errors_folder + "biassq_alpha.p";
-  plot_file = errors_folder + "biassq_alpha.eps";
+  data_file = errors_folder + common + "biassq_alpha";
+  script_file = errors_folder + common + "biassq_alpha.p";
+  plot_file = errors_folder + common + "biassq_alpha.eps";
   ylabel = "Bias squared";
   common_plot(data_file,script_file,plot_file,ylabel);
 
-  data_file = errors_folder + "variance_alpha";
-  script_file = errors_folder + "variance_alpha.p";
-  plot_file = errors_folder + "variance_alpha.eps";
+  data_file = errors_folder + common + "variance_alpha";
+  script_file = errors_folder + common + "variance_alpha.p";
+  plot_file = errors_folder + common + "variance_alpha.eps";
   ylabel = "Variance";
   common_plot(data_file,script_file,plot_file,ylabel);
 
-  data_file = errors_folder + "mse_alpha";
-  script_file = errors_folder + "mse_alpha.p";
-  plot_file = errors_folder + "mse_alpha.eps";
+  data_file = errors_folder + common + "mse_alpha";
+  script_file = errors_folder + common + "mse_alpha.p";
+  plot_file = errors_folder + common + "mse_alpha.eps";
   ylabel = "Mean squared error";
   common_plot(data_file,script_file,plot_file,ylabel);
 }
@@ -668,21 +673,21 @@ void plot_eta_errors(
 ) {
   string data_file,script_file,plot_file,ylabel;
 
-  data_file = errors_folder + "biassq_eta";
-  script_file = errors_folder + "biassq_eta.p";
-  plot_file = errors_folder + "biassq_eta.eps";
+  data_file = errors_folder + common + "biassq_eta";
+  script_file = errors_folder + common + "biassq_eta.p";
+  plot_file = errors_folder + common + "biassq_eta.eps";
   ylabel = "Bias squared";
   common_plot(data_file,script_file,plot_file,ylabel);
 
-  data_file = errors_folder + "variance_eta";
-  script_file = errors_folder + "variance_eta.p";
-  plot_file = errors_folder + "variance_eta.eps";
+  data_file = errors_folder + common + "variance_eta";
+  script_file = errors_folder + common + "variance_eta.p";
+  plot_file = errors_folder + common + "variance_eta.eps";
   ylabel = "Variance";
   common_plot(data_file,script_file,plot_file,ylabel);
 
-  data_file = errors_folder + "mse_eta";
-  script_file = errors_folder + "mse_eta.p";
-  plot_file = errors_folder + "mse_eta.eps";
+  data_file = errors_folder + common + "mse_eta";
+  script_file = errors_folder + common + "mse_eta.p";
+  plot_file = errors_folder + common + "mse_eta.eps";
   ylabel = "Mean squared error";
   common_plot(data_file,script_file,plot_file,ylabel);
 }
@@ -692,21 +697,21 @@ void plot_kappa_errors(
 ) {
   string data_file,script_file,plot_file,ylabel;
 
-  data_file = errors_folder + "biassq_kappa";
-  script_file = errors_folder + "biassq_kappa.p";
-  plot_file = errors_folder + "biassq_kappa.eps";
+  data_file = errors_folder + common + "biassq_kappa";
+  script_file = errors_folder + common + "biassq_kappa.p";
+  plot_file = errors_folder + common + "biassq_kappa.eps";
   ylabel = "Bias squared";
   common_plot(data_file,script_file,plot_file,ylabel);
 
-  data_file = errors_folder + "variance_kappa";
-  script_file = errors_folder + "variance_kappa.p";
-  plot_file = errors_folder + "variance_kappa.eps";
+  data_file = errors_folder + common + "variance_kappa";
+  script_file = errors_folder + common + "variance_kappa.p";
+  plot_file = errors_folder + common + "variance_kappa.eps";
   ylabel = "Variance";
   common_plot(data_file,script_file,plot_file,ylabel);
 
-  data_file = errors_folder + "mse_kappa";
-  script_file = errors_folder + "mse_kappa.p";
-  plot_file = errors_folder + "mse_kappa.eps";
+  data_file = errors_folder + common + "mse_kappa";
+  script_file = errors_folder + common + "mse_kappa.p";
+  plot_file = errors_folder + common + "mse_kappa.eps";
   ylabel = "Mean squared error";
   common_plot(data_file,script_file,plot_file,ylabel);
 }
@@ -716,21 +721,21 @@ void plot_beta_errors(
 ) {
   string data_file,script_file,plot_file,ylabel;
 
-  data_file = errors_folder + "biassq_beta";
-  script_file = errors_folder + "biassq_beta.p";
-  plot_file = errors_folder + "biassq_beta.eps";
+  data_file = errors_folder + common + "biassq_beta";
+  script_file = errors_folder + common + "biassq_beta.p";
+  plot_file = errors_folder + common + "biassq_beta.eps";
   ylabel = "Bias squared";
   common_plot(data_file,script_file,plot_file,ylabel);
 
-  data_file = errors_folder + "variance_beta";
-  script_file = errors_folder + "variance_beta.p";
-  plot_file = errors_folder + "variance_beta.eps";
+  data_file = errors_folder + common + "variance_beta";
+  script_file = errors_folder + common + "variance_beta.p";
+  plot_file = errors_folder + common + "variance_beta.eps";
   ylabel = "Variance";
   common_plot(data_file,script_file,plot_file,ylabel);
 
-  data_file = errors_folder + "mse_beta";
-  script_file = errors_folder + "mse_beta.p";
-  plot_file = errors_folder + "mse_beta.eps";
+  data_file = errors_folder + common + "mse_beta";
+  script_file = errors_folder + common + "mse_beta.p";
+  plot_file = errors_folder + common + "mse_beta.eps";
   ylabel = "Mean squared error";
   common_plot(data_file,script_file,plot_file,ylabel);
 }
@@ -740,21 +745,21 @@ void plot_ecc_errors(
 ) {
   string data_file,script_file,plot_file,ylabel;
 
-  data_file = errors_folder + "biassq_ecc";
-  script_file = errors_folder + "biassq_ecc.p";
-  plot_file = errors_folder + "biassq_ecc.eps";
+  data_file = errors_folder + common + "biassq_ecc";
+  script_file = errors_folder + common + "biassq_ecc.p";
+  plot_file = errors_folder + common + "biassq_ecc.eps";
   ylabel = "Bias squared";
   common_plot(data_file,script_file,plot_file,ylabel);
 
-  data_file = errors_folder + "variance_ecc";
-  script_file = errors_folder + "variance_ecc.p";
-  plot_file = errors_folder + "variance_ecc.eps";
+  data_file = errors_folder + common + "variance_ecc";
+  script_file = errors_folder + common + "variance_ecc.p";
+  plot_file = errors_folder + common + "variance_ecc.eps";
   ylabel = "Variance";
   common_plot(data_file,script_file,plot_file,ylabel);
 
-  data_file = errors_folder + "mse_ecc";
-  script_file = errors_folder + "mse_ecc.p";
-  plot_file = errors_folder + "mse_ecc.eps";
+  data_file = errors_folder + common + "mse_ecc";
+  script_file = errors_folder + common + "mse_ecc.p";
+  plot_file = errors_folder + common + "mse_ecc.eps";
   ylabel = "Mean squared error";
   common_plot(data_file,script_file,plot_file,ylabel);
 }
@@ -764,21 +769,21 @@ void plot_all_errors(
 ) {
   string data_file,script_file,plot_file,ylabel;
 
-  data_file = errors_folder + "biassq_all";
-  script_file = errors_folder + "biassq_all.p";
-  plot_file = errors_folder + "biassq_all.eps";
+  data_file = errors_folder + common + "biassq_all";
+  script_file = errors_folder + common + "biassq_all.p";
+  plot_file = errors_folder + common + "biassq_all.eps";
   ylabel = "Bias squared";
   common_plot(data_file,script_file,plot_file,ylabel);
 
-  data_file = errors_folder + "variance_all";
-  script_file = errors_folder + "variance_all.p";
-  plot_file = errors_folder + "variance_all.eps";
+  data_file = errors_folder + common + "variance_all";
+  script_file = errors_folder + common + "variance_all.p";
+  plot_file = errors_folder + common + "variance_all.eps";
   ylabel = "Variance";
   common_plot(data_file,script_file,plot_file,ylabel);
 
-  data_file = errors_folder + "mse_all";
-  script_file = errors_folder + "mse_all.p";
-  plot_file = errors_folder + "mse_all.eps";
+  data_file = errors_folder + common + "mse_all";
+  script_file = errors_folder + common + "mse_all.p";
+  plot_file = errors_folder + common + "mse_all.eps";
   ylabel = "Mean squared error";
   common_plot(data_file,script_file,plot_file,ylabel);
 }
@@ -806,9 +811,9 @@ void plot_errors()
 void plot_script_kldivs_wins(string &kldivs_folder, int num_map)
 {
   string map = boost::lexical_cast<string>(num_map);
-  string wins_kldivs_file = kldivs_folder + "wins_kldivs_map" + map + ".dat";
-  string script_file = kldivs_folder + "wins_kldivs_map" + map + ".p";
-  string plot_file = kldivs_folder + "wins_kldivs_map" + map + ".eps";
+  string wins_kldivs_file = kldivs_folder + common + "wins_kldivs_map" + map + ".dat";
+  string script_file = kldivs_folder + common + "wins_kldivs_map" + map + ".p";
+  string plot_file = kldivs_folder + common + "wins_kldivs_map" + map + ".eps";
   ofstream out(script_file.c_str());
   out << "set terminal postscript eps enhanced color\n\n";
   out << "set output \"" << plot_file << "\"\n\n";
@@ -817,7 +822,7 @@ void plot_script_kldivs_wins(string &kldivs_folder, int num_map)
   out << "set style fill solid 1.0 noborder\n";
   out << "set ytics 10 nomirror\n";
   out << "set yrange [:100]\n";
-  out << "set xlabel \"Sample size\"\n";
+  out << "set xlabel \"Sample size\\n\"\n";
   out << "set ylabel \"\% of wins\"\n";
   out << "set ytics 10\n\n"; 
   if (num_map != 3) {
@@ -879,7 +884,12 @@ void create_required_folders(
 
   errors_folder = all + "k_" + kappa_str + "_e_" + ecc_str + "/";
   check_and_create_directory(errors_folder);
+
+  int ecc10 = 10 * ecc;
+  string ecc2_str = boost::lexical_cast<string>(ecc10);
+  common = "p" + prior_str + "_k" + kappa_str + "_e" + ecc2_str + "_";
 }
+
 /* E **********************************************************************************/
 
 struct Parameters

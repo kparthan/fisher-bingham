@@ -602,6 +602,10 @@ void common_plot(
   out << "set style fill solid 1.0 noborder\n";
   out << "set xlabel \"eccentricity\"\n";
   out << "set ylabel \"" << ylabel << "\"\n";
+  out << "set xlabel font \"Times-Roman, 25\"\n";
+  out << "set ylabel font \"Times-Roman, 25\"\n";
+  out << "set xtics font \"Times-Roman, 20\"\n";
+  out << "set ytics font \"Times-Roman, 20\"\n";
   if (NUM_METHODS == 5) {
     out << "plot \"" << data_file << "\" using 1:2 t \"MOM\" lc rgb \"red\", \\\n"
         << "\"\" using 1:3 t \"MLE\" lc rgb \"blue\", \\\n"
