@@ -1,0 +1,6 @@
+./visualize/sampled_data/
+./visualize/*dat
+./data/
+./experiments/single_kent/
+./experiments/infer_components/
+./infer/
