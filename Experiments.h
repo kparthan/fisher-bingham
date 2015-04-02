@@ -12,6 +12,8 @@ class Experiments
   public:
     Experiments(int);
 
+    void fisher_uncertainty();
+
     void simulate();
 
     void checkFolders(string &);

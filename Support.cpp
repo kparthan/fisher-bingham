@@ -2173,7 +2173,9 @@ void RunExperiments(int iterations)
 {
   Experiments experiments(iterations);
 
-  experiments.simulate();
+  experiments.fisher_uncertainty();
+
+  //experiments.simulate();
 
   //experiments.infer_components_exp1();
 

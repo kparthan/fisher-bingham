@@ -13,6 +13,22 @@ extern int PRIOR;
 Experiments::Experiments(int iterations) : iterations(iterations)
 {}
 
+void Experiments::fisher_uncertainty()
+{
+  int N = 10;
+
+  double kappa = 100;
+  for (double ecc=0.1; ecc<0.95; ecc+=0.1) {
+    double beta = 0.5 * kappa * ecc;
+    Kent kent(ZAXIS,XAXIS,YAXIS,kappa,beta);
+    kent.computeExpectation();
+    //double log_det_fisher = kent.computeLogFisherScale();
+    double log_det_fisher = kent.computeLogFisherInformation(N);
+    double log_vkb = -2.5*logLatticeConstant(5) - 0.5 * log_det_fisher;
+    cout << "log_vkb: " << log_vkb << endl;
+  }
+}
+
 void Experiments::simulate()
 {
   int N = 45;
