@@ -1759,7 +1759,7 @@ void modelOneComponent(struct Parameters &parameters, std::vector<Vector> &data)
     double alpha = 90; alpha *= PI/180;
     double eta = 90; eta *= PI/180;
     double kappa = 10;
-    double ecc = 0.3;
+    double ecc = 0.1;
     double beta = 0.5 * kappa * ecc;
     Kent kent(psi,alpha,eta,kappa,beta);
     std::vector<struct Estimates> all_estimates;
@@ -2160,6 +2160,8 @@ void TestFunctions(void)
 
   //test.hypothesis_testing();
 
+  //test.hypothesis_testing2();
+
   //test.confidence_region();
 
   //test.infer_mixture();
@@ -2173,9 +2175,9 @@ void RunExperiments(int iterations)
 {
   Experiments experiments(iterations);
 
-  experiments.fisher_uncertainty();
+  //experiments.fisher_uncertainty();
 
-  //experiments.simulate();
+  experiments.simulate();
 
   //experiments.infer_components_exp1();
 
@@ -2358,5 +2360,57 @@ int maximumIndex(Vector &values)
     }
   }
   return max_index;
+}
+
+void chisquare_hypothesis_testing(
+  std::vector<Vector> &data,
+  std::vector<struct Estimates> &all_kent_estimates,
+  Vector &statistics,
+  Vector &pvalues
+) {
+  int num_methods = all_kent_estimates.size();
+  statistics = Vector(num_methods,0);
+  pvalues = Vector(num_methods,0);
+
+  chi_squared chisq(5);
+
+  Kent kent_ml(
+    all_kent_estimates[MLE].psi,
+    all_kent_estimates[MLE].alpha,
+    all_kent_estimates[MLE].eta,
+    all_kent_estimates[MLE].kappa,
+    all_kent_estimates[MLE].beta
+  );
+  double kent_ml_negloglike = kent_ml.computeNegativeLogLikelihood(data);
+  cout << "Kent (MLE) negloglike: " << kent_ml_negloglike << endl;
+
+  double kent_negloglike,log_ratio_statistic,pvalue;
+  for (int i=0; i<num_methods; i++) {
+    if (i != MLE) {
+      // null: Kent(i)
+      Kent kent(
+        all_kent_estimates[i].psi,
+        all_kent_estimates[i].alpha,
+        all_kent_estimates[i].eta,
+        all_kent_estimates[i].kappa,
+        all_kent_estimates[i].beta
+      );
+      kent_negloglike = kent.computeNegativeLogLikelihood(data);
+      log_ratio_statistic = 2 * (kent_negloglike - kent_ml_negloglike);
+      if (log_ratio_statistic < 0) {
+        //assert(fabs(log_ratio_statistic) < 1e-4);
+        log_ratio_statistic = fabs(log_ratio_statistic);
+      }
+      pvalue = 1 - cdf(chisq,log_ratio_statistic);
+    } else { 
+      log_ratio_statistic = 0;
+      pvalue = 1;
+    } // if()
+    cout << "(null: Kent[i]) negloglike: " << kent_negloglike
+         << "; log_ratio_statistic: " << log_ratio_statistic
+         << "; pvalue: " << pvalue << endl;
+    statistics[i] = log_ratio_statistic;
+    pvalues[i] = pvalue;
+  } // for()
 }
 

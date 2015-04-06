@@ -845,7 +845,7 @@ void Test::mml_estimation(void)
   Vector m0,m1,m2;
   double kappa = 100;
   double beta;
-  int sample_size = 100;
+  int sample_size = 10;
   string data_file = "random_sample.dat";
 
   beta = 45;
@@ -878,11 +878,11 @@ void Test::mml_estimation2(void)
   std::vector<struct Estimates> all_estimates;
   std::vector<Vector> random_sample;
   double kappa,beta,ecc;
-  int sample_size = 1000;
+  int sample_size = 10;
   string data_file = "random_sample.dat";
 
   kappa = 10;
-  ecc = 0.9;
+  ecc = 0.1;
   beta = 0.5 * kappa * ecc;
 
   // in degrees
@@ -903,6 +903,9 @@ void Test::mml_estimation2(void)
   random_sample = load_data_table(data_file);
   kent.computeAllEstimators(random_sample,all_estimates,1,1);
   //kent.computeAllEstimators(random_sample,all_estimates,1,0);
+
+  Vector statistics,pvalues;
+  chisquare_hypothesis_testing(random_sample,all_estimates,statistics,pvalues);
 }
 
 void Test::vmf_all_estimation()
@@ -964,6 +967,84 @@ void Test::hypothesis_testing()
   random_sample = vmf.generate(N);
   writeToFile("random_sample.dat",random_sample,3);
   kent.computeTestStatistic_vMF(random_sample);*/
+}
+
+void Test::hypothesis_testing2()
+{
+  string data_file = "./support/R_codes/whin_sill.txt";
+  std::vector<Vector> data = load_data_table(data_file);
+
+  cout << "vMF estimates ...\n";
+  std::vector<struct Estimates_vMF> all_vmf_estimates;
+  vMF vmf;
+  vmf.computeAllEstimators(data,all_vmf_estimates);
+
+  cout << "Kent estimates ...\n";
+  std::vector<struct Estimates> all_kent_estimates;
+  Kent kent;
+  kent.computeAllEstimators(data,all_kent_estimates,1,0);
+
+  cout << "Hypothesis testing ...\n";
+  vMF vmf_ml(all_vmf_estimates[MLE].mean,all_vmf_estimates[MLE].kappa);
+  double vmf_negloglike = vmf_ml.computeNegativeLogLikelihood(data);
+  cout << "vMF (MLE) negloglike: " << vmf_negloglike << endl;
+
+  Kent kent_ml(
+    all_kent_estimates[MLE].psi,
+    all_kent_estimates[MLE].alpha,
+    all_kent_estimates[MLE].eta,
+    all_kent_estimates[MLE].kappa,
+    all_kent_estimates[MLE].beta
+  );
+  double kent_ml_negloglike = kent_ml.computeNegativeLogLikelihood(data);
+  cout << "Kent (MLE) negloglike: " << kent_ml_negloglike << endl;
+
+  // null: vMF
+  double log_ratio_statistic = 2 * (vmf_negloglike - kent_ml_negloglike); // -2 log(ratio)
+  cout << "log_ratio_statistic (null:vMF): " << log_ratio_statistic << endl;
+
+  Vector statistics,pvalues;
+  chisquare_hypothesis_testing(data,all_kent_estimates,statistics,pvalues);
+/*
+  // null: Kent(MOMENT)
+  Kent kent_mom(
+    all_kent_estimates[MOMENT].psi,
+    all_kent_estimates[MOMENT].alpha,
+    all_kent_estimates[MOMENT].eta,
+    all_kent_estimates[MOMENT].kappa,
+    all_kent_estimates[MOMENT].beta
+  );
+  double kent_mom_negloglike = kent_mom.computeNegativeLogLikelihood(data);
+  cout << "Kent (MOMENT) negloglike: " << kent_mom_negloglike << endl;
+  log_ratio_statistic = 2 * (kent_mom_negloglike - kent_ml_negloglike);
+  cout << "log_ratio_statistic (null: Kent[MOMENT]): " << log_ratio_statistic << endl;
+
+  // null: Kent(MAP)
+  Kent kent_map(
+    all_kent_estimates[MAP].psi,
+    all_kent_estimates[MAP].alpha,
+    all_kent_estimates[MAP].eta,
+    all_kent_estimates[MAP].kappa,
+    all_kent_estimates[MAP].beta
+  );
+  double kent_map_negloglike = kent_map.computeNegativeLogLikelihood(data);
+  cout << "Kent (MAP) negloglike: " << kent_map_negloglike << endl;
+  log_ratio_statistic = 2 * (kent_map_negloglike - kent_ml_negloglike);
+  cout << "log_ratio_statistic (null: Kent[MAP]): " << log_ratio_statistic << endl;
+
+  // null: Kent(MML)
+  Kent kent_mml(
+    all_kent_estimates[MML].psi,
+    all_kent_estimates[MML].alpha,
+    all_kent_estimates[MML].eta,
+    all_kent_estimates[MML].kappa,
+    all_kent_estimates[MML].beta
+  );
+  double kent_mml_negloglike = kent_mml.computeNegativeLogLikelihood(data);
+  cout << "Kent (MML) negloglike: " << kent_mml_negloglike << endl;
+  log_ratio_statistic = 2 * (kent_mml_negloglike - kent_ml_negloglike);
+  cout << "log_ratio_statistic (null: Kent[MML]): " << log_ratio_statistic << endl;
+*/
 }
 
 void Test::confidence_region()
@@ -1087,4 +1168,6 @@ void Test::infer_mixture_vmf()
   cout << "kldiv_mml: " << kldiv_mml << endl;
   cout << "kldiv_map: " << kldiv_map << endl;
 }
+
+
 

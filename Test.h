@@ -70,6 +70,8 @@ class Test
 
     void hypothesis_testing();
 
+    void hypothesis_testing2();
+
     void confidence_region();
 
     void infer_mixture();

@@ -160,6 +160,9 @@ Vector computeMeans(std::vector<Vector> &);
 double computeVariance(Vector &);
 int minimumIndex(Vector &);
 int maximumIndex(Vector &);
+void chisquare_hypothesis_testing(
+  std::vector<Vector> &, std::vector<struct Estimates> &, Vector &, Vector &
+);
 
 #endif
 

@@ -31,7 +31,7 @@ void Experiments::fisher_uncertainty()
 
 void Experiments::simulate()
 {
-  int N = 45;
+  int N = 10;
   double kappa,beta,eccentricity;
 
   //string n_str = "N_" + boost::lexical_cast<string>(N) + "_uniform_prior/";
@@ -45,16 +45,19 @@ void Experiments::simulate()
   check_and_create_directory(parent_dir);
 
   string current_dir,kappa_str,eccentricity_str;
-  string psi_est,alpha_est,eta_est,kappas,betas,ecc_file,negloglike,kldivs,msglens;
+  string psi_est,alpha_est,eta_est,kappas,betas,ecc_file;
+  string negloglike,kldivs,msglens,chisq_stat,pvalues_file;
   std::vector<Vector> random_sample;
   std::vector<struct Estimates> all_estimates;
+  Vector statistics,pvalues;
+
   //string data_file = "random_sample_uniform.dat";
   //string data_file = "random_sample_vmf.dat";
   //string data_file = "random_sample_beta.dat";
   //string data_file = "random_sample.dat";
   //string data_file = "random_sample_new2.dat";
 
-  double INIT_KAPPA = 1;
+  double INIT_KAPPA = 100;
   double MAX_KAPPA = 100;
   double KAPPA_INCREMENT = 10;
   double ecc;
@@ -83,6 +86,8 @@ void Experiments::simulate()
       negloglike = current_dir + "negloglike";
       kldivs = current_dir + "kldivs";
       msglens = current_dir + "msglens";
+      chisq_stat = current_dir + "chisq_stat";
+      pvalues_file = current_dir + "pvalues";
 
       ofstream fpsi(psi_est.c_str(),ios::app);
       ofstream falpha(alpha_est.c_str(),ios::app);
@@ -93,6 +98,8 @@ void Experiments::simulate()
       ofstream fnlh(negloglike.c_str(),ios::app);
       ofstream fkl(kldivs.c_str(),ios::app);
       ofstream fmsg(msglens.c_str(),ios::app);
+      ofstream fchi(chisq_stat.c_str(),ios::app);
+      ofstream fpval(pvalues_file.c_str(),ios::app);
       
       cout << "kappa: " << kappa << "; beta: " << beta << "; e: " << eccentricity << endl;
       //Kent kent(ZAXIS,XAXIS,YAXIS,kappa,beta);
@@ -115,6 +122,7 @@ void Experiments::simulate()
         if (min_index != MML) {  // ignore iteration
           goto repeat;
         }
+        chisquare_hypothesis_testing(random_sample,all_estimates,statistics,pvalues);
         for (int j=0; j<all_estimates.size(); j++) {
           ecc = 2 * all_estimates[j].beta / all_estimates[j].kappa;
           fpsi << scientific << all_estimates[j].psi << "\t";
@@ -126,21 +134,24 @@ void Experiments::simulate()
           fnlh << scientific << all_estimates[j].negloglike << "\t";
           fkl << scientific << all_estimates[j].kldiv << "\t";
           fmsg << scientific << all_estimates[j].msglen << "\t";
+          fchi << scientific << statistics[j] << "\t";
+          fpval << scientific << pvalues[j] << "\t";
         } // for j ()
         fpsi << endl; falpha << endl; feta << endl;
         fecc << endl; fk << endl; fb << endl;
-        fnlh << endl;
-        fkl << endl;
-        fmsg << endl;
+        fnlh << endl; fkl << endl; fmsg << endl;
+        fchi << endl; fpval << endl;
       } // for i ()
 
-      eccentricity += 0.4;
+      eccentricity += 0.1;
       fecc.close();
       fk.close();
       fb.close();
       fnlh.close();
       fkl.close();
       fmsg.close();
+      fchi.close();
+      fpval.close();
     } // eccentricity
     //kappa += KAPPA_INCREMENT;
     kappa *= KAPPA_INCREMENT;
