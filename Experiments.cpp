@@ -31,7 +31,7 @@ void Experiments::fisher_uncertainty()
 
 void Experiments::simulate()
 {
-  int N = 10;
+  int N = 20;
   double kappa,beta,eccentricity;
 
   //string n_str = "N_" + boost::lexical_cast<string>(N) + "_uniform_prior/";
@@ -57,7 +57,7 @@ void Experiments::simulate()
   //string data_file = "random_sample.dat";
   //string data_file = "random_sample_new2.dat";
 
-  double INIT_KAPPA = 100;
+  double INIT_KAPPA = 1;
   double MAX_KAPPA = 100;
   double KAPPA_INCREMENT = 10;
   double ecc;
@@ -143,7 +143,7 @@ void Experiments::simulate()
         fchi << endl; fpval << endl;
       } // for i ()
 
-      eccentricity += 0.1;
+      eccentricity += 0.4;
       fecc.close();
       fk.close();
       fb.close();
