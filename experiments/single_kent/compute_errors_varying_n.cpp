@@ -602,6 +602,9 @@ void common_plot(
   out << "set ylabel font \"Times-Roman, 25\"\n";
   out << "set xtics font \"Times-Roman, 20\"\n";
   out << "set ytics font \"Times-Roman, 20\"\n";
+  out << "set xtics nomirror\n";
+  out << "set ytics nomirror\n";
+  out << "set border 2 back\n";
   if (NUM_METHODS == 5) {
     out << "plot \"" << data_file << "\" using 1:2 t \"MOMENT\" lc rgb \"red\", \\\n"
         << "\"\" using 1:3 t \"MLE\" lc rgb \"blue\", \\\n"
@@ -825,6 +828,9 @@ void plot_script_kldivs_wins(string &kldivs_folder, int num_map)
   out << "set xlabel \"Sample size\\n\"\n";
   out << "set ylabel \"\% of wins\"\n";
   out << "set ytics 10\n\n"; 
+  out << "set xtics nomirror\n";
+  out << "set ytics nomirror\n";
+  out << "set border 2 back\n";
   if (num_map != 3) {
     out << "plot \"" << wins_kldivs_file << "\" using 2 t \"MOMENT\" lc rgb \"red\", \\\n"
         << "\"\" using 3 t \"MLE\" lc rgb \"blue\", \\\n"

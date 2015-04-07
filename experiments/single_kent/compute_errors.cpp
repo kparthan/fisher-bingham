@@ -606,6 +606,9 @@ void common_plot(
   out << "set ylabel font \"Times-Roman, 25\"\n";
   out << "set xtics font \"Times-Roman, 20\"\n";
   out << "set ytics font \"Times-Roman, 20\"\n";
+  out << "set xtics nomirror\n";
+  out << "set ytics nomirror\n";
+  out << "set border 2 back\n";
   if (NUM_METHODS == 5) {
     out << "plot \"" << data_file << "\" using 1:2 t \"MOMENT\" lc rgb \"red\", \\\n"
         << "\"\" using 1:3 t \"MLE\" lc rgb \"blue\", \\\n"

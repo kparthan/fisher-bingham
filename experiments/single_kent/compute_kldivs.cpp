@@ -174,6 +174,9 @@ void plot_script_kldivs_wins(string &kldivs_folder, int num_map)
   out << "set xlabel \"eccentricity\\n\"\n";
   out << "set ylabel \"\% of wins\"\n";
   out << "set ytics 10\n\n"; 
+  out << "set xtics nomirror\n";
+  out << "set ytics nomirror\n";
+  out << "set border 2 back\n";
   out << "set xlabel font \"Times-Roman, 25\"\n";
   out << "set ylabel font \"Times-Roman, 25\"\n";
   out << "set xtics font \"Times-Roman, 20\"\n";
@@ -231,7 +234,7 @@ void boxplot_kldivs_fixed_kappa(string &n_str, string &kappa_str, string &kldivs
         << "\"" << kldivs_file << "\" using ((1)+3*d_width):5 lt 1 lc rgb \"pink\", \\\n"
         << "\"" << kldivs_file << "\" using ((1)+5*d_width):6 lt 1 lc rgb \"purple\", \\\n";
   } else if (NUM_METHODS == 5) {
-    out << "plot \"" << kldivs_file << "\" using ((1)-4*d_width):1 t \"MOM\" lt 1 lc rgb \"red\", \\\n"
+    out << "plot \"" << kldivs_file << "\" using ((1)-4*d_width):1 t \"MOMENT\" lt 1 lc rgb \"red\", \\\n"
         << "\"" << kldivs_file << "\" using ((1)-2*d_width):2 lt 1 lc rgb \"blue\", \\\n"
         << "\"" << kldivs_file << "\" using (1):3 lt 1 lc rgb \"dark-green\", \\\n"
         << "\"" << kldivs_file << "\" using ((1)+2*d_width):4 lt 1 lc rgb \"dark-magenta\", \\\n"
@@ -332,14 +335,17 @@ void plot_avg_kldivs(string &kldivs_folder)
   out << "set ylabel font \"Times-Roman, 25\"\n";
   out << "set xtics font \"Times-Roman, 20\"\n";
   out << "set ytics font \"Times-Roman, 20\"\n";
+  out << "set xtics nomirror\n";
+  out << "set ytics nomirror\n";
+  out << "set border 2 back\n";
   if (NUM_METHODS == 6) {
-    out << "plot \"" << avg_kldivs_file << "\" using 1:2 t \"MOM\" lc rgb \"red\", \\\n"
+    out << "plot \"" << avg_kldivs_file << "\" using 1:2 t \"MOMENT\" lc rgb \"red\", \\\n"
         << "\"\" using 1:7 t \"MAP3 = MLE\" lc rgb \"blue\", \\\n"
         << "\"\" using 1:4 t \"MAP1\" lc rgb \"dark-green\", \\\n"
         << "\"\" using 1:5 t \"MML\" lc rgb \"dark-magenta\", \\\n"
         << "\"\" using 1:6 t \"MAP2\" lc rgb \"black\"\n";
   } else if (NUM_METHODS == 5) {
-    out << "plot \"" << avg_kldivs_file << "\" using 1:2 t \"MOM\" lc rgb \"red\", \\\n"
+    out << "plot \"" << avg_kldivs_file << "\" using 1:2 t \"MOMENT\" lc rgb \"red\", \\\n"
         << "\"\" using 1:3 t \"MLE\" lc rgb \"blue\", \\\n"
         << "\"\" using 1:4 t \"MAP1\" lc rgb \"dark-green\", \\\n"
         << "\"\" using 1:5 t \"MML\" lc rgb \"dark-magenta\", \\\n"
@@ -464,7 +470,7 @@ void plot_kldivs_diff(string &kldivs_folder, double max)
   out << "set xtics font \"Times-Roman, 20\"\n";
   out << "set ytics font \"Times-Roman, 20\"\n";
   out << "set yr [0:" << max+0.1 << "]\n";
-  out << "plot \"" << kldivs_diff_file << "\" using 2 t \"MOM\" lc rgb \"red\", \\\n"
+  out << "plot \"" << kldivs_diff_file << "\" using 2 t \"MOMENT\" lc rgb \"red\", \\\n"
       << "\"\" using 3 t \"MLE\" lc rgb \"blue\", \\\n"
       << "\"\" using 4 t \"MAP1\" lc rgb \"dark-green\", \\\n";
   if (NUM_METHODS == 6) {
@@ -515,15 +521,15 @@ void boxplot_test_stats_fixed_kappa(
   out << "set terminal post eps enhanced color\n";
   out << "set output \"" << plot_file << "\"\n\n";
   out << "box_width=0.12\n";
-  out << "set style fill solid 0.25 noborder\n";
+  out << "set style fill solid 0.25 #noborder\n";
   out << "set style boxplot outliers pointtype 7\n";
   out << "set style data boxplot\n";
   out << "set boxwidth box_width #relative\n";
   out << "set pointsize 0.5\n";
   if (option == 1) {
-    out << "set key top right\n";
+    out << "set key top right opaque\n";
   } else if (option == 2) {
-    out << "set key bottom right\n";
+    out << "set key bottom right opaque\n";
   }
   out << "set border 2\n";
   out << "set xtics nomirror\n";
