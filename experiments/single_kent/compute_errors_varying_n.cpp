@@ -868,7 +868,7 @@ void boxplot_test_stats_fixed_kappa(
   out << "set terminal post eps enhanced color\n";
   out << "set output \"" << plot_file << "\"\n\n";
   out << "box_width=0.12\n";
-  out << "set style fill solid 0.25 noborder\n";
+  out << "set style fill solid 0.25 #noborder\n";
   out << "set style boxplot outliers pointtype 7\n";
   out << "set style data boxplot\n";
   out << "set boxwidth box_width #relative\n";
