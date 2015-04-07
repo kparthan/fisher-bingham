@@ -18,7 +18,7 @@ using namespace boost::filesystem;
 
 typedef std::vector<double> Vector;
 
-#define MOMENT 0 
+#define MOMENTENT 0 
 #define MLE 1
 #define MAP 2
 #define MML 3 
@@ -120,7 +120,7 @@ std::vector<Vector> flip(std::vector<Vector> &table)
 int minimumIndex(int map_index, Vector &values)
 {
   Vector new_list(4,0);
-  new_list[MOMENT] = values[MOMENT];
+  new_list[MOMENTENT] = values[MOMENTENT];
   if (map_index == 5) new_list[MLE] = values[map_index];
   else new_list[MLE] = values[MLE];
   new_list[MAP] = values[map_index];
@@ -603,13 +603,13 @@ void common_plot(
   out << "set xtics font \"Times-Roman, 20\"\n";
   out << "set ytics font \"Times-Roman, 20\"\n";
   if (NUM_METHODS == 5) {
-    out << "plot \"" << data_file << "\" using 1:2 t \"MOM\" lc rgb \"red\", \\\n"
+    out << "plot \"" << data_file << "\" using 1:2 t \"MOMENT\" lc rgb \"red\", \\\n"
         << "\"\" using 1:3 t \"MLE\" lc rgb \"blue\", \\\n"
         << "\"\" using 1:4 t \"MAP1\" lc rgb \"dark-green\", \\\n"
         << "\"\" using 1:5 t \"MML\" lc rgb \"dark-magenta\", \\\n"
         << "\"\" using 1:6 t \"MAP2\" lc rgb \"black\"\n";
   } else if (NUM_METHODS == 6) {
-    out << "plot \"" << data_file << "\" using 1:2 t \"MOM\" lc rgb \"red\", \\\n"
+    out << "plot \"" << data_file << "\" using 1:2 t \"MOMENT\" lc rgb \"red\", \\\n"
         << "\"\" using 1:7 t \"MAP3 = MLE\" lc rgb \"blue\", \\\n"
         << "\"\" using 1:4 t \"MAP1\" lc rgb \"dark-green\", \\\n"
         << "\"\" using 1:5 t \"MML\" lc rgb \"dark-magenta\", \\\n"
@@ -826,16 +826,88 @@ void plot_script_kldivs_wins(string &kldivs_folder, int num_map)
   out << "set ylabel \"\% of wins\"\n";
   out << "set ytics 10\n\n"; 
   if (num_map != 3) {
-    out << "plot \"" << wins_kldivs_file << "\" using 2 t \"MOM\" lc rgb \"red\", \\\n"
+    out << "plot \"" << wins_kldivs_file << "\" using 2 t \"MOMENT\" lc rgb \"red\", \\\n"
         << "\"\" using 3 t \"MLE\" lc rgb \"blue\", \\\n"
         << "\"\" using 4 t \"MAP" << num_map << "\" lc rgb \"dark-green\", \\\n"
         << "\"\" using 5:xtic(1) t \"MML\" lc rgb \"dark-magenta\"";
   } else {
-    out << "plot \"" << wins_kldivs_file << "\" using 2 t \"MOM\" lc rgb \"red\", \\\n"
+    out << "plot \"" << wins_kldivs_file << "\" using 2 t \"MOMENT\" lc rgb \"red\", \\\n"
         << "\"\" using 4 t \"MAP3 = MLE\" lc rgb \"dark-green\", \\\n"
         << "\"\" using 5:xtic(1) t \"MML\" lc rgb \"dark-magenta\"";
   }
   out.close();
+  string cmd = "gnuplot -persist " + script_file;
+  if(system(cmd.c_str()));
+}
+
+void boxplot_test_stats_fixed_kappa(
+  string &errors_folder, int option
+) {
+  string stats_file,script_file,plot_file,ylabel;
+
+  if (option == 1) {
+    script_file = errors_folder + "boxplot_test_statistics.p";
+    plot_file = errors_folder + common + "boxplot_test_statistics.eps";
+    ylabel = "Test statistic";
+  } else if (option == 2) {
+    script_file = errors_folder + "boxplot_pvalues.p";
+    plot_file = errors_folder + common + "boxplot_pvalues.eps";
+    ylabel = "p-values";
+  }
+
+  ofstream out(script_file.c_str());
+  out << "set terminal post eps enhanced color\n";
+  out << "set output \"" << plot_file << "\"\n\n";
+  out << "box_width=0.12\n";
+  out << "set style fill solid 0.25 noborder\n";
+  out << "set style boxplot outliers pointtype 7\n";
+  out << "set style data boxplot\n";
+  out << "set boxwidth box_width #relative\n";
+  out << "set pointsize 0.5\n";
+  if (option == 1) {
+    out << "set key top right\n";
+  } else if (option == 2) {
+    out << "set key bottom right\n";
+  }
+  out << "set border 2\n";
+  out << "set xtics nomirror\n";
+  out << "set ytics nomirror\n";
+  out << "set xlabel \"Sample size\\n\"\n";
+  out << "set ylabel \"" << ylabel << "\"\n";
+  out << "set xlabel font \"Times-Roman, 25\"\n";
+  out << "set ylabel font \"Times-Roman, 25\"\n";
+  out << "set xtics font \"Times-Roman, 20\"\n";
+  out << "set ytics font \"Times-Roman, 20\"\n";
+  out << "set xtics (\"10\" 1, \"15\" 2, \"20\" 3, "
+      << "\"25\" 4, \"30\" 5, \"35\" 6, \"40\" 7, \"45\" 8, \"50\" 9) scale 0.0\n";
+  out << "d_width=0.5*box_width\n\n";
+
+  int col = 1;
+  for (int N=10; N<=50; N+=5) {
+    string n_str = boost::lexical_cast<string>(N);
+    if (option == 1) {
+      stats_file = "./estimates/N_" + n_str + "_prior" + prior_str + "/k_" + kappa_str + "_e_" + ecc_str + "/chisq_stat";
+    } else if (option == 2) {
+      stats_file = "./estimates/N_" + n_str + "_prior" + prior_str + "/k_" + kappa_str + "_e_" + ecc_str + "/pvalues";
+    }
+    if (col == 1) {
+      out << "plot ";
+    }
+    if (col < 9) {
+      out << "\"" << stats_file << "\" using ((" << col << ")-3*d_width):1 notitle lt 1 lc rgb \"red\", \\\n"
+          << "\"" << stats_file << "\" using ((" << col << ")-d_width):3 notitle lt 1 lc rgb \"dark-green\", \\\n"
+          << "\"" << stats_file << "\" using ((" << col << ")+d_width):4 notitle lt 1 lc rgb \"dark-magenta\", \\\n"
+          << "\"" << stats_file << "\" using ((" << col << ")+3*d_width):5 notitle lt 1 lc rgb \"black\", \\\n";
+    } else if (col == 9) {
+      out << "\"" << stats_file << "\" using ((" << col << ")-3*d_width):1 title \"MOMENT\" lt 1 lc rgb \"red\", \\\n"
+          << "\"" << stats_file << "\" using ((" << col << ")-d_width):3 title \"MAP1\" lt 1 lc rgb \"dark-green\", \\\n"
+          << "\"" << stats_file << "\" using ((" << col << ")+d_width):4 title \"MML\" lt 1 lc rgb \"dark-magenta\", \\\n"
+          << "\"" << stats_file << "\" using ((" << col << ")+3*d_width):5 title \"MAP2\" lt 1 lc rgb \"black\"\n";
+    }
+    col++;
+  }
+  out.close();
+
   string cmd = "gnuplot -persist " + script_file;
   if(system(cmd.c_str()));
 }
@@ -852,6 +924,9 @@ void plot_kldivs()
   for (int i=1; i<=num_maps; i++) {
     plot_script_kldivs_wins(errors_folder,i);
   }
+
+  boxplot_test_stats_fixed_kappa(errors_folder,1);
+  boxplot_test_stats_fixed_kappa(errors_folder,2);
 }
 
 /* E **********************************************************************************/ 
@@ -935,6 +1010,5 @@ int main(int argc, char **argv)
   plot_errors();
 
   plot_kldivs();
-
 }
 

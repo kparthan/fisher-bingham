@@ -179,12 +179,12 @@ void plot_script_kldivs_wins(string &kldivs_folder, int num_map)
   out << "set xtics font \"Times-Roman, 20\"\n";
   out << "set ytics font \"Times-Roman, 20\"\n";
   if (num_map != 3) {
-    out << "plot \"" << wins_kldivs_file << "\" using 2 t \"MOM\" lc rgb \"red\", \\\n"
+    out << "plot \"" << wins_kldivs_file << "\" using 2 t \"MOMENT\" lc rgb \"red\", \\\n"
         << "\"\" using 3 t \"MLE\" lc rgb \"blue\", \\\n"
         << "\"\" using 4 t \"MAP" << num_map << "\" lc rgb \"dark-green\", \\\n"
         << "\"\" using 5:xtic(1) t \"MML\" lc rgb \"dark-magenta\"";
   } else {
-    out << "plot \"" << wins_kldivs_file << "\" using 2 t \"MOM\" lc rgb \"red\", \\\n"
+    out << "plot \"" << wins_kldivs_file << "\" using 2 t \"MOMENT\" lc rgb \"red\", \\\n"
         << "\"\" using 4 t \"MAP3 = MLE\" lc rgb \"dark-green\", \\\n"
         << "\"\" using 5:xtic(1) t \"MML\" lc rgb \"dark-magenta\"";
   }
@@ -496,6 +496,81 @@ void plot_kldivs_diff(string &kldivs_folder, double max)
   if(system(cmd.c_str()));
 }
 
+void boxplot_test_stats_fixed_kappa(
+  string &n_str, string &kappa_str, string &kldivs_folder, int option
+) {
+  string stats_file,script_file,plot_file,ylabel;
+
+  if (option == 1) {
+    script_file = kldivs_folder + "boxplot_test_statistics.p";
+    plot_file = kldivs_folder + common_kappa + "boxplot_test_statistics.eps";
+    ylabel = "Test statistic";
+  } else if (option == 2) {
+    script_file = kldivs_folder + "boxplot_pvalues.p";
+    plot_file = kldivs_folder + common_kappa + "boxplot_pvalues.eps";
+    ylabel = "p-values";
+  }
+
+  ofstream out(script_file.c_str());
+  out << "set terminal post eps enhanced color\n";
+  out << "set output \"" << plot_file << "\"\n\n";
+  out << "box_width=0.12\n";
+  out << "set style fill solid 0.25 noborder\n";
+  out << "set style boxplot outliers pointtype 7\n";
+  out << "set style data boxplot\n";
+  out << "set boxwidth box_width #relative\n";
+  out << "set pointsize 0.5\n";
+  if (option == 1) {
+    out << "set key top right\n";
+  } else if (option == 2) {
+    out << "set key bottom right\n";
+  }
+  out << "set border 2\n";
+  out << "set xtics nomirror\n";
+  out << "set ytics nomirror\n";
+  out << "set xlabel \"eccentricity\\n\"\n";
+  out << "set ylabel \"" << ylabel << "\"\n";
+  out << "set xlabel font \"Times-Roman, 25\"\n";
+  out << "set ylabel font \"Times-Roman, 25\"\n";
+  out << "set xtics font \"Times-Roman, 20\"\n";
+  out << "set ytics font \"Times-Roman, 20\"\n";
+  out << "set xtics (\"0.1\" 1, \"0.2\" 2, \"0.3\" 3, \"0.4\" 4, "
+      << "\"0.5\" 5, \"0.6\" 6, \"0.7\" 7, \"0.8\" 8, \"0.9\" 9) scale 0.0\n";
+  out << "d_width=0.5*box_width\n\n";
+
+  int col = 1;
+  for (double ecc=0.1; ecc<0.95; ecc+=0.1) {
+    ostringstream sse;
+    sse << fixed << setprecision(1);
+    sse << ecc;
+    string ecc_str = sse.str();
+    if (option == 1) {
+      stats_file = n_str + "k_" + kappa_str + "_e_" + ecc_str + "/chisq_stat";
+    } else if (option == 2) {
+      stats_file = n_str + "k_" + kappa_str + "_e_" + ecc_str + "/pvalues";
+    }
+    if (col == 1) {
+      out << "plot ";
+    }
+    if (col < 9) {
+      out << "\"" << stats_file << "\" using ((" << col << ")-3*d_width):1 notitle lt 1 lc rgb \"red\", \\\n"
+          << "\"" << stats_file << "\" using ((" << col << ")-d_width):3 notitle lt 1 lc rgb \"dark-green\", \\\n"
+          << "\"" << stats_file << "\" using ((" << col << ")+d_width):4 notitle lt 1 lc rgb \"dark-magenta\", \\\n"
+          << "\"" << stats_file << "\" using ((" << col << ")+3*d_width):5 notitle lt 1 lc rgb \"black\", \\\n";
+    } else if (col == 9) {
+      out << "\"" << stats_file << "\" using ((" << col << ")-3*d_width):1 title \"MOMENT\" lt 1 lc rgb \"red\", \\\n"
+          << "\"" << stats_file << "\" using ((" << col << ")-d_width):3 title \"MAP1\" lt 1 lc rgb \"dark-green\", \\\n"
+          << "\"" << stats_file << "\" using ((" << col << ")+d_width):4 title \"MML\" lt 1 lc rgb \"dark-magenta\", \\\n"
+          << "\"" << stats_file << "\" using ((" << col << ")+3*d_width):5 title \"MAP2\" lt 1 lc rgb \"black\"\n";
+    }
+    col++;
+  }
+  out.close();
+
+  string cmd = "gnuplot -persist " + script_file;
+  if(system(cmd.c_str()));
+}
+
 void process_kldivs(string &n_str)
 {
   string kldivs_folder;
@@ -542,6 +617,10 @@ void process_kldivs(string &n_str)
     // differences
     double max = compute_kldivs_diff_fixed_kappa(n_str,kappa_str,kldivs_folder);
     plot_kldivs_diff(kldivs_folder,max);
+
+    // boxplot hypothesis testing
+    boxplot_test_stats_fixed_kappa(n_str,kappa_str,kldivs_folder,1);
+    boxplot_test_stats_fixed_kappa(n_str,kappa_str,kldivs_folder,2);
 
     kappa *= KAPPA_INCREMENT;
   } // while(kappa)
@@ -622,6 +701,5 @@ int main(int argc, char **argv)
   create_required_folders(n_str);
 
   process_kldivs(n_str);
-
 }
 
