@@ -18,7 +18,7 @@ using namespace boost::filesystem;
 
 typedef std::vector<double> Vector;
 
-#define MOMENT 0 
+#define MOMENTENT 0 
 #define MLE 1
 #define MAP 2
 #define MML 3 
@@ -600,20 +600,20 @@ void common_plot(
   out << "set output \"" << plot_file << "\"\n\n";
   out << "set style data linespoints\n";
   out << "set style fill solid 1.0 noborder\n";
-  out << "set xlabel \"eccentricity\"\n";
+  out << "set xlabel \"eccentricity\\n\"\n";
   out << "set ylabel \"" << ylabel << "\"\n";
   out << "set xlabel font \"Times-Roman, 25\"\n";
   out << "set ylabel font \"Times-Roman, 25\"\n";
   out << "set xtics font \"Times-Roman, 20\"\n";
   out << "set ytics font \"Times-Roman, 20\"\n";
   if (NUM_METHODS == 5) {
-    out << "plot \"" << data_file << "\" using 1:2 t \"MOM\" lc rgb \"red\", \\\n"
+    out << "plot \"" << data_file << "\" using 1:2 t \"MOMENT\" lc rgb \"red\", \\\n"
         << "\"\" using 1:3 t \"MLE\" lc rgb \"blue\", \\\n"
         << "\"\" using 1:4 t \"MAP1\" lc rgb \"dark-green\", \\\n"
         << "\"\" using 1:5 t \"MML\" lc rgb \"dark-magenta\", \\\n"
         << "\"\" using 1:6 t \"MAP2\" lc rgb \"black\"\n";
   } else if (NUM_METHODS == 6) {
-    out << "plot \"" << data_file << "\" using 1:2 t \"MOM\" lc rgb \"red\", \\\n"
+    out << "plot \"" << data_file << "\" using 1:2 t \"MOMENT\" lc rgb \"red\", \\\n"
         << "\"\" using 1:7 t \"MAP3 = MLE\" lc rgb \"blue\", \\\n"
         << "\"\" using 1:4 t \"MAP1\" lc rgb \"dark-green\", \\\n"
         << "\"\" using 1:5 t \"MML\" lc rgb \"dark-magenta\", \\\n"
