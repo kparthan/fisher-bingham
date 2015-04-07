@@ -825,11 +825,14 @@ void plot_script_kldivs_wins(string &kldivs_folder, int num_map)
   out << "set style fill solid 1.0 noborder\n";
   out << "set ytics 10 nomirror\n";
   out << "set yrange [:100]\n";
+  out << "set xlabel font \"Times-Roman, 25\"\n";
+  out << "set ylabel font \"Times-Roman, 25\"\n";
+  out << "set xtics font \"Times-Roman, 20\"\n";
+  out << "set ytics font \"Times-Roman, 20\"\n";
   out << "set xlabel \"Sample size\\n\"\n";
   out << "set ylabel \"\% of wins\"\n";
   out << "set ytics 10\n\n"; 
   out << "set xtics nomirror\n";
-  out << "set ytics nomirror\n";
   out << "set border 2 back\n";
   if (num_map != 3) {
     out << "plot \"" << wins_kldivs_file << "\" using 2 t \"MOMENT\" lc rgb \"red\", \\\n"
