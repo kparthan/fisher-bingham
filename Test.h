@@ -64,6 +64,8 @@ class Test
 
     void mml_estimation2(void);
 
+    void plot_posterior_density();
+
     void vmf_all_estimation();
 
     void chi_square();

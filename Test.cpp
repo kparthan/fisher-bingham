@@ -6,6 +6,7 @@
 #include "FB4.h"
 #include "FB6.h"
 #include "Kent.h"
+#include "Kent_EccTrans.h"
 #include "MultivariateNormal.h"
 #include "ACG.h"
 #include "Bingham.h"
@@ -881,8 +882,8 @@ void Test::mml_estimation2(void)
   int sample_size = 10;
   string data_file = "random_sample.dat";
 
-  kappa = 10;
-  ecc = 0.1;
+  kappa = 5;
+  ecc = 0.9;
   beta = 0.5 * kappa * ecc;
 
   // in degrees
@@ -906,6 +907,56 @@ void Test::mml_estimation2(void)
 
   Vector statistics,pvalues;
   chisquare_hypothesis_testing(random_sample,all_estimates,statistics,pvalues);
+}
+
+void Test::plot_posterior_density(void)
+{
+  int N = 10;
+  // in degrees
+  double psi = 86.488 * PI/180;
+  double alpha = 96 * PI/180;
+  double eta = 90 * PI/180;
+  double kappa = 10;
+  double ecc = 0.5;
+  double beta = 0.5 * kappa * ecc;
+
+  //Kent kent(psi,alpha,eta,kappa,beta);
+  string data_file = "random_sample_example.dat";
+  std::vector<Vector> random_sample = load_data_table(data_file);
+
+  double kappa_inc = 0.1;
+  double kappa_max = 20;
+  double ecc_inc = 0.01;
+  double ecc_max = 0.99;
+  string posterior_file = "./visualize/sampled_data/posterior1.dat";
+  ofstream out1(posterior_file.c_str());
+  posterior_file = "./visualize/sampled_data/posterior2.dat";
+  ofstream out2(posterior_file.c_str());
+  for (double k=kappa_inc; k<=kappa_max; k+=kappa_inc) {
+    for (double e=ecc_inc; e<=ecc_max; e+=ecc_inc) {
+      psi = 86.488; alpha = 96.802; eta = 90.215;
+      psi *= PI/180; alpha *= PI/180; eta *= PI/180;
+      double b = 0.5 * k * e;
+      Kent kent1(psi,alpha,eta,k,b);
+      double log_prior = kent1.computeLogPriorProbability();
+      double fval = -log_prior + kent1.computeNegativeLogLikelihood(random_sample);
+      double posterior = exp(-fval);
+      out1 << fixed << scientific << setprecision(6) << posterior << "\t";
+      
+      // transformed ...
+      psi = 86.500; alpha = 96.831; eta = 90.215;
+      psi *= PI/180; alpha *= PI/180; eta *= PI/180;
+      Kent_EccTrans kent2(psi,alpha,eta,k,e);
+      log_prior = kent2.computeLogPriorProbability();
+      fval = -log_prior + kent2.computeNegativeLogLikelihood(random_sample);
+      posterior = exp(-fval);
+      out2 << fixed << scientific << setprecision(6) << posterior << "\t";
+    }
+    out1 << endl;
+    out2 << endl;
+  }
+  out1.close();
+  out2.close();
 }
 
 void Test::vmf_all_estimation()
