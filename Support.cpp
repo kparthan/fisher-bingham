@@ -1755,7 +1755,7 @@ void modelOneComponent(struct Parameters &parameters, std::vector<Vector> &data)
   if (DISTRIBUTION == KENT) {
     //Kent kent;
     //Kent kent(ZAXIS,XAXIS,YAXIS,100,45);
-    double psi = 45; psi *= PI/180;
+    double psi = 90; psi *= PI/180;
     double alpha = 90; alpha *= PI/180;
     double eta = 90; eta *= PI/180;
     double kappa = 10;
@@ -2152,9 +2152,9 @@ void TestFunctions(void)
 
   //test.mml_estimation();
 
-  test.mml_estimation2();
+  //test.mml_estimation2();
 
-  //test.plot_posterior_density();
+  test.plot_posterior_density();
 
   //test.vmf_all_estimation();
 
