@@ -852,11 +852,24 @@ struct Estimates Kent::computeAsymptoticMomentEstimates(
   K(2,1) = -K(1,2); K(2,2) = K(1,1);
   Matrix HK = prod(H,K);
 
+  /*Matrix BL(2,2);
+  BL(0,0) = B(1,1); BL(0,1) = B(1,2);
+  BL(1,0) = B(2,1); BL(1,1) = B(2,2);
+  Vector eigen_values(2,0);
+  Matrix eigen_vectors = IdentityMatrix(2,2);
+  eigenDecomposition(BL,eigen_values,eigen_vectors);
+  cout << "eigen values: "; print(cout,eigen_values,3); cout << endl;*/
+
   // compute r2:
+  //cout << "B: " << B << endl;
   double t1 = (B(1,1)-B(2,2)) * (B(1,1)-B(2,2));
   double t2 = 4 * B(1,2) * B(1,2);
   double r2 = sqrt(t1+t2);
-  //cout << scientific << "r2^2: " << r2*r2 << endl;
+  //cout << "r2: " << r2 << endl;
+
+  estimates.eig_max = 0.5 * (B(1,1) + B(2,2) + r2);
+  //cout << "eig_max: " << eig_max << endl;
+  //cout << "angle: " << acos(sqrt(1-eig_max)) * 180/PI << endl;
 
   estimates.mean = Vector(3,0);
   Vector axis1(3,0),axis2(3,0);
@@ -900,8 +913,8 @@ struct Estimates Kent::computeAsymptoticMomentEstimates(
   estimates.kappa = f1 + f2;
   estimates.beta = 0.5 * (f1-f2);
 
-  cout << "(asymptotic) kappa: " << estimates.kappa << endl;
-  cout << "(asymptotic) beta: " << estimates.beta << endl;
+  //cout << "(asymptotic) kappa: " << estimates.kappa << endl;
+  //cout << "(asymptotic) beta: " << estimates.beta << endl;
 
   /*Optimize opt("MOMENT");
   opt.initialize(N,estimates.mean,estimates.major_axis,estimates.minor_axis,

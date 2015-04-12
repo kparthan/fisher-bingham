@@ -39,6 +39,7 @@ struct Estimates
   Vector mean,major_axis,minor_axis;
   double kappa,beta;
   double msglen,negloglike,kldiv;
+  double eig_max;
 };
 
 struct Estimates_vMF

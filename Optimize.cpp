@@ -272,7 +272,7 @@ std::vector<double> Optimize::minimize(Vector &sample_mean, Matrix &S, int num_p
     default:
       break;
   }
-  cout << "solution: "; print(cout,x,3); 
+  //cout << "solution: "; print(cout,x,3); 
   //cout << "solution: (" << x[0] << ", " << x[1] << ")\n";
   //cout << "minf: " << minf << endl;
   return x;

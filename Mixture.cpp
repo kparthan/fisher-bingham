@@ -313,14 +313,31 @@ void Mixture::initialize_children_3()
 {
   N = data.size();
 
-  // initialize responsibility matrix
-  Vector tmp(N,0);
-  responsibility = std::vector<Vector>(K,tmp);
+  // initialize parameters of each component
+  double Neff;
+  Vector sample_mean = computeVectorSum(data,data_weights,Neff);
+  Matrix S = computeDispersionMatrix(data,data_weights);
 
+  Kent parent;
+  struct Estimates asymptotic_est = parent.computeAsymptoticMomentEstimates(sample_mean,S,Neff);
+  double theta = acos(sqrt(1 - asymptotic_est.eig_max));
+  cout << "theta: " << theta * 180/PI << " degrees ...\n";
+ 
+  Vector mi = asymptotic_est.minor_axis;
+  Matrix R = rotate_about_arbitrary_axis(mi,theta);
+  Vector mu1 = prod(R,asymptotic_est.mean);
+  R = rotate_about_arbitrary_axis(mi,-theta);
+  Vector mu2 = prod(R,asymptotic_est.mean);
+
+  // initialize responsibility matrix
+  Vector emptyvec(N,0);
+  responsibility = std::vector<Vector> (2,emptyvec);
   #pragma omp parallel for if(ENABLE_DATA_PARALLELISM) num_threads(NUM_THREADS) 
   for (int i=0; i<N; i++) {
-    int index = rand() % K;
-    responsibility[index][i] = 1;
+    double dp1 = data_weights[i] * computeDotProduct(mu1,data[i]);
+    double dp2 = data_weights[i] * computeDotProduct(mu2,data[i]);
+    if (dp1 < dp2) responsibility[0][i] = 1;
+    else responsibility[1][i] = 1;
   }
   sample_size = Vector(K,0);
   updateEffectiveSampleSize();
@@ -331,41 +348,19 @@ void Mixture::initialize_children_3()
     updateWeights_ML();
   }
 
-  // initialize parameters of each component
-  double Neff;
-  Vector sample_mean = computeVectorSum(data,data_weights,Neff);
-  Matrix S = computeDispersionMatrix(data,data_weights);
-  Kent parent;
+  vMF vmf;
+  vmf.estimateParameters(data,responsibility[0]);
+  double kappa1 = vmf.Kappa();
+  vmf.estimateParameters(data,responsibility[1]);
+  double kappa2 = vmf.Kappa();
 
-  struct Estimates asymptotic_est = parent.computeAsymptoticMomentEstimates(sample_mean,S,Neff);
-  string type = "MOMENT";
-  struct Estimates moment_est = asymptotic_est;
-  Optimize opt(type);
-  opt.initialize(Neff,moment_est.mean,moment_est.major_axis,moment_est.minor_axis,
-                 moment_est.kappa,moment_est.beta);
-  opt.computeEstimates(sample_mean,S,moment_est);
+  double beta = TOLERANCE;
 
-  Vector mu,mj,mi,spherical(3,0);
-  double theta,psi,alpha,eta,kappa,beta;
+  Vector mj1 = crossProduct(mi,mu1);
+  Kent child1(mu1,mj1,mi,kappa1,beta);
 
-  mi = moment_est.minor_axis;
-  kappa = moment_est.kappa;
-  beta = moment_est.beta;
-
-  //double ecc = 2 * beta / kappa;
-  //theta = 0.5 * PI * ecc;
-  double span = uniform_random();
-  theta = 0.5 * PI * span;
-  Matrix R = rotate_about_arbitrary_axis(mi,theta);
-  mu = prod(R,moment_est.mean);
-  mj = crossProduct(mi,mu);
-  Kent child1(mu,mj,mi,kappa,beta);
-
-  theta = 0.5 * PI * span;
-  R = rotate_about_arbitrary_axis(mi,-theta);
-  mu = prod(R,moment_est.mean);
-  mj = crossProduct(mi,mu);
-  Kent child2(mu,mj,mi,kappa,beta);
+  Vector mj2 = crossProduct(mi,mu2);
+  Kent child2(mu2,mj2,mi,kappa2,beta);
 
   components = std::vector<Kent>(K);
   components[0] = child1; components[1] = child2;
