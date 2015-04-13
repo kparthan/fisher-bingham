@@ -20,28 +20,25 @@ class Experiments
 
     void create_sub_folders(string &, string &);
 
-    void infer_components_exp1();
-    void infer_components_exp1(double, double);
+    void exp1();
+    void generate_data_exp1(int, int, int);
+    void infer_components_exp1(int, int);
 
-    void generateData(Mixture &, string &, int);
-
-    void inferMixtures_exp1(Mixture &, string &);
-    void inferMixtures_exp1(
-      Mixture &, std::vector<Vector> &, string &, string &, string &, string &, string &
+    void traditional_search(
+      string &,
+      Mixture &, std::vector<Vector> &, std::vector<Vector> &,
+      string &, string &,
+      ostream &, ostream &, ostream &
     );
 
-    void infer_components_exp2();
-    void inferMixtures_exp2(
+    void proposed_search(
       string &, Mixture &, std::vector<Vector> &, std::vector<Vector> &, string &
     );
-    void inferMixtures_exp2(
+    void proposed_search(
       string &, 
       Mixture &, std::vector<Vector> &, std::vector<Vector> &, 
       string &, string &, string &, string &
     );
-
-    void infer_components_exp3();
-    void infer_components_exp3(double, double, double);
 };
 
 #endif
