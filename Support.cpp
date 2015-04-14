@@ -1926,13 +1926,13 @@ void updateInference(Mixture &modified, Mixture &current, int N, ostream &log, i
 
   if (current_value > modified_value) {
     improvement_rate = (current_value - modified_value) / fabs(current_value);
-    if (operation == KILL || operation == JOIN) {
+    if (operation == KILL || operation == JOIN || operation == SPLIT) {
       log << "\t ... IMPROVEMENT ... (+ " << fixed << setprecision(3) 
           << 100 * improvement_rate << " %) ";
       log << "\t\t[ACCEPT]\n\n";
       current = modified;
     } // kill | join 
-    if (operation == SPLIT) {
+    /*if (operation == SPLIT) {
       if (improvement_rate >= IMPROVEMENT_RATE) {
         log << "\t ... IMPROVEMENT ... (+ " << fixed << setprecision(3) 
             << 100 * improvement_rate << " %) ";
@@ -1944,7 +1944,7 @@ void updateInference(Mixture &modified, Mixture &current, int N, ostream &log, i
             << 100 * IMPROVEMENT_RATE << " %)" ;
         log << "\t\t[REJECT]\n\n";
       } // if-else() 
-    } // split
+    }*/ // split
   } else {
     log << "\t ... NO IMPROVEMENT\t\t\t[REJECT]\n\n";
   } // if (current > modified)

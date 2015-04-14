@@ -25,10 +25,19 @@ class Experiments
     void infer_components_exp1(int, int);
 
     void traditional_search(
+      string &, Mixture &, std::vector<Vector> &, std::vector<Vector> &, string &
+    );
+    void traditional_search(
       string &,
       Mixture &, std::vector<Vector> &, std::vector<Vector> &,
       string &, string &,
       ostream &, ostream &, ostream &
+    );
+    void traditional_search_mml(
+      string &,
+      Mixture &, std::vector<Vector> &, std::vector<Vector> &,
+      string &, string &,
+      ostream &
     );
 
     void proposed_search(

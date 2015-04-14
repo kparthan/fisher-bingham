@@ -1027,6 +1027,7 @@ void Kent::estimateParameters(std::vector<Vector> &data, Vector &weights)
   opt.initialize(Neff,moment_est.mean,moment_est.major_axis,moment_est.minor_axis,
                  moment_est.kappa,moment_est.beta);
   opt.computeEstimates(sample_mean,S,moment_est);
+  moment_est.msglen = computeMessageLength(moment_est,sample_mean,S,Neff);
   //print(type,moment_est);
 
   switch(ESTIMATION) {
@@ -1062,8 +1063,18 @@ void Kent::estimateParameters(std::vector<Vector> &data, Vector &weights)
 
     case MML:
     {
+      type = "MAP";
+      struct Estimates map_est = moment_est;
+      Optimize opt2(type);
+      opt2.initialize(Neff,map_est.mean,map_est.major_axis,map_est.minor_axis,
+                      map_est.kappa,map_est.beta);
+      opt2.computeEstimates(sample_mean,S,map_est);
+      map_est.msglen = computeMessageLength(map_est,sample_mean,S,Neff);
+
       type = "MML";
-      struct Estimates mml_est = moment_est;
+      struct Estimates mml_est; 
+      if (moment_est.msglen < map_est.msglen) mml_est = moment_est;
+      else mml_est = map_est;
       Optimize opt3(type);
       opt3.initialize(Neff,mml_est.mean,mml_est.major_axis,mml_est.minor_axis,
                       mml_est.kappa,mml_est.beta);

@@ -163,8 +163,13 @@ void Experiments::checkFolders(string &exp_folder)
   string data_folder = exp_folder + "data/";
   check_and_create_directory(data_folder);
 
+  string search = exp_folder + "proposed_search/";
+  check_and_create_directory(search);
+  search = exp_folder + "traditional_search/";
+  check_and_create_directory(search);
+
   string criterion;
-  string logs_folder = exp_folder + "logs/";
+  string logs_folder = exp_folder + "proposed_search/logs/";
   check_and_create_directory(logs_folder);
   criterion = "aic/";
   create_sub_folders(logs_folder,criterion);
@@ -173,7 +178,7 @@ void Experiments::checkFolders(string &exp_folder)
   criterion = "icl/";
   create_sub_folders(logs_folder,criterion);
 
-  string mixtures_folder = exp_folder + "mixtures/";
+  string mixtures_folder = exp_folder + "proposed_search/mixtures/";
   check_and_create_directory(mixtures_folder);
   criterion = "aic/";
   create_sub_folders(mixtures_folder,criterion);
@@ -182,10 +187,31 @@ void Experiments::checkFolders(string &exp_folder)
   criterion = "icl/";
   create_sub_folders(mixtures_folder,criterion);
 
-  string results_folder = exp_folder + "results/";
+  mixtures_folder = exp_folder + "traditional_search/mixtures/";
+  check_and_create_directory(mixtures_folder);
+  criterion = "aic/";
+  create_sub_folders(mixtures_folder,criterion);
+  criterion = "bic/";
+  create_sub_folders(mixtures_folder,criterion);
+  criterion = "icl/";
+  create_sub_folders(mixtures_folder,criterion);
+
+  string results_folder = exp_folder + "proposed_search/results/";
   check_and_create_directory(results_folder);
   criterion = "aic/";
   string results = results_folder + criterion;
+  check_and_create_directory(results);
+  criterion = "bic/";
+  results = results_folder + criterion;
+  check_and_create_directory(results);
+  criterion = "icl/";
+  results = results_folder + criterion;
+  check_and_create_directory(results);
+
+  results_folder = exp_folder + "traditional_search/results/";
+  check_and_create_directory(results_folder);
+  criterion = "aic/";
+  results = results_folder + criterion;
   check_and_create_directory(results);
   criterion = "bic/";
   results = results_folder + criterion;
@@ -213,11 +239,11 @@ void Experiments::create_sub_folders(string &folder, string &criterion)
 
 void Experiments::exp1()
 {
-  int K = 5;
-  int num_mixtures = 5;
-  int N = 500;
+  int K = 1;
+  int num_mixtures = 50;
+  int N = 100;
 
-  //generate_data_exp1(N,K,num_mixtures);
+  generate_data_exp1(N,K,num_mixtures);
 
   infer_components_exp1(K,num_mixtures);
 }
@@ -268,21 +294,6 @@ void Experiments::infer_components_exp1(int K, int num_mixtures)
 
   int large_N = 100000;
 
-  ESTIMATION = MLE; // ML estimation ...
-
-  string est_type_file;
-  if (ESTIMATION == MOMENT) est_type_file = "moment";
-  else if (ESTIMATION == MLE) est_type_file = "mle";
-  else if (ESTIMATION == MAP) est_type_file = "map";
-  string est_type_folder = est_type_file + "/";
-
-  string results_file = exp_folder + "results/aic/" + est_type_file;
-  ofstream aic_out(results_file.c_str());
-  results_file = exp_folder + "results/bic/" + est_type_file;
-  ofstream bic_out(results_file.c_str());
-  results_file = exp_folder + "results/icl/" + est_type_file;
-  ofstream icl_out(results_file.c_str());
-
   for (int index=1; index<=num_mixtures; index++) {
     cout << "Mixture: " << index << " ...\n";
     string index_str = boost::lexical_cast<string>(index);
@@ -297,17 +308,85 @@ void Experiments::infer_components_exp1(int K, int num_mixtures)
     std::vector<Vector> random_sample = load_data_table(data_file);
 
     /* using traditional search */
-    traditional_search(
-      index_str,
-      original,random_sample,large_sample,
-      exp_folder,est_type_folder,
-      aic_out,bic_out,icl_out
-    );
+    cout << "Traditional search ...\n";
+    traditional_search(index_str,original,random_sample,large_sample,exp_folder);
 
     /* using the proposed search */
+    cout << "Proposed search ...\n";
     proposed_search(index_str,original,random_sample,large_sample,exp_folder);
   } // for()
-  aic_out.close(); bic_out.close(); icl_out.close();
+}
+
+void Experiments::traditional_search(
+  string &index_str,
+  Mixture &original, 
+  std::vector<Vector> &random_sample,
+  std::vector<Vector> &large_sample,
+  string &exp_folder
+) {
+  ESTIMATION = MOMENT; // Moment estimation ...
+  string est_type_file = "moment";
+  string est_type_folder = est_type_file + "/";
+  string results_file = exp_folder + "traditional_search/results/aic/" + est_type_file;
+  ofstream aic_out_mom(results_file.c_str(),ios::app);
+  results_file = exp_folder + "traditional_search/results/bic/" + est_type_file;
+  ofstream bic_out_mom(results_file.c_str(),ios::app);
+  results_file = exp_folder + "traditional_search/results/icl/" + est_type_file;
+  ofstream icl_out_mom(results_file.c_str(),ios::app);
+  traditional_search(
+    index_str,
+    original,random_sample,large_sample,
+    exp_folder,est_type_folder,
+    aic_out_mom,bic_out_mom,icl_out_mom
+  );
+  aic_out_mom.close(); bic_out_mom.close(); icl_out_mom.close();
+
+  ESTIMATION = MLE; // Max LH estimation ...
+  est_type_file = "mle";
+  est_type_folder = est_type_file + "/";
+  results_file = exp_folder + "traditional_search/results/aic/" + est_type_file;
+  ofstream aic_out_mle(results_file.c_str(),ios::app);
+  results_file = exp_folder + "traditional_search/results/bic/" + est_type_file;
+  ofstream bic_out_mle(results_file.c_str(),ios::app);
+  results_file = exp_folder + "traditional_search/results/icl/" + est_type_file;
+  ofstream icl_out_mle(results_file.c_str(),ios::app);
+  traditional_search(
+    index_str,
+    original,random_sample,large_sample,
+    exp_folder,est_type_folder,
+    aic_out_mle,bic_out_mle,icl_out_mle
+  );
+  aic_out_mle.close(); bic_out_mle.close(); icl_out_mle.close();
+
+  ESTIMATION = MAP; // MAP estimation ...
+  est_type_file = "map";
+  est_type_folder = est_type_file + "/";
+  results_file = exp_folder + "traditional_search/results/aic/" + est_type_file;
+  ofstream aic_out_map(results_file.c_str(),ios::app);
+  results_file = exp_folder + "traditional_search/results/bic/" + est_type_file;
+  ofstream bic_out_map(results_file.c_str(),ios::app);
+  results_file = exp_folder + "traditional_search/results/icl/" + est_type_file;
+  ofstream icl_out_map(results_file.c_str(),ios::app);
+  traditional_search(
+    index_str,
+    original,random_sample,large_sample,
+    exp_folder,est_type_folder,
+    aic_out_map,bic_out_map,icl_out_map
+  );
+  aic_out_map.close(); bic_out_map.close(); icl_out_map.close();
+
+  ESTIMATION = MML; // MML estimation ...
+  est_type_file = "mml";
+  est_type_folder = est_type_file + "/";
+  results_file = exp_folder + "traditional_search/results/" + est_type_file;
+  ofstream mml_out(results_file.c_str(),ios::app);
+  traditional_search_mml(
+    index_str,
+    original,random_sample,large_sample,
+    exp_folder,est_type_folder,
+    mml_out
+  );
+  mml_out.close();
 }
 
 void Experiments::traditional_search(
@@ -322,7 +401,6 @@ void Experiments::traditional_search(
   ostream &icl_out
 ) {
   int K_MAX = 10; 
-  Vector aic(K_MAX,0),bic(K_MAX,0),icl(K_MAX,0);
 
   Vector data_weights(random_sample.size(),1);
   Mixture mixture(1,random_sample,data_weights);
@@ -356,7 +434,7 @@ void Experiments::traditional_search(
     }
   } // for()
 
-  string mixtures_folder = exp_folder + "mixtures/";
+  string mixtures_folder = exp_folder + "traditional_search/mixtures/";
   /* save inferred mixtures */
   string inferred_mix_file = mixtures_folder + "aic/" + est_type_folder + "mixture_" + index_str;
   aic_best_mix.printParameters(inferred_mix_file);
@@ -377,6 +455,44 @@ void Experiments::traditional_search(
   icl_out << fixed << scientific << icl_best_mix.computeMinimumMessageLength() << endl;
 }
 
+void Experiments::traditional_search_mml(
+  string &index_str,
+  Mixture &original, 
+  std::vector<Vector> &random_sample,
+  std::vector<Vector> &large_sample,
+  string &exp_folder,
+  string &est_type_folder,
+  ostream &mml_out
+) {
+  int K_MAX = 10; 
+
+  Vector data_weights(random_sample.size(),1);
+  Mixture mixture(1,random_sample,data_weights);
+  mixture.estimateParameters();
+
+  double msglen_best = mixture.getMinimumMessageLength();
+  Mixture mml_best_mix = mixture;
+
+  for (int k=2; k<=K_MAX; k++) {
+    cout << "k: " << k << endl;
+    Mixture mixture(k,random_sample,data_weights);
+    mixture.estimateParameters();
+    double msglen = mixture.getMinimumMessageLength();
+    if (msglen < msglen_best) {
+      msglen_best = msglen;
+      mml_best_mix = mixture;
+    }
+  } // for()
+
+  string mixtures_folder = exp_folder + "traditional_search/mixtures/";
+  /* save inferred mixtures */
+  string inferred_mix_file = mixtures_folder + est_type_folder + "mixture_" + index_str;
+  mml_best_mix.printParameters(inferred_mix_file);
+  mml_out << fixed << setw(10) << mml_best_mix.getNumberOfComponents() << "\t\t";
+  mml_out << fixed << scientific << original.computeKLDivergence(mml_best_mix,large_sample) << "\t\t";
+  mml_out << fixed << scientific << mml_best_mix.getMinimumMessageLength() << endl;
+}
+
 void Experiments::proposed_search(
   string &index_str,
   Mixture &original, 
@@ -384,10 +500,37 @@ void Experiments::proposed_search(
   std::vector<Vector> &large_sample,
   string &exp_folder
 ) {
-  string logs_folder = exp_folder + "logs/";
-  string mixtures_folder = exp_folder + "mixtures/";
-  string results_folder = exp_folder + "results/";
+  string logs_folder = exp_folder + "proposed_search/logs/";
+  string mixtures_folder = exp_folder + "proposed_search/mixtures/";
+  string results_folder = exp_folder + "proposed_search/results/";
   string criterion;
+
+  criterion = "aic/";
+  CRITERION = AIC;
+
+  ESTIMATION = MOMENT;
+  proposed_search(
+    index_str,
+    original,random_sample,large_sample,
+    logs_folder,mixtures_folder,results_folder,
+    criterion
+  );
+
+  ESTIMATION = MLE;
+  proposed_search(
+    index_str,
+    original,random_sample,large_sample,
+    logs_folder,mixtures_folder,results_folder,
+    criterion
+  );
+
+  ESTIMATION = MAP;
+  proposed_search(
+    index_str,
+    original,random_sample,large_sample,
+    logs_folder,mixtures_folder,results_folder,
+    criterion
+  );
 
   criterion = "bic/";
   CRITERION = BIC;

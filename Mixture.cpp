@@ -698,13 +698,14 @@ double Mixture::estimateParameters()
 void Mixture::EM()
 {
   /* prepare log file */
-  string log_file = getLogFile();
-  ofstream log(log_file.c_str());
+  /*string log_file = getLogFile();
+  ofstream log(log_file.c_str());*/
+  ofstream log;
 
   computeNullModelMessageLength();
   //cout << "null_msglen: " << null_msglen << endl;
 
-  printParameters(log,0,0);
+  //printParameters(log,0,0);
 
   if (ESTIMATION == MML) {
     EM(
@@ -737,7 +738,7 @@ void Mixture::EM()
       break;
   }
 
-  log.close();
+  //log.close();
 }
 
 void Mixture::EM(
@@ -780,11 +781,11 @@ void Mixture::EM(
          ) {
         stop:
         current = computeMinimumMessageLength();
-        log << "\nSample size: " << N << endl;
+        /*log << "\nSample size: " << N << endl;
         log << "Kent encoding rate: " << current << " bits.";
         log << "\t(" << current/N << " bits/point)" << endl;
         log << "Null model encoding: " << null_msglen << " bits.";
-        log << "\t(" << null_msglen/N << " bits/point)" << endl;
+        log << "\t(" << null_msglen/N << " bits/point)" << endl;*/
         break;
       }
     }
