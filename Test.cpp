@@ -914,22 +914,23 @@ void Test::mml_estimation2(void)
 void Test::plot_posterior_density(void)
 {
   double psi,alpha,eta;
-  string data_file = "./visualize/sampled_data/random_sample_example.dat";
+  string data_file = "./visualize/sampled_data/random_sample_ex1.dat";
   std::vector<Vector> random_sample = load_data_table(data_file);
 
   double kappa_inc = 0.1;
-  double kappa_max = 20;
+  double kappa_max = 30;
   double ecc_inc = 0.01;
   double ecc_max = 0.99;
 
-/*
+
   string posterior_file = "./visualize/sampled_data/prior3d_posterior1.dat";
   ofstream out1(posterior_file.c_str());
   posterior_file = "./visualize/sampled_data/prior3d_posterior2.dat";
   ofstream out2(posterior_file.c_str());
   for (double k=kappa_inc; k<=kappa_max; k+=kappa_inc) {
     for (double e=ecc_inc; e<=ecc_max; e+=ecc_inc) {
-      psi = 63.873; alpha = 95.926; eta = 91.623;
+      //psi = 63.873; alpha = 95.926; eta = 91.623;
+      psi = 118.632; alpha = 85.533; eta = 87.221;
       psi *= PI/180; alpha *= PI/180; eta *= PI/180;
       double b = 0.5 * k * e;
       Kent kent1(psi,alpha,eta,k,b);
@@ -942,7 +943,8 @@ void Test::plot_posterior_density(void)
       out1 << endl;
       
       // eccentricity transform ...
-      psi = 63.869; alpha = 95.907; eta = 91.537;
+      //psi = 63.869; alpha = 95.907; eta = 91.537;
+      psi = 118.634; alpha = 85.547; eta = 87.213;
       psi *= PI/180; alpha *= PI/180; eta *= PI/180;
       Kent_EccTrans kent2(psi,alpha,eta,k,e);
       log_prior = kent2.computeLogPriorProbability();
@@ -956,7 +958,8 @@ void Test::plot_posterior_density(void)
   }
   out1.close();
   out2.close();
-*/
+
+/*
   PRIOR = 2;
   string posterior_file = "./visualize/sampled_data/prior2d_posterior1.dat";
   ofstream out1(posterior_file.c_str());
@@ -964,7 +967,7 @@ void Test::plot_posterior_density(void)
   ofstream out2(posterior_file.c_str());
   for (double k=kappa_inc; k<=kappa_max; k+=kappa_inc) {
     for (double e=ecc_inc; e<=ecc_max; e+=ecc_inc) {
-      psi = 63.884; alpha = 95.926; eta = 91.613;
+      psi = 118.629; alpha = 85.544; eta = 87.222;
       psi *= PI/180; alpha *= PI/180; eta *= PI/180;
       double b = 0.5 * k * e;
       Kent kent1(psi,alpha,eta,k,b);
@@ -977,7 +980,7 @@ void Test::plot_posterior_density(void)
       out1 << endl;
       
       // eccentricity transform ...
-      psi = 63.871; alpha = 95.910; eta = 91.547;
+      psi = 118.626; alpha = 85.541; eta = 87.204;
       psi *= PI/180; alpha *= PI/180; eta *= PI/180;
       Kent_EccTrans kent2(psi,alpha,eta,k,e);
       log_prior = kent2.computeLogPriorProbability();
@@ -999,7 +1002,7 @@ void Test::plot_posterior_density(void)
   double z5_inc = 0.01;
   double z5_max = 0.99;
   // uniform transform ...
-  psi = 63.889; alpha = 95.915; eta = 91.466;
+  psi = 118.644; alpha = 85.538; eta = 87.207;
   psi *= PI/180; alpha *= PI/180; eta *= PI/180;
   double z1 = psi / PI; 
   double z2 = 0.5 * (1 - cos(alpha)); 
@@ -1017,6 +1020,7 @@ void Test::plot_posterior_density(void)
     } // z4
   } // z5
   out3.close();
+*/
 }
 
 void Test::vmf_all_estimation()
