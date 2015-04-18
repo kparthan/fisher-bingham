@@ -13,15 +13,15 @@ function [] = plot_posterior_prior3d()
 %  xlabh = get(gca,'XLabel');
 %  set(xlabh,'Position',get(xlabh,'Position') + [0 -1 0])
 %  ylabh = get(gca,'YLabel');
-%  set(ylabh,'Position',get(ylabh,'Position') + [24 0 0])
+%  set(ylabh,'Position',get(ylabh,'Position') + [35 0 0])
 %  zlabh = get(gca,'ZLabel');
-%  set(zlabh,'Position',get(zlabh,'Position') + [-3 0 0.25e-6])
+%  set(zlabh,'Position',get(zlabh,'Position') + [-4 0 0.25e-4])
 %
 %  view ([42 75]);
 %
 %  grid on;
-%  set(gca,'xtick',[0:4:20]);
-%  set(gca,'ytick',[0:2:10]);
+%  set(gca,'xtick',[0:5:30]);
+%  set(gca,'ytick',[0:3:15]);
 %  saveas(gcf,'../figs/prior3d_posterior1.fig');
 %  saveas(gcf,'../figs/prior3d_posterior1.jpg');
 
@@ -38,16 +38,16 @@ function [] = plot_posterior_prior3d()
   xlabh = get(gca,'XLabel');
   set(xlabh,'Position',get(xlabh,'Position') + [0 -0.1 0])
   ylabh = get(gca,'YLabel');
-  set(ylabh,'Position',get(ylabh,'Position') + [24 0 0])
+  set(ylabh,'Position',get(ylabh,'Position') + [35 0 0])
   zlabh = get(gca,'ZLabel');
-  set(zlabh,'Position',get(zlabh,'Position') + [-3 0 1e-6])
+  set(zlabh,'Position',get(zlabh,'Position') + [-4 0 0.25e-3])
 
   view ([42 75]);
 
   grid on;
-  set(gca,'xtick',[0:4:20]);
+  set(gca,'xtick',[0:5:30]);
   set(gca,'ytick',[0:0.2:1]);
-  set(gca,'ztick',[0:2.5e-6:7.5e-6]);
+  %set(gca,'ztick',[0:2.5e-6:7.5e-6]);
   saveas(gcf,'../figs/prior3d_posterior2.fig');
   saveas(gcf,'../figs/prior3d_posterior2.jpg');
 

@@ -922,7 +922,7 @@ void Test::plot_posterior_density(void)
   double ecc_inc = 0.01;
   double ecc_max = 0.99;
 
-
+/*
   string posterior_file = "./visualize/sampled_data/prior3d_posterior1.dat";
   ofstream out1(posterior_file.c_str());
   posterior_file = "./visualize/sampled_data/prior3d_posterior2.dat";
@@ -958,8 +958,8 @@ void Test::plot_posterior_density(void)
   }
   out1.close();
   out2.close();
+*/
 
-/*
   PRIOR = 2;
   string posterior_file = "./visualize/sampled_data/prior2d_posterior1.dat";
   ofstream out1(posterior_file.c_str());
@@ -1020,7 +1020,7 @@ void Test::plot_posterior_density(void)
     } // z4
   } // z5
   out3.close();
-*/
+
 }
 
 void Test::vmf_all_estimation()
