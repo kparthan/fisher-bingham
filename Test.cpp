@@ -917,9 +917,9 @@ void Test::plot_posterior_density(void)
   string data_file = "./visualize/sampled_data/random_sample_ex1.dat";
   std::vector<Vector> random_sample = load_data_table(data_file);
 
-  double kappa_inc = 0.1;
+  double kappa_inc = 0.5;
   double kappa_max = 30;
-  double ecc_inc = 0.01;
+  double ecc_inc = 0.02;
   double ecc_max = 0.99;
 
 /*
@@ -991,15 +991,17 @@ void Test::plot_posterior_density(void)
       out2 << fixed << scientific << setprecision(6) << posterior << "\t";
       out2 << endl;
     } // e
+    out1 << endl;
+    out2 << endl;
   } // k
   out1.close();
   out2.close();
 
   posterior_file = "./visualize/sampled_data/prior2d_posterior3.dat";
   ofstream out3(posterior_file.c_str());
-  double z4_inc = 0.001;
+  double z4_inc = 0.02;
   double z4_max = 0.99;
-  double z5_inc = 0.01;
+  double z5_inc = 0.02;
   double z5_max = 0.99;
   // uniform transform ...
   psi = 118.644; alpha = 85.538; eta = 87.207;
@@ -1018,6 +1020,7 @@ void Test::plot_posterior_density(void)
       out3 << fixed << scientific << setprecision(6) << posterior << "\t";
       out3 << endl;
     } // z4
+    out3 << endl;
   } // z5
   out3.close();
 
