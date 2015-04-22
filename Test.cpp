@@ -917,19 +917,18 @@ void Test::plot_posterior_density(void)
   string data_file = "./visualize/sampled_data/random_sample_ex1.dat";
   std::vector<Vector> random_sample = load_data_table(data_file);
 
-  double kappa_inc = 0.5;
+  double kappa_inc = 0.2;
   double kappa_max = 30;
-  double ecc_inc = 0.02;
-  double ecc_max = 0.99;
+  double ecc_inc = 0.01;
+  double ecc_max = 1-TOLERANCE;
 
-/*
+  PRIOR = 3;
   string posterior_file = "./visualize/sampled_data/prior3d_posterior1.dat";
   ofstream out1(posterior_file.c_str());
   posterior_file = "./visualize/sampled_data/prior3d_posterior2.dat";
   ofstream out2(posterior_file.c_str());
   for (double k=kappa_inc; k<=kappa_max; k+=kappa_inc) {
     for (double e=ecc_inc; e<=ecc_max; e+=ecc_inc) {
-      //psi = 63.873; alpha = 95.926; eta = 91.623;
       psi = 118.632; alpha = 85.533; eta = 87.221;
       psi *= PI/180; alpha *= PI/180; eta *= PI/180;
       double b = 0.5 * k * e;
@@ -943,7 +942,6 @@ void Test::plot_posterior_density(void)
       out1 << endl;
       
       // eccentricity transform ...
-      //psi = 63.869; alpha = 95.907; eta = 91.537;
       psi = 118.634; alpha = 85.547; eta = 87.213;
       psi *= PI/180; alpha *= PI/180; eta *= PI/180;
       Kent_EccTrans kent2(psi,alpha,eta,k,e);
@@ -958,22 +956,30 @@ void Test::plot_posterior_density(void)
   }
   out1.close();
   out2.close();
-*/
 
+/*
   PRIOR = 2;
   string posterior_file = "./visualize/sampled_data/prior2d_posterior1.dat";
   ofstream out1(posterior_file.c_str());
   posterior_file = "./visualize/sampled_data/prior2d_posterior2.dat";
   ofstream out2(posterior_file.c_str());
-  for (double k=kappa_inc; k<=kappa_max; k+=kappa_inc) {
-    for (double e=ecc_inc; e<=ecc_max; e+=ecc_inc) {
+  int stop1=0,stop2=0;
+
+  double k = 1e-3;
+  double b,log_prior,fval,posterior;
+  while (k <= kappa_max) {
+    repeat1:
+    stop2 = 0;
+    double e = TOLERANCE;
+    while (e <= ecc_max) {
+      repeat2:
       psi = 118.629; alpha = 85.544; eta = 87.222;
       psi *= PI/180; alpha *= PI/180; eta *= PI/180;
-      double b = 0.5 * k * e;
+      b = 0.5 * k * e;
       Kent kent1(psi,alpha,eta,k,b);
-      double log_prior = kent1.computeLogPriorProbability();
-      double fval = -log_prior + kent1.computeNegativeLogLikelihood(random_sample);
-      double posterior = exp(-fval);
+      log_prior = kent1.computeLogPriorProbability();
+      fval = -log_prior + kent1.computeNegativeLogLikelihood(random_sample);
+      posterior = exp(-fval);
       out1 << fixed << scientific << setprecision(6) << k << "\t";
       out1 << fixed << scientific << setprecision(6) << b << "\t";
       out1 << fixed << scientific << setprecision(6) << posterior << "\t";
@@ -990,28 +996,48 @@ void Test::plot_posterior_density(void)
       out2 << fixed << scientific << setprecision(6) << e << "\t";
       out2 << fixed << scientific << setprecision(6) << posterior << "\t";
       out2 << endl;
+      e += ecc_inc;
+      if (stop2 == 1) goto finish2;
+      if (e > ecc_max) {
+        e = ecc_max;
+        stop2 = 1;
+        goto repeat2;
+      }
     } // e
-    out1 << endl;
-    out2 << endl;
+    finish2:
+    k += kappa_inc;
+    if (stop1 == 1) goto finish1;
+    if (k > kappa_max) {
+      k = kappa_max;
+      stop1 = 1;
+      goto repeat1;
+    }
   } // k
+  finish1:
   out1.close();
   out2.close();
 
   posterior_file = "./visualize/sampled_data/prior2d_posterior3.dat";
   ofstream out3(posterior_file.c_str());
-  double z4_inc = 0.02;
-  double z4_max = 0.99;
-  double z5_inc = 0.02;
-  double z5_max = 0.99;
+  double z4_inc = 0.005;
+  double z4_max = 1-1e-3;
+  double z5_inc = 0.01;
+  double z5_max = 1-1e-3;
   // uniform transform ...
   psi = 118.644; alpha = 85.538; eta = 87.207;
   psi *= PI/180; alpha *= PI/180; eta *= PI/180;
   double z1 = psi / PI; 
   double z2 = 0.5 * (1 - cos(alpha)); 
   double z3 = eta / (2 * PI); 
-  for (double z4=z4_inc; z4<=z4_max; z4+=z4_inc) {
-    //if (z4>=0.75) z4_inc = 0.001;
-    for (double z5=z5_inc; z5<=z5_max; z5+=z5_inc) {
+  double z4 = TOLERANCE;
+
+  stop1 = 0;
+  while (z4 <= z4_max) {
+    repeat3:
+    double z5 = TOLERANCE;
+    stop2 = 0;
+    while (z5 <= z5_max) {
+      repeat4:
       Kent_UnifTrans kent3(z1,z2,z3,z4,z5);
       double fval = kent3.computeNegativeLogLikelihood(random_sample);
       double posterior = exp(-fval);
@@ -1019,11 +1045,27 @@ void Test::plot_posterior_density(void)
       out3 << fixed << scientific << setprecision(6) << z5 << "\t";
       out3 << fixed << scientific << setprecision(6) << posterior << "\t";
       out3 << endl;
-    } // z4
-    out3 << endl;
-  } // z5
+      z5 += z5_inc;
+      if (stop2 == 1) goto finish4;
+      if (z5 > z5_max) {
+        z5 = z5_max;
+        stop2 = 1;
+        goto repeat4;
+      }
+    } // z5
+    finish4:
+    //out3 << endl;
+    z4 += z4_inc;
+    if (stop1 == 1) goto finish3;
+    if (z4 > z4_max) {
+      z4 = z4_max;
+      stop1 = 1;
+      goto repeat3;
+    }
+  } // z4 
+  finish3:
   out3.close();
-
+*/
 }
 
 void Test::vmf_all_estimation()
