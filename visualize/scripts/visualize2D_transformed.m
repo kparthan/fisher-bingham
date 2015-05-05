@@ -16,6 +16,6 @@ end
 % create legend
 N = [1:K];
 legend_cell = [cellstr(num2str(N','%d'))];
-legend(legend_cell);
+%legend(legend_cell);
 
 end

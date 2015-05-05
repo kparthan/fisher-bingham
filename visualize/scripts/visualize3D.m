@@ -8,10 +8,10 @@ r = ones(n, n); % radius is 1
 surface(x,y,z,'FaceColor','none');
 hold on;
 
-c(1,:) = [1 0.5 0];
-c(2,:) = [1 0 1];
-c(3,:) = [0 1 1];
-c(4,:) = [1 0 0];
+%c(1,:) = [1 0.5 0];
+%c(2,:) = [1 0 1];
+%c(3,:) = [0 1 1];
+%c(4,:) = [1 0 0];
 %c(5,:) = [0 1 0];
 %c(6,:) = [0 0 1];
 %c(7,:) = [0.5 0.5 0.5];
@@ -26,8 +26,8 @@ for k = 1:K
    y = M(:,2);
    z = M(:,3);
    colors = rand(1,3);
-   plot3(x,y,z,'.','Color',c(k,:));
-   %plot3(x,y,z,'.','Color',colors);
+   %plot3(x,y,z,'.','Color',c(k,:));
+   plot3(x,y,z,'.','Color',colors);
 end  
 xlabel('X');
 ylabel('Y');
