@@ -1409,6 +1409,27 @@ void Mixture::generateHeatmapData(double res)
   }
   fbins2D.close();
   fbins3D.close();
+
+  string comp_bins = "./visualize/sampled_data/component_bins/";
+  check_and_create_directory(comp_bins);
+  for (int i=0; i<K; i++) {
+    string fbins = comp_bins + "comp" + boost::lexical_cast<string>(i+1)
+                   + "_prob_bins2D.dat";
+    ofstream out(fbins.c_str());
+    Vector x(3,1);
+    Vector point(3,0);
+    for (double theta=0; theta<180; theta+=res) {
+      x[1] = theta * PI/180;
+      for (double phi=0; phi<360; phi+=res) {
+        x[2] = phi * PI/180;
+        spherical2cartesian(x,point);
+        double pr = exp(components[i].log_density(point));
+        out << scientific << setprecision(6) << pr << "\t";
+      } // phi()
+      out << endl;
+    } // theta()
+    out.close();
+  } // i()
 }
 
 /*!
