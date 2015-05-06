@@ -2,10 +2,10 @@ function [] = visualize_mixture_contours(K)
 
   addpath('export_fig');
 
-  bins_folder = '../sampled_data/bins_kent/';
-  outfile = 'kent_mix';
-  %bins_folder = '../sampled_data/bins_vmf/';
-  %outfile = 'vmf_mix';
+  %bins_folder = '../sampled_data/bins_kent/';
+  %outfile = 'kent_mix';
+  bins_folder = '../sampled_data/bins_vmf/';
+  outfile = 'vmf_mix';
  
    % plot the entire mixture density
   data_file = strcat(bins_folder,'mixture_density.dat');
@@ -50,7 +50,8 @@ function [] = visualize_mixture_contours(K)
 
     factor = range / range2;
     prob_bins = prob_bins2 .* factor;
-    C = contour(prob_bins,1,'LineWidth',2,'LineColor','black');
+    [C,h] = contour(prob_bins,1,'LineWidth',2,'LineColor','black');
+    %clabel(C,h);
 
     [row col] = ind2sub(size(prob_bins),max_index);
     cx = phi(col);
@@ -72,9 +73,9 @@ function [] = visualize_mixture_contours(K)
   output_eps = strcat('../figs/',outfile,'.eps');
   output_pdf = strcat('../figs/',outfile,'.pdf');
 
-  saveas(gcf,output_fig);
+  %saveas(gcf,output_fig);
   %print2eps(output_eps);
   %eps2pdf(output_eps,output_pdf,1);
-  export_fig(output_pdf,'-pdf');
+  %export_fig(output_pdf,'-pdf');
 
 end
