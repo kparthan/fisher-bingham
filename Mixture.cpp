@@ -1102,30 +1102,31 @@ std::vector<Vector> Mixture::generate(int num_samples, bool save_data)
   } // for i
 
   if (save_data) {
-    writeToFile("random_sample.dat",sample);
+    string comp_bins = "./visualize/sampled_data/bins_kent/";
+    check_and_create_directory(comp_bins);
     string comp_density_file,transformed_file;
-    string mix_density_file = "./visualize/sampled_data/mixture_density.dat";
+    string mix_density_file = "./visualize/sampled_data/bins_kent/mixture_density.dat";
     ofstream mix(mix_density_file.c_str());
     double comp_density,mix_density;
     for (int i=0; i<K; i++) {
       saveComponentData(i,random_data[i]);
-      comp_density_file = "./visualize/sampled_data/comp" 
-                          + boost::lexical_cast<string>(i+1) + "_density.dat";
-      ofstream comp(comp_density_file.c_str());
+      //comp_density_file = "./visualize/sampled_data/comp" 
+      //                    + boost::lexical_cast<string>(i+1) + "_density.dat";
+      //ofstream comp(comp_density_file.c_str());
       for (int j=0; j<random_data[i].size(); j++) {
-        comp_density = exp(components[i].log_density(random_data[i][j]));
+        //comp_density = exp(components[i].log_density(random_data[i][j]));
         mix_density = exp(log_probability(random_data[i][j]));
         for (int k=0; k<random_data[i][j].size(); k++) {
-          comp << fixed << setw(10) << setprecision(3) << random_data[i][j][k];
-          mix << fixed << setw(10) << setprecision(3) << random_data[i][j][k];
+          //comp << fixed << setw(10) << setprecision(3) << random_data[i][j][k];
+          mix << scientific << setprecision(6) << random_data[i][j][k] << "\t\t";
         } // k
-        comp << "\t\t" << scientific << comp_density << endl;
-        mix <<  "\t\t" << scientific << mix_density << endl;
+        //comp << "\t\t" << scientific << comp_density << endl;
+        mix << scientific << setprecision(6) << mix_density << endl;
       } // j
-      comp.close();
+      //comp.close();
     } // i
     mix.close();
-    generateHeatmapData(1);
+    //generateHeatmapData(1);
   } // if()
   return sample;
 }
@@ -1385,8 +1386,12 @@ Mixture Mixture::join(int c1, int c2, ostream &log)
  */
 void Mixture::generateHeatmapData(double res)
 {
-  string data_fbins2D = "./visualize/sampled_data/prob_bins2D.dat";
-  string data_fbins3D = "./visualize/sampled_data/prob_bins3D.dat";
+  string comp_bins = "./visualize/sampled_data/bins_kent/";
+  check_and_create_directory(comp_bins);
+
+  /* for the entire mixture */
+  string data_fbins2D = "./visualize/sampled_data/bins_kent/prob_bins2D.dat";
+  string data_fbins3D = "./visualize/sampled_data/bins_kent/prob_bins3D.dat";
   ofstream fbins2D(data_fbins2D.c_str());
   ofstream fbins3D(data_fbins3D.c_str());
   Vector x(3,1);
@@ -1410,8 +1415,7 @@ void Mixture::generateHeatmapData(double res)
   fbins2D.close();
   fbins3D.close();
 
-  string comp_bins = "./visualize/sampled_data/component_bins/";
-  check_and_create_directory(comp_bins);
+  /* bins due to each component in the mixture */
   for (int i=0; i<K; i++) {
     string fbins = comp_bins + "comp" + boost::lexical_cast<string>(i+1)
                    + "_prob_bins2D.dat";
