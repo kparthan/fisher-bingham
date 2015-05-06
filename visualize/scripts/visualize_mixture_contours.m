@@ -1,12 +1,19 @@
 function [] = visualize_mixture_contours(K)
 
+  addpath('export_fig');
+
   bins_folder = '../sampled_data/bins_kent/';
-%  bins_folder = '../sampled_data/bins_vmf/';
+  outfile = 'kent_mix';
+  %bins_folder = '../sampled_data/bins_vmf/';
+  %outfile = 'vmf_mix';
  
    % plot the entire mixture density
   data_file = strcat(bins_folder,'mixture_density.dat');
   M = load(data_file);
   density = M(:,4);
+  min_density = min(density);
+  max_density = max(density);
+  range = max_density - min_density;
   n = size(M,1);
   angles = zeros(n,2);
   for i=1:n
@@ -17,26 +24,57 @@ function [] = visualize_mixture_contours(K)
     angles(i,1) = phi;
     angles(i,2) = theta;
   end
-  scatter3(angles(:,1),angles(:,2),density,2,'cdata',density);
+  hs = scatter3(angles(:,1),angles(:,2),density,1,'cdata',density);
 
   hold on;
 
-  % plot the contours 
-%  theta = 0:1:179.9;
-%  phi = 0:1:359.9;
-%  for k = 1:K
-%    %k
-%    data_file = strcat(bins_folder,'comp',num2str(k),'_prob_bins2D.dat');
-%    prob_bins = load(data_file);
-%    colors = rand(1,3);
-%    %contour(phi,theta,prob_bins,[0 .1 .5 1],'LineWidth',2);
-%    [C,h] = contour(phi,theta,prob_bins,1,'LineWidth',2);
-%    %clabel(C,h);
-%  end  
+  % figure properties
+  set(gcf, 'Color', 'w');
+  xlabel('Longitude','fontsize',20);
+  ylabel('Co-latitude','fontsize',20);
+  set(gca,'Ylim',[0 120]);
+  set(gca,'xtick',[0:60:360],'fontsize',12);
+  set(gca,'ytick',[0:30:120],'fontsize',12);
+  view ([0 90]);
 
-  % create legend
-  %N = [1:K];
-  %legend_cell = [cellstr(num2str(N','%d'))];
-  %legend(legend_cell);
+  % plot the contours 
+  theta = 0:1:179.9;
+  phi = 0:1:359.9;
+  for k = 1:K
+    %k
+    data_file = strcat(bins_folder,'comp',num2str(k),'_prob_bins2D.dat');
+    prob_bins2 = load(data_file);
+    min_val = min(prob_bins2(:));
+    [max_val max_index] = max(prob_bins2(:));
+    range2 = max_val - min_val;
+
+    factor = range / range2;
+    prob_bins = prob_bins2 .* factor;
+    C = contour(prob_bins,1,'LineWidth',2,'LineColor','black');
+
+    [row col] = ind2sub(size(prob_bins),max_index);
+    cx = phi(col);
+    cy = theta(row);
+    %ht = text(cx,cy,num2str(k),'Color','red');
+
+%    hcl = clabel(C,'Color','red');
+%    for i=2:2:length(hcl)
+%      old_label = get(hcl(i),'String');
+%      new_label = num2str(k);
+%      set(hcl(i),'String',new_label);
+%    end
+  end  
+
+  %uistack(hs,'bottom');
+  %uistack(ht,'top');
+
+  output_fig = strcat('../figs/',outfile,'.fig');
+  output_eps = strcat('../figs/',outfile,'.eps');
+  output_pdf = strcat('../figs/',outfile,'.pdf');
+
+  saveas(gcf,output_fig);
+  %print2eps(output_eps);
+  %eps2pdf(output_eps,output_pdf,1);
+  export_fig(output_pdf,'-pdf');
 
 end
