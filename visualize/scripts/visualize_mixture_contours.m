@@ -2,18 +2,18 @@ function [] = visualize_mixture_contours(K)
 
   addpath('export_fig');
 
-  %bins_folder = '../sampled_data/bins_kent/';
-  %outfile = 'kent_mix';
-  bins_folder = '../sampled_data/bins_vmf/';
-  outfile = 'vmf_mix';
+  bins_folder = '../sampled_data/bins_kent/';
+  outfile = 'kent_mix';
+  %bins_folder = '../sampled_data/bins_vmf/';
+  %outfile = 'vmf_mix';
  
-   % plot the entire mixture density
+  % plot the entire mixture density
   data_file = strcat(bins_folder,'mixture_density.dat');
   M = load(data_file);
   density = M(:,4);
-  min_density = min(density);
-  max_density = max(density);
-  range = max_density - min_density;
+  min1 = min(density);
+  max1 = max(density);
+  range1 = max1 - min1;
   n = size(M,1);
   angles = zeros(n,2);
   for i=1:n
@@ -44,12 +44,13 @@ function [] = visualize_mixture_contours(K)
     %k
     data_file = strcat(bins_folder,'comp',num2str(k),'_prob_bins2D.dat');
     prob_bins2 = load(data_file);
-    min_val = min(prob_bins2(:));
-    [max_val max_index] = max(prob_bins2(:));
-    range2 = max_val - min_val;
+    min2 = min(prob_bins2(:));
+    [max2 max_index] = max(prob_bins2(:));
+    range2 = max2 - min2;
 
-    factor = range / range2;
-    prob_bins = prob_bins2 .* factor;
+    factor = range1 / range2;
+    prob_bins = (prob_bins2 - min2) * factor;
+    prob_bins = prob_bins + min1;
     [C,h] = contour(prob_bins,1,'LineWidth',2,'LineColor','black');
     %clabel(C,h);
 
