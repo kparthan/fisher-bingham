@@ -20,14 +20,19 @@ function [] = test2()
 %  pcolor(x1,x2,F)
 %  shading interp
   figure
-  contour_levels = [[0.1:0.1:0.9] 0.98]; 
-  contour_labels = [[0.1:0.2:0.9] 0.98];
+  contour_levels = [[0.1:0.1:0.9] 0.86 0.98 0.99]; 
+  contour_labels = [[0.1:0.2:0.9] 0.98 0.99];
   [C,h] = contour(x1,x2,YYY,contour_levels);
   clabel(C,h,contour_labels,'labelspacing',500)
 
   text(3,0,'+','Color','red');
   text(-3,0,'+','Color','red');
-  text(0,1,'*','Color','blue');
-  text(0,-1,'*','Color','blue');
+  text(6,0,'*','Color','red');
+  text(-6,0,'*','Color','red');
+  text(9,0,'x','Color','red');
+  text(-9,0,'x','Color','red');
+
+  %text(0,1,'*','Color','blue');
+  %text(0,-1,'*','Color','blue');
 
 end

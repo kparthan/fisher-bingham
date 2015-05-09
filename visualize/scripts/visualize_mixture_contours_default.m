@@ -1,4 +1,4 @@
-function [] = visualize_mixture_contours(K)
+function [] = visualize_mixture_contours_default(K)
 
   addpath('export_fig');
 
