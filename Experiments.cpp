@@ -239,11 +239,11 @@ void Experiments::create_sub_folders(string &folder, string &criterion)
 
 void Experiments::exp1()
 {
-  int K = 1;
+  int K = 2;
   int num_mixtures = 50;
   int N = 100;
 
-  generate_data_exp1(N,K,num_mixtures);
+  //generate_data_exp1(N,K,num_mixtures);
 
   infer_components_exp1(K,num_mixtures);
 }
@@ -289,6 +289,86 @@ void Experiments::infer_components_exp1(int K, int num_mixtures)
   check_and_create_directory(EM_LOG_FOLDER);
 
   string exp_folder = common + "K_" + K_str + "/";
+  string data_folder = exp_folder + "data/";
+  string original_mix_folder = exp_folder + "original/";
+
+  int large_N = 100000;
+
+  for (int index=1; index<=num_mixtures; index++) {
+    cout << "Mixture: " << index << " ...\n";
+    string index_str = boost::lexical_cast<string>(index);
+
+    string original_mix_file = original_mix_folder + "mixture_" + index_str;
+    Mixture original;
+    string mix_file = original_mix_folder + "mixture_" + index_str;
+    original.load(mix_file);
+
+    std::vector<Vector> large_sample = original.generate(large_N,0);
+    string data_file = data_folder + "mixture_" + index_str + ".dat";
+    std::vector<Vector> random_sample = load_data_table(data_file);
+
+    /* using traditional search */
+    cout << "Traditional search ...\n";
+    traditional_search(index_str,original,random_sample,large_sample,exp_folder);
+
+    /* using the proposed search */
+    cout << "Proposed search ...\n";
+    proposed_search(index_str,original,random_sample,large_sample,exp_folder);
+  } // for()
+}
+
+void Experiments::exp2()
+{
+  int K = 5;
+  int num_mixtures = 5;
+  int N = 50;
+
+  generate_data_exp2(N,K,num_mixtures);
+
+  infer_components_exp2(N,num_mixtures);
+}
+
+void Experiments::generate_data_exp2(int N, int K, int num_mixtures)
+{
+  string common = "./experiments/infer_components/exp2/";
+  check_and_create_directory(common);
+
+  string N_str = boost::lexical_cast<string>(N);
+
+  string exp_folder = common + "N_" + N_str + "/";
+  check_and_create_directory(exp_folder);
+  checkFolders(exp_folder);
+
+  string data_folder = exp_folder + "data/";
+  string original_mix_folder = exp_folder + "original/";
+  check_and_create_directory(original_mix_folder);
+
+  for (int index=1; index<=num_mixtures; index++) {
+    string index_str = boost::lexical_cast<string>(index);
+
+    Vector weights = generateFromSimplex(K);
+    std::vector<Kent> components = generateRandomComponents(K);
+    Mixture original(K,components,weights);
+    string mix_file = original_mix_folder + "mixture_" + index_str;
+    original.printParameters(mix_file);
+
+    std::vector<Vector> random_sample = original.generate(N,0);
+    string data_file = data_folder + "mixture_" + index_str + ".dat";
+    writeToFile(data_file,random_sample);
+  } // for()
+}
+
+void Experiments::infer_components_exp2(int N, int num_mixtures)
+{
+  INFER_COMPONENTS = SET;
+
+  string common = "./experiments/infer_components/exp2/";
+  string N_str = boost::lexical_cast<string>(N);
+
+  EM_LOG_FOLDER = "./infer/logs/kent/N_" + N_str + "/";
+  check_and_create_directory(EM_LOG_FOLDER);
+
+  string exp_folder = common + "N_" + N_str + "/";
   string data_folder = exp_folder + "data/";
   string original_mix_folder = exp_folder + "original/";
 

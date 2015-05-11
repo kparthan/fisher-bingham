@@ -24,6 +24,10 @@ class Experiments
     void generate_data_exp1(int, int, int);
     void infer_components_exp1(int, int);
 
+    void exp2();
+    void generate_data_exp2(int, int, int);
+    void infer_components_exp2(int, int);
+
     void traditional_search(
       string &, Mixture &, std::vector<Vector> &, std::vector<Vector> &, string &
     );
