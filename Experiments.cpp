@@ -832,15 +832,35 @@ void Experiments::traditional_search(
   ostream &bic_out,
   ostream &icl_out
 ) {
-  int K_MAX = 3; 
+  string mixtures_folder = exp_folder + "traditional_search/mixtures/";
+
+  string all_inferred_mix = mixtures_folder + "aic/" + est_type_folder + "aic_log";
+  ofstream aic_log(all_inferred_mix.c_str());
+  all_inferred_mix = mixtures_folder + "bic/" + est_type_folder + "bic_log";
+  ofstream bic_log(all_inferred_mix.c_str());
+  all_inferred_mix = mixtures_folder + "icl/" + est_type_folder + "icl_log";
+  ofstream icl_log(all_inferred_mix.c_str());
+
+  int K_MAX = 50; 
 
   Vector data_weights(random_sample.size(),1);
   Mixture mixture(1,random_sample,data_weights);
   mixture.estimateParameters();
+  double msg = mixture.computeMinimumMessageLength();
 
   double aic_best = mixture.computeAIC();
+  aic_log << fixed << setw(10) << 1 << "\t\t";
+  aic_log << fixed << scientific << aic_best << "\t\t";
+  aic_log << fixed << scientific << msg << endl;
   double bic_best = mixture.computeBIC();
+  bic_log << fixed << setw(10) << 1 << "\t\t";
+  bic_log << fixed << scientific << bic_best << "\t\t";
+  bic_log << fixed << scientific << msg << endl;
   double icl_best = mixture.computeICL();
+  icl_log << fixed << setw(10) << 1 << "\t\t";
+  icl_log << fixed << scientific << icl_best << "\t\t";
+  icl_log << fixed << scientific << msg << endl;
+
   Mixture aic_best_mix = mixture;
   Mixture bic_best_mix = mixture;
   Mixture icl_best_mix = mixture;
@@ -849,24 +869,37 @@ void Experiments::traditional_search(
     cout << "k: " << k << endl;
     Mixture mixture(k,random_sample,data_weights);
     mixture.estimateParameters();
+    msg = mixture.computeMinimumMessageLength();
+
     double aic = mixture.computeAIC();
+    aic_log << fixed << setw(10) << k << "\t\t";
+    aic_log << fixed << scientific << aic << "\t\t";
+    aic_log << fixed << scientific << msg << endl;
     if (aic < aic_best) {
       aic_best = aic;
       aic_best_mix = mixture;
     }
     double bic = mixture.computeBIC();
+    bic_log << fixed << setw(10) << k << "\t\t";
+    bic_log << fixed << scientific << bic << "\t\t";
+    bic_log << fixed << scientific << msg << endl;
     if (bic < bic_best) {
       bic_best = bic;
       bic_best_mix = mixture;
     }
     double icl = mixture.computeICL();
+    icl_log << fixed << setw(10) << k << "\t\t";
+    icl_log << fixed << scientific << icl << "\t\t";
+    icl_log << fixed << scientific << msg << endl;
     if (icl < icl_best) {
       icl_best = icl;
       icl_best_mix = mixture;
     }
   } // for()
+  aic_log.close();
+  bic_log.close();
+  icl_log.close();
 
-  string mixtures_folder = exp_folder + "traditional_search/mixtures/";
   /* save inferred mixtures */
   string inferred_mix_file = mixtures_folder + "aic/" + est_type_folder + "mixture";
   aic_best_mix.printParameters(inferred_mix_file);
@@ -893,6 +926,11 @@ void Experiments::traditional_search_mml(
   string &est_type_folder,
   ostream &mml_out
 ) {
+  string mixtures_folder = exp_folder + "traditional_search/mixtures/";
+
+  string all_inferred_mix = mixtures_folder + est_type_folder + "mml_log";
+  ofstream mml_log(all_inferred_mix.c_str());
+
   int K_MAX = 50; 
 
   Vector data_weights(random_sample.size(),1);
@@ -900,6 +938,9 @@ void Experiments::traditional_search_mml(
   mixture.estimateParameters();
 
   double msglen_best = mixture.getMinimumMessageLength();
+  mml_log << fixed << setw(10) << 1 << "\t\t";
+  mml_log << fixed << scientific << msglen_best << "\t\t";
+  mml_log << fixed << scientific << msglen_best << endl;
   Mixture mml_best_mix = mixture;
 
   for (int k=2; k<=K_MAX; k++) {
@@ -907,13 +948,16 @@ void Experiments::traditional_search_mml(
     Mixture mixture(k,random_sample,data_weights);
     mixture.estimateParameters();
     double msglen = mixture.getMinimumMessageLength();
+    mml_log << fixed << setw(10) << k << "\t\t";
+    mml_log << fixed << scientific << msglen << "\t\t";
+    mml_log << fixed << scientific << msglen << endl;
     if (msglen < msglen_best) {
       msglen_best = msglen;
       mml_best_mix = mixture;
     }
   } // for()
+  mml_log.close();
 
-  string mixtures_folder = exp_folder + "traditional_search/mixtures/";
   /* save inferred mixtures */
   string inferred_mix_file = mixtures_folder + est_type_folder + "mixture";
   mml_best_mix.printParameters(inferred_mix_file);
