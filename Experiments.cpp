@@ -9,6 +9,7 @@ extern string EM_LOG_FOLDER;
 extern struct stat st;
 extern int MML_FAIL;
 extern int PRIOR;
+extern int NUM_THREADS;
 
 Experiments::Experiments(int iterations) : iterations(iterations)
 {}
@@ -733,5 +734,191 @@ void Experiments::proposed_search(
   out << scientific << kldiv << "\t\t";
   out << scientific << inferred.getMinimumMessageLength() << endl;
   out.close();
+}
+
+void Experiments::exp3()
+{
+  struct Parameters parameters;
+  parameters.profiles_dir = "./data/profiles-b/";
+  NUM_THREADS = 2;
+
+  std::vector<Vector> data;
+  gatherData(parameters,data);
+  cout << "data.size(): " << data.size() << endl;
+
+  string exp_folder = "./experiments/infer_components/exp3/";
+  check_and_create_directory(exp_folder);
+  checkFolders(exp_folder);
+
+  traditional_search(data,exp_folder);
+}
+
+void Experiments::traditional_search(
+  std::vector<Vector> &random_sample,
+  string &exp_folder
+) {
+  ESTIMATION = MOMENT; // Moment estimation ...
+  string est_type_file = "moment";
+  string est_type_folder = est_type_file + "/";
+  string results_file = exp_folder + "traditional_search/results/aic/" + est_type_file;
+  ofstream aic_out_mom(results_file.c_str(),ios::app);
+  results_file = exp_folder + "traditional_search/results/bic/" + est_type_file;
+  ofstream bic_out_mom(results_file.c_str(),ios::app);
+  results_file = exp_folder + "traditional_search/results/icl/" + est_type_file;
+  ofstream icl_out_mom(results_file.c_str(),ios::app);
+  traditional_search(
+    random_sample,
+    exp_folder,est_type_folder,
+    aic_out_mom,bic_out_mom,icl_out_mom
+  );
+  aic_out_mom.close(); bic_out_mom.close(); icl_out_mom.close();
+
+/*
+  ESTIMATION = MLE; // Max LH estimation ...
+  est_type_file = "mle";
+  est_type_folder = est_type_file + "/";
+  results_file = exp_folder + "traditional_search/results/aic/" + est_type_file;
+  ofstream aic_out_mle(results_file.c_str(),ios::app);
+  results_file = exp_folder + "traditional_search/results/bic/" + est_type_file;
+  ofstream bic_out_mle(results_file.c_str(),ios::app);
+  results_file = exp_folder + "traditional_search/results/icl/" + est_type_file;
+  ofstream icl_out_mle(results_file.c_str(),ios::app);
+  traditional_search(
+    random_sample,
+    exp_folder,est_type_folder,
+    aic_out_mle,bic_out_mle,icl_out_mle
+  );
+  aic_out_mle.close(); bic_out_mle.close(); icl_out_mle.close();
+*/
+
+/*
+  ESTIMATION = MAP; // MAP estimation ...
+  est_type_file = "map";
+  est_type_folder = est_type_file + "/";
+  results_file = exp_folder + "traditional_search/results/aic/" + est_type_file;
+  ofstream aic_out_map(results_file.c_str(),ios::app);
+  results_file = exp_folder + "traditional_search/results/bic/" + est_type_file;
+  ofstream bic_out_map(results_file.c_str(),ios::app);
+  results_file = exp_folder + "traditional_search/results/icl/" + est_type_file;
+  ofstream icl_out_map(results_file.c_str(),ios::app);
+  traditional_search(
+    random_sample,
+    exp_folder,est_type_folder,
+    aic_out_map,bic_out_map,icl_out_map
+  );
+  aic_out_map.close(); bic_out_map.close(); icl_out_map.close();
+*/
+
+/*
+  ESTIMATION = MML; // MML estimation ...
+  est_type_file = "mml";
+  est_type_folder = est_type_file + "/";
+  results_file = exp_folder + "traditional_search/results/" + est_type_file;
+  ofstream mml_out(results_file.c_str(),ios::app);
+  traditional_search_mml(
+    random_sample,
+    exp_folder,est_type_folder,
+    mml_out
+  );
+  mml_out.close();
+*/
+}
+
+void Experiments::traditional_search(
+  std::vector<Vector> &random_sample,
+  string &exp_folder,
+  string &est_type_folder,
+  ostream &aic_out,
+  ostream &bic_out,
+  ostream &icl_out
+) {
+  int K_MAX = 3; 
+
+  Vector data_weights(random_sample.size(),1);
+  Mixture mixture(1,random_sample,data_weights);
+  mixture.estimateParameters();
+
+  double aic_best = mixture.computeAIC();
+  double bic_best = mixture.computeBIC();
+  double icl_best = mixture.computeICL();
+  Mixture aic_best_mix = mixture;
+  Mixture bic_best_mix = mixture;
+  Mixture icl_best_mix = mixture;
+
+  for (int k=2; k<=K_MAX; k++) {
+    cout << "k: " << k << endl;
+    Mixture mixture(k,random_sample,data_weights);
+    mixture.estimateParameters();
+    double aic = mixture.computeAIC();
+    if (aic < aic_best) {
+      aic_best = aic;
+      aic_best_mix = mixture;
+    }
+    double bic = mixture.computeBIC();
+    if (bic < bic_best) {
+      bic_best = bic;
+      bic_best_mix = mixture;
+    }
+    double icl = mixture.computeICL();
+    if (icl < icl_best) {
+      icl_best = icl;
+      icl_best_mix = mixture;
+    }
+  } // for()
+
+  string mixtures_folder = exp_folder + "traditional_search/mixtures/";
+  /* save inferred mixtures */
+  string inferred_mix_file = mixtures_folder + "aic/" + est_type_folder + "mixture";
+  aic_best_mix.printParameters(inferred_mix_file);
+  aic_out << fixed << setw(10) << aic_best_mix.getNumberOfComponents() << "\t\t";
+  aic_out << fixed << scientific << aic_best << "\t\t";
+  aic_out << fixed << scientific << aic_best_mix.computeMinimumMessageLength() << endl;
+
+  inferred_mix_file = mixtures_folder + "bic/" + est_type_folder + "mixture";  
+  bic_best_mix.printParameters(inferred_mix_file);
+  bic_out << fixed << setw(10) << bic_best_mix.getNumberOfComponents() << "\t\t";
+  bic_out << fixed << scientific << bic_best << "\t\t";
+  bic_out << fixed << scientific << bic_best_mix.computeMinimumMessageLength() << endl;
+
+  inferred_mix_file = mixtures_folder + "icl/" + est_type_folder + "mixture";  
+  icl_best_mix.printParameters(inferred_mix_file);
+  icl_out << fixed << setw(10) << icl_best_mix.getNumberOfComponents() << "\t\t";
+  icl_out << fixed << scientific << icl_best << "\t\t";
+  icl_out << fixed << scientific << icl_best_mix.computeMinimumMessageLength() << endl;
+}
+
+void Experiments::traditional_search_mml(
+  std::vector<Vector> &random_sample,
+  string &exp_folder,
+  string &est_type_folder,
+  ostream &mml_out
+) {
+  int K_MAX = 50; 
+
+  Vector data_weights(random_sample.size(),1);
+  Mixture mixture(1,random_sample,data_weights);
+  mixture.estimateParameters();
+
+  double msglen_best = mixture.getMinimumMessageLength();
+  Mixture mml_best_mix = mixture;
+
+  for (int k=2; k<=K_MAX; k++) {
+    cout << "k: " << k << endl;
+    Mixture mixture(k,random_sample,data_weights);
+    mixture.estimateParameters();
+    double msglen = mixture.getMinimumMessageLength();
+    if (msglen < msglen_best) {
+      msglen_best = msglen;
+      mml_best_mix = mixture;
+    }
+  } // for()
+
+  string mixtures_folder = exp_folder + "traditional_search/mixtures/";
+  /* save inferred mixtures */
+  string inferred_mix_file = mixtures_folder + est_type_folder + "mixture";
+  mml_best_mix.printParameters(inferred_mix_file);
+  mml_out << fixed << setw(10) << mml_best_mix.getNumberOfComponents() << "\t\t";
+  mml_out << fixed << scientific << msglen_best << "\t\t";
+  mml_out << fixed << scientific << mml_best_mix.getMinimumMessageLength() << endl;
 }
 

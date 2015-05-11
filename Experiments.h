@@ -52,6 +52,20 @@ class Experiments
       Mixture &, std::vector<Vector> &, std::vector<Vector> &, 
       string &, string &, string &, string &
     );
+
+    void exp3();
+    void traditional_search(std::vector<Vector> &, string &);
+    void traditional_search(
+      std::vector<Vector> &,
+      string &, string &,
+      ostream &, ostream &, ostream &
+    );      
+    void traditional_search_mml(
+      std::vector<Vector> &,
+      string &, string &,
+      ostream &
+    );
+
 };
 
 #endif
