@@ -2181,9 +2181,9 @@ void RunExperiments(int iterations)
 
   //experiments.simulate();
 
-  experiments.exp1();
+  //experiments.exp1();
 
-  //experiments.exp2();
+  experiments.exp2();
 }
 
 /*!

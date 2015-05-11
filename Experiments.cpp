@@ -320,7 +320,7 @@ void Experiments::infer_components_exp1(int K, int num_mixtures)
 void Experiments::exp2()
 {
   int K = 5;
-  int num_mixtures = 5;
+  int num_mixtures = 50;
   int N = 50;
 
   generate_data_exp2(N,K,num_mixtures);
