@@ -757,10 +757,12 @@ void Experiments::traditional_search(
   std::vector<Vector> &random_sample,
   string &exp_folder
 ) {
+  strin est_type_file,est_type_folder,results_file;
+
   ESTIMATION = MOMENT; // Moment estimation ...
-  string est_type_file = "moment";
-  string est_type_folder = est_type_file + "/";
-  string results_file = exp_folder + "traditional_search/results/aic/" + est_type_file;
+  est_type_file = "moment";
+  est_type_folder = est_type_file + "/";
+  results_file = exp_folder + "traditional_search/results/aic/" + est_type_file;
   ofstream aic_out_mom(results_file.c_str(),ios::app);
   results_file = exp_folder + "traditional_search/results/bic/" + est_type_file;
   ofstream bic_out_mom(results_file.c_str(),ios::app);
