@@ -757,7 +757,7 @@ void Experiments::traditional_search(
   std::vector<Vector> &random_sample,
   string &exp_folder
 ) {
-  strin est_type_file,est_type_folder,results_file;
+  string est_type_file,est_type_folder,results_file;
 
   ESTIMATION = MOMENT; // Moment estimation ...
   est_type_file = "moment";
