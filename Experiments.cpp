@@ -978,16 +978,59 @@ void Experiments::exp4()
   cout << "data.size(): " << data.size() << endl;
   double res = 1;
   std::vector<std::vector<int> > bins = updateBins(data,res);
-  string output = "bins_true";
-  writeToFile(output,bins);
+  string true_bins_file = "true_bins.dat";
+  writeToFile(true_bins_file,bins);
 
-  double sum = 0;
-  for (int i=0; i<bins.size(); i++) {
-    for (int j=0; j<bins[i].size(); j++) {
-      sum += bins[i][j];
-    }
+  int num_rows = bins.size();
+  int num_cols = bins[0].size();
+  int num_bins = num_rows * num_cols;
+  cout << "num_bins: " << num_bins << endl;
+
+  Vector emptyvec(num_cols,0);
+  std::vector<Vector> prob_bins(num_rows,emptyvec);
+  Vector elements(num_bins,0);
+  int count = 0;
+  for (int i=0; i<num_rows; i++) {
+    for (int j=0; j<num_cols; j++) {
+      prob_bins[i][j] = bins[i][j] / (double) data.size();
+      elements[count++] = prob_bins[i][j];
+    } // for (j)
+  } // for (i)
+  string prob_bins_file = "prob_bins.dat";
+  writeToFile(prob_bins_file,prob_bins);
+
+  std::vector<int> sorted_index;
+  Vector sorted_elements = sort(elements,sorted_index);
+  Vector cumsum(num_bins,0);
+  cumsum[0] = sorted_elements[0];
+  for (int i=1; i<num_bins; i++) {
+    cumsum[i] = cumsum[i-1] + sorted_elements[i];
+    //cout << sorted_index[i] << "\t\t" << cumsum[i] << endl;
   }
-  cout << "sum: " << sum << endl;
+
+  int N = 100;
+  std::vector<Vector> random_sample;
+  for (int i=0; i<N; i++) {
+    double cdf = uniform_random();
+    int bin;
+    for (int j=0; j<num_bins; j++) {
+      if (cdf <= cumsum[j]) {
+        bin = sorted_index[j];
+        break;
+      } // if ()
+      int row = bin / num_rows;
+      int col = bin % num_cols;
+      Vector spherical(3,0),cartesian(3,0);
+      spherical[0] = 1;
+      spherical[1] = row * res * PI/180;
+      spherical[2] = col * res * PI/180;
+      spherical2cartesian(spherical,cartesian);
+      random_sample.push_back(cartesian);
+    } // for (j)
+  } // for (i)
+  std::vector<std::vector<int> > bins2 = updateBins(random_sample,res);
+  string sampled_bins_file = "sampled_bins.dat";
+  writeToFile(sampled_bins_file,bins);
 
   /*string exp_folder = "./experiments/infer_components/exp4/";
   check_and_create_directory(exp_folder);

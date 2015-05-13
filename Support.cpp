@@ -2219,6 +2219,18 @@ Vector sort(Vector &list)
   return sortedList;
 }
 
+Vector sort(Vector &list, std::vector<int> &sorted_index)
+{
+  int num_samples = list.size();
+	Vector sortedList(list);
+  sorted_index = std::vector<int>(num_samples,0);
+	for(int i=0; i<num_samples; i++) {
+			sorted_index[i] = i;
+  }
+	quicksort(sortedList,sorted_index,0,num_samples-1);
+  return sortedList;
+}
+
 /*!
  *  This is an implementation of the classic quicksort() algorithm to sort a
  *  list of data values. The module uses the overloading operator(<) to 

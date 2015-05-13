@@ -152,6 +152,7 @@ void TestFunctions(void);
 void RunExperiments(int);
 
 Vector sort(Vector &);
+Vector sort(Vector &, std::vector<int> &);
 void quicksort(Vector &, std::vector<int> &, int, int);
 int partition(Vector &, std::vector<int> &, int, int);
 std::vector<Vector> flip(std::vector<Vector> &);
