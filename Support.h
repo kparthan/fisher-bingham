@@ -59,6 +59,7 @@ bool checkFile(string &);
 void writeToFile(const char *, std::vector<Vector> &, int);
 void writeToFile(const char *, std::vector<Vector> &);
 void writeToFile(string &file_name, std::vector<Vector> &);
+void writeToFile(string &file_name, std::vector<std::vector<int> > &);
 string extractName(string &);
 void print(ostream &, Vector &, int);
 void print(string &, struct Estimates &);

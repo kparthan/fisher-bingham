@@ -320,6 +320,18 @@ void writeToFile(string &file_name, std::vector<Vector> &v)
   file.close(); 
 }
 
+void writeToFile(string &file_name, std::vector<std::vector<int> > &v)
+{
+  ofstream file(file_name.c_str());
+  for (int i=0; i<v.size(); i++) {
+    for (int j=0; j<v[i].size(); j++) {
+      file << fixed << setw(15) << v[i][j];
+    }
+    file << endl;
+  }
+  file.close(); 
+}
+
 /*!
  *  \brief This module extracts the file name from the path
  *  \param file a reference to a string
@@ -2185,7 +2197,9 @@ void RunExperiments(int iterations)
 
   //experiments.exp2();
 
-  experiments.exp3();
+  //experiments.exp3();
+
+  experiments.exp4();
 }
 
 /*!

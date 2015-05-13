@@ -968,3 +968,30 @@ void Experiments::traditional_search_mml(
   mml_out << fixed << scientific << mml_best_mix.getMinimumMessageLength() << endl;
 }
 
+void Experiments::exp4()
+{
+  struct Parameters parameters;
+  parameters.profiles_dir = "./data/profiles-b/";
+
+  std::vector<Vector> data;
+  gatherData(parameters,data);
+  cout << "data.size(): " << data.size() << endl;
+  double res = 1;
+  std::vector<std::vector<int> > bins = updateBins(data,res);
+  string output = "bins_true";
+  writeToFile(output,bins);
+
+  double sum = 0;
+  for (int i=0; i<bins.size(); i++) {
+    for (int j=0; j<bins[i].size(); j++) {
+      sum += bins[i][j];
+    }
+  }
+  cout << "sum: " << sum << endl;
+
+  /*string exp_folder = "./experiments/infer_components/exp4/";
+  check_and_create_directory(exp_folder);
+  checkFolders(exp_folder);
+  traditional_search(data,exp_folder);*/
+}
+

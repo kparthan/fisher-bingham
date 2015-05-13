@@ -66,6 +66,8 @@ class Experiments
       ostream &
     );
 
+    void exp4();
+
 };
 
 #endif
