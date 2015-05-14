@@ -75,7 +75,7 @@ void Optimize2::computeEstimates(struct Estimates_vMF &estimates)
     x[0] = kappa;
   }
   //cout << "solution: (" << x[0] << ")\n";
-  cout << "minf: " << minf << endl;
+  //cout << "minf: " << minf << endl;
   estimates.kappa = x[0];
 }
 

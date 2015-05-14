@@ -4,6 +4,7 @@
 #include "Optimize2.h"
 
 extern Vector XAXIS;
+extern int ESTIMATION;
 
 /*!
  *  \brief This is a constructor module
@@ -485,8 +486,24 @@ void vMF::estimateParameters(std::vector<Vector> &data, Vector &weights)
   estimateMean(mlapprox_est,data,weights);
   estimateMLApproxKappa(mlapprox_est);
 
-  struct Estimates_vMF mml_est = computeMMLEstimates(mlapprox_est);
-  updateParameters(mml_est);
+  if (ESTIMATION == MML) {
+    struct Estimates_vMF mml_est = computeMMLEstimates(mlapprox_est);
+    updateParameters(mml_est);
+  } else if (ESTIMATION == MAP) {
+    string type = "MAP";
+    struct Estimates_vMF map_est = mlapprox_est;
+    Optimize2 opt_map(type);
+    opt_map.initialize(map_est.Neff,map_est.R,map_est.mean,map_est.kappa);
+    opt_map.computeEstimates(map_est);
+    updateParameters(map_est);
+  } else {
+    string type = "MLE";
+    struct Estimates_vMF ml_est = mlapprox_est;
+    Optimize2 opt_mle(type);
+    opt_mle.initialize(ml_est.Neff,ml_est.R,ml_est.mean,ml_est.kappa);
+    opt_mle.computeEstimates(ml_est);
+    updateParameters(ml_est);
+  }
 }
 
 void vMF::updateParameters(struct Estimates_vMF &estimates)
