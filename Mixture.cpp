@@ -192,10 +192,10 @@ void Mixture::initialize()
 
   // initialize responsibility matrix
   //srand(time(NULL));
-  Vector tmp(N,0);
-  responsibility = std::vector<Vector>(K,tmp);
+  Vector emptyvec(N,0);
+  responsibility = std::vector<Vector>(K,emptyvec);
   /*for (int i=0; i<K; i++) {
-    responsibility.push_back(tmp);
+    responsibility.push_back(emptyvec);
   }*/
 
   #pragma omp parallel for if(ENABLE_DATA_PARALLELISM) num_threads(NUM_THREADS) 
@@ -222,8 +222,8 @@ void Mixture::initialize_children_1()
   N = data.size();
 
   // initialize responsibility matrix
-  Vector tmp(N,0);
-  responsibility = std::vector<Vector>(K,tmp);
+  Vector emptyvec(N,0);
+  responsibility = std::vector<Vector>(K,emptyvec);
 
   #pragma omp parallel for if(ENABLE_DATA_PARALLELISM) num_threads(NUM_THREADS) 
   for (int i=0; i<N; i++) {
@@ -249,8 +249,8 @@ void Mixture::initialize_children_2()
   N = data.size();
 
   // initialize responsibility matrix
-  Vector tmp(N,0);
-  responsibility = std::vector<Vector>(K,tmp);
+  Vector emptyvec(N,0);
+  responsibility = std::vector<Vector>(K,emptyvec);
 
   #pragma omp parallel for if(ENABLE_DATA_PARALLELISM) num_threads(NUM_THREADS) 
   for (int i=0; i<N; i++) {
@@ -441,6 +441,7 @@ void Mixture::updateResponsibilityMatrix()
     for (int j=0; j<K; j++) {
       responsibility[j][i] = probabilities[j] / px;
       assert(!boost::math::isnan(responsibility[j][i]));
+      assert(responsibility[j][i] >= 0);
       /*if(boost::math::isnan(responsibility[j][i])) {
         cout << "error: resp (pj,px): " << probabilities[j] << "; " << px << endl;
         cout << "pj: "; print(cout,probabilities); cout << endl;
@@ -459,8 +460,8 @@ void Mixture::computeResponsibilityMatrix(std::vector<Vector> &sample,
                                           string &output_file)
 {
   int sample_size = sample.size();
-  Vector tmp(sample_size,0);
-  std::vector<Vector> resp(K,tmp);
+  Vector emptyvec(sample_size,0);
+  std::vector<Vector> resp(K,emptyvec);
   #pragma omp parallel for if(ENABLE_DATA_PARALLELISM) num_threads(NUM_THREADS) //private(j)
   for (int i=0; i<sample_size; i++) {
     Vector log_densities(K,0);
@@ -550,12 +551,36 @@ double Mixture::computeNegativeLogLikelihood(int verbose)
   return neglog - (2 * N * log(AOM));
 }
 
+double Mixture::compress(std::vector<Vector> &d)
+{
+  data = d;
+  N = data.size();
+  Vector emptyvec(N,0);
+  responsibility = std::vector<Vector>(K,emptyvec);
+  updateResponsibilityMatrix();
+
+  sample_size = Vector(K,0);
+  updateEffectiveSampleSize();
+
+  aic = computeAIC();
+  bic = computeBIC();
+  icl = computeICL();
+
+  minimum_msglen = computeMinimumMessageLength(1);
+  cout << "AIC: " << aic << endl;
+  cout << "BIC: " << bic << endl;
+  cout << "ICL: " << icl << endl;
+  cout << "MML: " << minimum_msglen << endl;
+
+  return minimum_msglen;
+}
+
 /*!
  *  \brief This function computes the minimum message length using the current
  *  model parameters.
  *  \return the minimum message length
  */
-double Mixture::computeMinimumMessageLength(int verbose /* default = 1 (print) */)
+double Mixture::computeMinimumMessageLength(int verbose /* default = 0 (don't print) */)
 {
   MSGLEN_FAIL = 0;
   part1 = 0;
@@ -587,6 +612,7 @@ double Mixture::computeMinimumMessageLength(int verbose /* default = 1 (print) *
   double logp;
   for (int i=0; i<K; i++) {
     logp = components[i].computeLogParametersProbability(sample_size[i]);
+    assert(!boost::math::isnan(logp));
     logp /= log(2);
     It.push_back(logp);
     sum_It += logp;
@@ -1011,16 +1037,16 @@ void Mixture::load(string &file_name, std::vector<Vector> &d, Vector &dw)
   data = d;
   N = data.size();
   data_weights = dw;
-  Vector tmp(N,0);
-  responsibility = std::vector<Vector>(K,tmp);
-  /*for (int i=0; i<K; i++) {
-    responsibility.push_back(tmp);
-  }*/
+  Vector emptyvec(N,0);
+  responsibility = std::vector<Vector>(K,emptyvec);
   updateResponsibilityMatrix();
   sample_size = Vector(K,0);
   updateEffectiveSampleSize();
   updateComponents();
   minimum_msglen = computeMinimumMessageLength();
+  aic = computeAIC();
+  bic = computeBIC();
+  icl = computeICL();
 }
 
 /*!
@@ -1517,10 +1543,16 @@ double Mixture::computeICL()
   double ec = 0,term;
   for (int i=0; i<K; i++) {
     for (int j=0; j<N; j++) {
-      term = indicators[i][j] * log(responsibility[i][j]);
+      if (indicators[i][j] == 0) {
+        term = 0;
+      } else { // indicators[i][j] = 1
+        if (responsibility[i][j] == 0) term = 0;
+        else term = log(responsibility[i][j]);
+      } // if ()
+      assert(!boost::math::isnan(term));
       ec -= term;
-    }
-  }
+    } // for (j)
+  } // for (i)
   int k = 6 * K - 1;
   double bic = compute_bic(k,N,negloglike); // in log_2
   return bic + (ec / log(2));

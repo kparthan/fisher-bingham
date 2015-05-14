@@ -551,7 +551,9 @@ double Kent::computeLogFisherInformation_Single(double N)
 double Kent::computeLogFisherInformation(double N)
 {
   double log_fisher = computeLogFisherInformation_Single(N); 
-  return log_fisher + 5 * log(N);
+  log_fisher += (5 * log(N));
+  assert(!boost::math::isnan(log_fisher));
+  return log_fisher;
 }
 
 double Kent::computeLogFisherAxes(double N)
@@ -574,7 +576,8 @@ double Kent::computeLogFisherAxes(double N)
   tmp1 = (constants.lambda1 - constants.lambda3) * sinsq_psi;
   tmp2 = (constants.lambda1 - constants.lambda2) * cossq_psi;
   ans += (2 * beta * (tmp1 - tmp2));
-  constants.fisher_axes(0,0) = ans + (3/(PI*PI*N));
+  //constants.fisher_axes(0,0) = ans + (3/(PI*PI*N));
+  constants.fisher_axes(0,0) = ans;
 
   // E [d^2 L / d n^2]
   ans = kappa * constants.ck_c * sinsq_alpha;
@@ -587,11 +590,13 @@ double Kent::computeLogFisherAxes(double N)
   tmp2 = constants.lambda1 * sinsq_alpha * (cossq_psi - sinsq_psi);
   tmp3 += (tmp1 + tmp2);
   ans += (2 * beta * tmp3);
-  constants.fisher_axes(1,1) = ans+ (3/(PI*PI*N));
+  //constants.fisher_axes(1,1) = ans + (3/(PI*PI*N));
+  constants.fisher_axes(1,1) = ans;
   
   // E [d^2 L / d s^2]
   ans = 4 * beta * constants.cb_c;
-  constants.fisher_axes(2,2) = ans+ (3/(PI*PI*N));
+  //constants.fisher_axes(2,2) = ans + (3/(PI*PI*N));
+  constants.fisher_axes(2,2) = ans;
 
   // E [d^2 L / dadn]
   tmp1 = 1 - (3 * constants.lambda1);
@@ -625,7 +630,8 @@ double Kent::computeLogFisherScale()
   // E [d^2 L / dk db]
   double t3 = constants.ckb_c - (constants.ck_c * constants.cb_c);
 
-  double det = t1 * t2 - t3 * t3;
+  double det = fabs(t1 * t2 - t3 * t3);
+  //assert(det > 0);
   //cout << "det: " << det << endl;
   return log(det);
 }

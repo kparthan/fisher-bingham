@@ -1582,6 +1582,7 @@ void simulateMixtureModel(struct Parameters &parameters)
           cout << "Error in reading data...\n";
           exit(1);
         }
+        double msglen = original.compress(data);
       } else if (parameters.read_profiles == UNSET) {
         data = original.generate(parameters.sample_size,save);
       }
