@@ -970,6 +970,18 @@ void Experiments::traditional_search_mml(
 
 void Experiments::exp4()
 {
+  string exp_folder = "./experiments/infer_components/exp4/";
+  check_and_create_directory(exp_folder);
+  checkFolders(exp_folder);
+
+  int N = 1000;
+  //generate_data_exp4(exp_folder,N);
+
+  infer_components_exp4(exp_folder,N);
+}
+
+void Experiments::generate_data_exp4(string &exp_folder, int N)
+{
   struct Parameters parameters;
   parameters.profiles_dir = "./data/profiles-b/";
 
@@ -977,12 +989,12 @@ void Experiments::exp4()
   gatherData(parameters,data);
   cout << "data.size(): " << data.size() << endl;
   double res = 1;
-  std::vector<std::vector<int> > bins = updateBins(data,res);
-  string true_bins_file = "true_bins.dat";
-  writeToFile(true_bins_file,bins);
+  std::vector<std::vector<int> > true_bins = updateBins(data,res);
+  string true_bins_file = "true_bins.dat";  // integers
+  writeToFile(true_bins_file,true_bins);
 
-  int num_rows = bins.size();
-  int num_cols = bins[0].size();
+  int num_rows = true_bins.size();
+  int num_cols = true_bins[0].size();
   int num_bins = num_rows * num_cols;
   cout << "num_bins: " << num_bins << endl;
 
@@ -992,11 +1004,11 @@ void Experiments::exp4()
   int count = 0;
   for (int i=0; i<num_rows; i++) {
     for (int j=0; j<num_cols; j++) {
-      prob_bins[i][j] = bins[i][j] / (double) data.size();
+      prob_bins[i][j] = true_bins[i][j] / (double) data.size();
       elements[count++] = prob_bins[i][j];
     } // for (j)
   } // for (i)
-  string prob_bins_file = "prob_bins.dat";
+  string prob_bins_file = "prob_bins.dat";  // fractional values
   writeToFile(prob_bins_file,prob_bins);
 
   std::vector<int> sorted_index;
@@ -1008,7 +1020,6 @@ void Experiments::exp4()
     //cout << sorted_index[i] << "\t\t" << cumsum[i] << endl;
   }
 
-  int N = 100;
   std::vector<Vector> random_sample;
   for (int i=0; i<N; i++) {
     double cdf = uniform_random();
@@ -1018,23 +1029,38 @@ void Experiments::exp4()
         bin = sorted_index[j];
         break;
       } // if ()
-      int row = bin / num_rows;
-      int col = bin % num_cols;
-      Vector spherical(3,0),cartesian(3,0);
-      spherical[0] = 1;
-      spherical[1] = row * res * PI/180;
-      spherical[2] = col * res * PI/180;
-      spherical2cartesian(spherical,cartesian);
-      random_sample.push_back(cartesian);
     } // for (j)
+    int row = bin / num_cols;
+    double theta = (row + uniform_random()) * res;  // in degrees
+    //double theta = row * res;
+    int col = bin % num_cols;
+    double phi = (col + uniform_random()) * res;   // in degrees`
+    //double phi = col * res;
+    Vector spherical(3,0),cartesian(3,0);
+    spherical[0] = 1;
+    spherical[1] = theta * PI/180;
+    spherical[2] = phi * PI/180;
+    spherical2cartesian(spherical,cartesian);
+    random_sample.push_back(cartesian);
   } // for (i)
-  std::vector<std::vector<int> > bins2 = updateBins(random_sample,res);
-  string sampled_bins_file = "sampled_bins.dat";
-  writeToFile(sampled_bins_file,bins);
+  std::vector<std::vector<int> > sampled_bins = updateBins(random_sample,res);
 
-  /*string exp_folder = "./experiments/infer_components/exp4/";
-  check_and_create_directory(exp_folder);
-  checkFolders(exp_folder);
-  traditional_search(data,exp_folder);*/
+  string N_str = boost::lexical_cast<string>(N);
+  string data_folder = exp_folder + "data/";
+  check_and_create_directory(data_folder);
+  string sampled_bins_file = data_folder + "N_" + N_str + "_sampled_bins.dat";
+  writeToFile(sampled_bins_file,sampled_bins);
+  
+  string data_file = data_folder + "N_" + N_str + ".dat";
+  writeToFile(data_file,random_sample);
+}
+
+void Experiments::infer_components_exp4(string &exp_folder, int N)
+{
+  string N_str = boost::lexical_cast<string>(N);
+  string data_file = exp_folder + "data/N_" + N_str + ".dat";
+  std::vector<Vector> data = load_data_table(data_file);
+
+  //traditional_search(random_sample,exp_folder);
 }
 

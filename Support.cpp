@@ -1424,8 +1424,8 @@ std::vector<std::vector<int> > updateBins(std::vector<Vector> &unit_coordinates,
     if (row >= bins.size() || col >= bins[0].size()) {
       cout << "outside bounds: " << row << " " << col << "\n";
       cout << "theta: " << theta << " phi: " << phi << endl;
-      cout << "spherical_1: " << spherical[1] << " spherical_2: " << spherical[2] << endl;
-      cout << "unit_coordinates[i]_1: " << unit_coordinates[i][1] << " unit_coordinates[i]_2: " << unit_coordinates[i][2] << endl;
+      cout << "spherical[1]: " << spherical[1] << " spherical[2]: " << spherical[2] << endl;
+      cout << "unit_coordinates[i][1]: " << unit_coordinates[i][1] << " unit_coordinates[i][2]: " << unit_coordinates[i][2] << endl;
       fflush(stdout);
     }
     bins[row][col]++;
