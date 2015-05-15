@@ -975,7 +975,9 @@ void Experiments::exp4()
   checkFolders(exp_folder);
 
   int N = 1000;
-  //generate_data_exp4(exp_folder,N);
+  /*for (int N=1000; N<=10000; N+=1000) {
+    generate_data_exp4(exp_folder,N);
+  }*/
 
   infer_components_exp4(exp_folder,N);
 }
@@ -1061,6 +1063,6 @@ void Experiments::infer_components_exp4(string &exp_folder, int N)
   string data_file = exp_folder + "data/N_" + N_str + ".dat";
   std::vector<Vector> data = load_data_table(data_file);
 
-  //traditional_search(random_sample,exp_folder);
+  traditional_search(data,exp_folder);
 }
 

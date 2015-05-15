@@ -1851,7 +1851,7 @@ string get_tracking_file()
   if (ESTIMATION == MOMENT) {
     estimation = "mom"; 
   } else if (ESTIMATION == MLE) {
-    estimation = "mom"; 
+    estimation = "mle"; 
   } else if (ESTIMATION == MAP) {
     estimation = "map"; 
   } else if (ESTIMATION == MML) {
