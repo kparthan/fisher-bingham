@@ -1128,6 +1128,8 @@ std::vector<Vector> Mixture::generate(int num_samples, bool save_data)
   } // for i
 
   if (save_data) {
+    string data_file = "random_sample.dat";
+    writeToFile(data_file,sample);
     string comp_bins = "./visualize/sampled_data/bins_kent/";
     check_and_create_directory(comp_bins);
     string comp_density_file,transformed_file;

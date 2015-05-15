@@ -141,6 +141,8 @@ std::vector<Kent> generateRandomComponents(int);
 std::vector<vMF> generateRandomComponents_vMF(int);
 Vector generateRandomKappas(int);
 Vector generateRandomBetas(Vector &);
+string get_tracking_file();
+void update_tracking_file(int, Mixture &, ostream &);
 Mixture inferComponents(std::vector<Vector> &, string &);
 Mixture inferComponents(Mixture &, int, ostream &);
 void updateInference(Mixture &, Mixture &, int, ostream &, int);

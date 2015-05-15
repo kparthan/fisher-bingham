@@ -1834,6 +1834,59 @@ void modelMixture(struct Parameters &parameters, std::vector<Vector> &data)
   }
 }
 
+string get_tracking_file()
+{
+  string criterion;
+  if (CRITERION == AIC) {
+    criterion = "aic";
+  } else if (CRITERION == BIC) {
+    criterion = "bic";
+  } else if (CRITERION == ICL) {
+    criterion = "icl";
+  } else if (CRITERION == MMLC) {
+    criterion = "mmlc";
+  }
+
+  string estimation;
+  if (ESTIMATION == MOMENT) {
+    estimation = "mom"; 
+  } else if (ESTIMATION == MLE) {
+    estimation = "mom"; 
+  } else if (ESTIMATION == MAP) {
+    estimation = "map"; 
+  } else if (ESTIMATION == MML) {
+    estimation = "mml"; 
+  }
+
+  string dist;
+  if (DISTRIBUTION == KENT) {
+    dist = "kent";
+  } else if (DISTRIBUTION == VMF) {
+    dist = "vmf";
+  }
+
+  string tracking_file = dist + "_" + criterion + "_" + estimation;
+  return tracking_file;
+}
+
+void update_tracking_file(int iter, Mixture &parent, ostream &out)
+{
+  out << fixed << setw(5) << iter << "\t\t";
+  out << fixed << setw(5) << parent.getNumberOfComponents() << "\t\t";
+
+  if (CRITERION == AIC) {
+    out << fixed << scientific << setprecision(6) << parent.getAIC() << endl;
+  } else if (CRITERION == BIC) {
+    out << fixed << scientific << setprecision(6) << parent.getBIC() << endl;
+  } else if (CRITERION == ICL) {
+    out << fixed << scientific << setprecision(6) << parent.getICL() << endl;
+  } else if (CRITERION == MMLC) {
+    out << fixed << scientific << setprecision(6) << parent.first_part()
+        << "\t\t" << parent.second_part()
+        << "\t\t" << parent.getMinimumMessageLength() << endl;
+  }
+}
+
 Mixture inferComponents(std::vector<Vector> &data, string &log_file)
 {
   Vector data_weights(data.size(),1.0);
@@ -1857,13 +1910,15 @@ Mixture inferComponents(Mixture &mixture, int N, ostream &log)
   log << "Null model encoding: " << null_msglen << " bits."
       << "\t(" << null_msglen/N << " bits/point)\n\n";
 
-  //MIN_N = 1;
+  string iter_track = get_tracking_file();
+  ofstream out(iter_track.c_str());
 
   improved = mixture;
 
   while (1) {
     parent = improved;
     iter++;
+    update_tracking_file(iter,parent,out);
     log << "Iteration #" << iter << endl;
     log << "Parent:\n";
     parent.printParameters(log,1);
@@ -1899,6 +1954,7 @@ Mixture inferComponents(Mixture &mixture, int N, ostream &log)
   } // if (improved == parent || iter%2 == 0) loop
 
   finish:
+  out.close();
   string inferred_mixture_file = "./simulation/inferred_mixture";
   parent.printParameters(inferred_mixture_file);
   return parent;
