@@ -70,6 +70,7 @@ class Experiments
     void generate_data_exp4(string &, int);
     void infer_components_exp4(string &, int);
 
+    void exp5();
 };
 
 #endif

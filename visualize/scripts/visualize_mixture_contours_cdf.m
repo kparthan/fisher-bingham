@@ -2,10 +2,10 @@ function [] = visualize_mixture_contours_cdf(K)
 
   addpath('export_fig');
 
-  %bins_folder = '../sampled_data/bins_kent/';
-  %outfile = 'kent_mix';
-  bins_folder = '../sampled_data/bins_vmf/';
-  outfile = 'vmf_mix';
+  bins_folder = '../sampled_data/bins_kent/';
+  outfile = 'kent_mix';
+  %bins_folder = '../sampled_data/bins_vmf/';
+  %outfile = 'vmf_mix';
  
   % figure properties
   fig = figure();
@@ -15,9 +15,9 @@ function [] = visualize_mixture_contours_cdf(K)
   set(gcf, 'Color', 'w');
   xlabel('Longitude','fontsize',20);
   ylabel('Co-latitude','fontsize',20);
-  set(gca,'Ylim',[0 120]);
+  set(gca,'Ylim',[0 180]);
   set(gca,'xtick',[0:60:360],'fontsize',12);
-  set(gca,'ytick',[0:30:120],'fontsize',12);
+  set(gca,'ytick',[0:30:180],'fontsize',12);
   view ([0 90]);
 
   % plot the contours 
@@ -103,14 +103,14 @@ function [] = visualize_mixture_contours_cdf(K)
   end
 %  min(norm_density)
 %  max(norm_density)
-  hs = scatter3(angles(:,1),angles(:,2),norm_density,1,'cdata',norm_density);
+  hs = scatter3(angles(:,1),angles(:,2),norm_density,2,'cdata',norm_density);
 
   %colorbar
   output_fig = strcat('../figs/',outfile,'.fig');
   output_eps = strcat('../figs/',outfile,'.eps');
   output_pdf = strcat('../figs/',outfile,'.pdf');
 
-  saveas(gcf,output_fig);
+  %saveas(gcf,output_fig);
   %print2eps(output_eps);
   %eps2pdf(output_eps,output_pdf,1);
   %export_fig(output_pdf,'-pdf');

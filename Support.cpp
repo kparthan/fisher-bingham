@@ -27,6 +27,7 @@ double MIN_N;
 int SPLITTING = 0;
 string EM_LOG_FOLDER;
 int PRIOR;
+string tracking_file;
 
 struct stat st = {0};
 
@@ -230,6 +231,7 @@ struct Parameters parseCommandLineInput(int argc, char **argv)
       Usage(argv[0],desc);
     }
   } else {  // default is MML estimation ...
+    estimation_method = "mml";
     ESTIMATION = MML;
   }
 
@@ -244,8 +246,11 @@ struct Parameters parseCommandLineInput(int argc, char **argv)
       CRITERION = MMLC;
     }
   } else {
+    criterion = "mmlc";
     CRITERION = MMLC;
   }
+
+  tracking_file = "kent_" + criterion + "_" + estimation_method;
 
   if (!vm.count("prior")) {
     PRIOR = 3;
@@ -1582,10 +1587,10 @@ void simulateMixtureModel(struct Parameters &parameters)
           cout << "Error in reading data...\n";
           exit(1);
         }
-        double msglen = original.compress(data);
       } else if (parameters.read_profiles == UNSET) {
         data = original.generate(parameters.sample_size,save);
       }
+      double msglen = original.compress(data);
       if (parameters.heat_map == SET) {
         original.generateHeatmapData(parameters.res);
         std::vector<std::vector<int> > bins = updateBins(data,parameters.res);
@@ -1834,41 +1839,6 @@ void modelMixture(struct Parameters &parameters, std::vector<Vector> &data)
   }
 }
 
-string get_tracking_file()
-{
-  string criterion;
-  if (CRITERION == AIC) {
-    criterion = "aic";
-  } else if (CRITERION == BIC) {
-    criterion = "bic";
-  } else if (CRITERION == ICL) {
-    criterion = "icl";
-  } else if (CRITERION == MMLC) {
-    criterion = "mmlc";
-  }
-
-  string estimation;
-  if (ESTIMATION == MOMENT) {
-    estimation = "mom"; 
-  } else if (ESTIMATION == MLE) {
-    estimation = "mle"; 
-  } else if (ESTIMATION == MAP) {
-    estimation = "map"; 
-  } else if (ESTIMATION == MML) {
-    estimation = "mml"; 
-  }
-
-  string dist;
-  if (DISTRIBUTION == KENT) {
-    dist = "kent";
-  } else if (DISTRIBUTION == VMF) {
-    dist = "vmf";
-  }
-
-  string tracking_file = dist + "_" + criterion + "_" + estimation;
-  return tracking_file;
-}
-
 void update_tracking_file(int iter, Mixture &parent, ostream &out)
 {
   out << fixed << setw(5) << iter << "\t\t";
@@ -1910,8 +1880,7 @@ Mixture inferComponents(Mixture &mixture, int N, ostream &log)
   log << "Null model encoding: " << null_msglen << " bits."
       << "\t(" << null_msglen/N << " bits/point)\n\n";
 
-  string iter_track = get_tracking_file();
-  ofstream out(iter_track.c_str());
+  ofstream out(tracking_file.c_str());
 
   improved = mixture;
 
@@ -2257,7 +2226,9 @@ void RunExperiments(int iterations)
 
   //experiments.exp3();
 
-  experiments.exp4();
+  //experiments.exp4();
+
+  experiments.exp5();
 }
 
 /*!

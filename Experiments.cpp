@@ -1066,3 +1066,47 @@ void Experiments::infer_components_exp4(string &exp_folder, int N)
   traditional_search(data,exp_folder);
 }
 
+void Experiments::exp5()
+{
+  double psi,alpha,eta,kappa,beta,ecc;
+  std::vector<Kent> components;
+
+  // (1)
+  psi = 0; alpha = 60; eta = 60; 
+  psi *= PI/180; alpha *= PI/180; eta *= PI/180;
+  kappa = 100; ecc = 0.1;
+  beta = 0.5 * kappa * ecc;
+  Kent kent1(psi,alpha,eta,kappa,beta);
+  components.push_back(kent1);
+
+  // (2)
+  psi = 30; alpha = 45; eta = 90; 
+  psi *= PI/180; alpha *= PI/180; eta *= PI/180;
+  kappa = 100; ecc = 0.5;
+  beta = 0.5 * kappa * ecc;
+  Kent kent2(psi,alpha,eta,kappa,beta);
+  components.push_back(kent2);
+
+  // (3)
+  psi = 60; alpha = 45; eta = 60; 
+  psi *= PI/180; alpha *= PI/180; eta *= PI/180;
+  kappa = 100; ecc = 0.9;
+  beta = 0.5 * kappa * ecc;
+  Kent kent3(psi,alpha,eta,kappa,beta);
+  components.push_back(kent3);
+
+  double w = 1.0/3.0;
+  Vector weights(3,w);
+  int N = 1000;
+
+  Mixture mix(3,components,weights);
+  ofstream file("./simulation/simulated_mixture");
+  for (int i=0; i<3; i++) {
+    file << fixed << setw(10) << setprecision(5) << weights[i];
+    file << "\t";
+    components[i].printParameters(file);
+  }
+  file.close();
+  mix.generate(N,1);
+}
+
