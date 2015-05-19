@@ -758,7 +758,7 @@ void Experiments::traditional_search(
   string &exp_folder
 ) {
   string est_type_file,est_type_folder,results_file;
-
+/*
   ESTIMATION = MOMENT; // Moment estimation ...
   est_type_file = "moment";
   est_type_folder = est_type_file + "/";
@@ -774,7 +774,7 @@ void Experiments::traditional_search(
     aic_out_mom,bic_out_mom,icl_out_mom
   );
   aic_out_mom.close(); bic_out_mom.close(); icl_out_mom.close();
-
+*/
 /*
   ESTIMATION = MLE; // Max LH estimation ...
   est_type_file = "mle";
@@ -811,7 +811,7 @@ void Experiments::traditional_search(
   aic_out_map.close(); bic_out_map.close(); icl_out_map.close();
 */
 
-/*
+
   ESTIMATION = MML; // MML estimation ...
   est_type_file = "mml";
   est_type_folder = est_type_file + "/";
@@ -823,7 +823,7 @@ void Experiments::traditional_search(
     mml_out
   );
   mml_out.close();
-*/
+
 }
 
 void Experiments::traditional_search(
@@ -933,7 +933,7 @@ void Experiments::traditional_search_mml(
   string all_inferred_mix = mixtures_folder + est_type_folder + "mml_log";
   ofstream mml_log(all_inferred_mix.c_str());
 
-  int K_MAX = 50; 
+  int K_MAX = 10; 
 
   Vector data_weights(random_sample.size(),1);
   Mixture mixture(1,random_sample,data_weights);
@@ -1066,8 +1066,10 @@ void Experiments::infer_components_exp4(string &exp_folder, int N)
   traditional_search(data,exp_folder);
 }
 
+// mix_example
 void Experiments::exp5()
 {
+/*
   double psi,alpha,eta,kappa,beta,ecc;
   std::vector<Kent> components;
 
@@ -1108,5 +1110,47 @@ void Experiments::exp5()
   }
   file.close();
   mix.generate(N,1);
+*/
+
+  // mml infer components (traditional search)
+  string exp_folder = "./experiments/infer_components/exp5/";
+  string data_file = exp_folder + "mix_example/random_sample_mix.dat";
+  std::vector<Vector> data = load_data_table(data_file);
+
+  string all_inferred_mix = exp_folder + "mml_log";
+  ofstream mml_log(all_inferred_mix.c_str());
+
+  int K_MAX = 10; 
+
+  Vector data_weights(data.size(),1);
+  Mixture mixture(1,data,data_weights);
+  mixture.estimateParameters();
+
+  double msglen_best = mixture.getMinimumMessageLength();
+  mml_log << fixed << setw(10) << 1 << "\t\t";
+  mml_log << fixed << scientific << mixture.first_part() << "\t\t";
+  mml_log << fixed << scientific << mixture.second_part() << "\t\t";
+  mml_log << fixed << scientific << msglen_best << endl;
+  Mixture mml_best_mix = mixture;
+
+  for (int k=2; k<=K_MAX; k++) {
+    cout << "k: " << k << endl;
+    Mixture mixture(k,data,data_weights);
+    mixture.estimateParameters();
+    double msglen = mixture.getMinimumMessageLength();
+    mml_log << fixed << setw(10) << k << "\t\t";
+    mml_log << fixed << scientific << mixture.first_part() << "\t\t";
+    mml_log << fixed << scientific << mixture.second_part() << "\t\t";
+    mml_log << fixed << scientific << msglen << endl;
+    if (msglen < msglen_best) {
+      msglen_best = msglen;
+      mml_best_mix = mixture;
+    }
+  } // for()
+  mml_log.close();
+
+  /* save inferred mixtures */
+  string inferred_mix_file = exp_folder + "best_mml_mixture";
+  mml_best_mix.printParameters(inferred_mix_file);
 }
 
