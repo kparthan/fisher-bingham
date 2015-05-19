@@ -1,5 +1,7 @@
 function [] = plot_posterior_prior2d()
 
+  addpath('export_fig');
+
   file_name = 'prior2d_posterior3';
 
   data_file = strcat('../../sampled_data/',file_name,'.dat');

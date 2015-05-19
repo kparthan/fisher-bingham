@@ -328,6 +328,8 @@ void Mixture::initialize_children_3()
   Vector mu1 = prod(R,asymptotic_est.mean);
   R = rotate_about_arbitrary_axis(mi,-theta);
   Vector mu2 = prod(R,asymptotic_est.mean);
+  cout << "init_means[0]: "; print(cout,mu1,3); cout << endl;
+  cout << "init_means[1]: "; print(cout,mu2,3); cout << endl;
 
   // initialize responsibility matrix
   Vector emptyvec(N,0);

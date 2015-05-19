@@ -16,6 +16,7 @@ function [] = visualize_mixture_contours_cdf(K)
   xlabel('Longitude','fontsize',20);
   ylabel('Co-latitude','fontsize',20);
   set(gca,'Ylim',[0 180]);
+  set(gca,'Xlim',[0 360]);
   set(gca,'xtick',[0:60:360],'fontsize',12);
   set(gca,'ytick',[0:30:180],'fontsize',12);
   view ([0 90]);
@@ -43,20 +44,6 @@ function [] = visualize_mixture_contours_cdf(K)
     range = max_val - min_val;
     cdf_bins = (cdf_bins - min_val) / range; % in [0,1]
 
-%    if k == 1
-%      min_val = min(cdf_bins(:));
-%      max_val = max(cdf_bins(:));
-%    else
-%      current_min = min(cdf_bins(:));
-%      current_max = max(cdf_bins(:));
-%      if current_min < min_val
-%        min_val = current_min;
-%      end
-%      if current_max > max_val
-%        max_val = current_max;
-%      end
-%    end
-
     level = 0.9;
     norm_level = (level - min_val) / range;
     contour_levels = [norm_level norm_level];
@@ -64,10 +51,27 @@ function [] = visualize_mixture_contours_cdf(K)
     %[C,h] = contour(cdf_bins,1,'LineWidth',2,'LineColor','black');
     %clabel(C,h);
 
+%    [c1,h1] = contour(cdf_bins,contour_levels,'LineWidth',2,'LineColor','black');
+%    % Take all the info from the contourline output argument:
+%    i0 = 1;
+%    i2 = 1;       
+%    while i0 <  length(c1)
+%        i1 = i0+[1:c1(2,i0)];
+%        zLevel(i2) = c1(1,i0);
+%        hold on
+%        % And plot it with dashed lines:
+%        %ph(i2) = plot(c1(1,i1),c1(2,i1),'k--','linewidth',2); 
+%        ph(i2) = dashline(c1(1,i1),c1(2,i1),1.5,3,1.5,3,'Color','black','linewidth',2); 
+%        i0 = i1(end)+1;
+%        i2 = i2+1;
+%    end
+%    % Scrap the contourlines:
+%    delete(h1);
+
     [row col] = ind2sub(size(prob_bins),max_index);
     cx = phi(col);
     cy = theta(row);
-    ht = text(cx,cy,num2str(k),'Color','red');
+    %ht = text(cx,cy,num2str(k),'Color','red');
 
 %    hcl = clabel(C,'Color','red');
 %    for i=2:2:length(hcl)
@@ -110,9 +114,9 @@ function [] = visualize_mixture_contours_cdf(K)
   output_eps = strcat('../figs/',outfile,'.eps');
   output_pdf = strcat('../figs/',outfile,'.pdf');
 
-  %saveas(gcf,output_fig);
+  saveas(gcf,output_fig);
   %print2eps(output_eps);
   %eps2pdf(output_eps,output_pdf,1);
-  %export_fig(output_pdf,'-pdf');
+  export_fig(output_pdf,'-pdf');
 
 end

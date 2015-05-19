@@ -1,5 +1,7 @@
 function [] = plot_posterior_prior3d()
 
+  addpath('export_fig');
+
   file_name = 'prior3d_posterior1';
 
   data_file = strcat('../../sampled_data/',file_name,'.dat');
@@ -19,13 +21,13 @@ function [] = plot_posterior_prior3d()
   %view ([42 75]);
   view ([35 65]);
 
-  %set(xlabh,'interpreter','tex');
-  %set(ylabh,'interpreter','tex');
-  %zlabel(['posterior',10,'density'],'fontweight','bold');
-
   xlabh = get(gca,'XLabel');
   ylabh = get(gca,'YLabel');
   zlabh = get(gca,'ZLabel');
+
+  %set(xlabh,'interpreter','tex');
+  %set(ylabh,'interpreter','tex');
+  %zlabel(['posterior',10,'density'],'fontweight','bold');
 
 %  xlabel('\kappa','fontweight','bold','fontsize',25);
 %  ylabel('\beta','fontweight','bold','fontsize',25);

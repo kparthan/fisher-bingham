@@ -1072,7 +1072,7 @@ void Experiments::exp5()
   std::vector<Kent> components;
 
   // (1)
-  psi = 0; alpha = 60; eta = 60; 
+  psi = 0; alpha = 60; eta = 45; 
   psi *= PI/180; alpha *= PI/180; eta *= PI/180;
   kappa = 100; ecc = 0.1;
   beta = 0.5 * kappa * ecc;
@@ -1080,7 +1080,7 @@ void Experiments::exp5()
   components.push_back(kent1);
 
   // (2)
-  psi = 30; alpha = 45; eta = 90; 
+  psi = 150; alpha = 45; eta = 30; 
   psi *= PI/180; alpha *= PI/180; eta *= PI/180;
   kappa = 100; ecc = 0.5;
   beta = 0.5 * kappa * ecc;
@@ -1088,7 +1088,7 @@ void Experiments::exp5()
   components.push_back(kent2);
 
   // (3)
-  psi = 60; alpha = 45; eta = 60; 
+  psi = 30; alpha = 45; eta = 60; 
   psi *= PI/180; alpha *= PI/180; eta *= PI/180;
   kappa = 100; ecc = 0.9;
   beta = 0.5 * kappa * ecc;

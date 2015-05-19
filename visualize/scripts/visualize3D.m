@@ -1,5 +1,7 @@
 function [] = visualize3D(K)
 
+  addpath('export_fig');
+
   % draw a unit sphere
   n = 25;
   r = ones(n, n); % radius is 1 
@@ -18,12 +20,23 @@ function [] = visualize3D(K)
       Z(i,j) = z;
     end
   end
-%  [x,y,z]= sph2cart(th, phi, r);
-  surface(X,Y,Z,'FaceColor','none');
+
+  fig = figure();
   hold on;
+  set(gcf, 'Color', 'w');
+  %box on;
+  %set(gca,'xgrid','on');
+  surface(X,Y,Z,'FaceColor','none','LineWidth',0.01,'linestyle',':');
+  view([-55 -30]);
+  xlabh = get(gca,'XLabel');
+  ylabh = get(gca,'YLabel');
+  zlabh = get(gca,'ZLabel');
+  set(xlabh,'Position',[0 1.3 -1]);
+  set(ylabh,'Position',[1.4 0 -1]);
 
-  %c(1,:) = [1 0.5 0];
-
+  c(1,:) = [1 0 0];
+  c(2,:) = [0 0.5 0];
+  c(3,:) = [0 0 1];
   % plot the sampled data
   for k = 1:K
      data_file = strcat('../sampled_data/comp',num2str(k),'.dat');
@@ -31,13 +44,14 @@ function [] = visualize3D(K)
      x = M(:,1);
      y = M(:,2);
      z = M(:,3);
-     colors = rand(1,3);
-     %plot3(x,y,z,'.','Color',c(k,:));
-     plot3(x,y,z,'.','Color',colors);
+     plot3(x,y,z,'.','Color',c(k,:));
+     %colors = rand(1,3);
+     %plot3(x,y,z,'.','Color',colors);
   end  
-  xlabel('X');
-  ylabel('Y');
-  zlabel('Z');
+  xlabel('X_{1}','fontsize',18);
+  ylabel('X_{2}','fontsize',18);
+  zlabel('X_{3}','fontsize',18);
+  set(gca,'fontsize',12);
 
   % create legend
   %N = [1:K];
@@ -45,4 +59,13 @@ function [] = visualize3D(K)
   %legend_cell = [legend_cell ; cellstr(num2str(N','%d'))];
   %legend(legend_cell);
 
+  outfile = 'mixture_sphere';
+  output_fig = strcat('../figs/',outfile,'.fig');
+  output_eps = strcat('../figs/',outfile,'.eps');
+  output_pdf = strcat('../figs/',outfile,'.pdf');
+
+  saveas(gcf,output_fig);
+  export_fig(output_pdf,'-pdf');
+
 end
+
