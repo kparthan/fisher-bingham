@@ -2226,9 +2226,9 @@ void RunExperiments(int iterations)
 
   //experiments.exp3();
 
-  //experiments.exp4();
+  experiments.exp4();
 
-  experiments.exp5();
+  //experiments.exp5();
 }
 
 /*!

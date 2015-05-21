@@ -975,11 +975,11 @@ void Experiments::exp4()
   checkFolders(exp_folder);
 
   int N = 1000;
-  /*for (int N=1000; N<=10000; N+=1000) {
+  for (int N=1000; N<=10000; N+=1000) {
     generate_data_exp4(exp_folder,N);
-  }*/
+  }
 
-  infer_components_exp4(exp_folder,N);
+  //infer_components_exp4(exp_folder,N);
 }
 
 void Experiments::generate_data_exp4(string &exp_folder, int N)
@@ -1120,7 +1120,7 @@ void Experiments::exp5()
   string all_inferred_mix = exp_folder + "mml_log";
   ofstream mml_log(all_inferred_mix.c_str());
 
-  int K_MAX = 10; 
+  int K_MAX = 15; 
 
   Vector data_weights(data.size(),1);
   Mixture mixture(1,data,data_weights);

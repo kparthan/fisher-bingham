@@ -23,6 +23,7 @@ function [] = visualize3D(K)
 
   fig = figure();
   hold on;
+  axis equal;
   set(gcf, 'Color', 'w');
   %box on;
   %set(gca,'xgrid','on');
@@ -32,7 +33,8 @@ function [] = visualize3D(K)
   ylabh = get(gca,'YLabel');
   zlabh = get(gca,'ZLabel');
   set(xlabh,'Position',[0 1.3 -1]);
-  set(ylabh,'Position',[1.4 0 -1]);
+  set(ylabh,'Position',[1.7 0 -1]);
+  %set(zlabh,'Position',[-1 1.2 0]);
 
   c(1,:) = [1 0 0];
   c(2,:) = [0 0.5 0];
@@ -53,6 +55,8 @@ function [] = visualize3D(K)
   zlabel('X_{3}','fontsize',18);
   set(gca,'fontsize',12);
 
+  %draw_box_lines();
+
   % create legend
   %N = [1:K];
   %legend_cell = cellstr('unit sphere');
@@ -66,6 +70,40 @@ function [] = visualize3D(K)
 
   saveas(gcf,output_fig);
   export_fig(output_pdf,'-pdf');
+
+end
+
+function [] = draw_box_lines()
+
+  px = [-1 -1];
+  py = [1 -1];
+  pz = [-1 -1];
+  plot3(px,py,pz,'k');
+
+  px = [1 -1];
+  py = [-1 -1];
+  pz = [-1 -1];
+  plot3(px,py,pz,'k');
+
+  px = [-1 -1];
+  py = [-1 -1];
+  pz = [1 -1];
+  plot3(px,py,pz,'k');
+
+  px = [-1 -1];
+  py = [1 -1];
+  pz = [1 1];
+  plot3(px,py,pz,'k');
+
+  px = [1 -1];
+  py = [-1 -1];
+  pz = [1 1];
+  plot3(px,py,pz,'k');
+
+  px = [1 1];
+  py = [-1 -1];
+  pz = [-1 1];
+  plot3(px,py,pz,'k');
 
 end
 
