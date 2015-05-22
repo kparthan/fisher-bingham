@@ -1841,10 +1841,10 @@ void modelMixture(struct Parameters &parameters, std::vector<Vector> &data)
 
 void update_tracking_file(int iter, Mixture &parent, ostream &out)
 {
-  out << fixed << setw(5) << iter << "\t\t";
-  out << fixed << setw(5) << parent.getNumberOfComponents() << "\t\t";
+  out << fixed << setw(5) << iter << "\t";
+  out << fixed << setw(5) << parent.getNumberOfComponents() << "\t";
 
-  if (CRITERION == AIC) {
+  /*if (CRITERION == AIC) {
     out << fixed << scientific << setprecision(6) << parent.getAIC() << endl;
   } else if (CRITERION == BIC) {
     out << fixed << scientific << setprecision(6) << parent.getBIC() << endl;
@@ -1854,7 +1854,19 @@ void update_tracking_file(int iter, Mixture &parent, ostream &out)
     out << fixed << scientific << setprecision(6) << parent.first_part()
         << "\t\t" << parent.second_part()
         << "\t\t" << parent.getMinimumMessageLength() << endl;
-  }
+  }*/
+
+  double aic = parent.computeAIC();
+  double bic = parent.computeBIC();
+  double icl = parent.computeICL();
+  double msglen = parent.computeMinimumMessageLength();
+
+  out << fixed << scientific << setprecision(6) << aic << "\t";
+  out << fixed << scientific << setprecision(6) << bic << "\t";
+  out << fixed << scientific << setprecision(6) << icl << "\t";
+  out << fixed << scientific << setprecision(6) << parent.first_part() << "\t";
+  out << fixed << scientific << setprecision(6) << parent.second_part() << "\t";
+  out << fixed << scientific << setprecision(6) << msglen << endl;
 }
 
 Mixture inferComponents(std::vector<Vector> &data, string &log_file)

@@ -811,7 +811,7 @@ void Experiments::traditional_search(
   aic_out_map.close(); bic_out_map.close(); icl_out_map.close();
 */
 
-
+/*
   ESTIMATION = MML; // MML estimation ...
   est_type_file = "mml";
   est_type_folder = est_type_file + "/";
@@ -823,7 +823,7 @@ void Experiments::traditional_search(
     mml_out
   );
   mml_out.close();
-
+*/
 }
 
 void Experiments::traditional_search(
@@ -849,55 +849,107 @@ void Experiments::traditional_search(
   Mixture mixture(1,random_sample,data_weights);
   mixture.estimateParameters();
   double msg = mixture.computeMinimumMessageLength();
-
   double aic_best = mixture.computeAIC();
-  aic_log << fixed << setw(10) << 1 << "\t\t";
-  aic_log << fixed << scientific << aic_best << "\t\t";
-  aic_log << fixed << scientific << msg << endl;
   double bic_best = mixture.computeBIC();
-  bic_log << fixed << setw(10) << 1 << "\t\t";
-  bic_log << fixed << scientific << bic_best << "\t\t";
-  bic_log << fixed << scientific << msg << endl;
   double icl_best = mixture.computeICL();
-  icl_log << fixed << setw(10) << 1 << "\t\t";
+  aic_log << fixed << setw(10) << 1 << "\t";
+  aic_log << fixed << scientific << aic_best << "\t";
+  aic_log << fixed << scientific << bic_best << "\t";
+  aic_log << fixed << scientific << icl_best << "\t";
+  aic_log << fixed << scientific << mixture.first_part() << "\t";
+  aic_log << fixed << scientific << mixture.second_part() << "\t";
+  aic_log << fixed << scientific << msg << endl;
+
+  bic_log << fixed << setw(10) << 1 << "\t";
+  bic_log << fixed << scientific << aic_best << "\t";
+  bic_log << fixed << scientific << bic_best << "\t";
+  bic_log << fixed << scientific << mixture.first_part() << "\t";
+  bic_log << fixed << scientific << mixture.second_part() << "\t";
+  bic_log << fixed << scientific << msg << endl;
+
+  icl_log << fixed << setw(10) << 1 << "\t";
+  icl_log << fixed << scientific << aic_best << "\t\t";
+  icl_log << fixed << scientific << bic_best << "\t\t";
   icl_log << fixed << scientific << icl_best << "\t\t";
+  icl_log << fixed << scientific << mixture.first_part() << "\t";
+  icl_log << fixed << scientific << mixture.second_part() << "\t";
   icl_log << fixed << scientific << msg << endl;
 
   Mixture aic_best_mix = mixture;
   Mixture bic_best_mix = mixture;
   Mixture icl_best_mix = mixture;
 
+  int NUM_TRIALS = 5;
   for (int k=2; k<=K_MAX; k++) {
     cout << "k: " << k << endl;
-    Mixture mixture(k,random_sample,data_weights);
-    mixture.estimateParameters();
-    msg = mixture.computeMinimumMessageLength();
+    Mixture aic_best_mix_iter,bic_best_mix_iter,icl_best_mix_iter;
+    double aic,bic,icl,aic_best_iter,bic_best_iter,icl_best_iter;
+    for (int j=0; j<NUM_TRIALS; j++) {
+      Mixture mixture(k,random_sample,data_weights);
+      mixture.estimateParameters();
+      aic = mixture.computeAIC();
+      bic = mixture.computeBIC();
+      icl = mixture.computeICL();
+      if (j == 0) {
+        aic_best_iter = aic;
+        aic_best_mix_iter = mixture;
+        bic_best_iter = bic;
+        bic_best_mix_iter = mixture;
+        icl_best_iter = icl;
+        icl_best_mix_iter = mixture;
+      } else {
+        if (aic < aic_best_iter) {
+          aic_best_iter = aic;
+          aic_best_mix_iter = mixture;
+        }
+        if (bic < bic_best_iter) {
+          bic_best_iter = bic;
+          bic_best_mix_iter = mixture;
+        }
+        if (icl < icl_best_iter) {
+          icl_best_iter = icl;
+          icl_best_mix_iter = mixture;
+        }
+      } // if (j == 0)
+    } // for (j)
 
-    double aic = mixture.computeAIC();
-    aic_log << fixed << setw(10) << k << "\t\t";
-    aic_log << fixed << scientific << aic << "\t\t";
+    aic_log << fixed << setw(10) << k << "\t";
+    aic_log << fixed << scientific << aic_best_iter << "\t";
+    aic_log << fixed << scientific << aic_best_mix_iter.computeBIC() << "\t";
+    aic_log << fixed << scientific << aic_best_mix_iter.computeICL() << "\t";
+    msg = aic_best_mix_iter.computeMinimumMessageLength();
+    aic_log << fixed << scientific << aic_best_mix_iter.first_part() << "\t";
+    aic_log << fixed << scientific << aic_best_mix_iter.second_part() << "\t";
     aic_log << fixed << scientific << msg << endl;
-    if (aic < aic_best) {
-      aic_best = aic;
-      aic_best_mix = mixture;
+    if (aic_best_iter < aic_best) {
+      aic_best = aic_best_iter;
+      aic_best_mix = aic_best_mix_iter;
     }
-    double bic = mixture.computeBIC();
-    bic_log << fixed << setw(10) << k << "\t\t";
-    bic_log << fixed << scientific << bic << "\t\t";
+    bic_log << fixed << setw(10) << k << "\t";
+    bic_log << fixed << scientific << bic_best_mix_iter.computeAIC() << "\t";
+    bic_log << fixed << scientific << bic_best_iter << "\t";
+    bic_log << fixed << scientific << bic_best_mix_iter.computeICL() << "\t";
+    msg = bic_best_mix_iter.computeMinimumMessageLength();
+    bic_log << fixed << scientific << bic_best_mix_iter.first_part() << "\t";
+    bic_log << fixed << scientific << bic_best_mix_iter.second_part() << "\t";
     bic_log << fixed << scientific << msg << endl;
-    if (bic < bic_best) {
-      bic_best = bic;
-      bic_best_mix = mixture;
+    if (bic_best_iter < bic_best) {
+      bic_best = bic_best_iter;
+      bic_best_mix = bic_best_mix_iter;
     }
-    double icl = mixture.computeICL();
-    icl_log << fixed << setw(10) << k << "\t\t";
-    icl_log << fixed << scientific << icl << "\t\t";
+    icl_log << fixed << setw(10) << k << "\t";
+    icl_log << fixed << scientific << icl_best_mix_iter.computeAIC() << "\t";
+    icl_log << fixed << scientific << icl_best_mix_iter.computeBIC() << "\t";
+    icl_log << fixed << scientific << icl_best_iter << "\t";
+    msg = icl_best_mix_iter.computeMinimumMessageLength();
+    icl_log << fixed << scientific << icl_best_mix_iter.first_part() << "\t";
+    icl_log << fixed << scientific << icl_best_mix_iter.second_part() << "\t";
     icl_log << fixed << scientific << msg << endl;
-    if (icl < icl_best) {
-      icl_best = icl;
-      icl_best_mix = mixture;
+    if (icl_best_iter < icl_best) {
+      icl_best = icl_best_iter;
+      icl_best_mix = icl_best_mix_iter;
     }
-  } // for()
+  } // for (k)
   aic_log.close();
   bic_log.close();
   icl_log.close();
@@ -933,29 +985,52 @@ void Experiments::traditional_search_mml(
   string all_inferred_mix = mixtures_folder + est_type_folder + "mml_log";
   ofstream mml_log(all_inferred_mix.c_str());
 
-  int K_MAX = 10; 
+  int K_MAX = 50; 
 
   Vector data_weights(random_sample.size(),1);
   Mixture mixture(1,random_sample,data_weights);
   mixture.estimateParameters();
 
   double msglen_best = mixture.getMinimumMessageLength();
-  mml_log << fixed << setw(10) << 1 << "\t\t";
-  mml_log << fixed << scientific << msglen_best << "\t\t";
+  mml_log << fixed << setw(10) << 1 << "\t";
+  mml_log << fixed << scientific << mixture.computeAIC() << "\t";
+  mml_log << fixed << scientific << mixture.computeBIC() << "\t";
+  mml_log << fixed << scientific << mixture.computeICL() << "\t";
+  mml_log << fixed << scientific << mixture.first_part() << "\t";
+  mml_log << fixed << scientific << mixture.second_part() << "\t";
   mml_log << fixed << scientific << msglen_best << endl;
   Mixture mml_best_mix = mixture;
 
+  int NUM_TRIALS = 5;
   for (int k=2; k<=K_MAX; k++) {
     cout << "k: " << k << endl;
-    Mixture mixture(k,random_sample,data_weights);
-    mixture.estimateParameters();
-    double msglen = mixture.getMinimumMessageLength();
+    Mixture mml_best_mix_iter;
+    double msglen,msglen_best_iter;
+    for (int j=0; j<NUM_TRIALS; j++) {
+      cout << "\ttrial #" << j+1 << endl;
+      Mixture mixture(k,random_sample,data_weights);
+      mixture.estimateParameters();
+      msglen = mixture.getMinimumMessageLength();
+      if (j == 0) {
+        msglen_best_iter = msglen;
+        mml_best_mix_iter = mixture;
+      } else {
+        if (msglen < msglen_best_iter) {
+          msglen_best_iter = msglen;
+          mml_best_mix_iter = mixture;
+        }
+      } // if (j == 0)
+    } // for (j)
     mml_log << fixed << setw(10) << k << "\t\t";
-    mml_log << fixed << scientific << msglen << "\t\t";
-    mml_log << fixed << scientific << msglen << endl;
-    if (msglen < msglen_best) {
-      msglen_best = msglen;
-      mml_best_mix = mixture;
+    mml_log << fixed << scientific << mml_best_mix_iter.computeAIC() << "\t";
+    mml_log << fixed << scientific << mml_best_mix_iter.computeBIC() << "\t";
+    mml_log << fixed << scientific << mml_best_mix_iter.computeICL() << "\t";
+    mml_log << fixed << scientific << mml_best_mix_iter.first_part() << "\t";
+    mml_log << fixed << scientific << mml_best_mix_iter.second_part() << "\t";
+    mml_log << fixed << scientific << msglen_best_iter << endl;
+    if (msglen_best_iter < msglen_best) {
+      msglen_best = msglen_best_iter;
+      mml_best_mix = mml_best_mix_iter;
     }
   } // for()
   mml_log.close();
@@ -974,15 +1049,41 @@ void Experiments::exp4()
   check_and_create_directory(exp_folder);
   checkFolders(exp_folder);
 
-  int N = 1000;
-  for (int N=1000; N<=10000; N+=1000) {
+  /*for (int N=1000; N<=10000; N+=1000) {
     generate_data_exp4(exp_folder,N);
-  }
+  }*/
+
+  int N = 1000;
+  std::vector<Vector> data = generate_data_exp4(exp_folder,N);
+  std::vector<Vector> combined_data = data;
+  double res = 1;
+  do {
+    cout << "N: " << N << endl;
+    if (N > 1000) {
+      std::vector<Vector> data2 = generate_data_exp4(exp_folder,1000);
+      /* merge data */
+      for (int i=0; i<data2.size(); i++) {
+        combined_data.push_back(data2[i]);
+      } // for (i)
+    } // if (N2 != 0)
+
+    /* save data */
+    std::vector<std::vector<int> > sampled_bins = updateBins(combined_data,res);
+    string N_str = boost::lexical_cast<string>(N);
+    string data_folder = exp_folder + "data/";
+    check_and_create_directory(data_folder);
+    string sampled_bins_file = data_folder + "N_" + N_str + "_sampled_bins.dat";
+    writeToFile(sampled_bins_file,sampled_bins);
+    string data_file = data_folder + "N_" + N_str + ".dat";
+    writeToFile(data_file,combined_data);
+
+    N += 1000;
+  } while (N <= 50000);
 
   //infer_components_exp4(exp_folder,N);
 }
 
-void Experiments::generate_data_exp4(string &exp_folder, int N)
+std::vector<Vector> Experiments::generate_data_exp4(string &exp_folder, int N)
 {
   struct Parameters parameters;
   parameters.profiles_dir = "./data/profiles-b/";
@@ -992,8 +1093,8 @@ void Experiments::generate_data_exp4(string &exp_folder, int N)
   cout << "data.size(): " << data.size() << endl;
   double res = 1;
   std::vector<std::vector<int> > true_bins = updateBins(data,res);
-  string true_bins_file = "true_bins.dat";  // integers
-  writeToFile(true_bins_file,true_bins);
+  //string true_bins_file = "true_bins.dat";  // integers
+  //writeToFile(true_bins_file,true_bins);
 
   int num_rows = true_bins.size();
   int num_cols = true_bins[0].size();
@@ -1010,8 +1111,8 @@ void Experiments::generate_data_exp4(string &exp_folder, int N)
       elements[count++] = prob_bins[i][j];
     } // for (j)
   } // for (i)
-  string prob_bins_file = "prob_bins.dat";  // fractional values
-  writeToFile(prob_bins_file,prob_bins);
+  //string prob_bins_file = "prob_bins.dat";  // fractional values
+  //writeToFile(prob_bins_file,prob_bins);
 
   std::vector<int> sorted_index;
   Vector sorted_elements = sort(elements,sorted_index);
@@ -1045,16 +1146,8 @@ void Experiments::generate_data_exp4(string &exp_folder, int N)
     spherical2cartesian(spherical,cartesian);
     random_sample.push_back(cartesian);
   } // for (i)
-  std::vector<std::vector<int> > sampled_bins = updateBins(random_sample,res);
 
-  string N_str = boost::lexical_cast<string>(N);
-  string data_folder = exp_folder + "data/";
-  check_and_create_directory(data_folder);
-  string sampled_bins_file = data_folder + "N_" + N_str + "_sampled_bins.dat";
-  writeToFile(sampled_bins_file,sampled_bins);
-  
-  string data_file = data_folder + "N_" + N_str + ".dat";
-  writeToFile(data_file,random_sample);
+  return random_sample;
 }
 
 void Experiments::infer_components_exp4(string &exp_folder, int N)

@@ -67,7 +67,7 @@ class Experiments
     );
 
     void exp4();
-    void generate_data_exp4(string &, int);
+    std::vector<Vector> generate_data_exp4(string &, int);
     void infer_components_exp4(string &, int);
 
     void exp5();
