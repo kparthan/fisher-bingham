@@ -2079,6 +2079,9 @@ Mixture_vMF jackknife(
   log << " jackknife ...\n\n";
   int N = data.size();
   int K = original.getNumberOfComponents();
+
+  if (K == 1) return original;
+
   int K_remove = ceil(percent_remove * K);
   log << "K: " << K << endl;
   log << "K_remove: " << K_remove << endl;

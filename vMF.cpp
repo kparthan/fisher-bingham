@@ -5,6 +5,8 @@
 
 extern Vector XAXIS;
 extern int ESTIMATION;
+extern int CONSTRAIN_KAPPA;
+extern double MAX_KAPPA;
 
 /*!
  *  \brief This is a constructor module
@@ -304,6 +306,7 @@ double vMF::computeLogPriorScale()
   log_prior = log(4/PI);
   log_prior += 2 * log(kappa);
   log_prior -= 2 * log(1+kappa*kappa);
+  assert(!boost::math::isnan(log_prior));
   return log_prior;
 }
 
@@ -473,6 +476,9 @@ struct Estimates_vMF vMF::computeMMLEstimates(struct Estimates_vMF &mlapprox_est
   Optimize2 opt_mml(type);
   opt_mml.initialize(mml_est.Neff,mml_est.R,mml_est.mean,mml_est.kappa);
   opt_mml.computeEstimates(mml_est);
+  if (CONSTRAIN_KAPPA == SET && mml_est.kappa > MAX_KAPPA) {
+    mml_est.kappa = MAX_KAPPA;
+  }
   print(type,mml_est);
   msglen = computeMessageLength(mml_est);
   cout << "msglen (bpr): " << msglen/mml_est.Neff << endl;
