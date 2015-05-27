@@ -12,8 +12,7 @@ function [] = visualize_mixture_contours_cdf(K,pdf)
     bins_folder = '../sampled_data/bins_kent/';
     outfile = 'kent_mix';
   end
-  disp('bins_folder: '); 
-  disp(bins_folder);
+  disp(strcat('bins_folder: ',{' '},bins_folder)); 
  
   % figure properties
   fig = figure();
