@@ -2061,8 +2061,113 @@ Mixture_vMF inferComponents_vMF(std::vector<Vector> &data, string &log_file)
   mixture.estimateParameters();
   ofstream log(log_file.c_str());
   Mixture_vMF inferred = inferComponents_vMF(mixture,data.size(),log);
+  //return inferred;
+
+  /* jackknife */
+  double percent_remove = 0.2;
+  Mixture_vMF jk1 = jackknife(data,inferred,percent_remove,log);
+  Mixture_vMF inferred1 = inferComponents_vMF(jk1,data.size(),log);
+  Mixture_vMF jk2 = jackknife(data,inferred1,percent_remove,log);
+  Mixture_vMF inferred2 = inferComponents_vMF(jk2,data.size(),log);
   log.close();
-  return inferred;
+  return inferred2;
+}
+
+Mixture_vMF jackknife(
+  std::vector<Vector> &data, Mixture_vMF &original, double percent_remove, ostream &log
+) {
+  log << " jackknife ...\n\n";
+  int N = data.size();
+  int K = original.getNumberOfComponents();
+  int K_remove = ceil(percent_remove * K);
+  log << "K: " << K << endl;
+  log << "K_remove: " << K_remove << endl;
+  int K_m = K - K_remove;
+  log << "K_m: " << K_m << endl;
+
+  std::vector<int> flags(K,0);  // = 1 => discard the component
+  int count = 0;
+  while (1) {
+    int c = rand() % K;
+    if (flags[c] == 0) {
+      flags[c] = 1;
+      count++;
+    }
+    if (count == K_remove) break;
+  }
+
+  // adjust weights
+  Vector weights = original.getWeights();
+  double residual_sum = 0;
+  for (int i=0; i<K; i++) {
+    if (flags[i] != 1) residual_sum += weights[i];
+  }
+  Vector weights_m(K_m,0);
+  int index = 0;
+  for (int i=0; i<K; i++) {
+    if (flags[i] != 1) weights_m[index++] = weights[i] / residual_sum;
+  }
+  
+  // adjust responsibility matrix
+  std::vector<Vector> responsibility = original.getResponsibilityMatrix();
+  Vector residual_sums(N,0);
+  for (int i=0; i<N; i++) {
+    for (int j=0; j<K; j++) {
+      if (flags[j] != 1) {
+        residual_sums[i] += responsibility[j][i];
+      } // if()
+    } // j
+  } // i
+  Vector resp(N,0);
+  std::vector<Vector> responsibility_m(K_m,resp);
+  index = 0;
+  for (int i=0; i<K; i++) {
+    if (flags[i] != 1) {
+      #pragma omp parallel for if(ENABLE_DATA_PARALLELISM) num_threads(NUM_THREADS) //private(residual_sum) 
+      for (int j=0; j<N; j++) {
+        if (residual_sums[j] <= 0.01) {
+          responsibility_m[index][j] = 1.0 / K_m;
+        } else {
+          responsibility_m[index][j] = responsibility[i][j] / residual_sums[j];
+        } // if()
+        assert(responsibility_m[index][j] >= 0 && responsibility_m[index][j] <= 1);
+      } // j
+      index++;
+    } // if ()
+  } // i
+
+  // adjust effective sample size
+  Vector sample_size_m(K_m,0);
+  for (int i=0; i<K_m; i++) {
+    double sum = 0;
+    #pragma omp parallel for if(ENABLE_DATA_PARALLELISM) num_threads(NUM_THREADS) reduction(+:sum) 
+    for (int j=0; j<N; j++) {
+      sum += responsibility_m[i][j];
+    } // j
+    sample_size_m[i] = sum;
+  } // i
+
+  // child components
+  std::vector<vMF> components_m(K_m);
+  std::vector<vMF> components = original.getComponents();
+  index = 0;
+  for (int i=0; i<K; i++) {
+    if (flags[i] != 1) {
+      components_m[index++] = components[i];
+    } // if
+  } // i
+
+  log << "\t\tResidual:\n";
+  Vector data_weights_m(N,1);
+  Mixture_vMF modified(K_m,components_m,weights_m,sample_size_m,responsibility_m,data,data_weights_m);
+  log << "\t\tBefore adjustment ...\n";
+  modified.computeMinimumMessageLength();
+  modified.printParameters(log,2);
+  modified.EM();
+  log << "\t\tAfter adjustment ...\n";
+  modified.printParameters(log,2);
+  modified.printIndividualMsgLengths(log);
+  return modified;
 }
 
 Mixture_vMF inferComponents_vMF(Mixture_vMF &mixture, int N, ostream &log)
@@ -2276,11 +2381,13 @@ void RunExperiments(int iterations)
 
   //experiments.exp2();
 
-  experiments.exp3();
+  //experiments.exp3();
 
   //experiments.exp4();
 
   //experiments.exp5();
+
+  experiments.exp6();
 }
 
 /*!

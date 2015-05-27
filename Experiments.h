@@ -67,10 +67,12 @@ class Experiments
     );
 
     void exp4();
-    std::vector<Vector> generate_data_exp4(string &, int);
+    std::vector<Vector> generate_data_exp4(int);
     void infer_components_exp4(string &, int);
 
     void exp5();
+
+    void exp6();
 };
 
 #endif

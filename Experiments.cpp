@@ -10,6 +10,7 @@ extern struct stat st;
 extern int MML_FAIL;
 extern int PRIOR;
 extern int NUM_THREADS;
+extern int ENABLE_DATA_PARALLELISM;
 
 Experiments::Experiments(int iterations) : iterations(iterations)
 {}
@@ -1045,48 +1046,56 @@ void Experiments::traditional_search_mml(
 
 void Experiments::exp4()
 {
-  string exp_folder = "./experiments/infer_components/exp4/";
-  check_and_create_directory(exp_folder);
+  //string exp_folder = "./experiments/infer_components/exp4/";
+  //check_and_create_directory(exp_folder);
+  string exp_folder = "./";
   checkFolders(exp_folder);
+
+  /*int N = 10000;
+  std::vector<Vector> sampled_data = generate_data_exp4(N);
+  string data_file = "constrained_N_10000.dat";
+  writeToFile(data_file,sampled_data);*/
 
   /*for (int N=1000; N<=10000; N+=1000) {
     generate_data_exp4(exp_folder,N);
   }*/
 
-  int N = 1000;
-  std::vector<Vector> data = generate_data_exp4(exp_folder,N);
-  std::vector<Vector> combined_data = data;
-  double res = 1;
-  do {
-    cout << "N: " << N << endl;
-    if (N > 1000) {
-      std::vector<Vector> data2 = generate_data_exp4(exp_folder,1000);
-      /* merge data */
-      for (int i=0; i<data2.size(); i++) {
-        combined_data.push_back(data2[i]);
-      } // for (i)
-    } // if (N2 != 0)
-
-    /* save data */
-    std::vector<std::vector<int> > sampled_bins = updateBins(combined_data,res);
-    string N_str = boost::lexical_cast<string>(N);
-    string data_folder = exp_folder + "data/";
-    check_and_create_directory(data_folder);
-    string sampled_bins_file = data_folder + "N_" + N_str + "_sampled_bins.dat";
-    writeToFile(sampled_bins_file,sampled_bins);
-    string data_file = data_folder + "N_" + N_str + ".dat";
-    writeToFile(data_file,combined_data);
-
-    N += 1000;
-  } while (N <= 50000);
+//  int N = 1000;
+//  std::vector<Vector> data = generate_data_exp4(N);
+//  std::vector<Vector> combined_data = data;
+//  double res = 1;
+//  do {
+//    cout << "N: " << N << endl;
+//    if (N > 1000) {
+//      std::vector<Vector> data2 = generate_data_exp4(1000);
+//      /* merge data */
+//      for (int i=0; i<data2.size(); i++) {
+//        combined_data.push_back(data2[i]);
+//      } // for (i)
+//    } // if (N2 != 0)
+//
+//    /* save data */
+//    std::vector<std::vector<int> > sampled_bins = updateBins(combined_data,res);
+//    string N_str = boost::lexical_cast<string>(N);
+//    string data_folder = exp_folder + "data/";
+//    check_and_create_directory(data_folder);
+//    string sampled_bins_file = data_folder + "N_" + N_str + "_sampled_bins.dat";
+//    writeToFile(sampled_bins_file,sampled_bins);
+//    string data_file = data_folder + "N_" + N_str + ".dat";
+//    writeToFile(data_file,combined_data);
+//
+//    N += 1000;
+//  } while (N <= 50000);
 
   //infer_components_exp4(exp_folder,N);
 }
 
-std::vector<Vector> Experiments::generate_data_exp4(string &exp_folder, int N)
+std::vector<Vector> Experiments::generate_data_exp4(int N)
 {
   struct Parameters parameters;
   parameters.profiles_dir = "./data/profiles-b/";
+  //parameters.profiles_dir = "./data/profiles/";
+  //parameters.profile_file = "constrained_bins.dat";
 
   std::vector<Vector> data;
   gatherData(parameters,data);
@@ -1246,4 +1255,21 @@ void Experiments::exp5()
   string inferred_mix_file = exp_folder + "best_mml_mixture";
   mml_best_mix.printParameters(inferred_mix_file);
 }
+
+void Experiments::exp6()
+{
+  struct Parameters parameters;
+  parameters.profiles_dir = "./data/profiles/";
+  //parameters.profile_file = "random_sample_mix.dat";
+
+  ENABLE_DATA_PARALLELISM = SET;
+  NUM_THREADS = 4;
+  std::vector<Vector> data;
+  gatherData(parameters,data);
+  cout << "data.size(): " << data.size() << endl;
+
+  string log_file = "infer_vmf_all_jk.log";
+  inferComponents_vMF(data,log_file);
+}
+
 
