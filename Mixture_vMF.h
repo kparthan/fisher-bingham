@@ -119,6 +119,8 @@ class Mixture_vMF
 
     double computeNegativeLogLikelihood(int verbose = 0);
 
+    double compress(std::vector<Vector> &);
+
     //! Computes the minimum message length
     double computeMinimumMessageLength(int verbose = 0);
 

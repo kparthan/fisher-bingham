@@ -1408,9 +1408,12 @@ std::vector<std::vector<int> > updateBins(std::vector<Vector> &unit_coordinates,
     bins.push_back(tmp);
   }
 
+  cout << "unit_coordinates.size(): " << unit_coordinates.size() << endl;
   double theta,phi;
   int row,col;
   Vector spherical(3,0);
+  //string output_file = "constrained_bins.dat";
+  //ofstream out(output_file.c_str());
   for (int i=0; i<unit_coordinates.size(); i++) {
     //cout << "i: " << i << endl; 
     cartesian2spherical(unit_coordinates[i],spherical);
@@ -1434,8 +1437,16 @@ std::vector<std::vector<int> > updateBins(std::vector<Vector> &unit_coordinates,
       fflush(stdout);
     }
     bins[row][col]++;
+    /*if (bins[row][col] < 500) {
+      bins[row][col]++;
+      for (int j=0; j<3; j++) {
+        out << fixed << setw(10) << setprecision(3) << unit_coordinates[i][j];
+      } // for (j)
+      out << endl;
+    } // if ()*/
     //cout << "row,col: " << row << "," << col << endl;
-  }
+  } // for (i)
+  //out.close();
   return bins;
 }
 
@@ -1595,7 +1606,21 @@ void simulateMixtureModel(struct Parameters &parameters)
         original.generateHeatmapData(parameters.res);
         std::vector<std::vector<int> > bins = updateBins(data,parameters.res);
         outputBins(bins,parameters.res);
-      }
+        /* save mixture_density if not already done */
+        if (parameters.read_profiles == SET) {
+          string mix_density_file = "./visualize/sampled_data/bins_kent/mixture_density.dat";
+          ofstream mix(mix_density_file.c_str());
+          double mix_density;
+          for (int i=0; i<data.size(); i++) {
+            mix_density = exp(original.log_probability(data[i]));
+            for (int j=0; j<data[i].size(); j++) {
+              mix << scientific << setprecision(6) << data[i][j] << "\t\t";
+            } // j
+            mix << scientific << setprecision(6) << mix_density << endl;
+          } // i
+          mix.close();
+        } // if (parameters.read_profiles == SET) {
+      } // if (parameters.heat_map == SET)
     } else if (parameters.load_mixture == UNSET) {
       int k = parameters.simulated_components;
       //srand(time(NULL));
@@ -1627,11 +1652,26 @@ void simulateMixtureModel(struct Parameters &parameters)
       } else if (parameters.read_profiles == UNSET) {
         data = original.generate(parameters.sample_size,save);
       }
+      double msglen = original.compress(data);
       if (parameters.heat_map == SET) {
         original.generateHeatmapData(parameters.res);
         std::vector<std::vector<int> > bins = updateBins(data,parameters.res);
         outputBins(bins,parameters.res);
-      }
+        /* save mixture_density if not already done */
+        if (parameters.read_profiles == SET) {
+          string mix_density_file = "./visualize/sampled_data/bins_vmf/mixture_density.dat";
+          ofstream mix(mix_density_file.c_str());
+          double mix_density;
+          for (int i=0; i<data.size(); i++) {
+            mix_density = exp(original.log_probability(data[i]));
+            for (int j=0; j<data[i].size(); j++) {
+              mix << scientific << setprecision(6) << data[i][j] << "\t\t";
+            } // j
+            mix << scientific << setprecision(6) << mix_density << endl;
+          } // i
+          mix.close();
+        } // if (parameters.read_profiles == SET) {
+      } // if (parameters.heat_map == SET)
     } else if (parameters.load_mixture == UNSET) {
       int k = parameters.simulated_components;
       //srand(time(NULL));
@@ -2236,9 +2276,9 @@ void RunExperiments(int iterations)
 
   //experiments.exp2();
 
-  //experiments.exp3();
+  experiments.exp3();
 
-  experiments.exp4();
+  //experiments.exp4();
 
   //experiments.exp5();
 }

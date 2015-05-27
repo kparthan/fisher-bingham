@@ -811,7 +811,7 @@ void Experiments::traditional_search(
   aic_out_map.close(); bic_out_map.close(); icl_out_map.close();
 */
 
-/*
+
   ESTIMATION = MML; // MML estimation ...
   est_type_file = "mml";
   est_type_folder = est_type_file + "/";
@@ -823,7 +823,7 @@ void Experiments::traditional_search(
     mml_out
   );
   mml_out.close();
-*/
+
 }
 
 void Experiments::traditional_search(

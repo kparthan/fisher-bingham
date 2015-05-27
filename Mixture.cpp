@@ -1134,7 +1134,7 @@ std::vector<Vector> Mixture::generate(int num_samples, bool save_data)
     writeToFile(data_file,sample);
     string comp_bins = "./visualize/sampled_data/bins_kent/";
     check_and_create_directory(comp_bins);
-    string comp_density_file,transformed_file;
+    string comp_density_file;
     string mix_density_file = "./visualize/sampled_data/bins_kent/mixture_density.dat";
     ofstream mix(mix_density_file.c_str());
     double comp_density,mix_density;

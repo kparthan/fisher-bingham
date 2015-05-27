@@ -1,11 +1,19 @@
-function [] = visualize_mixture_contours_cdf(K)
+function [] = visualize_mixture_contours_cdf(K,pdf)
 
   addpath('export_fig');
 
-  bins_folder = '../sampled_data/bins_kent/';
-  outfile = 'kent_mix';
-  %bins_folder = '../sampled_data/bins_vmf/';
-  %outfile = 'vmf_mix';
+  isvmf = strcmp(pdf,'vmf');
+  bins_folder = '';
+  outfile = '';
+  if (isvmf == 1)
+    bins_folder = '../sampled_data/bins_vmf/';
+    outfile = 'vmf_mix';
+  elseif (isvmf == 0)
+    bins_folder = '../sampled_data/bins_kent/';
+    outfile = 'kent_mix';
+  end
+  disp('bins_folder: '); 
+  disp(bins_folder);
  
   % figure properties
   fig = figure();
@@ -44,7 +52,7 @@ function [] = visualize_mixture_contours_cdf(K)
     range = max_val - min_val;
     cdf_bins = (cdf_bins - min_val) / range; % in [0,1]
 
-    level = 0.9;
+    level = 0.8;
     norm_level = (level - min_val) / range;
     contour_levels = [norm_level norm_level];
     [C,h] = contour(cdf_bins,contour_levels,'LineWidth',2,'LineColor','black');
@@ -71,7 +79,7 @@ function [] = visualize_mixture_contours_cdf(K)
     [row col] = ind2sub(size(prob_bins),max_index);
     cx = phi(col);
     cy = theta(row);
-    %ht = text(cx,cy,num2str(k),'Color','red');
+    ht = text(cx,cy,num2str(k),'Color','red');
 
 %    hcl = clabel(C,'Color','red');
 %    for i=2:2:length(hcl)
@@ -114,9 +122,9 @@ function [] = visualize_mixture_contours_cdf(K)
   output_eps = strcat('../figs/',outfile,'.eps');
   output_pdf = strcat('../figs/',outfile,'.pdf');
 
-  saveas(gcf,output_fig);
+  %saveas(gcf,output_fig);
   %print2eps(output_eps);
   %eps2pdf(output_eps,output_pdf,1);
-  export_fig(output_pdf,'-pdf');
+  %export_fig(output_pdf,'-pdf');
 
 end

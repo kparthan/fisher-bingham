@@ -77,7 +77,7 @@ function [] = mix_example(K)
 %    plot_dashed_contours(cdf_bins,contour_levels,colour);
 
     % kill operation
-%    kill = 3;
+%    kill = 1;
 %    if (k == kill) 
 %      colour = [0 0.5 0];
 %    else

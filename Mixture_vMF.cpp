@@ -616,6 +616,30 @@ double Mixture_vMF::computeNegativeLogLikelihood(int verbose)
   return neglog - (2 * N * log(AOM));
 }
 
+double Mixture_vMF::compress(std::vector<Vector> &d)
+{
+  data = d;
+  N = data.size();
+  Vector emptyvec(N,0);
+  responsibility = std::vector<Vector>(K,emptyvec);
+  updateResponsibilityMatrix();
+
+  sample_size = Vector(K,0);
+  updateEffectiveSampleSize();
+
+  /*aic = computeAIC();
+  bic = computeBIC();
+  icl = computeICL();
+  cout << "AIC: " << aic << endl;
+  cout << "BIC: " << bic << endl;
+  cout << "ICL: " << icl << endl;*/
+
+  minimum_msglen = computeMinimumMessageLength(1);
+  cout << "MML: " << minimum_msglen << endl;
+
+  return minimum_msglen;
+}
+
 /*!
  *  \brief This function computes the minimum message length using the current
  *  model parameters.
@@ -1153,32 +1177,25 @@ std::vector<Vector> Mixture_vMF::generate(int num_samples, bool save_data)
   } // for i
 
   if (save_data) {
+    string data_file = "random_sample_mix.dat";
+    writeToFile(data_file,sample);
     string comp_bins = "./visualize/sampled_data/bins_vmf/";
     check_and_create_directory(comp_bins);
-    //writeToFile("random_sample.dat",sample);
     string comp_density_file;
     string mix_density_file = "./visualize/sampled_data/bins_vmf/mixture_density.dat";
     ofstream mix(mix_density_file.c_str());
     double comp_density,mix_density;
     for (int i=0; i<K; i++) {
       saveComponentData(i,random_data[i]);
-      //comp_density_file = "./visualize/sampled_data/comp" 
-      //                    + boost::lexical_cast<string>(i+1) + "_density.dat";
-      //ofstream comp(comp_density_file.c_str());
       for (int j=0; j<random_data[i].size(); j++) {
-        //comp_density = exp(components[i].log_density(random_data[i][j]));
         mix_density = exp(log_probability(random_data[i][j]));
         for (int k=0; k<random_data[i][j].size(); k++) {
-          //comp << fixed << setw(10) << setprecision(3) << random_data[i][j][k];
           mix << scientific << setprecision(6) << random_data[i][j][k] << "\t\t";
         } // k
-        //comp << "\t\t" << scientific << comp_density << endl;
         mix << scientific << setprecision(6) << mix_density << endl;
       } // j
-      //comp.close();
     } // i
     mix.close();
-    //generateHeatmapData(1);
   } // if()
   return sample;
 }
