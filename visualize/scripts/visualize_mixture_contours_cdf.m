@@ -7,10 +7,12 @@ function [] = visualize_mixture_contours_cdf(K,pdf)
   outfile = '';
   if (isvmf == 1)
     bins_folder = '../sampled_data/bins_vmf/';
-    outfile = 'vmf_mix';
+    %outfile = 'vmf_mix';
+    outfile = 'b_vmf_37';
   elseif (isvmf == 0)
     bins_folder = '../sampled_data/bins_kent/';
-    outfile = 'kent_mix';
+    %outfile = 'kent_mix';
+    outfile = 'b_kent_mml_23';
   end
   disp(strcat('bins_folder: ',{' '},bins_folder)); 
  
@@ -22,7 +24,7 @@ function [] = visualize_mixture_contours_cdf(K,pdf)
   set(gcf, 'Color', 'w');
   xlabel('Longitude','fontsize',20);
   ylabel('Co-latitude','fontsize',20);
-  set(gca,'Ylim',[0 180]);
+  set(gca,'Ylim',[0 120]);
   set(gca,'Xlim',[0 360]);
   set(gca,'xtick',[0:60:360],'fontsize',12);
   set(gca,'ytick',[0:30:180],'fontsize',12);
@@ -75,10 +77,10 @@ function [] = visualize_mixture_contours_cdf(K,pdf)
 %    % Scrap the contourlines:
 %    delete(h1);
 
-    [row col] = ind2sub(size(prob_bins),max_index);
-    cx = phi(col);
-    cy = theta(row);
-    ht = text(cx,cy,num2str(k),'Color','red');
+%    [row col] = ind2sub(size(prob_bins),max_index);
+%    cx = phi(col);
+%    cy = theta(row);
+%    ht = text(cx,cy,num2str(k),'Color','red');
 
 %    hcl = clabel(C,'Color','red');
 %    for i=2:2:length(hcl)
@@ -117,13 +119,13 @@ function [] = visualize_mixture_contours_cdf(K,pdf)
   hs = scatter3(angles(:,1),angles(:,2),norm_density,2,'cdata',norm_density);
 
   %colorbar
-  output_fig = strcat('../figs/',outfile,'.fig');
-  output_eps = strcat('../figs/',outfile,'.eps');
-  output_pdf = strcat('../figs/',outfile,'.pdf');
+  output_fig = strcat('../figs/protein_modelling/',outfile,'.fig');
+  output_eps = strcat('../figs/protein_modelling/',outfile,'.eps');
+  output_pdf = strcat('../figs/protein_modelling/',outfile,'.pdf');
 
-  %saveas(gcf,output_fig);
+  saveas(gcf,output_fig);
   %print2eps(output_eps);
   %eps2pdf(output_eps,output_pdf,1);
-  %export_fig(output_pdf,'-pdf');
+  export_fig(output_pdf,'-pdf');
 
 end
