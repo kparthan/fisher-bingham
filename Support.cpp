@@ -1869,6 +1869,9 @@ void modelMixture(struct Parameters &parameters, std::vector<Vector> &data)
       } // continue_inference
       ofstream log(parameters.infer_log.c_str());
       Mixture_vMF stable = inferComponents_vMF(mixture,data.size(),log);
+      /*double percent_remove = 0.2;
+      Mixture_vMF jk2 = jackknife(data,stable,percent_remove,log);
+      Mixture_vMF inferred2 = inferComponents_vMF(jk2,data.size(),log);*/
       log.close();
     } else if (parameters.infer_num_components == UNSET) {
       // for a given value of number of components
@@ -2061,16 +2064,16 @@ Mixture_vMF inferComponents_vMF(std::vector<Vector> &data, string &log_file)
   mixture.estimateParameters();
   ofstream log(log_file.c_str());
   Mixture_vMF inferred = inferComponents_vMF(mixture,data.size(),log);
-  //return inferred;
+  return inferred;
 
   /* jackknife */
-  double percent_remove = 0.2;
+  /*double percent_remove = 0.2;
   Mixture_vMF jk1 = jackknife(data,inferred,percent_remove,log);
   Mixture_vMF inferred1 = inferComponents_vMF(jk1,data.size(),log);
   Mixture_vMF jk2 = jackknife(data,inferred1,percent_remove,log);
   Mixture_vMF inferred2 = inferComponents_vMF(jk2,data.size(),log);
   log.close();
-  return inferred2;
+  return inferred2;*/
 }
 
 Mixture_vMF jackknife(

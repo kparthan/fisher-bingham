@@ -726,9 +726,9 @@ double Mixture::estimateParameters()
 void Mixture::EM()
 {
   /* prepare log file */
-  /*string log_file = getLogFile();
-  ofstream log(log_file.c_str());*/
-  ofstream log;
+  string log_file = getLogFile();
+  ofstream log(log_file.c_str());
+  //ofstream log;
 
   computeNullModelMessageLength();
   //cout << "null_msglen: " << null_msglen << endl;
