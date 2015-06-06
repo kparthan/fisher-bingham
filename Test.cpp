@@ -1329,5 +1329,56 @@ void Test::infer_mixture_vmf()
   cout << "kldiv_map: " << kldiv_map << endl;
 }
 
+void Test::contours()
+{
+  Vector mu(3,0),mj(3,0),mi(3,0);
+  double psi,alpha,eta,kappa,beta,ecc;
 
+  psi = 60 * PI/180;
+  alpha = 90 * PI/180;
+  eta = 45 * PI/180;
+  kappa = 100;
+  ecc = 0.9;
+  beta = 0.5 * kappa * ecc;
+  //Kent kent(psi,alpha,eta,kappa,beta);
+
+  // comp 7
+	mu[0] = 0.550; mu[1] = -0.764; mu[2] = -0.336;		
+  mj[0] = 0.140; mj[1] = 0.482; mj[2] = -0.865;		
+  mi[0] = 0.823; mi[1] = 0.429; mi[2] = 0.372;		
+  kappa = 28.140; beta = 6.407;
+
+  // comp 9
+	/*mu[0] = 0.833; mu[1] = -0.247; mu[2] = 0.495;		
+  mj[0] = -0.019; mj[1] = -0.907; mj[2] = -0.421;		
+  mi[0] = 0.552; mi[1] = 0.341; mi[2] = -0.760;		
+  kappa = 102.456;  beta = 49.162;*/
+
+  // comp 22
+  mu[0] = 0.669; mu[1] = 0.368; mu[2] = -0.645;		
+  mj[0] = -0.108; mj[1] = 0.907; mj[2] = 0.406;		
+  mi[0] = 0.735; mi[1] = -0.202; mi[2] = 0.647;		
+  kappa = 9.136;  beta = 4.568;
+
+  Kent kent(mu,mj,mi,kappa,beta);
+
+  double res = 1;
+  double theta,phi;
+  Vector spherical(3,0),cartesian(3,0);
+  spherical[0] = 1;
+  string output = "./visualize/sampled_data/kent_density.dat";
+  ofstream out(output.c_str());
+  for (theta=0; theta<180; theta+=res) {
+    spherical[1] = theta * PI/180;
+    for (phi=0; phi<360; phi+=res) {
+      spherical[2] = phi * PI/180;
+      spherical2cartesian(spherical,cartesian);
+      double log_p = kent.log_density(cartesian);
+      double pdf = exp(log_p);
+      out << fixed << scientific << setprecision(6) 
+          << theta << "\t" << phi << "\t" << pdf << endl;
+    } // phi()
+  } // theta
+  out.close();
+}
 

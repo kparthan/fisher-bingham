@@ -1003,7 +1003,7 @@ void Experiments::traditional_search_mml(
   Mixture mml_best_mix = mixture;
 
   int NUM_TRIALS = 5;
-  for (int k=2; k<=K_MAX; k++) {
+  for (int k=38; k<=K_MAX; k++) {
     cout << "k: " << k << endl;
     Mixture mml_best_mix_iter;
     double msglen,msglen_best_iter;

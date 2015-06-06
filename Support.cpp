@@ -2356,7 +2356,7 @@ void TestFunctions(void)
 
   //test.mml_estimation2();
 
-  test.plot_posterior_density();
+  //test.plot_posterior_density();
 
   //test.vmf_all_estimation();
 
@@ -2371,6 +2371,8 @@ void TestFunctions(void)
   //test.infer_mixture();
 
   //test.infer_mixture_vmf();
+
+  test.contours();
 }
 
 ////////////////////// EXPERIMENTS \\\\\\\\\\\\\\\\\\\\\\\\\\\\

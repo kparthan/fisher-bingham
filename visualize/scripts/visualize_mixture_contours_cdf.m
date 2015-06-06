@@ -83,14 +83,14 @@ function [] = visualize_mixture_contours_cdf(K,pdf)
 %    % Scrap the contourlines:
 %    delete(h1);
 
-%    [row col] = ind2sub(size(prob_bins),max_index);
-%    cx = phi(col);
-%    cy = theta(row);
-%    ht = text(cx,cy,num2str(k),'Color','red');
-    [cx,cy,index] = number_component(isvmf,k);
-    if (index > 0)
-      ht = text(cx,cy,num2str(index),'Color','red','fontsize',8);
-    end
+    [row col] = ind2sub(size(prob_bins),max_index);
+    cx = phi(col);
+    cy = theta(row);
+    ht = text(cx,cy,num2str(k),'Color','red');
+ %   [cx,cy,index] = number_component(isvmf,k);
+ %   if (index > 0)
+ %     ht = text(cx,cy,num2str(index),'Color','red','fontsize',8);
+ %   end
 
 %    hcl = clabel(C,'Color','red');
 %    for i=2:2:length(hcl)
@@ -133,10 +133,10 @@ function [] = visualize_mixture_contours_cdf(K,pdf)
   output_eps = strcat('../figs/protein_modelling/',outfile,'.eps');
   output_pdf = strcat('../figs/protein_modelling/',outfile,'.pdf');
 
-  saveas(gcf,output_fig);
+  %saveas(gcf,output_fig);
   %print2eps(output_eps);
   %eps2pdf(output_eps,output_pdf,1);
-  export_fig(output_pdf,'-pdf');
+  %export_fig(output_pdf,'-pdf');
 
 end
 

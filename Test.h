@@ -79,6 +79,8 @@ class Test
     void infer_mixture();
 
     void infer_mixture_vmf();
+
+    void contours();
 };
 
 #endif
