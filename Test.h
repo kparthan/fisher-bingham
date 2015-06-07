@@ -81,6 +81,14 @@ class Test
     void infer_mixture_vmf();
 
     void contours();
+
+    void gsl_numerical_integration();
+
+    void gsl_numerical_kent_density_integration();
+
+    void gsl_monte_carlo_integration();
+
+    void gsl_monte_carlo_kent_density_integration();
 };
 
 #endif

@@ -51,6 +51,15 @@ struct Estimates_vMF
   double kappa;
 };
 
+struct IntegrationParams
+{
+  double phi_lower,phi_upper;
+  Vector mu,mj,mi;
+  double kappa,beta;
+  double theta;
+  double log_norm_const;
+};
+
 // general functions
 //void Setup();
 struct Parameters parseCommandLineInput (int, char **); 
@@ -121,6 +130,13 @@ void rhs(const std::vector<double> &, std::vector<double> &, const double);
 double Constraint2(const std::vector<double> &, std::vector<double> &, void *);
 double Constraint5(const std::vector<double> &, std::vector<double> &, void *);
 double Constraint5_2(const std::vector<double> &, std::vector<double> &, void *);
+double test_function_integral(double, void *); 
+double integrate_wrt_theta(double, void *);
+double compute_bivariate_fval(double, void *);
+double integrate_wrt_phi(struct IntegrationParams &);
+double test_function_integral2(double *, size_t, void *);
+double compute_bivariate_fval(double *, size_t, void *);
+void display_results(string &, double, double);
 double computeTestStatistic(double, double, double, int);
 double compute_pvalue(double, chi_squared &);
 double compute_aic(int, int, double);

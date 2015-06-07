@@ -1349,10 +1349,10 @@ void Test::contours()
   kappa = 28.140; beta = 6.407;
 
   // comp 9
-	/*mu[0] = 0.833; mu[1] = -0.247; mu[2] = 0.495;		
+	mu[0] = 0.833; mu[1] = -0.247; mu[2] = 0.495;		
   mj[0] = -0.019; mj[1] = -0.907; mj[2] = -0.421;		
   mi[0] = 0.552; mi[1] = 0.341; mi[2] = -0.760;		
-  kappa = 102.456;  beta = 49.162;*/
+  kappa = 102.456;  beta = 49.162;
 
   // comp 22
   mu[0] = 0.669; mu[1] = 0.368; mu[2] = -0.645;		
@@ -1380,5 +1380,188 @@ void Test::contours()
     } // phi()
   } // theta
   out.close();
+
+  output = "./visualize/sampled_data/kent_probability.dat";
+  ofstream out2(output.c_str());
+  for (theta=0; theta<180; theta+=res) {
+    cout << "theta: " << theta << endl;
+    double theta_lower = theta * PI/180;
+    double theta_upper = (theta+res) * PI/180;
+    for (phi=0; phi<360; phi+=res) {
+      double phi_lower = phi * PI/180;
+      double phi_upper = (phi+res) * PI/180;
+      double probability = kent.numerical_integration(
+                           //kent.numerical_integration_monte_carlo(
+                            theta_lower,theta_upper,phi_lower,phi_upper
+                           );
+      out2 << fixed << scientific << setprecision(6) 
+          << theta << "\t" << phi << "\t" << probability << endl;
+    } // phi()
+  } // theta
+  out2.close();
 }
+
+void Test::gsl_numerical_integration()
+{
+  gsl_integration_workspace *w = gsl_integration_workspace_alloc (1000);
+  
+  double result, error;
+  double expected = -4.0;
+  double alpha = 1.0;
+
+  gsl_function F;
+  F.function = &test_function_integral;
+  F.params = &alpha;
+
+  gsl_integration_qags (&F, 0, 1, 0, 1e-7, 1000,
+                        w, &result, &error); 
+
+  cout << fixed << setprecision(18);
+  cout << "result          = " << result << endl;
+  cout << "exact result    = " << expected << endl;
+  cout << "estimated error = " << error << endl;
+  cout << "actual error    = " << result - expected << endl;
+  cout << "intervals =  " << w->size << endl;
+
+  gsl_integration_workspace_free (w);
+}
+
+void Test::gsl_numerical_kent_density_integration()
+{
+  Vector mu(3,0),mj(3,0),mi(3,0);
+  double psi,alpha,eta,kappa,beta,ecc;
+
+  // comp 7
+	mu[0] = 0.550; mu[1] = -0.764; mu[2] = -0.336;		
+  mj[0] = 0.140; mj[1] = 0.482; mj[2] = -0.865;		
+  mi[0] = 0.823; mi[1] = 0.429; mi[2] = 0.372;		
+  kappa = 28.140; beta = 6.407;
+
+  // comp 9
+	mu[0] = 0.833; mu[1] = -0.247; mu[2] = 0.495;		
+  mj[0] = -0.019; mj[1] = -0.907; mj[2] = -0.421;		
+  mi[0] = 0.552; mi[1] = 0.341; mi[2] = -0.760;		
+  kappa = 102.456;  beta = 49.162;
+
+  // comp 22
+  mu[0] = 0.669; mu[1] = 0.368; mu[2] = -0.645;		
+  mj[0] = -0.108; mj[1] = 0.907; mj[2] = 0.406;		
+  mi[0] = 0.735; mi[1] = -0.202; mi[2] = 0.647;		
+  kappa = 9.136;  beta = 4.568;
+
+  Kent kent(mu,mj,mi,kappa,beta);
+  double theta_lower = 0; 
+  double theta_upper = PI;
+  double phi_lower = 0; 
+  double phi_upper = 2*PI;
+  double probability = kent.numerical_integration(
+                           theta_lower,theta_upper,phi_lower,phi_upper
+                       );
+  cout << "probability: " << probability << endl;
+}
+
+void Test::gsl_monte_carlo_integration()
+{
+  double res, err;
+
+  double xl[3] = { 0, 0, 0 };
+  double xu[3] = { M_PI, M_PI, M_PI };
+
+  const gsl_rng_type *T;
+  gsl_rng *r;
+
+  gsl_monte_function G = { &test_function_integral2, 3, 0 };
+
+  size_t calls = 500000;
+
+  gsl_rng_env_setup ();
+
+  T = gsl_rng_default;
+  r = gsl_rng_alloc (T);
+
+  string title;
+
+  {
+    gsl_monte_plain_state *s = gsl_monte_plain_alloc (3);
+    gsl_monte_plain_integrate (&G, xl, xu, 3, calls, r, s, 
+                               &res, &err);
+    gsl_monte_plain_free (s);
+
+    title = "plain";
+    display_results (title, res, err);
+  }
+
+  {
+    gsl_monte_miser_state *s = gsl_monte_miser_alloc (3);
+    gsl_monte_miser_integrate (&G, xl, xu, 3, calls, r, s,
+                               &res, &err);
+    gsl_monte_miser_free (s);
+
+    title = "miser";
+    display_results (title, res, err);
+  }
+
+  {
+    gsl_monte_vegas_state *s = gsl_monte_vegas_alloc (3);
+
+    gsl_monte_vegas_integrate (&G, xl, xu, 3, 10000, r, s,
+                               &res, &err);
+    title = "vegas warm-up";
+    display_results (title, res, err);
+
+    printf ("converging...\n");
+
+    do
+      {
+        gsl_monte_vegas_integrate (&G, xl, xu, 3, calls/5, r, s,
+                                   &res, &err);
+        printf ("result = % .6f sigma = % .6f "
+                "chisq/dof = %.1f\n", res, err, gsl_monte_vegas_chisq (s));
+      }
+    while (fabs (gsl_monte_vegas_chisq (s) - 1.0) > 0.5);
+
+    title = "vegas final";
+    display_results (title, res, err);
+
+    gsl_monte_vegas_free (s);
+  }
+
+  gsl_rng_free (r);
+
+}
+
+void Test::gsl_monte_carlo_kent_density_integration()
+{
+  Vector mu(3,0),mj(3,0),mi(3,0);
+  double psi,alpha,eta,kappa,beta,ecc;
+
+  // comp 7
+	mu[0] = 0.550; mu[1] = -0.764; mu[2] = -0.336;		
+  mj[0] = 0.140; mj[1] = 0.482; mj[2] = -0.865;		
+  mi[0] = 0.823; mi[1] = 0.429; mi[2] = 0.372;		
+  kappa = 28.140; beta = 6.407;
+
+  // comp 9
+	mu[0] = 0.833; mu[1] = -0.247; mu[2] = 0.495;		
+  mj[0] = -0.019; mj[1] = -0.907; mj[2] = -0.421;		
+  mi[0] = 0.552; mi[1] = 0.341; mi[2] = -0.760;		
+  kappa = 102.456;  beta = 49.162;
+
+  // comp 22
+  mu[0] = 0.669; mu[1] = 0.368; mu[2] = -0.645;		
+  mj[0] = -0.108; mj[1] = 0.907; mj[2] = 0.406;		
+  mi[0] = 0.735; mi[1] = -0.202; mi[2] = 0.647;		
+  kappa = 9.136;  beta = 4.568;
+
+  Kent kent(mu,mj,mi,kappa,beta);
+  double theta_lower = 0; 
+  double theta_upper = PI;
+  double phi_lower = 0; 
+  double phi_upper = 2*PI;
+  double probability = kent.numerical_integration_monte_carlo(
+                           theta_lower,theta_upper,phi_lower,phi_upper
+                       );
+  cout << "probability: " << probability << endl;
+}
+
 

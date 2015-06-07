@@ -1331,6 +1331,107 @@ double Constraint5_2(const std::vector<double> &x, std::vector<double> &grad, vo
     return (TOLERANCE * x[3] - 2 * x[4]);
 }
 
+double test_function_integral(double x, void * params) 
+{
+  double alpha = *(double *) params;
+  double f = log(alpha*x) / sqrt(x);
+  return f;
+}
+
+double integrate_wrt_theta(double theta, void *params)
+{
+  //cout << "here in theta ...\n";
+  cout << "";
+  //struct IntegrationParams int_params = *(struct IntegrationParams *) params;
+  struct IntegrationParams int_params = *reinterpret_cast<struct IntegrationParams *>(params);
+  int_params.theta = theta;
+  double fval = integrate_wrt_phi(int_params) * sin(theta);
+  return fval;
+}
+
+double compute_bivariate_fval(double phi, void *params)
+{
+  //struct IntegrationParams int_params = *(struct IntegrationParams *) params;
+  struct IntegrationParams int_params = *reinterpret_cast<struct IntegrationParams *>(params);
+
+  Vector x(3,0);
+  Vector spherical(3,1);
+  spherical[1] = int_params.theta;
+  spherical[2] = phi;
+  spherical2cartesian(spherical,x);
+
+  double c1 = computeDotProduct(int_params.mu,x);
+
+  Matrix xx = outer_prod(x,x);
+  double mj = prod_xMy(int_params.mj,xx,int_params.mj);
+  double mi = prod_xMy(int_params.mi,xx,int_params.mi);
+  double c2 = mj - mi;
+
+  //double ans = -int_params.log_norm_const + int_params.kappa * c1 + int_params.beta * c2;
+  double ans = int_params.kappa * c1 + int_params.beta * c2;
+  return exp(ans);
+}
+
+double integrate_wrt_phi(struct IntegrationParams &int_params)
+{
+  //cout << "here in phi ...\n";
+  cout << "";
+  gsl_integration_workspace *w = gsl_integration_workspace_alloc (1000);
+  
+  double result, error;
+
+  gsl_function F;
+  F.function = &compute_bivariate_fval;
+  //F.params = &int_params;
+  F.params = reinterpret_cast<void *>(&int_params);
+
+  gsl_integration_qags (&F, int_params.phi_lower, int_params.phi_upper, 0, 1e-8, 1000, //2,
+                        w, &result, &error); 
+
+  gsl_integration_workspace_free (w);
+}
+
+void display_results(string &title, double result, double error)
+{
+  //double exact = 1.3932039296856768591842462603255;
+  double exact = 1;
+  cout << title << " ==================\n";
+  cout << fixed << setprecision(6);
+  cout << "result = " << result << endl;
+  cout << "sigma  = " << error << endl; 
+  cout << "exact  = " << exact << endl;
+  cout << "error  = " << result - exact << " = " <<
+          fabs (result - exact) / error << endl;
+}
+
+double test_function_integral2 (double *k, size_t dim, void *params)
+{
+  double A = 1.0 / (M_PI * M_PI * M_PI);
+  return A / (1.0 - cos (k[0]) * cos (k[1]) * cos (k[2]));
+}
+
+double compute_bivariate_fval(double *k, size_t dim, void *params)
+{
+  struct IntegrationParams int_params = *reinterpret_cast<struct IntegrationParams *>(params);
+
+  Vector x(3,0);
+  Vector spherical(3,1);
+  spherical[1] = k[0];
+  spherical[2] = k[1];
+  spherical2cartesian(spherical,x);
+
+  double c1 = computeDotProduct(int_params.mu,x);
+
+  Matrix xx = outer_prod(x,x);
+  double mj = prod_xMy(int_params.mj,xx,int_params.mj);
+  double mi = prod_xMy(int_params.mi,xx,int_params.mi);
+  double c2 = mj - mi;
+
+  double ans = -int_params.log_norm_const + int_params.kappa * c1 + int_params.beta * c2;
+  return exp(ans) * sin(k[0]);
+}
+
+
 double computeTestStatistic( // vMF (null) against Kent (alternative)
   double kappa, 
   double eig_val_sq, 
@@ -2373,6 +2474,14 @@ void TestFunctions(void)
   //test.infer_mixture_vmf();
 
   test.contours();
+
+  //test.gsl_numerical_integration();
+
+  //test.gsl_numerical_kent_density_integration();
+
+  //test.gsl_monte_carlo_integration();
+
+  //test.gsl_monte_carlo_kent_density_integration();
 }
 
 ////////////////////// EXPERIMENTS \\\\\\\\\\\\\\\\\\\\\\\\\\\\
@@ -2395,7 +2504,7 @@ void RunExperiments(int iterations)
 
   //experiments.exp5();
 
-  experiments.exp6();
+  //experiments.exp6();
 }
 
 /*!

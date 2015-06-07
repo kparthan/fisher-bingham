@@ -1271,3 +1271,128 @@ double Kent::computeConfidenceRegion(std::vector<Vector> &x)
   }
 }
 
+// page: 184 (GNU Scientific Library Manual)
+// QAGS adaptive integration with singularities
+double Kent::numerical_integration(
+  double theta_lower, double theta_upper, double phi_lower, double phi_upper
+) {
+  gsl_integration_workspace *w = gsl_integration_workspace_alloc (1000);
+  
+  double result, error;
+  double expected = 1;
+
+  struct IntegrationParams int_params;
+  int_params.phi_lower = phi_lower;
+  int_params.phi_upper = phi_upper;
+  int_params.mu = mu;
+  int_params.mj = major_axis;
+  int_params.mi = minor_axis;
+  int_params.kappa = kappa;
+  int_params.beta = beta;
+  double log_norm_const;
+  if (computed == UNSET) {
+    int_params.log_norm_const = computeLogNormalizationConstant();
+  } else {
+    int_params.log_norm_const = constants.log_c;
+  }
+
+  gsl_function F;
+  F.function = &integrate_wrt_theta;
+  //F.params = &int_params;
+  F.params = reinterpret_cast<void *>(&int_params);
+
+  gsl_integration_qags (&F, theta_lower, theta_upper, 0, 1e-8, 1000, //2,
+                        w, &result, &error); 
+
+  double log_probability = -int_params.log_norm_const + log(result);
+  //double log_probability = log(result);
+  double probability = exp(log_probability);
+
+  /*cout << fixed << setprecision(18);
+  cout << "result = " << result << endl;
+  cout << "probability = " << probability << endl;
+  cout << "exact probability = " << expected << endl;
+  cout << "estimated error = " << error << endl;
+  cout << "actual error    = " << probability - expected << endl;
+  cout << "intervals =  " << w->size << endl;*/
+
+  gsl_integration_workspace_free (w);
+  return probability;
+}
+
+double Kent::numerical_integration_monte_carlo(
+  double theta_lower, double theta_upper, double phi_lower, double phi_upper
+) {
+  double res, err;
+
+  double xl[2] = {0,0};
+  double xu[2] = {PI,2*PI};
+
+  const gsl_rng_type *T;
+  gsl_rng *r;
+
+  struct IntegrationParams int_params;
+  int_params.mu = mu;
+  int_params.mj = major_axis;
+  int_params.mi = minor_axis;
+  int_params.kappa = kappa;
+  int_params.beta = beta;
+  if (computed == UNSET) {
+    int_params.log_norm_const = computeLogNormalizationConstant();
+  } else {
+    int_params.log_norm_const = constants.log_c;
+  }
+
+  gsl_monte_function G;
+  G.f = &compute_bivariate_fval;
+  G.dim = 2;
+  G.params = reinterpret_cast<void *>(&int_params);
+
+  size_t calls = 500000;
+  //size_t calls = 1000000;
+
+  gsl_rng_env_setup ();
+
+  T = gsl_rng_default;
+  r = gsl_rng_alloc (T);
+
+  string title;
+/*
+  {
+    gsl_monte_plain_state *s = gsl_monte_plain_alloc (2);
+    gsl_monte_plain_integrate (&G, xl, xu, 2, calls, r, s, &res, &err);
+    gsl_monte_plain_free (s);
+    title = "plain";
+    //display_results (title, res, err);
+  }
+*/
+  {
+    gsl_monte_miser_state *s = gsl_monte_miser_alloc (2);
+    gsl_monte_miser_integrate (&G, xl, xu, 2, calls, r, s, &res, &err);
+    gsl_monte_miser_free (s);
+    title = "miser";
+    //display_results (title, res, err);
+  }
+/*
+  {
+    gsl_monte_vegas_state *s = gsl_monte_vegas_alloc (2);
+    gsl_monte_vegas_integrate (&G, xl, xu, 2, 10000, r, s, &res, &err);
+    title = "vegas warm-up";
+    display_results (title, res, err);
+    cout << "converging...\n";
+    do {
+      gsl_monte_vegas_integrate (&G, xl, xu, 2, calls/5, r, s, &res, &err);
+      cout << "result = " << res << " sigma = " << err
+           << " chisq/dof = " << gsl_monte_vegas_chisq (s) << endl;
+    }
+    while (fabs (gsl_monte_vegas_chisq (s) - 1.0) > 0.5);
+    gsl_monte_vegas_free (s);
+    title = "vegas final";
+    display_results (title, res, err);
+  }
+*/
+  gsl_rng_free (r);
+
+  return res;
+}
+

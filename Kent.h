@@ -143,6 +143,10 @@ class Kent  // FB5
     double computeTestStatistic_vMF(std::vector<Vector> &);
 
     double computeConfidenceRegion(std::vector<Vector> &);
+
+    double numerical_integration(double, double, double, double);
+
+    double numerical_integration_monte_carlo(double, double, double, double);
 };
 
 #endif
