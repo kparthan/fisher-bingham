@@ -68,8 +68,8 @@ function [] = visualize3D(K)
   output_eps = strcat('../figs/',outfile,'.eps');
   output_pdf = strcat('../figs/',outfile,'.pdf');
 
-  saveas(gcf,output_fig);
-  export_fig(output_pdf,'-pdf');
+  %saveas(gcf,output_fig);
+  %export_fig(output_pdf,'-pdf');
 
 end
 
