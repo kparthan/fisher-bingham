@@ -2435,7 +2435,7 @@ void TestFunctions(void)
 
   //test.bingham();
 
-  //test.kent_bingham_generation();
+  test.kent_bingham_generation();
 
   //test.normalization_constant();
 
@@ -2473,7 +2473,7 @@ void TestFunctions(void)
 
   //test.infer_mixture_vmf();
 
-  test.contours();
+  //test.contours();
 
   //test.gsl_numerical_integration();
 

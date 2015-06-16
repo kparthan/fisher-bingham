@@ -497,8 +497,8 @@ void Test::kent_bingham_generation(void)
 
   m0 = ZAXIS; m1 = XAXIS; m2 = YAXIS;
   int N = 10000;
-  kappa = 1000;
-  ecc = 0.99;
+  kappa = 10;
+  ecc = 0.1;
   beta = 0.5 * kappa * ecc;
   Kent kent(m0,m1,m2,kappa,beta);
   random_sample = kent.generate(N);
