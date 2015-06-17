@@ -914,7 +914,7 @@ void Test::mml_estimation2(void)
 void Test::plot_posterior_density(void)
 {
   double psi,alpha,eta;
-  string data_file = "./visualize/sampled_data/random_sample_ex1.dat";
+  string data_file = "./data/other/random_sample_ex1.dat";
   std::vector<Vector> random_sample = load_data_table(data_file);
 
   double kappa_inc = 0.2;
@@ -922,11 +922,14 @@ void Test::plot_posterior_density(void)
   double ecc_inc = 0.01;
   double ecc_max = 1-TOLERANCE;
 
+/*
   PRIOR = 3;
   string posterior_file = "./visualize/sampled_data/prior3d_posterior1.dat";
   ofstream out1(posterior_file.c_str());
   posterior_file = "./visualize/sampled_data/prior3d_posterior2.dat";
   ofstream out2(posterior_file.c_str());
+  posterior_file = "./visualize/sampled_data/prior3d_posterior2_1.dat";
+  ofstream out21(posterior_file.c_str());
   for (double k=kappa_inc; k<=kappa_max; k+=kappa_inc) {
     for (double e=ecc_inc; e<=ecc_max; e+=ecc_inc) {
       psi = 118.632; alpha = 85.533; eta = 87.221;
@@ -952,17 +955,25 @@ void Test::plot_posterior_density(void)
       out2 << fixed << scientific << setprecision(6) << e << "\t";
       out2 << fixed << scientific << setprecision(6) << posterior << "\t";
       out2 << endl;
-    }
-  }
+
+      out21 << fixed << scientific << setprecision(6) << k << "\t";
+      out21 << fixed << scientific << setprecision(6) << b << "\t";
+      out21 << fixed << scientific << setprecision(6) << posterior << "\t";
+      out21 << endl;
+    } // for k
+  } // for e
   out1.close();
   out2.close();
+  out21.close();
+*/
 
-/*
   PRIOR = 2;
   string posterior_file = "./visualize/sampled_data/prior2d_posterior1.dat";
   ofstream out1(posterior_file.c_str());
   posterior_file = "./visualize/sampled_data/prior2d_posterior2.dat";
   ofstream out2(posterior_file.c_str());
+  posterior_file = "./visualize/sampled_data/prior2d_posterior2_1.dat";
+  ofstream out21(posterior_file.c_str());
   int stop1=0,stop2=0;
 
   double k = 1e-3;
@@ -996,6 +1007,12 @@ void Test::plot_posterior_density(void)
       out2 << fixed << scientific << setprecision(6) << e << "\t";
       out2 << fixed << scientific << setprecision(6) << posterior << "\t";
       out2 << endl;
+
+      out21 << fixed << scientific << setprecision(6) << k << "\t";
+      out21 << fixed << scientific << setprecision(6) << b << "\t";
+      out21 << fixed << scientific << setprecision(6) << posterior << "\t";
+      out21 << endl;
+
       e += ecc_inc;
       if (stop2 == 1) goto finish2;
       if (e > ecc_max) {
@@ -1016,6 +1033,7 @@ void Test::plot_posterior_density(void)
   finish1:
   out1.close();
   out2.close();
+  out21.close();
 
   posterior_file = "./visualize/sampled_data/prior2d_posterior3.dat";
   ofstream out3(posterior_file.c_str());
@@ -1030,11 +1048,12 @@ void Test::plot_posterior_density(void)
   double z2 = 0.5 * (1 - cos(alpha)); 
   double z3 = eta / (2 * PI); 
   double z4 = TOLERANCE;
+  double z5;
 
   stop1 = 0;
   while (z4 <= z4_max) {
     repeat3:
-    double z5 = TOLERANCE;
+    z5 = TOLERANCE;
     stop2 = 0;
     while (z5 <= z5_max) {
       repeat4:
@@ -1045,6 +1064,7 @@ void Test::plot_posterior_density(void)
       out3 << fixed << scientific << setprecision(6) << z5 << "\t";
       out3 << fixed << scientific << setprecision(6) << posterior << "\t";
       out3 << endl;
+
       z5 += z5_inc;
       if (stop2 == 1) goto finish4;
       if (z5 > z5_max) {
@@ -1065,7 +1085,49 @@ void Test::plot_posterior_density(void)
   } // z4 
   finish3:
   out3.close();
-*/
+
+  posterior_file = "./visualize/sampled_data/prior2d_posterior3_1.dat";
+  ofstream out31(posterior_file.c_str());
+  k = 1e-3;
+
+  stop1 = 0;
+  while (k <= kappa_max) {
+    repeat5:
+    z4 = 1 - cos(atan(k));
+    stop2 = 0;
+    double e = TOLERANCE;
+    while (e <= ecc_max) {
+      repeat6:
+      z5 = e;
+
+      Kent_UnifTrans kent3(z1,z2,z3,z4,z5);
+      double fval = kent3.computeNegativeLogLikelihood(random_sample);
+      double posterior = exp(-fval);
+      b = 0.5 * k * e;
+      out31 << fixed << scientific << setprecision(6) << k << "\t";
+      out31 << fixed << scientific << setprecision(6) << b << "\t";
+      out31 << fixed << scientific << setprecision(6) << posterior << "\t";
+      out31 << endl;
+      
+      e += ecc_inc;
+      if (stop2 == 1) goto finish6;
+      if (e > ecc_max) {
+        e = ecc_max;
+        stop2 = 1;
+        goto repeat6;
+      }
+    } // e
+    finish6:
+    k += kappa_inc;
+    if (stop1 == 1) goto finish5;
+    if (k > kappa_max) {
+      k = kappa_max;
+      stop1 = 1;
+      goto repeat5;
+    }
+  } // k
+  finish5:
+  out31.close();
 }
 
 void Test::vmf_all_estimation()
