@@ -509,7 +509,7 @@ void Test::normalization_constant(void)
 {
   cout << "ZERO: " << ZERO << endl;
   double kappa = 100;
-  double beta = 45;
+  double beta = 10;
   Vector m0 = XAXIS;
   Vector m1 = YAXIS;
   Vector m2 = ZAXIS;
