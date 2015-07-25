@@ -509,7 +509,7 @@ void Test::normalization_constant(void)
 {
   cout << "ZERO: " << ZERO << endl;
   double kappa = 100;
-  double beta = 14.5;
+  double beta = 45;
   Vector m0 = XAXIS;
   Vector m1 = YAXIS;
   Vector m2 = ZAXIS;
@@ -922,7 +922,7 @@ void Test::plot_posterior_density(void)
   double ecc_inc = 0.01;
   double ecc_max = 1-TOLERANCE;
 
-/*
+
   PRIOR = 3;
   string posterior_file = "./visualize/sampled_data/prior3d_posterior1.dat";
   ofstream out1(posterior_file.c_str());
@@ -965,8 +965,9 @@ void Test::plot_posterior_density(void)
   out1.close();
   out2.close();
   out21.close();
-*/
 
+
+/*
   PRIOR = 2;
   string posterior_file = "./visualize/sampled_data/prior2d_posterior1.dat";
   ofstream out1(posterior_file.c_str());
@@ -1128,6 +1129,7 @@ void Test::plot_posterior_density(void)
   } // k
   finish5:
   out31.close();
+*/
 }
 
 void Test::vmf_all_estimation()

@@ -43,7 +43,7 @@ function [] = heat_map_3D(file_name)
   set(gca,'ytick',[-1,-0.5,0,0.5,1],'fontsize',18);
   %set(gca,'ztick',[]);
 
-  file_name = '../figs/k10_e5_heatmap';
+  file_name = '../figs/k10_e1_heatmap';
   output_fig = strcat(file_name,'.fig');
   output_eps = strcat(file_name,'.eps');
   output_pdf = strcat(file_name,'.pdf');
@@ -55,7 +55,7 @@ function [] = heat_map_3D(file_name)
   %print2eps(output_eps);
   %eps2pdf(output_eps,output_pdf,1);
 
-  export_fig(output_pdf,'-pdf','-r100');
+  %export_fig(output_pdf,'-pdf','-r10');
   %export_fig(output_jpg,'-jpg');
 
 end

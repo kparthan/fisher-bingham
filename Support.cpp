@@ -2437,7 +2437,7 @@ void TestFunctions(void)
 
   //test.kent_bingham_generation();
 
-  //test.normalization_constant();
+  test.normalization_constant();
 
   //test.optimization();
 
@@ -2457,7 +2457,7 @@ void TestFunctions(void)
 
   //test.mml_estimation2();
 
-  test.plot_posterior_density();
+  //test.plot_posterior_density();
 
   //test.vmf_all_estimation();
 
