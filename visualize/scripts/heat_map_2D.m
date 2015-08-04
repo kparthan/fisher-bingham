@@ -46,6 +46,6 @@ function [] = heat_map_2D(file_name)
 
   %saveas(gcf,output_fig);
   %export_fig(output_eps,'-eps');
-  export_fig(output_pdf,'-pdf');
+  %export_fig(output_pdf,'-pdf');
 
 end

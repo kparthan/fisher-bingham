@@ -1594,6 +1594,7 @@ void computeEstimators(struct Parameters &parameters)
 {
   std::vector<Vector> unit_coordinates;
   bool success = gatherData(parameters,unit_coordinates);
+  writeToFile("full.dat",unit_coordinates);
   if (parameters.heat_map == SET) {
     std::vector<std::vector<int> > bins = updateBins(unit_coordinates,parameters.res);
     outputBins(bins,parameters.res);
