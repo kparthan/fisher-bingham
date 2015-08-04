@@ -1628,4 +1628,40 @@ void Test::gsl_monte_carlo_kent_density_integration()
   cout << "probability: " << probability << endl;
 }
 
+void Test::testing_sample_empirical_distribution()
+{
+  int N = 10000;
+  double res = 1;
+  std::vector<std::vector<int> > true_bins;
+  std::vector<Vector> sampled_data
+  = sample_empirical_distribution(N,res,true_bins);
+  
+  /*std::vector<std::vector<int> > 
+  sampled_bins = updateBins(sampled_angle_pairs,res);
+  outputBins(sampled_bins,res);*/
+
+  string sampled_data_density = "./visualize/sampled_data/sampled_density.dat";
+  ofstream out(sampled_data_density.c_str());
+  int row,col;
+  Vector spherical(3,0);
+  for (int i=0; i<N; i++) {
+    cartesian2spherical(sampled_data[i],spherical);
+    double theta = spherical[1] * 180 / PI;
+    if (fabs(theta) <= ZERO) {
+      row = 0;
+    } else {
+      row = (int)(ceil(theta/res) - 1);
+    }
+    double phi = spherical[2] * 180 / PI;    // convert to degrees
+    if (fabs(phi) <= ZERO) {
+      col = 0;
+    } else {
+      col = (int)(ceil(phi/res) - 1);
+    }
+    out << fixed << scientific << sampled_data[i][0] << "\t"
+        << sampled_data[i][1] << "\t" << sampled_data[i][2] << "\t"
+        << true_bins[row][col] << endl;
+  }
+  out.close();
+}
 

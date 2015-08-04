@@ -2,13 +2,16 @@ function [] = heat_map_3D(file_name)
 
   addpath('export_fig');
 
+  fig = figure();
+
   % draw a unit sphere
-  %n = 25;
-  %r = ones(n, n); % radius is 1 
-  %[th, phi] = meshgrid(linspace(0, pi, n), linspace(0, 2*pi, n));
-  %[x,y,z]= sph2cart(th, phi, r);
+  n = 25;
+  r = ones(n, n); % radius is 1 
+  [th, phi] = meshgrid(linspace(0, pi, n), linspace(0, 2*pi, n));
+  [x,y,z]= sph2cart(th, phi, r);
   %surface(x,y,z,'FaceColor','none');
-  %hold on;
+  surface(x,y,z,'FaceColor','none','LineWidth',0.1,'linestyle',':');
+  hold on;
 
   % plot data
   M = load(file_name);
@@ -17,11 +20,9 @@ function [] = heat_map_3D(file_name)
   z = M(:,3);
   density = M(:,4);
 
-  fig = figure();
+  h=scatter3(x,y,z,1,'cdata',density);
 
-  h=scatter3(x,y,z,'cdata',density);
-
-  view ([0 90]);
+  set(gca, 'visible', 'off');
   axis equal;
   set(gcf, 'Color', 'w');
   set(gcf,'defaultaxesfontname','Arial');
@@ -31,6 +32,9 @@ function [] = heat_map_3D(file_name)
   set(gca,'Zlim',[-1 1]);
 
   %view ([180 90]);
+  %view ([134 50]);
+  %view ([164 50]);
+  %view ([45 -22]);
 
   xlabel('X_2','fontsize',20);
   ylabel('X_3','fontsize',20);
@@ -43,18 +47,19 @@ function [] = heat_map_3D(file_name)
   set(gca,'ytick',[-1,-0.5,0,0.5,1],'fontsize',18);
   %set(gca,'ztick',[]);
 
-  file_name = '../figs/k10_e1_heatmap';
+  file_name = '../figs/sphere4';
   output_fig = strcat(file_name,'.fig');
   output_eps = strcat(file_name,'.eps');
   output_pdf = strcat(file_name,'.pdf');
   output_jpg = strcat(file_name,'.jpg');
 
   %print(file_name,'-dpdf');
-  %saveas(gcf,output_fig);
+  saveas(gcf,output_fig);
 
   %print2eps(output_eps);
   %eps2pdf(output_eps,output_pdf,1);
 
+  %export_fig(output_pdf,'-pdf');
   %export_fig(output_pdf,'-pdf','-r10');
   %export_fig(output_jpg,'-jpg');
 

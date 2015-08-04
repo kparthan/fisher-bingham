@@ -89,6 +89,8 @@ class Test
     void gsl_monte_carlo_integration();
 
     void gsl_monte_carlo_kent_density_integration();
+
+    void testing_sample_empirical_distribution();
 };
 
 #endif

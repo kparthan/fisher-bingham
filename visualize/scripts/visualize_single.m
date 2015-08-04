@@ -16,6 +16,7 @@ z = M(:,3);
 %colors = rand(1,3);
 colors = [0 0 1];
 plot3(x,y,z,'.','Color',colors);
+%plot3(x(1:10000),y(1:10000),z(1:10000),'.','Color',colors);
 
 view ([180 0]);
 

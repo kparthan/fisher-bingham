@@ -25,15 +25,20 @@ function [] = visualize3D(K)
   hold on;
   axis equal;
   set(gcf, 'Color', 'w');
-  %box on;
-  %set(gca,'xgrid','on');
+  %box off;
+  %set(gca,'xtick',[]);
+  %set(gca,'ytick',[]);
+  %set(gca,'ztick',[]);
+  %set(gca,'xticklabel',[]);
+  %set(gca,'yticklabel',[]);
+  set(gca, 'visible', 'off');
   surface(X,Y,Z,'FaceColor','none','LineWidth',0.01,'linestyle',':');
-  view([-55 -30]);
-  xlabh = get(gca,'XLabel');
-  ylabh = get(gca,'YLabel');
-  zlabh = get(gca,'ZLabel');
-  set(xlabh,'Position',[0 1.3 -1]);
-  set(ylabh,'Position',[1.7 0 -1]);
+  view([112 70]);
+%  xlabh = get(gca,'XLabel');
+%  ylabh = get(gca,'YLabel');
+%  zlabh = get(gca,'ZLabel');
+%  set(xlabh,'Position',[0 1.3 -1]);
+%  set(ylabh,'Position',[1.7 0 -1]);
   %set(zlabh,'Position',[-1 1.2 0]);
 
   c(1,:) = [1 0 0];
@@ -50,10 +55,10 @@ function [] = visualize3D(K)
      %colors = rand(1,3);
      %plot3(x,y,z,'.','Color',colors);
   end  
-  xlabel('X_{1}','fontsize',18);
-  ylabel('X_{2}','fontsize',18);
-  zlabel('X_{3}','fontsize',18);
-  set(gca,'fontsize',12);
+%  xlabel('X_{1}','fontsize',18);
+%  ylabel('X_{2}','fontsize',18);
+%  zlabel('X_{3}','fontsize',18);
+%  set(gca,'fontsize',12);
 
   %draw_box_lines();
 
@@ -63,13 +68,13 @@ function [] = visualize3D(K)
   %legend_cell = [legend_cell ; cellstr(num2str(N','%d'))];
   %legend(legend_cell);
 
-  outfile = 'mixture_sphere';
+  outfile = 'mixture2_sphere';
   output_fig = strcat('../figs/',outfile,'.fig');
   output_eps = strcat('../figs/',outfile,'.eps');
   output_pdf = strcat('../figs/',outfile,'.pdf');
 
-  %saveas(gcf,output_fig);
-  %export_fig(output_pdf,'-pdf');
+  saveas(gcf,output_fig);
+  export_fig(output_pdf,'-pdf');
 
 end
 

@@ -146,6 +146,10 @@ double computeConstantTerm(int);
 double logLatticeConstant(int);
 std::vector<std::vector<int> > updateBins(std::vector<Vector> &, double);
 void outputBins(std::vector<std::vector<int> > &, double);
+std::vector<Vector> sample_empirical_distribution(
+  int, double, std::vector<std::vector<int> > &
+);
+
 void computeEstimators(struct Parameters &);
 void computeResponsibilityGivenMixture(struct Parameters &);
 bool gatherData(struct Parameters &, std::vector<Vector> &);

@@ -1585,6 +1585,67 @@ void outputBins(std::vector<std::vector<int> > &bins, double res)
   fbins3D.close();
 }
 
+std::vector<Vector> sample_empirical_distribution(
+  int N, double res, std::vector<std::vector<int> > &true_bins
+) {
+  struct Parameters parameters;
+  parameters.profiles_dir = "./data/profiles-b/";
+
+  std::vector<Vector> data;
+  gatherData(parameters,data);
+  cout << "data.size(): " << data.size() << endl;
+  true_bins = updateBins(data,res);
+
+  int num_rows = true_bins.size();
+  int num_cols = true_bins[0].size();
+  int num_bins = num_rows * num_cols;
+  cout << "num_bins: " << num_bins << endl;
+
+  Vector emptyvec(num_cols,0);
+  std::vector<Vector> prob_bins(num_rows,emptyvec);
+  Vector elements(num_bins,0);
+  int count = 0;
+  for (int i=0; i<num_rows; i++) {
+    for (int j=0; j<num_cols; j++) {
+      assert(!boost::math::isnan(true_bins[i][j]));
+      prob_bins[i][j] = true_bins[i][j] / (double) data.size();
+      elements[count++] = prob_bins[i][j];
+    } // for (j)
+  } // for (i)
+
+  std::vector<int> sorted_index;
+  Vector sorted_elements = sort(elements,sorted_index);
+  Vector cumsum(num_bins,0);
+  cumsum[0] = sorted_elements[0];
+  for (int i=1; i<num_bins; i++) {
+    cumsum[i] = cumsum[i-1] + sorted_elements[i];
+  }
+
+  std::vector<Vector> random_sample;
+  for (int i=0; i<N; i++) {
+    double cdf = uniform_random();
+    int bin;
+    for (int j=0; j<num_bins; j++) {
+      if (cdf <= cumsum[j]) {
+        bin = sorted_index[j];
+        break;
+      } // if ()
+    } // for (j)
+    int row = bin / num_cols;
+    double theta = (row + uniform_random()) * res;  // in degrees
+    int col = bin % num_cols;
+    double phi = (col + uniform_random()) * res;   // in degrees`
+    Vector spherical(3,0),cartesian(3,0);
+    spherical[0] = 1;
+    spherical[1] = theta * PI/180;
+    spherical[2] = phi * PI/180;
+    spherical2cartesian(spherical,cartesian);
+    random_sample.push_back(cartesian);
+  } // for (i)
+
+  return random_sample;
+}
+
 /*!
  *  \brief This function is used to read the angular profiles and use this data
  *  to estimate parameters of a Von Mises distribution.
@@ -1594,7 +1655,7 @@ void computeEstimators(struct Parameters &parameters)
 {
   std::vector<Vector> unit_coordinates;
   bool success = gatherData(parameters,unit_coordinates);
-  writeToFile("full.dat",unit_coordinates);
+  //writeToFile("full.dat",unit_coordinates);
   if (parameters.heat_map == SET) {
     std::vector<std::vector<int> > bins = updateBins(unit_coordinates,parameters.res);
     outputBins(bins,parameters.res);
@@ -2438,7 +2499,7 @@ void TestFunctions(void)
 
   //test.kent_bingham_generation();
 
-  test.normalization_constant();
+  //test.normalization_constant();
 
   //test.optimization();
 
@@ -2483,6 +2544,8 @@ void TestFunctions(void)
   //test.gsl_monte_carlo_integration();
 
   //test.gsl_monte_carlo_kent_density_integration();
+
+  test.testing_sample_empirical_distribution();
 }
 
 ////////////////////// EXPERIMENTS \\\\\\\\\\\\\\\\\\\\\\\\\\\\
