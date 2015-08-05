@@ -33,7 +33,7 @@ function [] = visualize3D(K)
   %set(gca,'yticklabel',[]);
   set(gca, 'visible', 'off');
   surface(X,Y,Z,'FaceColor','none','LineWidth',0.01,'linestyle',':');
-  view([112 70]);
+  view([41 76]);
 %  xlabh = get(gca,'XLabel');
 %  ylabh = get(gca,'YLabel');
 %  zlabh = get(gca,'ZLabel');
@@ -68,7 +68,8 @@ function [] = visualize3D(K)
   %legend_cell = [legend_cell ; cellstr(num2str(N','%d'))];
   %legend(legend_cell);
 
-  outfile = 'mixture2_sphere';
+  %outfile = 'kent_mix1';
+  outfile = 'vmf_mix1';
   output_fig = strcat('../figs/',outfile,'.fig');
   output_eps = strcat('../figs/',outfile,'.eps');
   output_pdf = strcat('../figs/',outfile,'.pdf');
