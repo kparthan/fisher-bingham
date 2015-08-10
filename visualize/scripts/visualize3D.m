@@ -69,13 +69,14 @@ function [] = visualize3D(K)
   %legend(legend_cell);
 
   %outfile = 'kent_mix1';
-  outfile = 'vmf_mix1';
+  %outfile = 'kent_mix2';
+  %outfile = 'vmf_mix1';
   output_fig = strcat('../figs/',outfile,'.fig');
   output_eps = strcat('../figs/',outfile,'.eps');
   output_pdf = strcat('../figs/',outfile,'.pdf');
 
-  saveas(gcf,output_fig);
-  export_fig(output_pdf,'-pdf');
+  %saveas(gcf,output_fig);
+  %export_fig(output_pdf,'-pdf');
 
 end
 
