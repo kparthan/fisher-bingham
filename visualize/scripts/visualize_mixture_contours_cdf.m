@@ -7,8 +7,10 @@ function [] = visualize_mixture_contours_cdf(K,pdf)
   outfile = '';
   if (isvmf == 1)
     bins_folder = '../sampled_data/bins_vmf/';
-    %outfile = 'vmf_mix';
-    outfile = 'b_vmf_37';
+    %outfile = 'vmf_mix_reweighted_beta';
+    %outfile = 'original';
+    %outfile = 'b_vmf_37';
+    outfile = 'b_vmf';
   elseif (isvmf == 0)
     bins_folder = '../sampled_data/bins_kent/';
     %outfile = 'kent_mix';
@@ -28,7 +30,7 @@ function [] = visualize_mixture_contours_cdf(K,pdf)
   ylabh = get(gca,'YLabel');
   set(xlabh,'interpreter','tex');
   set(ylabh,'interpreter','tex');
-  set(gca,'Ylim',[15 115]);
+  set(gca,'Ylim',[15 110]);
   %set(gca,'Ylim',[25 100]);
   set(gca,'Xlim',[0 360]);
   set(gca,'xtick',[0:60:360],'fontsize',10);
@@ -86,7 +88,7 @@ function [] = visualize_mixture_contours_cdf(K,pdf)
     [row col] = ind2sub(size(prob_bins),max_index);
     cx = phi(col);
     cy = theta(row);
-    ht = text(cx,cy,num2str(k),'Color','red');
+ %   ht = text(cx,cy,num2str(k),'Color','red');
  %   [cx,cy,index] = number_component(isvmf,k);
  %   if (index > 0)
  %     ht = text(cx,cy,num2str(index),'Color','red','fontsize',8);
