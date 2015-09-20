@@ -23,11 +23,11 @@ function [] = heat_map_2D(file_name)
   view ([-61 28]);
 
   M = load(file_name);
-  %mesh(M);
+  mesh(M);
   %surf(M);
   %shading interp;
   
-  surf(M,'EdgeColor','none','LineStyle','none');
+  %surf(M,'EdgeColor','none','LineStyle','none');
   %bar3(M);
   %colormap(jet);
 
@@ -39,6 +39,7 @@ function [] = heat_map_2D(file_name)
 %  set(gca,'YLim',[15 115]);
 
   %outfile = 'b_vmf_37_density';
+  %outfile = 'b_empirical';
   outfile = 'b_empirical';
   output_fig = strcat('../figs/protein_modelling/',outfile,'.fig');
   output_pdf = strcat('../figs/protein_modelling/',outfile,'.pdf');

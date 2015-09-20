@@ -1338,7 +1338,7 @@ double test_function_integral(double x, void * params)
   return f;
 }
 
-double integrate_wrt_theta(double theta, void *params)
+/*double integrate_wrt_theta(double theta, void *params)
 {
   //cout << "here in theta ...\n";
   cout << "";
@@ -1347,7 +1347,7 @@ double integrate_wrt_theta(double theta, void *params)
   int_params.theta = theta;
   double fval = integrate_wrt_phi(int_params) * sin(theta);
   return fval;
-}
+}*/
 
 double compute_bivariate_fval(double phi, void *params)
 {
@@ -1372,7 +1372,7 @@ double compute_bivariate_fval(double phi, void *params)
   return exp(ans);
 }
 
-double integrate_wrt_phi(struct IntegrationParams &int_params)
+/*double integrate_wrt_phi(struct IntegrationParams &int_params)
 {
   //cout << "here in phi ...\n";
   cout << "";
@@ -1389,7 +1389,7 @@ double integrate_wrt_phi(struct IntegrationParams &int_params)
                         w, &result, &error); 
 
   gsl_integration_workspace_free (w);
-}
+}*/
 
 void display_results(string &title, double result, double error)
 {
@@ -1589,7 +1589,8 @@ std::vector<Vector> sample_empirical_distribution(
   int N, double res, std::vector<std::vector<int> > &true_bins
 ) {
   struct Parameters parameters;
-  parameters.profiles_dir = "./data/profiles-b/";
+  //parameters.profiles_dir = "./data/profiles-b/";
+  parameters.profile_file = "./data/arun.dat";
 
   std::vector<Vector> data;
   gatherData(parameters,data);

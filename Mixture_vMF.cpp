@@ -1047,7 +1047,7 @@ void Mixture_vMF::load(string &file_name)
   double sum_weights = 0;
   while (getline(file,line)) {
     K++;
-    boost::char_separator<char> sep("mujikapbet,:()[] \t");
+    boost::char_separator<char> sep("mujikapbt,:()[] \t");
     boost::tokenizer<boost::char_separator<char> > tokens(line,sep);
     BOOST_FOREACH (const string& t, tokens) {
       istringstream iss(t);

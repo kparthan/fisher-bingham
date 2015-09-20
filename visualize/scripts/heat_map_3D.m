@@ -32,9 +32,9 @@ function [] = heat_map_3D(file_name)
   set(gca,'Zlim',[-1 1]);
 
   %view ([180 90]);
-  %view ([134 50]);
+  view ([134 50]);
   %view ([164 50]);
-  %view ([45 -22]);
+  %view ([73 54]);
 
   xlabel('X_2','fontsize',20);
   ylabel('X_3','fontsize',20);
@@ -47,7 +47,7 @@ function [] = heat_map_3D(file_name)
   set(gca,'ytick',[-1,-0.5,0,0.5,1],'fontsize',18);
   %set(gca,'ztick',[]);
 
-  file_name = '../figs/sphere4';
+  file_name = '../figs/arun';
   output_fig = strcat(file_name,'.fig');
   output_eps = strcat(file_name,'.eps');
   output_pdf = strcat(file_name,'.pdf');
@@ -59,7 +59,7 @@ function [] = heat_map_3D(file_name)
   %print2eps(output_eps);
   %eps2pdf(output_eps,output_pdf,1);
 
-  %export_fig(output_pdf,'-pdf');
+  export_fig(output_pdf,'-pdf');
   %export_fig(output_pdf,'-pdf','-r10');
   %export_fig(output_jpg,'-jpg');
 

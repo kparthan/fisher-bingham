@@ -1393,7 +1393,7 @@ void Test::infer_mixture_vmf()
   cout << "kldiv_map: " << kldiv_map << endl;
 }
 
-void Test::contours()
+/*void Test::contours()
 {
   Vector mu(3,0),mj(3,0),mi(3,0);
   double psi,alpha,eta,kappa,beta,ecc;
@@ -1463,9 +1463,9 @@ void Test::contours()
     } // phi()
   } // theta
   out2.close();
-}
+}*/
 
-void Test::gsl_numerical_integration()
+/*void Test::gsl_numerical_integration()
 {
   gsl_integration_workspace *w = gsl_integration_workspace_alloc (1000);
   
@@ -1488,9 +1488,9 @@ void Test::gsl_numerical_integration()
   cout << "intervals =  " << w->size << endl;
 
   gsl_integration_workspace_free (w);
-}
+}*/
 
-void Test::gsl_numerical_kent_density_integration()
+/*void Test::gsl_numerical_kent_density_integration()
 {
   Vector mu(3,0),mj(3,0),mi(3,0);
   double psi,alpha,eta,kappa,beta,ecc;
@@ -1522,9 +1522,9 @@ void Test::gsl_numerical_kent_density_integration()
                            theta_lower,theta_upper,phi_lower,phi_upper
                        );
   cout << "probability: " << probability << endl;
-}
+}*/
 
-void Test::gsl_monte_carlo_integration()
+/*void Test::gsl_monte_carlo_integration()
 {
   double res, err;
 
@@ -1626,7 +1626,7 @@ void Test::gsl_monte_carlo_kent_density_integration()
                            theta_lower,theta_upper,phi_lower,phi_upper
                        );
   cout << "probability: " << probability << endl;
-}
+}*/
 
 void Test::testing_sample_empirical_distribution()
 {

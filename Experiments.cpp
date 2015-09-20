@@ -1048,13 +1048,14 @@ void Experiments::exp4()
 {
   //string exp_folder = "./experiments/infer_components/exp4/";
   //check_and_create_directory(exp_folder);
-  string exp_folder = "./";
-  checkFolders(exp_folder);
+  //string exp_folder = "./";
+  //checkFolders(exp_folder);
 
-  /*int N = 10000;
+  int N = 10000;
   std::vector<Vector> sampled_data = generate_data_exp4(N);
-  string data_file = "constrained_N_10000.dat";
-  writeToFile(data_file,sampled_data);*/
+  //string data_file = "constrained_N_10000.dat";
+  string data_file = "./data/arun_N_10000.dat";
+  writeToFile(data_file,sampled_data);
 
   /*for (int N=1000; N<=10000; N+=1000) {
     generate_data_exp4(exp_folder,N);
@@ -1093,9 +1094,10 @@ void Experiments::exp4()
 std::vector<Vector> Experiments::generate_data_exp4(int N)
 {
   struct Parameters parameters;
-  parameters.profiles_dir = "./data/profiles-b/";
+  //parameters.profiles_dir = "./data/profiles-b/";
   //parameters.profiles_dir = "./data/profiles/";
   //parameters.profile_file = "constrained_bins.dat";
+  parameters.profile_file = "./data/arun.dat";
 
   std::vector<Vector> data;
   gatherData(parameters,data);

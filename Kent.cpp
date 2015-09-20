@@ -1273,7 +1273,7 @@ double Kent::computeConfidenceRegion(std::vector<Vector> &x)
 
 // page: 184 (GNU Scientific Library Manual)
 // QAGS adaptive integration with singularities
-double Kent::numerical_integration(
+/*double Kent::numerical_integration(
   double theta_lower, double theta_upper, double phi_lower, double phi_upper
 ) {
   gsl_integration_workspace *w = gsl_integration_workspace_alloc (1000);
@@ -1308,13 +1308,13 @@ double Kent::numerical_integration(
   //double log_probability = log(result);
   double probability = exp(log_probability);
 
-  /*cout << fixed << setprecision(18);
+  cout << fixed << setprecision(18);
   cout << "result = " << result << endl;
   cout << "probability = " << probability << endl;
   cout << "exact probability = " << expected << endl;
   cout << "estimated error = " << error << endl;
   cout << "actual error    = " << probability - expected << endl;
-  cout << "intervals =  " << w->size << endl;*/
+  cout << "intervals =  " << w->size << endl;
 
   gsl_integration_workspace_free (w);
   return probability;
@@ -1357,7 +1357,7 @@ double Kent::numerical_integration_monte_carlo(
   r = gsl_rng_alloc (T);
 
   string title;
-/*
+
   {
     gsl_monte_plain_state *s = gsl_monte_plain_alloc (2);
     gsl_monte_plain_integrate (&G, xl, xu, 2, calls, r, s, &res, &err);
@@ -1365,7 +1365,7 @@ double Kent::numerical_integration_monte_carlo(
     title = "plain";
     //display_results (title, res, err);
   }
-*/
+
   {
     gsl_monte_miser_state *s = gsl_monte_miser_alloc (2);
     gsl_monte_miser_integrate (&G, xl, xu, 2, calls, r, s, &res, &err);
@@ -1373,7 +1373,7 @@ double Kent::numerical_integration_monte_carlo(
     title = "miser";
     //display_results (title, res, err);
   }
-/*
+
   {
     gsl_monte_vegas_state *s = gsl_monte_vegas_alloc (2);
     gsl_monte_vegas_integrate (&G, xl, xu, 2, 10000, r, s, &res, &err);
@@ -1390,9 +1390,9 @@ double Kent::numerical_integration_monte_carlo(
     title = "vegas final";
     display_results (title, res, err);
   }
-*/
+
   gsl_rng_free (r);
 
   return res;
 }
-
+*/
