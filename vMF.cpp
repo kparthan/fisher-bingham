@@ -324,7 +324,7 @@ double vMF::computeLogFisherInformation()
   if (fabs(angle-PI) < TOLERANCE) angle = PI-TOLERANCE;
 
   log_fisher += 2 * log(sin(angle));
-  log_fisher += log(kappa);
+  log_fisher += 2 * log(kappa);
   double kappa_inv = 1 / kappa;
   // A_3(k)
   double a3k = (1 / tanh(kappa)) - kappa_inv;

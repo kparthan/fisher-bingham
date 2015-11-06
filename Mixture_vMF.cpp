@@ -442,6 +442,60 @@ void Mixture_vMF::initialize_children_4()
   components[0] = child1; components[1] = child2;
 }
 
+void Mixture_vMF::initialize_children_5()
+{
+  N = data.size();
+
+  // initialize parameters of each component
+  double Neff;
+  Vector sample_mean = computeVectorSum(data,data_weights,Neff);
+  Matrix S = computeDispersionMatrix(data,data_weights);
+
+  Kent parent;
+  struct Estimates asymptotic_est = parent.computeAsymptoticMomentEstimates(sample_mean,S,Neff);
+  double theta = acos(sqrt(1 - asymptotic_est.eig_max));
+  cout << "theta: " << theta * 180/PI << " degrees ...\n";
+ 
+  Vector mi = asymptotic_est.minor_axis;
+  Matrix R = rotate_about_arbitrary_axis(mi,theta);
+  Vector mu1 = prod(R,asymptotic_est.mean);
+  R = rotate_about_arbitrary_axis(mi,-theta);
+  Vector mu2 = prod(R,asymptotic_est.mean);
+  cout << "init_means[0]: "; print(cout,mu1,3); cout << endl;
+  cout << "init_means[1]: "; print(cout,mu2,3); cout << endl;
+
+  // initialize responsibility matrix
+  Vector emptyvec(N,0);
+  responsibility = std::vector<Vector> (2,emptyvec);
+  #pragma omp parallel for if(ENABLE_DATA_PARALLELISM) num_threads(NUM_THREADS) 
+  for (int i=0; i<N; i++) {
+    double dp1 = data_weights[i] * computeDotProduct(mu1,data[i]);
+    double dp2 = data_weights[i] * computeDotProduct(mu2,data[i]);
+    if (dp1 < dp2) responsibility[0][i] = 1;
+    else responsibility[1][i] = 1;
+  }
+  sample_size = Vector(K,0);
+  updateEffectiveSampleSize();
+  weights = Vector(K,0);
+  if (ESTIMATION == MML) {
+    updateWeights();
+  } else {
+    updateWeights_ML();
+  }
+
+  vMF vmf;
+  vmf.estimateParameters(data,responsibility[0]);
+  double kappa1 = vmf.Kappa();
+  vmf.estimateParameters(data,responsibility[1]);
+  double kappa2 = vmf.Kappa();
+
+  vMF child1(mu1,kappa1);
+  vMF child2(mu2,kappa2);
+
+  components = std::vector<vMF>(K);
+  components[0] = child1; components[1] = child2;
+  //updateComponents();
+}
 /*!
  *  \brief This function updates the effective sample size of each component.
  */
@@ -769,7 +823,8 @@ double Mixture_vMF::estimateParameters()
     //initialize_children_1();
     //initialize_children_2();
     //initialize_children_3();
-    initialize_children_4();
+    //initialize_children_4();
+    initialize_children_5();
   } else {
     initialize();
   }

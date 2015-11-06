@@ -1018,6 +1018,7 @@ void Mixture::load(string &file_name)
     kent.computeExpectation();
     components.push_back(kent);
     numbers.clear();
+    //cout << "norm_const: " << kent.computeLogNormalizationConstant() << endl; 
   }
   file.close();
   for (int i=0; i<K; i++) {

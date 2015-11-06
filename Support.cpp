@@ -281,7 +281,9 @@ void Usage(const char *exe, options_description &desc)
 bool checkFile(string &file_name)
 {
   ifstream file(file_name.c_str());
-  return file;
+  if (file.good()) return 1;
+  else return 0;
+  //return file;
 }
 
 /*!
@@ -2355,10 +2357,17 @@ Mixture_vMF inferComponents_vMF(Mixture_vMF &mixture, int N, ostream &log)
 
   improved = mixture;
 
+  ofstream summary("vmf_mml_summary");
+
   while (1) {
     parent = improved;
     iter++;
     log << "Iteration #" << iter << endl;
+    summary << setw(10) << iter << "\t";
+    summary << setw(10) << parent.getNumberOfComponents() << "\t";
+    summary << fixed << scientific << setprecision(6) << parent.first_part() << "\t";
+    summary << fixed << scientific << setprecision(6) << parent.second_part() << "\t";
+    summary << fixed << scientific << setprecision(6) << parent.getMinimumMessageLength() << endl;
     log << "Parent:\n";
     parent.printParameters(log,1);
     parent.printIndividualMsgLengths(log);
@@ -2372,7 +2381,7 @@ Mixture_vMF inferComponents_vMF(Mixture_vMF &mixture, int N, ostream &log)
         if (IGNORE_SPLIT == 0) {
           updateInference_vMF(modified,improved,N,log,SPLIT);
         } else {
-            log << "\t\tIGNORING SPLIT ... \n\n";
+          log << "\t\tIGNORING SPLIT ... \n\n";
         }
       }
     }
@@ -2393,6 +2402,7 @@ Mixture_vMF inferComponents_vMF(Mixture_vMF &mixture, int N, ostream &log)
   } // if (improved == parent || iter%2 == 0) loop
 
   finish:
+  summary.close();
   //string inferred_mixture_file = "./simulation/inferred_mixture_vmf";
   string inferred_mixture_file = "inferred_mixture_vmf";
   parent.printParameters(inferred_mixture_file);
