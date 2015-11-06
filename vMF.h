@@ -3,7 +3,7 @@
 
 #include "Header.h"
 
-class vMF
+class vMF   // f(x) = c3(k) exp(k mu'x)
 {
   private:
     //! (unit) mean of the distribution
