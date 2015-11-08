@@ -18,7 +18,7 @@ using namespace boost::filesystem;
 
 typedef std::vector<double> Vector;
 
-#define MOMENTENT 0 
+#define MOMENT 0 
 #define MLE 1
 #define MAP 2
 #define MML 3 
@@ -120,7 +120,7 @@ std::vector<Vector> flip(std::vector<Vector> &table)
 int minimumIndex(int map_index, Vector &values)
 {
   Vector new_list(4,0);
-  new_list[MOMENTENT] = values[MOMENTENT];
+  new_list[MOMENT] = values[MOMENT];
   if (map_index == 5) new_list[MLE] = values[map_index];
   else new_list[MLE] = values[MLE];
   new_list[MAP] = values[map_index];

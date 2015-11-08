@@ -47,19 +47,19 @@ function [] = heat_map_3D(file_name)
   set(gca,'ytick',[-1,-0.5,0,0.5,1],'fontsize',18);
   %set(gca,'ztick',[]);
 
-  file_name = '../figs/arun';
+  file_name = '../figs/arun_mix16';
   output_fig = strcat(file_name,'.fig');
   output_eps = strcat(file_name,'.eps');
   output_pdf = strcat(file_name,'.pdf');
   output_jpg = strcat(file_name,'.jpg');
 
   %print(file_name,'-dpdf');
-  saveas(gcf,output_fig);
+  %saveas(gcf,output_fig);
 
   %print2eps(output_eps);
   %eps2pdf(output_eps,output_pdf,1);
 
-  export_fig(output_pdf,'-pdf');
+  %export_fig(output_pdf,'-pdf');
   %export_fig(output_pdf,'-pdf','-r10');
   %export_fig(output_jpg,'-jpg');
 

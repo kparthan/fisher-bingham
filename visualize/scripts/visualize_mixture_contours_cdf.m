@@ -10,11 +10,12 @@ function [] = visualize_mixture_contours_cdf(K,pdf)
     %outfile = 'vmf_mix_reweighted_beta';
     %outfile = 'original';
     %outfile = 'b_vmf_37';
-    outfile = 'b_vmf';
+    outfile = 'b_vmf_35';
   elseif (isvmf == 0)
     bins_folder = '../sampled_data/bins_kent/';
     %outfile = 'kent_mix';
-    outfile = 'b_kent_mml_23';
+    %outfile = 'b_kent_mml_23';
+    outfile = 'b_kent_mml_new';
   end
   disp(strcat('bins_folder: ',{' '},bins_folder)); 
  
@@ -30,7 +31,7 @@ function [] = visualize_mixture_contours_cdf(K,pdf)
   ylabh = get(gca,'YLabel');
   set(xlabh,'interpreter','tex');
   set(ylabh,'interpreter','tex');
-  set(gca,'Ylim',[15 110]);
+  set(gca,'Ylim',[15 115]);
   %set(gca,'Ylim',[25 100]);
   set(gca,'Xlim',[0 360]);
   set(gca,'xtick',[0:60:360],'fontsize',10);
@@ -64,7 +65,11 @@ function [] = visualize_mixture_contours_cdf(K,pdf)
     level = 0.8;
     norm_level = (level - min_val) / range;
     contour_levels = [norm_level norm_level];
-    [C,h] = contour(cdf_bins,contour_levels,'LineWidth',1.5,'LineColor','black');
+    line_width = 1.5;
+    if (k==1 || k==35)
+      line_width = 2.5;
+    end 
+    [C,h] = contour(cdf_bins,contour_levels,'LineWidth',line_width,'LineColor','black');
     %[C,h] = contour(cdf_bins,1,'LineWidth',2,'LineColor','black');
     %clabel(C,h);
 
@@ -85,14 +90,14 @@ function [] = visualize_mixture_contours_cdf(K,pdf)
 %    % Scrap the contourlines:
 %    delete(h1);
 
-    [row col] = ind2sub(size(prob_bins),max_index);
-    cx = phi(col);
-    cy = theta(row);
- %   ht = text(cx,cy,num2str(k),'Color','red');
- %   [cx,cy,index] = number_component(isvmf,k);
- %   if (index > 0)
- %     ht = text(cx,cy,num2str(index),'Color','red','fontsize',8);
- %   end
+%   [row col] = ind2sub(size(prob_bins),max_index);
+%   cx = phi(col);
+%   cy = theta(row);
+%   ht = text(cx,cy,num2str(k),'Color','red');
+    [cx,cy,index] = number_component(isvmf,k);
+    if (index > 0)
+      ht = text(cx,cy,num2str(index),'Color','red','fontsize',8);
+    end
 
 %    hcl = clabel(C,'Color','red');
 %    for i=2:2:length(hcl)
@@ -128,17 +133,17 @@ function [] = visualize_mixture_contours_cdf(K,pdf)
   end
 %  min(norm_density)
 %  max(norm_density)
-  hs = scatter3(angles(:,1),angles(:,2),norm_density,0.1,'cdata',norm_density);
+  hs = scatter3(angles(:,1),angles(:,2),norm_density,0.5,'cdata',norm_density);
 
   %colorbar
   output_fig = strcat('../figs/protein_modelling/',outfile,'.fig');
   output_eps = strcat('../figs/protein_modelling/',outfile,'.eps');
   output_pdf = strcat('../figs/protein_modelling/',outfile,'.pdf');
 
-  %saveas(gcf,output_fig);
-  %print2eps(output_eps);
+%  saveas(gcf,output_fig);
+%  export_fig(output_pdf,'-pdf');
+%  print2eps(output_eps);
   %eps2pdf(output_eps,output_pdf,1);
-  %export_fig(output_pdf,'-pdf');
 
 end
 
@@ -147,54 +152,50 @@ function [cx,cy,index] = number_component(isvmf,k)
 
   cx = 1; cy = 1; index = -1;
   if (isvmf == 1) % vMF mixture
-    if (k == 1)
-      cx = 25; cy = 97; index = 1;
+    if (k == 13)
+      cx = 10; cy = 98; index = 1;
+    elseif (k == 33)
+      cx = 26; cy = 97; index = 2;
     elseif (k == 32)
-      cx = 40; cy = 96; index = 2;
-    elseif (k == 30)
-      cx = 48; cy = 96; index = 3;
-    elseif (k == 31)
-      cx = 55; cy = 98; index = 4;
-    elseif (k == 8)
-      cx = 65; cy = 73; index = 5;
-    elseif (k == 5)
-      cx = 63; cy = 98; index = 6;
-    elseif (k == 6)
-      cx = 70; cy = 99; index = 7;
-    elseif (k == 7)
-      cx = 90; cy = 102; index = 8;
-    elseif (k == 9)
-      cx = 110; cy = 101; index = 9;
+      cx = 40; cy = 96; index = 3;
+    elseif (k == 1)
+      cx = 47; cy = 96; index = 4;
+    elseif (k == 35)
+      cx = 55; cy = 97; index = 5;
     elseif (k == 2)
-      cx = 7; cy = 62; index = 10;
+      cx = 63; cy = 99; index = 6;
     elseif (k == 3)
-      cx = 32; cy = 65; index = 11;
+      cx = 70; cy = 100; index = 7;
+    elseif (k == 4)
+      cx = 90; cy = 102; index = 8;
+    elseif (k == 31)
+      cx = 35; cy = 65; index = 9;
+    elseif (k == 34)
+      cx = 170; cy = 30; index = 10;
+    elseif (k == 27)
+      cx = 190; cy = 35; index = 11;
     elseif (k == 17)
-      cx = 170; cy = 30; index = 12;
-    elseif (k == 16)
-      cx = 190; cy = 35; index = 13;
-    elseif (k == 23)
-      cx = 200; cy = 40; index = 14;
-    elseif (k == 24)
-      cx = 235; cy = 45; index = 15;
-    elseif (k == 22)
-      cx = 265; cy = 55; index = 16;
-    elseif (k == 25)
-      cx = 270; cy = 40; index = 17;
-    elseif (k == 12)
-      cx = 168; cy = 95; index = 18;
-    elseif (k == 13)
-      cx = 181; cy = 97; index = 19;
-    elseif (k == 14)
-      cx = 196; cy = 97; index = 20;
-    elseif (k == 18)
-      cx = 208; cy = 99; index = 21;
+      cx = 205; cy = 42; index = 12;
     elseif (k == 19)
-      cx = 221; cy = 100; index = 22;
-    elseif (k == 20)
-      cx = 235; cy = 100; index = 23;
+      cx = 237; cy = 44; index = 13;
+    elseif (k == 18)
+      cx = 262; cy = 55; index = 14;
+    elseif (k == 16)
+      cx = 265; cy = 43; index = 15;
+    elseif (k == 26)
+      cx = 168; cy = 95; index = 16;
+    elseif (k == 25)
+      cx = 181; cy = 96; index = 17;
+    elseif (k == 24)
+      cx = 194; cy = 98; index = 18;
+    elseif (k == 23)
+      cx = 208; cy = 99; index = 19;
+    elseif (k == 22)
+      cx = 223; cy = 100; index = 20;
     elseif (k == 21)
-      cx = 250; cy = 100; index = 24;
+      cx = 237; cy = 100; index = 21;
+    elseif (k == 20)
+      cx = 252; cy = 99; index = 22;
     end
   elseif (isvmf == 0) % Kent mixture
     if (k == 17)
@@ -208,13 +209,13 @@ function [cx,cy,index] = number_component(isvmf,k)
     elseif (k == 15)
       cx = 90; cy = 98; index = 5;
     elseif (k == 14)
-      cx = 115; cy = 98; index = 6;
+      cx = 110; cy = 97; index = 6;
     elseif (k == 23)
       cx = 160; cy = 30; index = 7;
     elseif (k == 8)
       cx = 190; cy = 32; index = 8;
     elseif (k == 7)
-      cx = 220; cy = 40; index = 9;
+      cx = 220; cy = 41; index = 9;
     elseif (k == 6)
       cx = 250; cy = 50; index = 10;
     elseif (k == 2)
