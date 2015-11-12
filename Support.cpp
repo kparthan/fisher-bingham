@@ -500,6 +500,59 @@ double norm(Vector &v)
 
 /*!
  *  \brief This function converts the cartesian coordinates into spherical.
+ *  (theta with +Z and phi with +X)
+ *  \param cartesian a reference to a Vector 
+ *  \param spherical a reference to a Vector 
+ */
+void cartesian2spherical_Pole_ZAxis(Vector &cartesian, Vector &spherical)
+{
+  Vector unit(3,0);
+  long double r = normalize(cartesian,unit);
+
+  long double x = unit[0];
+  long double y = unit[1];
+  long double z = unit[2];
+
+  // theta \in [0,PI]: angle with Z-axis
+  long double theta = acos(z);
+
+  // phi \in[0,2 PI]: angle with positive X-axis
+  long double ratio = x/sin(theta);
+  if (ratio > 1) {
+    ratio = 1;
+  } else if (ratio < -1) {
+    ratio = -1;
+  }
+  long double angle = acos(ratio);
+  long double phi = 0;
+  if (x == 0 && y == 0) {
+    phi = 0;
+  } else if (x == 0) {
+    if (y > 0) {
+      phi = angle;
+    } else {
+      phi = 2 * PI - angle;
+    }
+  } else if (y >= 0) {
+    phi = angle;
+  } else if (y < 0) {
+    phi = 2 * PI - angle;
+  }
+
+  spherical[0] = r;
+  spherical[1] = theta;
+  spherical[2] = phi;
+}
+
+void spherical2cartesian_Pole_ZAxis(Vector &spherical, Vector &cartesian)
+{
+  cartesian[0] = spherical[0] * sin(spherical[1]) * cos(spherical[2]);
+  cartesian[1] = spherical[0] * sin(spherical[1]) * sin(spherical[2]);
+  cartesian[2] = spherical[0] * cos(spherical[1]);
+}
+
+/*!
+ *  \brief This function converts the cartesian coordinates into spherical.
  *  (theta with +X and phi with +Y)
  *  \param cartesian a reference to a Vector 
  *  \param spherical a reference to a Vector 
@@ -1520,6 +1573,7 @@ std::vector<std::vector<int> > updateBins(std::vector<Vector> &unit_coordinates,
   for (int i=0; i<unit_coordinates.size(); i++) {
     //cout << "i: " << i << endl; 
     cartesian2spherical(unit_coordinates[i],spherical);
+    //cartesian2spherical_Pole_ZAxis(unit_coordinates[i],spherical);
     theta = spherical[1] * 180 / PI;
     if (fabs(theta) <= ZERO) {
       row = 0;
@@ -1772,7 +1826,7 @@ void simulateMixtureModel(struct Parameters &parameters)
         original.generateHeatmapData(parameters.res);
         std::vector<std::vector<int> > bins = updateBins(data,parameters.res);
         outputBins(bins,parameters.res);
-        /* save mixture_density if not already done */
+        /* save mixture density if not already done */
         if (parameters.read_profiles == SET) {
           string mix_density_file = "./visualize/sampled_data/bins_kent/mixture_density.dat";
           ofstream mix(mix_density_file.c_str());
@@ -1823,7 +1877,7 @@ void simulateMixtureModel(struct Parameters &parameters)
         original.generateHeatmapData(parameters.res);
         std::vector<std::vector<int> > bins = updateBins(data,parameters.res);
         outputBins(bins,parameters.res);
-        /* save mixture_density if not already done */
+        /* save mixture density if not already done */
         if (parameters.read_profiles == SET) {
           string mix_density_file = "./visualize/sampled_data/bins_vmf/mixture_density.dat";
           ofstream mix(mix_density_file.c_str());
@@ -2484,7 +2538,7 @@ void TestFunctions(void)
 
   //test.uniform_number_generation();
 
-  //test.arbitrary_rotation();
+  test.arbitrary_rotation();
 
   //test.matrixFunctions();
 
@@ -2556,7 +2610,7 @@ void TestFunctions(void)
 
   //test.gsl_monte_carlo_kent_density_integration();
 
-  test.testing_sample_empirical_distribution();
+  //test.testing_sample_empirical_distribution();
 }
 
 ////////////////////// EXPERIMENTS \\\\\\\\\\\\\\\\\\\\\\\\\\\\

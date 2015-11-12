@@ -9,18 +9,24 @@ function [] = heat_map_2D(file_name)
   fig = figure();
   hold on;
   set(gcf, 'Color', 'w');
-  xlabel('Longitude\phi','fontsize',12);
-  ylabel('Co-latitude\theta','fontsize',13);
+  xlabel('Longitude\phi','fontsize',12,'fontweight','bold');
+  ylabel('Co-latitude\theta','fontsize',13,'fontweight','bold');
   xlabh = get(gca,'XLabel');
   ylabh = get(gca,'YLabel');
   set(xlabh,'interpreter','tex');
   set(ylabh,'interpreter','tex');
-  set(gca,'Ylim',[15 115]);
   set(gca,'Xlim',[0 360]);
   set(gca,'xtick',[0:60:360],'fontsize',10);
-  set(gca,'ytick',[15:20:180],'fontsize',10);
+  set(gca,'Ylim',[0 180]);
+  set(gca,'ytick',[0:30:180],'fontsize',10);
   %view ([0 90]);
-  view ([-61 28]);
+  view ([-27 18]);
+
+  %set(xlabh,'Position',[150 -50 0]);
+  %set(ylabh,'Position',[-15 90 0]);
+
+  set(xlabh,'Rotation',5);
+  set(ylabh,'Rotation',-25);
 
   M = load(file_name);
   mesh(M);
@@ -38,15 +44,18 @@ function [] = heat_map_2D(file_name)
 %  set(gca,'XLim',[0 360]);
 %  set(gca,'YLim',[15 115]);
 
-  %outfile = 'b_vmf_37_density';
-  %outfile = 'b_empirical';
-  outfile = 'b_empirical';
-  output_fig = strcat('../figs/protein_modelling/',outfile,'.fig');
-  output_pdf = strcat('../figs/protein_modelling/',outfile,'.pdf');
-  output_eps = strcat('../figs/protein_modelling/',outfile,'.eps');
+  %outfile = 'b_kent_23_2d';
+  outfile = 'b_kent_23_3d';
+
+  %outfile = 'b_empirical_2d';
+  %outfile = 'b_empirical_3d';
+
+  output_fig = strcat('../figs/arun/',outfile,'.fig');
+  output_pdf = strcat('../figs/arun/',outfile,'.pdf');
+  output_eps = strcat('../figs/arun/',outfile,'.eps');
 
   %saveas(gcf,output_fig);
-  %export_fig(output_eps,'-eps');
   %export_fig(output_pdf,'-pdf');
+  %print2eps(output_eps);
 
 end

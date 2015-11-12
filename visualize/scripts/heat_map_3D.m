@@ -33,8 +33,6 @@ function [] = heat_map_3D(file_name)
 
   %view ([180 90]);
   view ([134 50]);
-  %view ([164 50]);
-  %view ([73 54]);
 
   xlabel('X_2','fontsize',20);
   ylabel('X_3','fontsize',20);
@@ -58,7 +56,6 @@ function [] = heat_map_3D(file_name)
 
   %print2eps(output_eps);
   %eps2pdf(output_eps,output_pdf,1);
-
   %export_fig(output_pdf,'-pdf');
   %export_fig(output_pdf,'-pdf','-r10');
   %export_fig(output_jpg,'-jpg');

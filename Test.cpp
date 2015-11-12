@@ -131,7 +131,8 @@ void Test::arbitrary_rotation()
   }
   //cout << "r: " << r << endl;
 
-  theta = 50;
+  //theta = 50;
+  theta = -90;
   theta *= PI/180;
 
   Rx = rotate_about_xaxis(theta);
@@ -148,6 +149,9 @@ void Test::arbitrary_rotation()
   cout << "Rz: " << Rz << endl;
   R = rotate_about_arbitrary_axis(ZAXIS,theta);
   cout << "R: " << R << endl;
+
+  r = prod(Rx,Ry);  // r = Rx * Ry
+  cout << "\nr: " << r << endl;
 }
 
 void Test::matrixFunctions()

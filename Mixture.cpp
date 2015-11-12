@@ -643,7 +643,7 @@ double Mixture::computeMinimumMessageLength(int verbose /* default = 0 (don't pr
   //assert(Il > 0);
   //if (Il < 0 || boost::math::isnan(Il)) {
   if (boost::math::isnan(Il)) {
-    cout << "isnan(Il)\n"; sleep(5);
+    cout << "isnan(Il)\n"; //sleep(5);
     minimum_msglen = LARGE_NUMBER;
     MSGLEN_FAIL = 1;
     return minimum_msglen;
@@ -1424,6 +1424,7 @@ void Mixture::generateHeatmapData(double res)
     for (double phi=0; phi<360; phi+=res) {
       x[2] = phi * PI/180;
       spherical2cartesian(x,point);
+      //spherical2cartesian_Pole_ZAxis(x,point);
       double pr = exp(log_probability(point));
       // 2D bins
       fbins2D << scientific << setprecision(6) << pr << "\t";

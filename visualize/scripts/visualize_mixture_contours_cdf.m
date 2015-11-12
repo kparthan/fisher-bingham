@@ -66,9 +66,9 @@ function [] = visualize_mixture_contours_cdf(K,pdf)
     norm_level = (level - min_val) / range;
     contour_levels = [norm_level norm_level];
     line_width = 1.5;
-    if (k==1 || k==35)
-      line_width = 2.5;
-    end 
+%    if (k==1 || k==35)
+%      line_width = 2.5;
+%    end 
     [C,h] = contour(cdf_bins,contour_levels,'LineWidth',line_width,'LineColor','black');
     %[C,h] = contour(cdf_bins,1,'LineWidth',2,'LineColor','black');
     %clabel(C,h);
@@ -94,10 +94,10 @@ function [] = visualize_mixture_contours_cdf(K,pdf)
 %   cx = phi(col);
 %   cy = theta(row);
 %   ht = text(cx,cy,num2str(k),'Color','red');
-    [cx,cy,index] = number_component(isvmf,k);
-    if (index > 0)
-      ht = text(cx,cy,num2str(index),'Color','red','fontsize',8);
-    end
+%    [cx,cy,index] = number_component(isvmf,k);
+%    if (index > 0)
+%      ht = text(cx,cy,num2str(index),'Color','red','fontsize',8);
+%    end
 
 %    hcl = clabel(C,'Color','red');
 %    for i=2:2:length(hcl)
@@ -146,7 +146,6 @@ function [] = visualize_mixture_contours_cdf(K,pdf)
   %eps2pdf(output_eps,output_pdf,1);
 
 end
-
 
 function [cx,cy,index] = number_component(isvmf,k)
 
