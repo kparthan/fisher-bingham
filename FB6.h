@@ -8,14 +8,14 @@ class FB6
   private:
     Vector mu,major_axis,minor_axis;
 
-    long double kappa,beta,gamma;
+    double kappa,beta,gamma;
 
   public:
     FB6();
 
-    FB6(long double, long double, long double);
+    FB6(double, double, double);
 
-    FB6(Vector &, Vector &, Vector &, long double, long double, long double);
+    FB6(Vector &, Vector &, Vector &, double, double, double);
  
     FB6 operator=(const FB6 &);
 

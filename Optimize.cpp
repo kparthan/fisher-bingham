@@ -1,199 +1,280 @@
 #include "Optimize.h"
 
+extern int CONSTRAIN_KAPPA;
+extern double MAX_KAPPA;
+extern int ESTIMATION;
+extern Vector XAXIS,YAXIS,ZAXIS;
+
 Optimize::Optimize(string type)
 {
   if (type.compare("MOMENT") == 0) {
-    estimation = MOMENT;
-  } else if (type.compare("MLE_UNCONSTRAINED") == 0) {
-    estimation = MLE_UNCONSTRAINED;
-  } else if (type.compare("MLE_CONSTRAINED") == 0) {
-    estimation = MLE_CONSTRAINED;
-  } else if (type.compare("MML_SCALE") == 0) {
-    estimation = MML_SCALE;
+    ESTIMATION = MOMENT;
+  } else if (type.compare("MLE") == 0) {
+    ESTIMATION = MLE;
+  } else if (type.compare("MAP") == 0) {
+    ESTIMATION = MAP;
   } else if (type.compare("MML") == 0) {
-    estimation = MML;
+    ESTIMATION = MML;
+  } else if (type.compare("MAP_ECCENTRICITY_TRANSFORM") == 0) {
+    ESTIMATION = MAP_ECCENTRICITY_TRANSFORM;
+  } else if (type.compare("MAP_UNIFORM_TRANSFORM") == 0) {
+    ESTIMATION = MAP_UNIFORM_TRANSFORM;
   }
 }
 
-void Optimize::initialize(int sample_size, Vector &m0, Vector &m1, Vector &m2, long double k, long double b)
-{
+void Optimize::initialize(
+  double sample_size, Vector &m0, Vector &m1, Vector &m2, double k, double b
+) {
   N = sample_size;
   mean = m0;
   major = m1;
   minor = m2;
   kappa = k;
   beta = b;
-  Vector spherical(3,0);
-  cartesian2spherical(m0,spherical);
-  alpha = spherical[1]; eta = spherical[2];
-  cartesian2spherical(m1,spherical);
-  psi = spherical[1]; delta = spherical[2];
-  c1 = 1000;  
-  c2 = c1;
+  double e = 2 * b / k;
+  if (e > 1 - TOLERANCE) {
+    e = 1 - TOLERANCE;
+    beta = 0.5 * kappa * e;
+  }
+  if (CONSTRAIN_KAPPA == SET) {
+    if (kappa >= MAX_KAPPA) {
+      double e = 2 * beta / kappa;
+      kappa = MAX_KAPPA - TOLERANCE;
+      beta = kappa * e / 2;
+    }
+  }
 }
 
 void Optimize::computeEstimates(Vector &sample_mean, Matrix &S, struct Estimates &estimates)
 {
-  switch(estimation) {
-    case MOMENT:
-    {
-      column_vector theta = minimize(sample_mean,S,2);
-      estimates.kappa = theta(0);
-      estimates.beta = theta(1);
-      break;
-    }
+  double s,a,e;
+  computeOrthogonalTransformation(mean,major,s,a,e);
+  while (s >= PI) s -= PI;
+  assert(s >= 0 && s < PI);
+  Matrix r = computeOrthogonalTransformation(s,a,e);
+  psi = s; alpha = a; eta = e;
+  mean = prod(r,XAXIS);
+  major = prod(r,YAXIS);
+  minor = prod(r,ZAXIS);
 
-    case MLE_UNCONSTRAINED:
-    {
-      column_vector theta = minimize(sample_mean,S,5);
-      finalize(theta,estimates);
-      break;
-    }
+  assert(psi <= PI);
+  if (psi < TOLERANCE) psi = TOLERANCE;
+  if (alpha < TOLERANCE) alpha = TOLERANCE;
+  if (eta < TOLERANCE) eta = TOLERANCE;
 
-    case MLE_CONSTRAINED:
-    {
-      column_vector theta = minimize(sample_mean,S,7);
-      finalize(theta,estimates);
-      break;
-    }
-
-    case MML_SCALE:
-    {
-      column_vector theta = minimize(sample_mean,S,2);
-      estimates.kappa = theta(0);
-      estimates.beta = theta(1);
-      break;
-    }
-
-    case MML:
-    {
-      column_vector theta = minimize(sample_mean,S,5);
-      finalize(theta,estimates);
-      break;
-    }
-  }
-}
-
-void Optimize::finalize(column_vector &theta, struct Estimates &estimates)
-{
-  double alpha_f = theta(0);
-  double eta_f = theta(1);
-  Vector spherical(3,1);
-  spherical[1] = alpha_f; spherical[2] = eta_f;
-  spherical2cartesian(spherical,estimates.mean);
-  double psi_f = theta(2);
-  double tmp = -1/(tan(alpha_f) * tan(psi_f));
-  double delta_f;
-  if (fabs(tmp) > 1) { 
-    cout << "yesf, tmp: " << tmp << endl;;
-    psi_f = psi;
-    delta_f = delta;
+  if (ESTIMATION == MOMENT) {
+    std::vector<double> theta = minimize(sample_mean,S,2);
+    estimates.kappa = theta[0];
+    estimates.beta = theta[1];
+    estimates.psi = psi;
+    estimates.alpha = alpha;
+    estimates.eta = eta;
   } else {
-    double acos_tmp = acos(tmp);
-    delta_f = eta_f + acos_tmp;
-    if (!(delta_f >= eta_f && delta_f <= PI+eta_f)) {
-      cout << "yes2\n";
-      delta_f = eta_f - acos_tmp;
-      assert(delta_f >= eta_f && delta_f <= PI+eta_f);
-    }
+    std::vector<double> theta = minimize(sample_mean,S,5);
+    finalize(theta,estimates);
   }
-  assert(!boost::math::isnan(delta_f));
-  spherical[1] = psi_f; spherical[2] = delta_f;
-  spherical2cartesian(spherical,estimates.major_axis);
-  estimates.minor_axis = crossProduct(estimates.mean,estimates.major_axis);
-  estimates.kappa = theta(3);
-  estimates.beta = theta(4);
+  validate_scale(estimates.kappa,estimates.beta);
 }
 
-column_vector Optimize::minimize(Vector &sample_mean, Matrix &S, int num_params)
+void Optimize::finalize(std::vector<double> &theta, struct Estimates &estimates)
 {
-  column_vector starting_point(num_params);
-  switch(estimation) {
+  if (ESTIMATION == MLE || ESTIMATION == MAP || ESTIMATION == MML) {
+    estimates.psi = theta[0];
+    estimates.alpha = theta[1];
+    estimates.eta = theta[2];
+    estimates.kappa = theta[3];
+    estimates.beta = theta[4];
+  } else if (ESTIMATION == MAP_ECCENTRICITY_TRANSFORM) {
+    estimates.psi = theta[0];
+    estimates.alpha = theta[1];
+    estimates.eta = theta[2];
+    estimates.kappa = theta[3];
+    estimates.beta = 0.5 * estimates.kappa * theta[4];
+  } else if (ESTIMATION == MAP_UNIFORM_TRANSFORM) {
+    estimates.psi = PI * theta[0];
+    estimates.alpha = acos(1 - 2 * theta[1]);
+    estimates.eta = 2 * PI * theta[2];
+    double tmp = acos(1 - theta[3]);
+    estimates.kappa = tan(tmp);
+    estimates.beta = 0.5 * estimates.kappa * theta[4];
+  }
+  Kent kent(estimates.psi,estimates.alpha,estimates.eta,estimates.kappa,estimates.beta);
+  estimates.mean = kent.Mean();
+  estimates.major_axis = kent.MajorAxis();
+  estimates.minor_axis = kent.MinorAxis();
+}
+
+void Optimize::validate_scale(double &k, double &b)
+{
+  double ex = 2 * b / k;
+  if (ex >= 1) {
+    ex = 1 - ZERO;
+    b = 0.5 * k * ex;
+  }
+  if (CONSTRAIN_KAPPA == SET) {
+    if (k > MAX_KAPPA) {
+      double e = 2 * b / k;
+      k = MAX_KAPPA - ZERO;
+      b = k * e / 2;
+    }
+  }
+}
+
+std::vector<double> Optimize::minimize(Vector &sample_mean, Matrix &S, int num_params)
+{
+  std::vector<double> x(num_params);
+  nlopt::opt opt(nlopt::LN_COBYLA, num_params);
+
+  std::vector<double> lb(num_params,ZERO);
+  std::vector<double> ub(num_params,0);
+
+  double LIMIT = 1e-4;
+  double minf = 0;
+
+  switch(ESTIMATION) {
     case MOMENT:
     {
-      starting_point = kappa,beta; 
-      find_min_using_approximate_derivatives(
-        bfgs_search_strategy(),
-        objective_delta_stop_strategy(1e-10),
-        MomentObjectiveFunction(mean,major,minor,sample_mean,S,N),
-        starting_point,
-        -100
-      );
+      opt.set_lower_bounds(lb);
+      ub[0] = HUGE_VAL; ub[1] = HUGE_VAL;
+      opt.set_upper_bounds(ub);
+
+      MomentObjectiveFunction moment(mean,major,minor,sample_mean,S,N);
+      opt.set_min_objective(MomentObjectiveFunction::wrap, &moment);
+      opt.add_inequality_constraint(Constraint2, NULL, TOLERANCE);
+      opt.set_xtol_rel(LIMIT);
+
+      x[0] = kappa; x[1] = beta;
+      nlopt::result result = opt.optimize(x, minf);
+      //if (result == NLOPT_FAILURE) {
+      /*cout << "mom result: " << result << endl;
+      if (result == -1) {
+        cout << "failed\n";
+        exit(1);
+      }*/
+      assert(!boost::math::isnan(minf));
       break;
     }
 
-    case MLE_UNCONSTRAINED:
+    case MLE:
     {
-      starting_point = alpha,eta,psi,kappa,beta; 
-      find_min_using_approximate_derivatives(
-        bfgs_search_strategy(),
-        objective_delta_stop_strategy(1e-10),
-        MaximumLikelihoodObjectiveFunctionUnconstrained(sample_mean,S,N,starting_point),
-        starting_point,
-        -100
-      );
+      opt.set_lower_bounds(lb);
+      ub[0] = PI; ub[1] = PI; ub[2] = 2*PI; ub[3] = HUGE_VAL; ub[4] = HUGE_VAL;
+      opt.set_upper_bounds(ub);
+
+      MaximumLikelihoodObjectiveFunction mle(sample_mean,S,N);
+      opt.set_min_objective(MaximumLikelihoodObjectiveFunction::wrap, &mle);
+      opt.add_inequality_constraint(Constraint5, NULL, TOLERANCE);
+      opt.set_xtol_rel(LIMIT);
+
+      x[0] = psi; x[1] = alpha; x[2] = eta; x[3] = kappa; x[4] = beta;
+      nlopt::result result = opt.optimize(x, minf);
+      assert(!boost::math::isnan(minf));
       break;
     }
 
-    case MLE_CONSTRAINED:
+    case MAP:
     {
-      starting_point = alpha,eta,psi,kappa,beta,c1,c2; 
-      column_vector min_values(num_params);
-      column_vector max_values(num_params);
-      min_values = -1e10,-1e10,-1e10,0,0,1e-10,1e-10;
-      max_values = uniform_matrix<double>(num_params,1,1e10);
-      find_min_box_constrained(
-        bfgs_search_strategy(),  
-        objective_delta_stop_strategy(1e-9),  
-        MaximumLikelihoodObjectiveFunctionConstrained(sample_mean,S,N,starting_point), 
-        derivative(MaximumLikelihoodObjectiveFunctionConstrained(sample_mean,S,N,starting_point)), 
-        starting_point,min_values,max_values 
-      );
-      break;
-    }
+      opt.set_lower_bounds(lb);
+      ub[0] = PI; ub[1] = PI; ub[2] = 2*PI; ub[3] = HUGE_VAL; ub[4] = HUGE_VAL;
+      opt.set_upper_bounds(ub);
 
-    case MML_SCALE:
-    {
-      starting_point = kappa,beta; 
-      find_min_using_approximate_derivatives(
-        bfgs_search_strategy(),
-        objective_delta_stop_strategy(1e-10),
-        MMLObjectiveFunctionScale(alpha,eta,psi,delta,sample_mean,S,N),
-        starting_point,
-        -100
-      );
+      MAPObjectiveFunction map(sample_mean,S,N);
+      opt.set_min_objective(MAPObjectiveFunction::wrap, &map);
+      opt.add_inequality_constraint(Constraint5, NULL, TOLERANCE);
+      opt.set_xtol_rel(LIMIT);
+
+      x[0] = psi; x[1] = alpha; x[2] = eta; x[3] = kappa; x[4] = beta;
+      nlopt::result result = opt.optimize(x, minf);
+      //assert(!boost::math::isnan(minf));
+      if (boost::math::isnan(minf)) {
+        cout << "MAP here:\n";
+        x[0] = psi; x[1] = alpha; x[2] = eta; x[3] = kappa; x[4] = beta;
+      }
       break;
     }
 
     case MML:
     {
-      starting_point = alpha,eta,psi,kappa,beta; 
-      find_min_using_approximate_derivatives(
-        bfgs_search_strategy(),
-        objective_delta_stop_strategy(1e-10),
-        MMLObjectiveFunction(sample_mean,S,N,starting_point),
-        starting_point,
-        -100
-      );
+      opt.set_lower_bounds(lb);
+      ub[0] = PI; ub[1] = PI; ub[2] = 2*PI; ub[3] = HUGE_VAL; ub[4] = HUGE_VAL;
+      opt.set_upper_bounds(ub);
+
+      MMLObjectiveFunction mml(sample_mean,S,N);
+      opt.set_min_objective(MMLObjectiveFunction::wrap, &mml);
+      opt.add_inequality_constraint(Constraint5, NULL, TOLERANCE);
+      //opt.add_inequality_constraint(Constraint5_2, NULL, TOLERANCE);
+      opt.set_xtol_rel(LIMIT);
+
+      x[0] = psi; x[1] = alpha; x[2] = eta; x[3] = kappa; x[4] = beta;
+      nlopt::result result = opt.optimize(x, minf);
+      //cout << "result: " << result << endl;
+      //assert(!boost::math::isnan(minf));
+      //cout << "mml result: " << result << endl;
+      /*if (result < 0) {
+        cout << "failed\n";
+        exit(1);
+      }*/
+      if (boost::math::isnan(minf) || fabs(minf) >= INFINITY) {
+        cout << "MML5 here:\n";
+        x[0] = psi; x[1] = alpha; x[2] = eta; x[3] = kappa; x[4] = beta;
+      }
       break;
     }
+
+    case MAP_ECCENTRICITY_TRANSFORM:
+    {
+      opt.set_lower_bounds(lb);
+      ub[0] = PI; ub[1] = PI; ub[2] = 2*PI; ub[3] = HUGE_VAL; ub[4] = 1 - ZERO;
+      opt.set_upper_bounds(ub);
+
+      MAPObjectiveFunction_EccTrans map(sample_mean,S,N);
+      opt.set_min_objective(MAPObjectiveFunction_EccTrans::wrap, &map);
+      opt.set_xtol_rel(LIMIT);
+
+      x[0] = psi; x[1] = alpha; x[2] = eta; x[3] = kappa; x[4] = 2*beta/kappa;
+      nlopt::result result = opt.optimize(x, minf);
+      //assert(!boost::math::isnan(minf));
+      if (boost::math::isnan(minf) || fabs(minf) >= INFINITY) {
+        cout << "MAP here:\n";
+        x[0] = psi; x[1] = alpha; x[2] = eta; x[3] = kappa; x[4] = 2*beta/kappa;
+      }
+      break;
+    }
+
+    case MAP_UNIFORM_TRANSFORM:
+    {
+      opt.set_lower_bounds(lb);
+      for (int i=0 ; i<5; i++) ub[i] = 1 - ZERO;
+      opt.set_upper_bounds(ub);
+
+      MAPObjectiveFunction_UnifTrans map(sample_mean,S,N);
+      opt.set_min_objective(MAPObjectiveFunction_UnifTrans::wrap, &map);
+      opt.set_xtol_rel(LIMIT);
+
+      x[0] = psi / PI; 
+      x[1] = 0.5 * (1 - cos(alpha)); 
+      x[2] = eta / (2 * PI); 
+      x[3] = 1 - cos(atan(kappa)); 
+      x[4] = 2*beta/kappa;
+      nlopt::result result = opt.optimize(x, minf);
+      //assert(!boost::math::isnan(minf));
+      if (boost::math::isnan(minf) || minf >= INFINITY) {
+        cout << "MAP here:\n";
+        x[0] = psi / PI; 
+        x[1] = 0.5 * (1 - cos(alpha)); 
+        x[2] = eta / (2 * PI); 
+        x[3] = 1 - cos(atan(kappa)); 
+        x[4] = 2*beta/kappa;
+      }
+      break;
+    }
+
+    default:
+      break;
   }
-  /*find_min_box_constrained(bfgs_search_strategy(),  
-                           objective_delta_stop_strategy(1e-9),  
-                           momentObjectiveFunction, derivative(momentObjectiveFunction), 
-                           starting_point, 
-                           uniform_matrix<double>(2,1,0.0),
-                           uniform_matrix<double>(2,1,2000.0));*/
-  /*find_min_bobyqa(momentObjectiveFunction,
-                  starting_point, 
-                  5,    // number of interpolation points
-                  uniform_matrix<double>(2,1,-1e100),  // lower bound constraint
-                  uniform_matrix<double>(2,1, 2000),   // upper bound constraint
-                  10,    // initial trust region radius
-                  1e-6,  // stopping trust region radius
-                  100    // max number of objective function evaluations
-  );*/
-  cout << "solution:\n" << starting_point << endl;
-  return starting_point;
+  //cout << "solution: "; print(cout,x,3); 
+  //cout << "solution: (" << x[0] << ", " << x[1] << ")\n";
+  //cout << "minf: " << minf << endl;
+  return x;
 }
 

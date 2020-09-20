@@ -3,37 +3,35 @@
 
 #include "Header.h"
 
-class vMF
+class vMF   // f(x) = c3(k) exp(k mu'x)
 {
   private:
-    //! Dimensionality
-    int D;
-
     //! (unit) mean of the distribution
-		Vector mu;
+		Vector mu,kmu;
+
+    double alpha,eta;
 
     //! Concentration parameter 
-		long double kappa;
+		double kappa;
 
     //! Normalization constant
-    long double cd,log_cd;
-
-    //! kappa * mu
-    Vector kmu;
+    double log_cd;
 
   protected:
     //! Computes the vMF constants
     void updateConstants();
 
     //! Computes the normalization constant
-    long double computeLogNormalizationConstant();
+    double computeLogNormalizationConstant();
 
   public:
 		//! Constructor
 		vMF();
 
 		//! Constructor that sets value of parameters
-		vMF(Vector &, long double);
+		vMF(Vector &, double);
+
+		vMF(double);
 
     //! Updates the model parameters
     void updateParameters();
@@ -42,39 +40,74 @@ class vMF
     vMF operator=(const vMF &);
 
 		//! Gets the mean 
-		Vector mean();
+		Vector Mean();
 
     //! Gets the Kappa 
-    long double Kappa(); 
+    double Kappa(); 
 
     //! Gets the normalization constant
-    long double getNormalizationConstant();
-    long double getLogNormalizationConstant();
-
-    //! Gets the dimensionality of the data
-    int getDimensionality();
+    double getLogNormalizationConstant();
 
 		//! Function value
-		long double density(Vector &);
+		double density(Vector &);
 
     //! Computes the log of probability density
-		long double log_density(Vector &);
+		double log_density(Vector &);
 
     //! Computes the negative log likelihood of a sample
-    long double negativeLogLikelihood(Vector &);
+    double computeNegativeLogLikelihood(Vector &);
 
     //! Computes the negative log likelihood of a sample
-    long double negativeLogLikelihood(std::vector<Vector > &);
+    double computeNegativeLogLikelihood(std::vector<Vector> &);
+
+    double computeNegativeLogLikelihood(double, double);
 
     //! Prints the model parameters
     void printParameters(ostream &);
 
     //! Generate random sample
-    std::vector<Vector > generate(int);
+    std::vector<Vector> generate(int);
 
     //! Generate a random canonical sample
     void generateCanonical(std::vector<Vector> &, int);
 
+    double computeLogParametersProbability(double);
+
+    double computeLogPriorProbability();
+
+    double computeLogPriorMean();
+
+    double computeLogPriorScale();
+
+    double computeLogFisherInformation();
+
+    double computeLogFisherInformation(double);
+
+    void computeAllEstimators(std::vector<Vector> &);
+
+    void computeAllEstimators(std::vector<Vector> &, std::vector<struct Estimates_vMF> &);
+
+    void estimateMean(struct Estimates_vMF &, std::vector<Vector> &, Vector &);
+
+    void estimateMLApproxKappa(struct Estimates_vMF &);
+
+    struct Estimates_vMF computeMMLEstimates(std::vector<Vector> &);
+
+    struct Estimates_vMF computeMMLEstimates(struct Estimates_vMF &);
+
+    void estimateParameters(std::vector<Vector> &, Vector &);
+
+    void updateParameters(struct Estimates_vMF &);
+
+    double computeMessageLength(std::vector<Vector> &);
+
+    double computeMessageLength(double, double);
+
+    double computeMessageLength(struct Estimates_vMF &);
+
+    double computeKLDivergence(vMF &);
+
+    double computeKLDivergence(struct Estimates_vMF &);
 };
 
 #endif
